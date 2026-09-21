@@ -16,6 +16,9 @@ export type ConsumptionTaxAdvisorReviewPayload = {
   fiscal_year: string;
   status: ConsumptionTaxAdvisorDecision;
   reviewer_ref: string;
+  professional_registration_ref: string;
+  qualification_evidence_ref: string;
+  qualification_evidence_sha256: string;
   reviewed_at: string;
   evidence_ref: string;
   evidence_sha256: string;
@@ -27,6 +30,9 @@ function canonicalPayload(payload: ConsumptionTaxAdvisorReviewPayload): string {
     fiscal_year: payload.fiscal_year,
     status: payload.status,
     reviewer_ref: payload.reviewer_ref,
+    professional_registration_ref: payload.professional_registration_ref,
+    qualification_evidence_ref: payload.qualification_evidence_ref,
+    qualification_evidence_sha256: payload.qualification_evidence_sha256,
     reviewed_at: payload.reviewed_at,
     evidence_ref: payload.evidence_ref,
     evidence_sha256: payload.evidence_sha256,
@@ -64,7 +70,7 @@ export function verifyConsumptionTaxAdvisorReviewAudit(
 }
 
 export function recordConsumptionTaxAdvisorReview(
-  input: Omit<ConsumptionTaxAdvisorReviewPayload, "evidence_sha256"> & { evidence_sha256?: string },
+  input: Omit<ConsumptionTaxAdvisorReviewPayload, "evidence_sha256" | "qualification_evidence_sha256"> & { evidence_sha256?: string; qualification_evidence_sha256?: string },
 ): { audit_event_id: string } {
   const auth = getCliOperatorContext();
   if (!auth) throw new Error("advisor review requires an authenticated operator context");
@@ -73,7 +79,10 @@ export function recordConsumptionTaxAdvisorReview(
   const evidencePath = resolveTenantPath(input.evidence_ref);
   const evidenceSha256 = createHash("sha256").update(readFileSync(evidencePath)).digest("hex");
   if (input.evidence_sha256 && input.evidence_sha256 !== evidenceSha256) throw new Error("advisor review evidence SHA-256 mismatch");
-  const payload: ConsumptionTaxAdvisorReviewPayload = { ...input, evidence_sha256: evidenceSha256 };
+  const qualificationPath = resolveTenantPath(input.qualification_evidence_ref);
+  const qualificationEvidenceSha256 = createHash("sha256").update(readFileSync(qualificationPath)).digest("hex");
+  if (input.qualification_evidence_sha256 && input.qualification_evidence_sha256 !== qualificationEvidenceSha256) throw new Error("advisor qualification evidence SHA-256 mismatch");
+  const payload: ConsumptionTaxAdvisorReviewPayload = { ...input, evidence_sha256: evidenceSha256, qualification_evidence_sha256: qualificationEvidenceSha256 };
   const profile = loadTaxProfile() as Record<string, unknown> & {
     consumption_tax?: Record<string, unknown> & { advisor_reviews?: Array<Record<string, unknown>> };
   };
@@ -92,6 +101,8 @@ export function recordConsumptionTaxAdvisorReview(
       related: {
         fiscal_year: payload.fiscal_year,
         reviewer_ref: payload.reviewer_ref,
+        professional_registration_ref: payload.professional_registration_ref,
+        qualification_evidence_sha256: payload.qualification_evidence_sha256,
         calculation_sha256: payload.calculation_sha256,
         evidence_sha256: payload.evidence_sha256,
       },

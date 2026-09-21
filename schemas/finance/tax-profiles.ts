@@ -125,13 +125,16 @@ export const taxProfileConsumptionTaxSchema = z.object({
     fiscal_year: z.string().regex(/^FY\d{4}$/),
     status: z.enum(["pending", "approved", "rejected"]),
     reviewer_ref: z.string().min(1).optional(),
+    professional_registration_ref: z.string().min(1).optional(),
+    qualification_evidence_ref: z.string().min(1).optional(),
+    qualification_evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
     reviewed_at: z.string().datetime().optional(),
     evidence_ref: z.string().min(1).optional(),
     evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
     calculation_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
     audit_event_id: z.string().regex(/^EVT-\d{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
   }).superRefine((review, ctx) => {
-    if (review.status !== "pending" && (!review.reviewer_ref || !review.reviewed_at || !review.evidence_ref || !review.evidence_sha256 || !review.calculation_sha256 || !review.audit_event_id)) {
+    if (review.status !== "pending" && (!review.reviewer_ref || !review.professional_registration_ref || !review.qualification_evidence_ref || !review.qualification_evidence_sha256 || !review.reviewed_at || !review.evidence_ref || !review.evidence_sha256 || !review.calculation_sha256 || !review.audit_event_id)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "completed advisor review requires reviewer, evidence digest, calculation digest, and audit event" });
     }
   })).superRefine((reviews, ctx) => {

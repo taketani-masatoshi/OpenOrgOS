@@ -39,6 +39,9 @@ export const consumptionTaxFilingDraftSchema = z
     advisor_review: z.object({
       status: z.enum(["pending", "approved", "rejected"]),
       reviewer_ref: z.string().optional(),
+      professional_registration_ref: z.string().optional(),
+      qualification_evidence_ref: z.string().optional(),
+      qualification_evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
       reviewed_at: z.string().datetime().optional(),
       evidence_ref: z.string().optional(),
       evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),

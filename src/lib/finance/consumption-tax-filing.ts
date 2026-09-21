@@ -513,7 +513,7 @@ export function buildConsumptionTaxFilingDraft(fiscalYear: string) {
   const effectiveInput = Math.max(0, effectiveInputBeforeFloor);
   const inputTaxRecapture = Math.max(0, -effectiveInputBeforeFloor);
   const advisorReviews = Array.isArray(consumption?.advisor_reviews)
-    ? consumption.advisor_reviews as Array<{ fiscal_year: string; status: "pending" | "approved" | "rejected"; reviewer_ref?: string; reviewed_at?: string; evidence_ref?: string; evidence_sha256?: string; calculation_sha256?: string; audit_event_id?: string }>
+    ? consumption.advisor_reviews as Array<{ fiscal_year: string; status: "pending" | "approved" | "rejected"; reviewer_ref?: string; professional_registration_ref?: string; qualification_evidence_ref?: string; qualification_evidence_sha256?: string; reviewed_at?: string; evidence_ref?: string; evidence_sha256?: string; calculation_sha256?: string; audit_event_id?: string }>
     : [];
   const advisorReview = advisorReviews.find((review) => review.fiscal_year === fiscalYear) ?? { fiscal_year: fiscalYear, status: "pending" as const };
   const filed = calculateConsumptionTaxFilingAmounts({
@@ -543,12 +543,15 @@ export function buildConsumptionTaxFilingDraft(fiscalYear: string) {
     filing_amounts: filed,
   });
   const advisorReviewMatches = advisorReview.calculation_sha256 === calculationSha256;
-  const advisorAudit = advisorReview.status === "pending" || !advisorReview.reviewer_ref || !advisorReview.reviewed_at || !advisorReview.evidence_ref || !advisorReview.evidence_sha256 || !advisorReview.calculation_sha256
+  const advisorAudit = advisorReview.status === "pending" || !advisorReview.reviewer_ref || !advisorReview.professional_registration_ref || !advisorReview.qualification_evidence_ref || !advisorReview.qualification_evidence_sha256 || !advisorReview.reviewed_at || !advisorReview.evidence_ref || !advisorReview.evidence_sha256 || !advisorReview.calculation_sha256
     ? { ok: false, reason: "advisor review incomplete" }
     : verifyConsumptionTaxAdvisorReviewAudit({
         fiscal_year: fiscalYear,
         status: advisorReview.status,
         reviewer_ref: advisorReview.reviewer_ref,
+        professional_registration_ref: advisorReview.professional_registration_ref,
+        qualification_evidence_ref: advisorReview.qualification_evidence_ref,
+        qualification_evidence_sha256: advisorReview.qualification_evidence_sha256,
         reviewed_at: advisorReview.reviewed_at,
         evidence_ref: advisorReview.evidence_ref,
         evidence_sha256: advisorReview.evidence_sha256,
@@ -583,6 +586,9 @@ export function buildConsumptionTaxFilingDraft(fiscalYear: string) {
     advisor_review: {
       status: advisorReview.status,
       reviewer_ref: advisorReview.reviewer_ref,
+      professional_registration_ref: advisorReview.professional_registration_ref,
+      qualification_evidence_ref: advisorReview.qualification_evidence_ref,
+      qualification_evidence_sha256: advisorReview.qualification_evidence_sha256,
       reviewed_at: advisorReview.reviewed_at,
       evidence_ref: advisorReview.evidence_ref,
       evidence_sha256: advisorReview.evidence_sha256,

@@ -459,7 +459,7 @@ describe("consumption tax strengthening", () => {
       const pending = buildConsumptionTaxFilingDraft("FY2026");
       expect(pending.calculation_sha256).toMatch(/^[a-f0-9]{64}$/);
 
-      writeFileSync(profilePath, baseProfile.replace("corporate_tax: {}", `  advisor_reviews:\n    - fiscal_year: FY2026\n      status: approved\n      reviewer_ref: advisor:fixture\n      reviewed_at: 2027-03-01T00:00:00.000Z\n      evidence_ref: review:FY2026\n      evidence_sha256: ${"b".repeat(64)}\n      calculation_sha256: ${pending.calculation_sha256}\n      audit_event_id: EVT-20270301-compliance-fake-review\ncorporate_tax: {}`), "utf-8");
+      writeFileSync(profilePath, baseProfile.replace("corporate_tax: {}", `  advisor_reviews:\n    - fiscal_year: FY2026\n      status: approved\n      reviewer_ref: advisor:fixture\n      professional_registration_ref: registry:fixture\n      qualification_evidence_ref: docs/qualification.txt\n      qualification_evidence_sha256: ${"d".repeat(64)}\n      reviewed_at: 2027-03-01T00:00:00.000Z\n      evidence_ref: review:FY2026\n      evidence_sha256: ${"b".repeat(64)}\n      calculation_sha256: ${pending.calculation_sha256}\n      audit_event_id: EVT-20270301-compliance-fake-review\ncorporate_tax: {}`), "utf-8");
       const approved = buildConsumptionTaxFilingDraft("FY2026");
       expect(approved.advisor_review).toMatchObject({ status: "approved", matches_calculation: true, audit_verified: false });
       expect(approved.blockers).toEqual(expect.arrayContaining([expect.stringContaining("tax advisor review audit invalid")]));
@@ -487,18 +487,22 @@ describe("consumption tax strengthening", () => {
       writeFileSync(join(financeDir, "tax-profile.yaml"), `entity:\n  name: Audit Fixture KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\ncorporate_tax: {}\n`, "utf-8");
       const evidencePath = join(isolated.dir, "tenants", isolated.tenantId, "docs", "advisor-review.txt");
       writeFileSync(evidencePath, "reviewed", "utf-8");
+      writeFileSync(join(isolated.dir, "tenants", isolated.tenantId, "docs", "advisor-qualification.txt"), "registered", "utf-8");
       setCliOperatorContext({ record: { operator_id: "advisor:licensed-001", display_name: "Advisor", seat_kind: "standard", role: "approver", status: "active" }, permissions: ["chat:approve"] });
       const payload = {
         fiscal_year: "FY2026",
         status: "approved" as const,
         reviewer_ref: "advisor:licensed-001",
+        professional_registration_ref: "tax-advisor-registry:licensed-001",
+        qualification_evidence_ref: "docs/advisor-qualification.txt",
         reviewed_at: "2027-03-01T00:00:00.000Z",
         evidence_ref: "docs/advisor-review.txt",
         calculation_sha256: "c".repeat(64),
       };
       const recorded = recordConsumptionTaxAdvisorReview(payload);
       const evidence_sha256 = createHash("sha256").update("reviewed").digest("hex");
-      expect(verifyConsumptionTaxAdvisorReviewAudit({ ...payload, evidence_sha256, ...recorded })).toEqual({ ok: true });
+      const qualification_evidence_sha256 = createHash("sha256").update("registered").digest("hex");
+      expect(verifyConsumptionTaxAdvisorReviewAudit({ ...payload, evidence_sha256, qualification_evidence_sha256, ...recorded })).toEqual({ ok: true });
       expect(() => recordConsumptionTaxAdvisorReview(payload)).toThrow(/already recorded/);
     } finally {
       isolated.restore();
