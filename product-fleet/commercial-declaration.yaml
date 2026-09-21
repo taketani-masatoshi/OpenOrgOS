@@ -9,5 +9,5 @@ checklist: docs/product/commercial-claim-checklist.md
 runbook: docs/product/commercial-declaration-runbook.md
 public_statement_ja: |
   OrgOS Ledger はマネージド単一テナントの法人向けクラウド会計です。電子帳簿は基本要件対応（優良要件は別オプション）。e-Tax 提出は含みません。
-  セルフサーブ課金（Stripe live）は別途投入予定。現時点は招待制・契約ベースの提供とします。
+  セルフサーブ課金（Stripe live）は提供しません。招待制・契約ベース（請求書 · 銀行振込）で提供します。
 note: Phase 8 qualified declaration 2026-08-26 — stripe-live deferred by CEO

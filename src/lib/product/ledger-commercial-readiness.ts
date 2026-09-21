@@ -54,6 +54,23 @@ export function buildCommercialReadinessChecks(): CommercialReadinessCheck[] {
       pass: fileExists("docs/product/dencho-sales-claim.md"),
     },
     {
+      id: "public-base-url",
+      gate: "C0",
+      label: "Public HTTPS base URL configured",
+      weight: 4,
+      pass:
+        !isProductionEnv() ||
+        Boolean(
+          process.env.ORGOS_PUBLIC_BASE_URL?.trim().startsWith("https://") &&
+            !/https?:\/\/(localhost|127\.0\.0\.1)/i.test(
+              process.env.ORGOS_PUBLIC_BASE_URL ?? "",
+            ),
+        ),
+      detail: isProductionEnv()
+        ? "ORGOS_PUBLIC_BASE_URL must be https (non-localhost)"
+        : "ok",
+    },
+    {
       id: "prod-webhook-guard",
       gate: "C0",
       label: "Production blocks unsigned Stripe webhooks",

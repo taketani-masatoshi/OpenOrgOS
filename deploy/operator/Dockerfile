@@ -72,4 +72,5 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=12 \
   CMD node -e "fetch('http://127.0.0.1:9470/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 ENTRYPOINT ["/usr/local/bin/orgos-operator-entrypoint.sh"]
+# Tenant comes from ORGOS_TENANT (Compose overrides --tenant). Default is for local mal stacks.
 CMD ["orgos", "operator", "console", "start", "--host", "0.0.0.0", "--port", "9470", "--tenant", "mal"]

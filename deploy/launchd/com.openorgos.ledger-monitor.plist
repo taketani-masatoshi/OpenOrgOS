@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  OrgOS Ledger fleet monitor — every 5 minutes.
+  Install:
+    1. Set ORGOS_ROOT below to your checkout (or export it in the shell wrapper).
+    2. launchctl load ~/Library/LaunchAgents/com.openorgos.ledger-monitor.plist
+  Optional: ORGOS_LEDGER_ALERT_WEBHOOK for paging without committing the URL.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.openorgos.ledger-monitor</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>cd "${ORGOS_ROOT:?set ORGOS_ROOT}" &amp;&amp; npm run orgos -- ledger product monitor --fail-on-unhealthy</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>300</integer>
+  <key>StandardOutPath</key>
+  <string>/tmp/orgos-ledger-monitor.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/orgos-ledger-monitor.stderr.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>ORGOS_ROOT</key>
+    <string>/path/to/OpenOrgOS</string>
+  </dict>
+</dict>
+</plist>

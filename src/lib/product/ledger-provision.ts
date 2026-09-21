@@ -1,9 +1,9 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { runTenantInit } from "../tenant-init.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { getInstallRoot, getTenantsDir } from "../orgos-paths.js";
-import { setTenantId } from "../tenant.js";
+import { runWithTenantId } from "../tenant.js";
 import { upsertLedgerSubscription } from "./ledger-subscription.js";
 import type { LedgerPlanId } from "../../../schemas/product/ledger-product.js";
 import { getClock } from "../runtime-context.js";
@@ -13,6 +13,12 @@ import {
 } from "../org/operators.js";
 import { operatorRegistrySchema } from "../../../schemas/org/operator.js";
 import { upsertControlPlaneTenant } from "./ledger-control-plane.js";
+import {
+  findLedgerSignup,
+  listLedgerSignups,
+  setLedgerSignupStatus,
+} from "./ledger-fleet.js";
+import { isLedgerProductTenant } from "./ledger-product-tenant.js";
 
 /** Product-only finance files not covered by tenant-init skeleton. */
 const FINANCE_ENSURE_FILES = ["period-locks.yaml"] as const;
@@ -54,8 +60,9 @@ function ensureLedgerFinanceSkeleton(tenantId: string): void {
   const fixedAssetsDest = join(destRoot, "fixed-assets.yaml");
   if (!existsSync(fixedAssetsDest)) {
     writeYamlFileAtomic(fixedAssetsDest, {
-      as_of: "2026-08-31",
-      fiscal_year: "FY2026",
+      as_of: null,
+      fiscal_year: "TBD",
+      status: "template",
       currency: "JPY",
       assets: [],
       summary: {
@@ -137,50 +144,145 @@ export function ensureCeoOperator(input: {
   return operatorId;
 }
 
+export function isLedgerProvisionComplete(tenantId: string): boolean {
+  const dest = join(getTenantsDir(), tenantId);
+  if (!existsSync(join(dest, "tenant.yaml"))) return false;
+  if (!isLedgerProductTenant(tenantId)) return false;
+  const subPath = join(dest, "data/product/subscription.yaml");
+  if (!existsSync(subPath)) return false;
+  return runWithTenantId(tenantId, () => {
+    const registry = loadOperatorRegistry();
+    return Boolean(registry?.operators.some((op) => op.role === "ceo" && op.status === "active"));
+  });
+}
+
+function assertProvisionAllowed(input: {
+  tenantId: string;
+  companyName: string;
+  adminEmail: string;
+  plan: LedgerPlanId;
+  signupId?: string;
+}): void {
+  const dest = join(getTenantsDir(), input.tenantId);
+  const reservation = listLedgerSignups().find((row) => row.tenant_id === input.tenantId);
+
+  if (existsSync(dest) && isLedgerProvisionComplete(input.tenantId)) {
+    if (
+      input.signupId &&
+      reservation &&
+      reservation.signup_id !== input.signupId
+    ) {
+      throw new Error(`Tenant "${input.tenantId}" already exists and is fully provisioned`);
+    }
+    // Idempotent continue (CEO / finance ensure are skip-if-exists).
+    return;
+  }
+
+  if (existsSync(dest) && !isLedgerProvisionComplete(input.tenantId)) {
+    if (!input.signupId || !reservation) {
+      throw new Error(
+        `Incomplete tenant "${input.tenantId}" exists — pass matching signupId to resume`,
+      );
+    }
+    if (
+      reservation.signup_id !== input.signupId ||
+      reservation.company_name !== input.companyName.trim() ||
+      reservation.admin_email !== input.adminEmail.trim().toLowerCase() ||
+      reservation.plan !== input.plan
+    ) {
+      throw new Error(`Tenant "${input.tenantId}" is reserved for another signup`);
+    }
+    return;
+  }
+
+  if (reservation && input.signupId && reservation.signup_id !== input.signupId) {
+    throw new Error(`Tenant "${input.tenantId}" is reserved for another signup`);
+  }
+}
+
+function markProductOnTenantYaml(tenantId: string): void {
+  const tenantYaml = join(getTenantsDir(), tenantId, "tenant.yaml");
+  if (!existsSync(tenantYaml)) return;
+  let raw = readFileSync(tenantYaml, "utf-8");
+  if (!raw.includes("product:")) {
+    raw += "\nproduct: orgos-ledger\n";
+    writeFileSync(tenantYaml, raw, "utf-8");
+  }
+}
+
+function initTenantWorkspace(input: {
+  tenantId: string;
+  companyName: string;
+}): void {
+  const dest = join(getTenantsDir(), input.tenantId);
+  if (existsSync(join(dest, "tenant.yaml"))) {
+    return;
+  }
+  // Partial crash (dir without tenant.yaml) — rebuild.
+  if (existsSync(dest)) {
+    rmSync(dest, { recursive: true, force: true });
+  }
+  runTenantInit({
+    id: input.tenantId,
+    name: input.companyName,
+    jurisdiction: "JP",
+    entityForm: "kk",
+    fromModules: [],
+    productSkeleton: true,
+  });
+}
+
 export function provisionLedgerTenant(input: {
   tenantId: string;
   companyName: string;
   adminEmail: string;
   plan: LedgerPlanId;
+  signupId?: string;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   accountantParentId?: string;
 }): { tenant_id: string; path: string; ceo_operator_id: string } {
   const tenantId = input.tenantId.trim().toLowerCase();
   const dest = join(getTenantsDir(), tenantId);
-  if (!existsSync(dest)) {
-    runTenantInit({
-      id: tenantId,
-      name: input.companyName,
-      jurisdiction: "JP",
-      entityForm: "kk",
-    });
-  }
-  ensureLedgerFinanceSkeleton(tenantId);
-  writeLedgerProductMeta(tenantId);
-  setTenantId(tenantId);
-  const ceoOperatorId = ensureCeoOperator({
-    adminEmail: input.adminEmail,
-  });
-  const trialEnds = new Date(getClock().now());
-  trialEnds.setDate(trialEnds.getDate() + 14);
-  upsertLedgerSubscription({
-    plan: input.plan,
-    status: "trialing",
+  assertProvisionAllowed({
+    tenantId,
     companyName: input.companyName,
     adminEmail: input.adminEmail,
-    stripeCustomerId: input.stripeCustomerId,
-    stripeSubscriptionId: input.stripeSubscriptionId,
-    trialEndsAt: trialEnds.toISOString(),
+    plan: input.plan,
+    signupId: input.signupId,
   });
-  const tenantYaml = join(dest, "tenant.yaml");
-  if (existsSync(tenantYaml)) {
-    let raw = readFileSync(tenantYaml, "utf-8");
-    if (!raw.includes("product:")) {
-      raw += "\nproduct: orgos-ledger\n";
-      writeFileSync(tenantYaml, raw, "utf-8");
+
+  if (input.signupId) {
+    const signup = findLedgerSignup(input.signupId);
+    if (signup && signup.status !== "provisioned") {
+      setLedgerSignupStatus(input.signupId, "provisioning");
     }
   }
+
+  if (!isLedgerProvisionComplete(tenantId)) {
+    initTenantWorkspace({ tenantId, companyName: input.companyName });
+  }
+
+  ensureLedgerFinanceSkeleton(tenantId);
+  writeLedgerProductMeta(tenantId);
+
+  const ceoOperatorId = runWithTenantId(tenantId, () => {
+    const ceo = ensureCeoOperator({ adminEmail: input.adminEmail });
+    const trialEnds = new Date(getClock().now());
+    trialEnds.setDate(trialEnds.getDate() + 14);
+    upsertLedgerSubscription({
+      plan: input.plan,
+      status: "trialing",
+      companyName: input.companyName,
+      adminEmail: input.adminEmail,
+      stripeCustomerId: input.stripeCustomerId,
+      stripeSubscriptionId: input.stripeSubscriptionId,
+      trialEndsAt: trialEnds.toISOString(),
+    });
+    return ceo;
+  });
+
+  markProductOnTenantYaml(tenantId);
   upsertControlPlaneTenant({
     tenantId,
     companyName: input.companyName,
@@ -188,5 +290,14 @@ export function provisionLedgerTenant(input: {
     status: "active",
     accountantParentId: input.accountantParentId,
   });
+
+  if (!isLedgerProvisionComplete(tenantId)) {
+    throw new Error(`Provision incomplete for tenant "${tenantId}"`);
+  }
+
+  if (input.signupId) {
+    setLedgerSignupStatus(input.signupId, "provisioned");
+  }
+
   return { tenant_id: tenantId, path: dest, ceo_operator_id: ceoOperatorId };
 }

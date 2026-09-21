@@ -6,6 +6,7 @@ export const ledgerSignupStatusSchema = z.enum([
   "pending",
   "checkout",
   "paid",
+  "provisioning",
   "provisioned",
   "cancelled",
 ]);

@@ -206,7 +206,7 @@ export async function runMeshToAiac(
     correlationId: DEMO_EVENT_ID,
     operatorAttestation: {
       operator_id: "秘書オペレータ",
-      approver_id: "段燕燕",
+      approver_id: "山田太郎",
       approved_at: new Date().toISOString(),
       basis: "existing_contract",
       basis_ref: "CTR-012",

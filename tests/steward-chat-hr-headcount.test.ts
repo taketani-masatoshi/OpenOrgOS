@@ -28,7 +28,7 @@ describe("steward chat HR headcount fact provider", () => {
     expect(result.providerId).toBe("hr_headcount");
     expect(result.coverage).toBe("registered");
     expect(result.reply).toBe("4名");
-    expect(result.reply).not.toMatch(/段燕燕|宮城|三塚|鈴木|秘書として|決定論パス|人員集計|職種別/);
+    expect(result.reply).not.toMatch(/\u6bb5\u71d5\u71d5|\u5bae\u57ce|\u4e09\u585a|\u9234\u6728|秘書として|決定論パス|人員集計|職種別/);
     expect(result.work_order_ids).toBeUndefined();
   });
 

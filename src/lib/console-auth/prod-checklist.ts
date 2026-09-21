@@ -99,6 +99,53 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
           : "Session persistence enabled",
   });
 
+  const publicBase =
+    process.env.ORGOS_PUBLIC_BASE_URL?.trim() ||
+    process.env.STEWARD_CHAT_PUBLIC_URL?.trim() ||
+    "";
+  const publicHttps = publicBase.startsWith("https://");
+  const publicLocal =
+    /https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(publicBase);
+  checks.push({
+    id: "public_base_url",
+    ok: !prod || (publicHttps && !publicLocal),
+    warn: !prod && !publicBase,
+    detail: prod
+      ? publicHttps && !publicLocal
+        ? `ORGOS_PUBLIC_BASE_URL=${publicBase}`
+        : "ORGOS_PUBLIC_BASE_URL must be https (non-localhost) in production"
+      : publicBase
+        ? `Public base ${publicBase}`
+        : "ORGOS_PUBLIC_BASE_URL unset (ok for local)",
+  });
+
+  if (prod && publicHttps && !publicLocal) {
+    try {
+      const publicHost = new URL(publicBase).hostname.toLowerCase();
+      const rp = process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID?.trim().toLowerCase() ?? "";
+      const origin = process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN?.trim().replace(/\/$/, "") ?? "";
+      checks.push({
+        id: "public_url_webauthn_align",
+        ok:
+          Boolean(rp) &&
+          (publicHost === rp || publicHost.endsWith(`.${rp}`)) &&
+          origin === publicBase.replace(/\/$/, ""),
+        detail:
+          Boolean(rp) &&
+          (publicHost === rp || publicHost.endsWith(`.${rp}`)) &&
+          origin === publicBase.replace(/\/$/, "")
+            ? "WebAuthn RP ID / Origin align with ORGOS_PUBLIC_BASE_URL"
+            : "WIRE_CONSOLE_WEBAUTHN_RP_ID / ORIGIN must match ORGOS_PUBLIC_BASE_URL host",
+      });
+    } catch {
+      checks.push({
+        id: "public_url_webauthn_align",
+        ok: false,
+        detail: "ORGOS_PUBLIC_BASE_URL is not a valid URL",
+      });
+    }
+  }
+
   const llmMock = process.env.ORGOS_LLM_MOCK === "1";
   checks.push({
     id: "llm_mock_disabled",

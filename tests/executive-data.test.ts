@@ -11,7 +11,7 @@ import {
 } from "../src/lib/data.js";
 import { stakeholdersFileExists } from "../src/lib/stakeholders.js";
 import { readYamlFile, getDataDir } from "../src/lib/utils.js";
-import { ROOT_DIR } from "../src/lib/tenant.js";
+import { ROOT_DIR, resolveTenantPath } from "../src/lib/tenant.js";
 import {
   calendarFileSchema,
   tasksFileSchema,
@@ -22,6 +22,11 @@ import {
 
 const execDir = join(getDataDir(), "executive");
 const templateExecDir = join(ROOT_DIR, "tenants/_template/data/executive");
+
+// payroll.yaml carries real names and salaries, so it stays out of the tip
+// (docs/org-os/tenant-github-tip-policy.md). validateAll covers the whole
+// tenant, so it only runs where the operator has the local file.
+const hasLocalPayroll = existsSync(resolveTenantPath("data/finance/payroll.yaml"));
 
 function localExecutiveFile(name: string): string {
   return join(execDir, name);
@@ -101,7 +106,7 @@ describe("executive data (Secretary Agent SoT)", () => {
     expect(scaffold.stakeholders).toEqual([]);
   });
 
-  it(
+  it.skipIf(!hasLocalPayroll)(
     "passes validateAll (executive yaml optional when absent)",
     () => {
       const result = validateAll();

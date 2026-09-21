@@ -126,7 +126,7 @@ export async function runInvoiceGenerate(
     options.senderEmail ??
     billing.sender_email ??
     template.defaults?.sender_email ??
-    "info@malkk.com";
+    "info@example.com";
 
   mkdirSync(outputDir, { recursive: true });
   mkdirSync(emailsDir, { recursive: true });

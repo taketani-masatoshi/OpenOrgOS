@@ -111,7 +111,7 @@ Mail Intake → Secretary / Mail Outbound では **誤解防止のため文脈�
 ### 未知送信者（必須ポリシー）
 
 - Web 検索結果は **L1 要約のみ** queue に保存 — CEO 確認なしでは register しない
-- 自社ドメイン（例: `malkk.com`）は `company.yaml` の公開メールから自動判定し internal として紐づけ試行
+- 自社ドメイン（例: `example.com`）は `company.yaml` の公開メールから自動判定し internal として紐づけ試行
 - CEO 回答後: `sender confirm` → `sender register`
 
 ## CLI クイックリファレンス

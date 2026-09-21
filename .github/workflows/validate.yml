@@ -15,9 +15,14 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - run: npm run check:tenant-tip
+      - run: npm run check:pii
       - run: npm run generated:check
       - run: npm run agent:pipeline:check
+      # Pin the tenant so the gates never fall back to an operator's real tenant.
       - run: npm run check
+        env:
+          ORGOS_TENANT: demo
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run test:registry:sync
@@ -25,7 +30,11 @@ jobs:
       - run: npm run test:registry:check
       - run: npm run test:tiered:verify
       - run: npm run test:contract
-      - run: npm run test:finance
+      # Split so one vitest run stays short: a 180s run made the worker RPC
+      # time out on the runner even with every test passing.
+      - run: npm run test:finance:books
+      - run: npm run test:finance:product
+      - run: npm run test:finance:journeys
       - run: ORGOS_TENANT=_fixture-books FINANCE_LOOP_ROUNDS=1 bash scripts/finance-accuracy-loops.sh
       - run: '/usr/bin/time -f "npm test elapsed: %E" npm test'
   console-build:

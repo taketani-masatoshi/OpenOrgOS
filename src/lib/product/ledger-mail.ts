@@ -15,6 +15,8 @@ const outboxSchema = z.object({
       kind: z.string(),
       to: z.string(),
       tenant_id: z.string().optional(),
+      /** Fleet customer id (managed-single-tenant SKU) for per-customer SMTP drills. */
+      customer_id: z.string().optional(),
       subject: z.string(),
       body: z.string(),
       sent_at: z.string(),
@@ -215,6 +217,7 @@ export async function sendLedgerMail(input: {
   kind: LedgerMailKind;
   to: string;
   tenantId?: string;
+  customerId?: string;
   companyName?: string;
   setupUrl?: string;
 }): Promise<{ transport: "outbox" | "smtp"; id: string; status: "sent" | "failed" }> {
@@ -243,6 +246,7 @@ export async function sendLedgerMail(input: {
     kind: input.kind,
     to: input.to.trim(),
     tenant_id: input.tenantId,
+    customer_id: input.customerId,
     subject,
     body,
     sent_at: getClock().nowIso(),
@@ -263,21 +267,34 @@ export function listLedgerMailOutbox() {
 }
 
 /** Commercial gate: recent successful SMTP delivery (drill or real mail). */
-export function hasRecentSuccessfulSmtpMail(maxAgeDays = 30): boolean {
+export function hasRecentSuccessfulSmtpMail(
+  maxAgeDays = 30,
+  opts?: { customerId?: string },
+): boolean {
   if (!smtpUrlConfigured()) return false;
   const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+  const customerId = opts?.customerId?.trim();
   return loadOutbox().messages.some(
     (row) =>
       row.transport === "smtp" &&
       (row.status ?? "sent") === "sent" &&
-      Date.parse(row.sent_at) >= cutoff,
+      Date.parse(row.sent_at) >= cutoff &&
+      (!customerId || row.customer_id === customerId || row.tenant_id === customerId),
   );
 }
 
-export async function runLedgerMailDrill(to: string): Promise<{
+export async function runLedgerMailDrill(
+  to: string,
+  opts?: { customerId?: string; tenantId?: string },
+): Promise<{
   transport: "outbox" | "smtp";
   id: string;
   status: "sent" | "failed";
 }> {
-  return sendLedgerMail({ kind: "mail_drill", to });
+  return sendLedgerMail({
+    kind: "mail_drill",
+    to,
+    customerId: opts?.customerId,
+    tenantId: opts?.tenantId ?? opts?.customerId,
+  });
 }

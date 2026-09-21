@@ -109,7 +109,7 @@ describe("Community → Console SSO handoff", () => {
     const idToken = mintTestOidcIdToken({
       sub: "community-user",
       operator_id: "OP-001",
-      approver_id: "段燕燕",
+      approver_id: "山田太郎",
     });
     const result = authenticateWireConsoleLogin({ id_token: idToken });
     expect("error" in result).toBe(false);
@@ -125,10 +125,10 @@ describe("Community → Console SSO handoff", () => {
       `version: "1"
 operators:
   - operator_id: OP-001
-    display_name: "段燕燕"
+    display_name: "山田太郎"
     role: ceo
     status: active
-    approver_name: "段燕燕"
+    approver_name: "山田太郎"
     email: k.lab.masa@gmail.com
     key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
   - operator_id: OP-002
@@ -207,14 +207,14 @@ operators:
       `version: "1"
 login_policy:
   email_domains:
-    - malkk.com
+    - example.com
   grandfather_emails: []
 operators:
   - operator_id: OP-001
-    display_name: "段燕燕"
+    display_name: "山田太郎"
     role: ceo
     status: active
-    approver_name: "段燕燕"
+    approver_name: "山田太郎"
     email: outsider@gmail.com
     key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
 `,
@@ -235,14 +235,14 @@ operators:
       `version: "1"
 login_policy:
   email_domains:
-    - malkk.com
+    - example.com
 operators:
   - operator_id: OP-001
-    display_name: "段燕燕"
+    display_name: "山田太郎"
     role: ceo
     status: active
-    approver_name: "段燕燕"
-    email: ceo@malkk.com
+    approver_name: "山田太郎"
+    email: ceo@example.com
     key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
 `,
       "utf-8",
@@ -250,7 +250,7 @@ operators:
     clearOperatorsRegistryCacheForTests();
 
     const { status, location } = captureHandoff(
-      mintWithEmail({ sub: "ooo-user-id", email: "ceo@malkk.com" }),
+      mintWithEmail({ sub: "ooo-user-id", email: "ceo@example.com" }),
     );
     expect(status).toBe(302);
     expect(location).toBe("/wire/");
@@ -262,14 +262,14 @@ operators:
       `version: "1"
 login_policy:
   email_domains:
-    - malkk.com
+    - example.com
 operators:
   - operator_id: OP-001
-    display_name: "段燕燕"
+    display_name: "山田太郎"
     role: ceo
     status: active
-    approver_name: "段燕燕"
-    email: ceo@malkk.com
+    approver_name: "山田太郎"
+    email: ceo@example.com
     key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
 `,
       "utf-8",
@@ -279,7 +279,7 @@ operators:
     const { status, body } = captureHandoff(
       mintWithEmail({
         sub: "ooo-user-id",
-        email: "other@malkk.com",
+        email: "other@example.com",
         operator_id: "OP-001",
       }),
     );

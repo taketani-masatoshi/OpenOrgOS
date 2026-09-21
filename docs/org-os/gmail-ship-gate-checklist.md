@@ -19,7 +19,7 @@
 ### 準備
 
 - [x] `tenants/mal/records/executive/mail-config.mal-pilot.yaml.example` — Xserver · `ai@` テンプレ
-- [ ] `deploy/mal-pilot/env/.env.mail-wire` — L2 SMTP/IMAP（`ai@malkk.com`）※gitignore
+- [ ] `deploy/mal-pilot/env/.env.mail-wire` — L2 SMTP/IMAP（`ops@example.com`）※gitignore
 - [ ] `tenants/mal/records/executive/mail-config.yaml` — mal-pilot テンプレから生成 ※gitignore
 - [ ] Wire Gateway 公開 health 200（`https://wire.oorgos.org/wire/v1/health`）
 

@@ -10,8 +10,8 @@ import { setTenantId } from "../src/lib/tenant.js";
 
 describe("invoice qualified checks", () => {
   it("validates T+13 registration number pattern", () => {
-    expect(JP_INVOICE_REGISTRATION_NUMBER_PATTERN.test("T4010001189530")).toBe(true);
-    expect(JP_INVOICE_REGISTRATION_NUMBER_PATTERN.test("4010001189530")).toBe(false);
+    expect(JP_INVOICE_REGISTRATION_NUMBER_PATTERN.test("T9999999999999")).toBe(true);
+    expect(JP_INVOICE_REGISTRATION_NUMBER_PATTERN.test("9999999999999")).toBe(false);
   });
 
   it("flags exempt status with registered invoice without reconciled basis", () => {
@@ -19,7 +19,7 @@ describe("invoice qualified checks", () => {
       consumption_tax: {
         status: "免税事業者",
         invoice_registered: true,
-        invoice_registration_number: "T4010001189530",
+        invoice_registration_number: "T9999999999999",
       },
     });
     expect(
@@ -32,7 +32,7 @@ describe("invoice qualified checks", () => {
       consumption_tax: {
         status: "課税事業者（本則）",
         invoice_registered: false,
-        invoice_registration_number: "T4010001189530",
+        invoice_registration_number: "T9999999999999",
       },
     });
     expect(result.can_issue_qualified_invoice).toBe(false);

@@ -34,7 +34,7 @@ npm run orgos -- --tenant mal protocol approvers
 
 # CEO 承認 → 署名付き outbox · peer へ deliver（webhook URL 設定時）
 npm run orgos -- --tenant mal protocol notice approve \
-  --id NOTICE-* --approver "段燕燕"
+  --id NOTICE-* --approver "山田太郎"
 
 # 相手 peer 登録（identity から公開鍵）
 npm run orgos -- --tenant southwood protocol peer register \

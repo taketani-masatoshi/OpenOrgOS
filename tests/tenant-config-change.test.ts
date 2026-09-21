@@ -100,7 +100,7 @@ describe("tenant config change (standards)", () => {
 
     const applied = approveAndApplyTenantConfigChange({
       approvalId: proposed.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       reviewed: true,
     });
@@ -115,7 +115,7 @@ describe("tenant config change (standards)", () => {
     });
     approveAndApplyTenantConfigChange({
       approvalId: restore.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       reviewed: true,
     });
@@ -131,7 +131,7 @@ describe("tenant config change (standards)", () => {
     });
     rejectTenantConfigChange({
       approvalId: proposed.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       reason: "not now",
     });
     const change = findTenantConfigChangeByApproval(proposed.approval_id);
@@ -171,7 +171,7 @@ describe("tenant config change (standards)", () => {
 
     const applied = approveAndApplyTenantConfigChange({
       approvalId: proposed.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       reviewed: true,
     });
@@ -186,7 +186,7 @@ describe("tenant config change (standards)", () => {
     });
     approveAndApplyTenantConfigChange({
       approvalId: restore.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       reviewed: true,
     });

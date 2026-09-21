@@ -90,7 +90,7 @@ export const salesDealSchema = z
     confidence_pct: z.number().int().min(0).max(100).optional(),
     /** Internal assignee id / role key (optional when owner_name set) */
     owner: z.string().min(1).optional(),
-    /** Display name — e.g. 段燕燕 · 宮城万貴子 */
+    /** Display name — e.g. 山田太郎 · 鈴木花子 */
     owner_name: z.string().min(1).optional(),
     /** Company short name (required if party omitted and account_id unset) */
     counterparty: z.string().min(1).optional(),

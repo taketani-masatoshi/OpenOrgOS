@@ -1,6 +1,10 @@
 version: 1
-status: configured
-mode: test
+status: deferred
+mode: stub
 webhook_path: /chat/v1/product/stripe/webhook
-checked_at: 2026-08-30T02:14:58.997Z
-note: Saved via Operator Console stripe settings
+checked_at: 2026-09-17T04:50:00.000Z
+note: >-
+  Self-serve Stripe Checkout is deferred (CEO). OrgOS Ledger is offered on
+  contract / invoice only — see docs/product/pricing.md and
+  product-fleet/commercial-declaration.yaml. Re-attest with stripe-attest
+  when live keys are intentionally enabled.

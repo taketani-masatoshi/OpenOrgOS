@@ -10,7 +10,7 @@ Phase 3（Wire Gateway 本番ゲート）と Phase 4（email_wire）を **env-ga
 
 - 秘密情報は CLI 出力・証跡 JSON 双方で redact
 - Vitest 実行前に停止（`mail-config.yaml` 破壊防止）
-- `info@malkk.com` は OrgOS から使用しない（`ai@malkk.com` のみ）
+- `info@example.com` は OrgOS から使用しない（`ops@example.com` のみ）
 
 ---
 
@@ -19,7 +19,7 @@ Phase 3（Wire Gateway 本番ゲート）と Phase 4（email_wire）を **env-ga
 | 項目 | 値 |
 |------|-----|
 | Wire 公開 URL | `https://wire.oorgos.org` |
-| メール | `ai@malkk.com`（L2: `tenants/mal/records/executive/smtp.env`） |
+| メール | `ops@example.com`（L2: `tenants/mal/records/executive/smtp.env`） |
 | Phase 4 設定 | `tenants/mal/records/executive/mail-config.yaml` |
 | ゲート env | `ORGOS_LIVE_VERIFY=1` **必須** |
 
@@ -96,7 +96,7 @@ npm run orgos -- --tenant mal protocol transaction prune-orphans --apply
 
 | 症状 | 確認 |
 |------|------|
-| SMTP auth fail | L2 `smtp.env` / `.env.mail-wire` · `ai@malkk.com` のみ |
+| SMTP auth fail | L2 `smtp.env` / `.env.mail-wire` · `ops@example.com` のみ |
 | IMAP sync 0 | mail-config `receive.sync: imap` · Vitest 停止 |
 | ingest 0 | `ai+wireloop@` 配送 · base64 MIME · `wire-scan` |
 | `witness-receipt-missing` | `protocol witness cache-missing` · 不可なら `prune-orphans --apply` |

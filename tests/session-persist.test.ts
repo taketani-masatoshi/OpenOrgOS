@@ -45,7 +45,7 @@ describe("session persistence", () => {
     const created = createDevSession({
       passkey: "orgos-dev",
       operator_id: "OP-001",
-      approver_id: "段燕燕",
+      approver_id: "山田太郎",
     });
     if ("error" in created) throw new Error(created.error);
     expect(created.user.operator_id).toBe("OP-001");

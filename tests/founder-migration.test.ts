@@ -15,7 +15,7 @@ describe("founder migration policy", () => {
   it("allows grandfather email while grace is open", () => {
     const reg = registry({
       login_policy: {
-        email_domains: ["malkk.com"],
+        email_domains: ["example.com"],
         grandfather_emails: ["founder@gmail.com"],
         founder_migration: { status: "open", grace_until: "2099-12-31" },
       },
@@ -36,7 +36,7 @@ describe("founder migration policy", () => {
   it("blocks grandfather email after grace expires", () => {
     const reg = registry({
       login_policy: {
-        email_domains: ["malkk.com"],
+        email_domains: ["example.com"],
         grandfather_emails: ["founder@gmail.com"],
         founder_migration: { status: "open", grace_until: "2020-01-01" },
       },
@@ -58,7 +58,7 @@ describe("founder migration policy", () => {
   it("blocks second standing human while grandfather remains", () => {
     const reg = registry({
       login_policy: {
-        email_domains: ["malkk.com"],
+        email_domains: ["example.com"],
         grandfather_emails: ["founder@gmail.com"],
         founder_migration: { status: "open", grace_until: "2099-12-31" },
       },
@@ -82,7 +82,7 @@ describe("founder migration policy", () => {
             display_name: "Ops",
             role: "operator",
             status: "active",
-            email: "ops@malkk.com",
+            email: "ops@example.com",
           },
         ],
       }),
