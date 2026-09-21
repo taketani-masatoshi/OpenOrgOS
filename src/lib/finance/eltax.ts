@@ -14,7 +14,7 @@ import { operatorHasPermission } from "../console-auth/operator-rbac.js";
 import { assertHumanApprovalContext } from "../org/human-approval-context.js";
 import type { HumanApprovalContext } from "../../../schemas/org/human-approval-context.js";
 import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
-import { createCompanyEvent } from "../company-events.js";
+import { createCompanyEvent, listCompanyEvents } from "../company-events.js";
 
 export interface EltaxTransport {
   readonly channel: "eltax";
@@ -180,7 +180,7 @@ export class EltaxSubmissionStore {
       if (record.retention_until < current.retention_until) throw new Error("eLTAX retention cannot be shortened");
       const parsed = eltaxSubmissionRecordSchema.parse({ ...record, revision: record.revision + 1, updated_at: getClock().nowIso() });
       assertRecordEvidence(parsed);
-      if (this.production && parsed.status !== "prepared" && parsed.status !== "cancelled" && !parsed.approval?.company_event_id) {
+      if (this.production && ["signed", "sending", "received", "accepted", "rejected"].includes(parsed.status) && !parsed.approval?.company_event_id) {
         throw new Error("production eLTAX state requires a Company Event approval anchor");
       }
       this.persist(parsed);
@@ -242,24 +242,37 @@ export function approveEltaxSubmissionWithHumanContext(input: {
   approval: OrgApprovalRequest;
   humanContext: HumanApprovalContext;
 }): EltaxSubmissionRecord {
-  const record = input.store.get(input.submissionId);
+  let record = input.store.get(input.submissionId);
   if (input.approval.subject_type !== "eltax.submission" || input.approval.subject_ref !== record.package.payload_sha256) {
     throw new Error("human approval is not bound to this eLTAX payload");
   }
   const operator = findOperatorById(input.operatorId);
   if (!operatorHasPermission(operator, "chat:approve")) throw new Error("operator lacks chat:approve for eLTAX submission");
   assertHumanApprovalContext({ context: input.humanContext, approval: input.approval, operatorId: input.operatorId });
-  const companyEventId = recordEltaxAuditEvent({ ...record, status: "approved" }, input.store.auditHeadSha256());
-  const approved = input.store.save({
-    ...record,
-    status: "approved",
-    approval: { operator_id: input.operatorId, approved_at: getClock().nowIso(), payload_sha256: record.package.payload_sha256, company_event_id: companyEventId },
-  }, authorizedTransition);
-  return approved;
+  if (record.status === "prepared") {
+    record = input.store.save({
+      ...record,
+      status: "approved",
+      approval: { operator_id: input.operatorId, approved_at: getClock().nowIso(), payload_sha256: record.package.payload_sha256 },
+    }, authorizedTransition);
+  } else if (record.status !== "approved" || !record.approval || record.approval.operator_id !== input.operatorId) {
+    throw new Error(`eLTAX approval cannot resume from ${record.status}`);
+  }
+  const approvalEvidence = record.approval;
+  if (!approvalEvidence) throw new Error("eLTAX approved state is missing approval evidence");
+  if (approvalEvidence.company_event_id) return record;
+  const auditHead = input.store.auditHeadSha256();
+  const companyEventId = recordEltaxAuditEvent(record, auditHead);
+  return input.store.save({ ...record, approval: { ...approvalEvidence, company_event_id: companyEventId } }, authorizedTransition);
 }
 
 export function recordEltaxAuditEvent(record: EltaxSubmissionRecord, auditHeadSha256: string): string {
   if (!/^[a-f0-9]{64}$/.test(auditHeadSha256)) throw new Error("invalid eLTAX audit head");
+  const existing = listCompanyEvents({ includeVoided: true }).find((event) =>
+    event.related?.application_id === record.submission_id &&
+    event.notes?.includes(`audit_head_sha256=${auditHeadSha256}`) &&
+    event.notes?.includes(`status=${record.status}`));
+  if (existing) return existing.id;
   const event = createCompanyEvent({
     kind: "finance",
     title: `eLTAX ${record.package.tax_type} ${record.status}`,
@@ -274,6 +287,7 @@ export async function signEltaxSubmission(input: { store: EltaxSubmissionStore; 
   const record = input.store.get(input.submissionId);
   assertCertifiedProductAdapter(input.signer, "signer", input.allowUncertifiedTestDouble);
   if (record.status !== "approved" || !record.approval || !input.signer.certified) throw new Error("eLTAX submission requires approval and a certified signer");
+  if (input.store.production && !record.approval.company_event_id) throw new Error("production eLTAX signature requires a Company Event approval anchor");
   const payload = readFileSync(record.package.payload_path);
   if (sha256(payload) !== record.package.payload_sha256 || record.approval.payload_sha256 !== record.package.payload_sha256) throw new Error("eLTAX approved payload changed");
   const signed = await input.signer.sign({ payloadPath: record.package.payload_path, payloadSha256: record.package.payload_sha256 });

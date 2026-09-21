@@ -117,7 +117,7 @@
 - 法定申告書の完成
 - e-Tax / eLTAXへの提出
 
-地方税ワークペーパーは、ハッシュ固定した税率カタログと原典を用い、明示された法定按分ウェイトで複数事業所を配分できる。欠損金、外形標準課税額、中間納付は根拠資料で確定した入力値として扱い、自動推定しない。eLTAX本番承認はOperator登録簿、`chat:approve`、HumanApprovalContext、Org Approval、Company Eventによる監査先端固定を必須とする。本番transport・公式仕様・接続試験が未登録の間は送信を拒否する。
+地方税ワークペーパーは、配備時の`ORGOS_LOCAL_TAX_CATALOG_PUBLIC_KEY_PEM`で署名検証した税率カタログと原典を用い、明示された法定按分ウェイトで複数事業所を配分できる。欠損金、外形標準課税額、中間納付は根拠資料で確定した入力値として扱い、自動推定しない。eLTAX本番承認はOperator登録簿、`chat:approve`、HumanApprovalContext、Org Approval、Company Eventによる監査先端固定を必須とする。本番transport・公式仕様・接続試験が未登録の間は送信を拒否する。
 - 税理士または代表者による最終確認・署名
 
 `evaluateTaxAdjustment` は別表四相当のワークシートだけを返す。仕訳は切らない。開始残高の切替もしない。

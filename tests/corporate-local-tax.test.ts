@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createHash } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { calculateCorporateLocalTax, calculateCorporateLocalTaxReturn, loadTrustedCorporateLocalTaxCatalog } from "../src/lib/finance/corporate-local-tax.js";
 
@@ -35,11 +35,18 @@ describe("corporate local tax calculation", () => {
     const catalogPath = join(root, "trusted-catalog.json");
     const catalogBytes = JSON.stringify({ schema: "orgos.jp.corporate-local-tax-trusted-catalog.v1", entries: [{ profile_id: profile.id, source_sha256: profile.source_sha256 }] });
     writeFileSync(catalogPath, catalogBytes);
-    const trustedCatalog = loadTrustedCorporateLocalTaxCatalog(catalogPath, createHash("sha256").update(catalogBytes).digest("hex"));
+    const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    const signaturePath = join(root, "trusted-catalog.sig");
+    writeFileSync(signaturePath, sign("sha256", Buffer.from(catalogBytes), privateKey));
+    const priorKey = process.env.ORGOS_LOCAL_TAX_CATALOG_PUBLIC_KEY_PEM;
+    process.env.ORGOS_LOCAL_TAX_CATALOG_PUBLIC_KEY_PEM = publicKey.export({ type: "spki", format: "pem" }).toString();
+    const trustedCatalog = loadTrustedCorporateLocalTaxCatalog(catalogPath, signaturePath);
     expect(() => calculateCorporateLocalTax({ profile, sourceDocumentPath, trustedProfileIds: [], production: true,
       fiscalYearEnd: "2027-03-31", nationalCorporateTaxYen: 1, taxableIncomeYen: 1 })).toThrow(/hash-pinned/);
     expect(calculateCorporateLocalTax({ profile, sourceDocumentPath, trustedProfileIds: [], trustedCatalog, production: true,
       fiscalYearEnd: "2027-03-31", nationalCorporateTaxYen: 1, taxableIncomeYen: 1 }).profile_id).toBe(profile.id);
+    if (priorKey === undefined) delete process.env.ORGOS_LOCAL_TAX_CATALOG_PUBLIC_KEY_PEM;
+    else process.env.ORGOS_LOCAL_TAX_CATALOG_PUBLIC_KEY_PEM = priorKey;
   });
   it("apportions multiple establishments, losses, external-standard tax, and interim payments", () => {
     const result = calculateCorporateLocalTaxReturn({

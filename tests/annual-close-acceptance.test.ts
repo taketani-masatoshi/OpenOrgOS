@@ -298,6 +298,20 @@ describe("annual close acceptance", () => {
     expect(parseYaml(readFileSync(statePath, "utf-8")).operator_id).toBe(OPERATOR);
   });
 
+  it("finalizes after a crash between live-opening replacement and committed-state write", () => {
+    useFinanceFixtureTenant();
+    lockPreparedYear();
+    const first = closeAccountingYear({ fiscalYear: FY, operatorId: OPERATOR });
+    const statePath = annualCloseTransactionPath(FY);
+    const state = parseYaml(readFileSync(statePath, "utf-8"));
+    writeFileSync(statePath, YAML.stringify({ ...state, phase: "committing", lease_expires_at: "2020-01-01T00:00:00.000Z" }));
+    const resumed = closeAccountingYear({ fiscalYear: FY, operatorId: OPERATOR });
+    expect(resumed.ok).toBe(true);
+    expect(resumed.posted_entry_ids).toEqual([]);
+    expect(parseYaml(readFileSync(statePath, "utf-8")).phase).toBe("committed");
+    expect(existsSync(first.opening_proposal_path!)).toBe(true);
+  });
+
   it("writes nothing when a month is relocked without valid close evidence", () => {
     useFinanceFixtureTenant();
     const months = lockPreparedYear();

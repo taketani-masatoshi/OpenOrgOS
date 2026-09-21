@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createPublicKey, verify as verifySignature } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
 import {
@@ -17,9 +17,12 @@ const trustedCatalogSchema = z.object({
 });
 export type TrustedCorporateLocalTaxCatalog = z.output<typeof trustedCatalogSchema> & { [trustedCatalogMarker]: true };
 
-export function loadTrustedCorporateLocalTaxCatalog(path: string, expectedSha256: string): TrustedCorporateLocalTaxCatalog {
+export function loadTrustedCorporateLocalTaxCatalog(path: string, signaturePath: string): TrustedCorporateLocalTaxCatalog {
   const bytes = readFileSync(path);
-  if (createHash("sha256").update(bytes).digest("hex") !== expectedSha256) throw new Error("trusted local-tax catalog hash mismatch");
+  const publicKeyPem = process.env.ORGOS_LOCAL_TAX_CATALOG_PUBLIC_KEY_PEM;
+  if (!publicKeyPem) throw new Error("local-tax catalog trust root is not configured");
+  const signature = readFileSync(signaturePath);
+  if (!verifySignature("sha256", bytes, createPublicKey(publicKeyPem), signature)) throw new Error("trusted local-tax catalog signature mismatch");
   return Object.assign(trustedCatalogSchema.parse(JSON.parse(bytes.toString("utf8"))), { [trustedCatalogMarker]: true as const });
 }
 

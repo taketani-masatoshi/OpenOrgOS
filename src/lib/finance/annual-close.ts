@@ -5,7 +5,7 @@
  * A resumable transaction state makes partial multi-file commits safe to retry.
  */
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import type { OpeningBalancesFile } from "../../../schemas/finance/opening-balances.js";
@@ -304,6 +304,15 @@ function closeAccountingYearUnlocked(input: {
       throw error;
     }
   })();
+  if (existing?.phase === "committing" && existing.opening_sha256 && existing.committed_evaluation?.can_close && existsSync(existing.proposal_path)) {
+    const proposal = readYamlFile(existing.proposal_path, openingBalancesSchema);
+    const live = readYamlFile(openingBalancesPath(), openingBalancesSchema);
+    if (sha256(proposal) === existing.opening_sha256 && sha256(live) === existing.opening_sha256) {
+      const committed = { ...existing, phase: "committed" as const, lease_expires_at: undefined, updated_at: new Date().toISOString() };
+      saveTransaction(committed);
+      return { ok: true, posted_entry_ids: [], opening_proposal_path: existing.proposal_path, evaluation: existing.committed_evaluation };
+    }
+  }
   const evaluation = evaluateAnnualCloseGates(input.fiscalYear);
   // After a successful close the live opening belongs to the next year, so
   // statement/tax gates for this FY may fail. Resume from the committed state.
@@ -388,6 +397,15 @@ function closeAccountingYearUnlocked(input: {
   const proposalPath = writeOpeningProposal(opening, evaluation.next_fiscal_year);
   const parsedOpening = openingBalancesSchema.parse(opening);
   const openingHash = sha256(parsedOpening);
+  transaction = {
+    ...transaction,
+    phase: "committing",
+    opening_sha256: openingHash,
+    committed_evaluation: evaluation,
+    lease_expires_at: annualLeaseExpiry(new Date().toISOString()),
+    updated_at: new Date().toISOString(),
+  };
+  saveTransaction(transaction);
   writeYamlFileAtomic(openingBalancesPath(), parsedOpening);
   transaction = {
     ...transaction,
