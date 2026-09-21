@@ -29,7 +29,7 @@
    親 Work Order の子バッチ hint に降格。グローバル同時数の正本は AIA runtime。
 
 4. **作業スペース隔離**  
-   各 run は `tenants/{id}/scratch/aia-runs/{run_id}/` のみに中間成果を書く。Primary Folders への並列直書は禁止。SSOT 確定は Skill/CLI + CAS / yaml-atomic、または Integration merge。詳細: [aia-workspace-isolation.md](../org-os/aia-workspace-isolation.md)。
+   各 run は `tenants/{id}/data/scratch/aia-runs/{run_id}/` のみに中間成果を書く。Primary Folders への並列直書は禁止。SSOT 確定は Skill/CLI + CAS / yaml-atomic、または Integration merge。詳細: [aia-workspace-isolation.md](../org-os/aia-workspace-isolation.md)。
 
 5. **モジュール `concurrent_jobs`**  
    manifest `limits.concurrent_jobs` を enforce する。未設定: コア Agent はテナント枠内、招待/third_party モジュールは既定 **1**。

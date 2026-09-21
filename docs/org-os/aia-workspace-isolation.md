@@ -12,7 +12,7 @@
 
 | 層 | パス | git | 用途 |
 |----|------|-----|------|
-| Run workspace | `tenants/{id}/scratch/aia-runs/{run_id}/` | ignore | 下書き · ツール出力 · 一時添付 |
+| Run workspace | `tenants/{id}/data/scratch/aia-runs/{run_id}/` | ignore | 下書き · ツール出力 · 一時添付 |
 | SSOT | `tenants/{id}/data/**` · 許可された `docs/**` | 追跡（L2 除く） | 確定データのみ |
 | 要約 | `docs/reports/agent-summaries/` | 追跡 | 上行（Integration / Executive） |
 

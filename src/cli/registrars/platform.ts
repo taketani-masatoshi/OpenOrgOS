@@ -13,6 +13,12 @@ import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
 import { runPipelineDaily, runPipelineList, runPipelineWeekly } from "../../commands/pipeline.js";
 import { runTenantInitCommand, runTenantScaffoldData, runTenantAlignClassification } from "../../commands/tenant.js";
 import {
+  runTenantBackupRestore,
+  runTenantBackupSnapshot,
+  runTenantBackupStatus,
+  runTenantGitRemoteCheck,
+} from "../../commands/tenant-backup.js";
+import {
   runRegulationsList,
   runRegulationsEffective,
   runRegulationsSeed,
@@ -454,6 +460,44 @@ export function registerPlatformCommands(program: Command): void {
         json: opts.json,
       })
     );
+
+  const tenantBackupCmd = tenantCmd
+    .command("backup")
+    .description("NAS restore copy of the tenant (not the working canonical)");
+  tenantBackupCmd
+    .command("status")
+    .description("Show whether a restore destination is configured and how old the stamp is")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => {
+      runTenantBackupStatus(opts);
+    });
+  tenantBackupCmd
+    .command("snapshot")
+    .description("Tar the tenant to the encrypted destination and stamp only on success")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => {
+      runTenantBackupSnapshot(opts);
+    });
+  tenantBackupCmd
+    .command("restore")
+    .description("Extract a snapshot into an empty directory that is not the live tenant")
+    .requiredOption("--archive <path>", "Absolute path to the snapshot tar.gz")
+    .requiredOption("--into <dir>", "Empty absolute directory, outside the live tenant")
+    .option("--json", "JSON output")
+    .action((opts: { archive: string; into: string; json?: boolean }) => {
+      runTenantBackupRestore(opts);
+    });
+
+  tenantCmd
+    .command("git-remote")
+    .description("Check that tenant history is not pointed at a public forge")
+    .command("check")
+    .description("Classify git_remote from backup-target.yaml, or --url")
+    .option("--url <url>", "Remote URL to classify instead of the config file")
+    .option("--json", "JSON output")
+    .action((opts: { url?: string; json?: boolean }) => {
+      runTenantGitRemoteCheck(opts);
+    });
 
   const tenantLifecycleCmd = tenantCmd
     .command("lifecycle")
