@@ -47,7 +47,7 @@ ISO 37000:2021（Governance of organizations — Guidance）の **11原則** を
 | --- | --- |
 | **ISO 37000** | Guidance · **自己宣言可** · 本原則 + `steward/standards/iso/ISO-37000/` |
 | **ISO 37001** | 贈収賄防止 ABMS · 本パックと別（スタブ可） |
-| **ISO 37301** | コンプライアンス MS · 認証前提 · モジュール `iso_cms`（未実装時は ID 予約のみ） |
+| **ISO 37301** | コンプライアンス MS · 認証前提 · 正本は [steward/standards/iso/](../standards/iso/catalog.yaml)（モジュール id は置かない — [ADR 0080](../../docs/adr/0080-catalog-id-materialism.md)） |
 | **9001 / 27001 / 21401** | 領域マネジメントシステム · 37000 の代替ではない |
 
 ---

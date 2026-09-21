@@ -76,6 +76,10 @@ modules:
   language_bridge:
     tier: production_ready
     notes: user vs system record language · bilingual minutes · Secretary/Compliance
+  pdf_esign:
+    tier: activation_ready
+    notes: 国民 eID 署名（DigiDoc · SiVa）· operations esign CLI。SiVa / sidecar
+      の外部依存があるため production_ready ではない。ADR 0014 · ADR 0080
   jp_carbon_neutral_2050:
     tier: production_ready
     notes: 2050 CN 宣言 · action-plan · REG-014 · activation seeds 完備

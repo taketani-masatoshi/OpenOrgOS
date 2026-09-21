@@ -137,7 +137,7 @@ standards:
     hls: true
     core_profile: hls_full
     tier: "1"
-    relevance: 37000（指針）· 37001（贈収賄）と分離した認証可能な CMS。予約 ID iso_cms の受け皿。
+    relevance: 37000（指針）· 37001（贈収賄）と分離した認証可能な CMS。正本は本カタログで、モジュール id は置かない（ADR 0080）。
   - id: ISO-27701
     title: Privacy information management systems
     year: "2025"

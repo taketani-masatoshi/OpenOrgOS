@@ -1,0 +1,11 @@
+# コピー先: tenants/{id}/data/pdf-esign/digidoc.yaml（任意 · national-eid.yaml に上書き合成）
+# 本番は HTTPS。ローカル SiVa / sidecar を使うときだけ allow_http_loopback を true にする。
+version: 1
+siva_base_url: https://siva.example.org
+digidoc_sidecar_url: https://digidoc-sidecar.example.org
+allow_http_loopback: false
+siva_timeout_ms: 30000
+sidecar_timeout_ms: 60000
+max_pdf_bytes: 26214400
+max_asice_bytes: 41943040
+notes: sidecar の Bearer トークンは orgos operations esign endpoints set で 0600 のストアへ

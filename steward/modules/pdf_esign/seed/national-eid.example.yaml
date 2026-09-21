@@ -1,0 +1,7 @@
+# コピー先: tenants/{id}/data/pdf-esign/national-eid.yaml
+# 署名は本人の eID カードで行う。鍵やトークンはこのファイルに書かない。
+version: 1
+active_stack: EE/digidoc
+siva_base_url: https://siva.example.org
+digidoc_sidecar_url: https://digidoc-sidecar.example.org
+notes: 会社の登記法域と署名スタックは別に選べる（ADR 0014）
