@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 610
-  static_test_cases: 2820
-  tiered_execution_total: 610
+  vitest_total: 611
+  static_test_cases: 2844
+  tiered_execution_total: 611
   catalog_total: 50
   catalog_cli_registered: 50
   catalog_gap: 0
@@ -33,6 +33,7 @@ catalog_modules:
     coverage_tier: dedicated
     cli: true
     tests:
+      - propose-hundred.test.ts
       - propose-surface.test.ts
   clinic:
     tier: production_ready
@@ -91,6 +92,7 @@ catalog_modules:
     coverage_tier: dedicated
     cli: true
     tests:
+      - propose-hundred.test.ts
       - propose-surface.test.ts
   hospitality:
     tier: production_ready
@@ -110,6 +112,7 @@ catalog_modules:
     coverage_tier: dedicated
     cli: true
     tests:
+      - propose-hundred.test.ts
       - propose-surface.test.ts
   investor_relations:
     tier: production_ready
@@ -1964,6 +1967,13 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  propose-hundred.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - field_ops
+      - client_portal
+      - hr_lifecycle
   propose-surface.test.ts:
     axis: catalog
     kind: unit

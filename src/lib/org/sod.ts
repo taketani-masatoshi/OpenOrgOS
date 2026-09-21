@@ -9,8 +9,14 @@ export type SodDuty = {
   subjectId: string;
 };
 
-/** Same person must not both request and approve, or both purchase and accept. */
-export function findSodConflicts(duties: SodDuty[]): string[] {
+/** Same person must not hold both sides of a declared incompatible pair. */
+export function findSodConflicts(
+  duties: SodDuty[],
+  pairs: Array<{ left: SodDuty["action"]; right: SodDuty["action"] }> = [
+    { left: "request", right: "approve" },
+    { left: "purchase", right: "accept" },
+  ],
+): string[] {
   const bySubject = new Map<string, SodDuty[]>();
   for (const duty of duties) {
     const list = bySubject.get(duty.subjectId) ?? [];
@@ -19,15 +25,17 @@ export function findSodConflicts(duties: SodDuty[]): string[] {
   }
   const issues: string[] = [];
   for (const [subjectId, list] of bySubject) {
-    const requester = list.find((duty) => duty.action === "request");
-    const approver = list.find((duty) => duty.action === "approve");
-    if (requester && approver && requester.actorId === approver.actorId) {
-      issues.push(`${subjectId}: requester and approver are ${requester.actorId}`);
-    }
-    const purchaser = list.find((duty) => duty.action === "purchase");
-    const acceptor = list.find((duty) => duty.action === "accept");
-    if (purchaser && acceptor && purchaser.actorId === acceptor.actorId) {
-      issues.push(`${subjectId}: purchaser and acceptor are ${purchaser.actorId}`);
+    for (const pair of pairs) {
+      const left = list.find((duty) => duty.action === pair.left);
+      const right = list.find((duty) => duty.action === pair.right);
+      if (!left || !right || left.actorId !== right.actorId) continue;
+      const label =
+        pair.left === "request" && pair.right === "approve"
+          ? "requester and approver"
+          : pair.left === "purchase" && pair.right === "accept"
+            ? "purchaser and acceptor"
+            : `${pair.left} and ${pair.right}`;
+      issues.push(`${subjectId}: ${label} are ${left.actorId}`);
     }
   }
   return issues;
