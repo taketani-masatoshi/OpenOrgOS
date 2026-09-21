@@ -106,6 +106,26 @@ describe("hundred point inside doctrine", () => {
     expect(report.coordinates).toBeNull();
   });
 
+  it("tracking resolves assignee and eta from the job ledger", () => {
+    const jobs = [
+      { id: "JOB-001", assignee_id: "ST-001", eta: "15:00", status: "enroute" as const },
+    ];
+    const report = renderTrackingStatus({ jobId: "JOB-001", jobs });
+    expect(report.depth).toBe("L2");
+    expect(report.jobFound).toBe(true);
+    expect(report.assigneeId).toBe("ST-001");
+    expect(report.eta).toBe("15:00");
+    expect(report.mapTiles).toBe(false);
+    const missing = renderTrackingStatus({
+      jobId: "JOB-MISSING",
+      assigneeId: "ST-9",
+      eta: "12:00",
+      jobs,
+    });
+    expect(missing.jobFound).toBe(false);
+    expect(missing.missing_refs).toContain("job:JOB-MISSING");
+  });
+
   it("field analytics note is not an order", () => {
     const note = analyzeFieldTime([{ staffId: "ST-1", minutes: 30, travelMinutes: 40 }]);
     expect(note.note.ordered).toBe(false);
@@ -235,6 +255,37 @@ describe("hundred point inside doctrine", () => {
     expect(report.apply).toBe("human");
   });
 
+  it("expense intake resolves amount and status from the claims ledger when present", async () => {
+    const { resolveExpenseClaimRef, renderExpenseIntakeReport: render } = await import(
+      "../src/lib/propose/expense.js"
+    );
+    const resolved = resolveExpenseClaimRef("ECL-20260803-001");
+    if (resolved.found) {
+      expect(resolved.status).toBeTruthy();
+      expect(resolved.amountYen).toBeTypeOf("number");
+      const report = render({
+        channel: "chat",
+        referenceId: "ECL-20260803-001",
+      });
+      expect(report.depth).toBe("L2");
+      expect(report.claim.foundInLedger).toBe(true);
+      expect(report.claim.ledgerStatus).toBe(resolved.status);
+      expect(report.claim.amountYen).toBe(resolved.amountYen);
+      expect(report.autoApprove).toBe(false);
+      expect(report.photo).toBeNull();
+    } else {
+      expect(resolved.missing_refs.length).toBeGreaterThan(0);
+      const report = render({
+        channel: "chat",
+        referenceId: "ECL-20990101-999",
+        amountYen: 500,
+      });
+      expect(report.claim.foundInLedger).toBe(false);
+      expect(report.claim.amountYen).toBe(500);
+      expect(report.autoApprove).toBe(false);
+    }
+  });
+
   it("sales quote pdf uses the quote record and is still a draft", async () => {
     const pdf = await renderSalesQuotePdf({
       id: "QUOTE-2026-001",
@@ -271,6 +322,21 @@ describe("hundred point inside doctrine", () => {
     expect(report.posted).toBe(false);
     expect(report.liveOcr).toBe(false);
     expect(report.liveNtaApi).toBe(false);
+  });
+
+  it("invoice intake defaults to offline catalog SoT when catalog is omitted", async () => {
+    const { resolveInvoiceCatalog, renderInvoiceJournalReport: render } = await import(
+      "../src/lib/propose/invoice.js"
+    );
+    const resolved = resolveInvoiceCatalog();
+    expect(resolved.catalog.version).toBe(1);
+    expect(Array.isArray(resolved.catalog.registrations)).toBe(true);
+    const report = render("請求 T9999999999999 10% 100 円");
+    expect(report.kind).toBe("invoice-journal-report");
+    expect(report.liveOcr).toBe(false);
+    expect(report.liveNtaApi).toBe(false);
+    expect(report.posted).toBe(false);
+    expect(report.registration).toBe("not_in_catalog");
   });
 
   it("cash series includes orders and recurring amounts", () => {
@@ -333,6 +399,33 @@ describe("hundred point inside doctrine", () => {
     expect(report.kind).toBe("bant-report");
     expect(report.invoked).toBe(false);
     expect(report.apply).toBe("human");
+    expect(report.liveStt).toBe(false);
+  });
+
+  it("bant accepts a UTF-8 transcript file and refuses audio paths", async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const { loadBantTranscriptInput, renderBantReport: render } = await import(
+      "../src/lib/propose/bant.js"
+    );
+    const dir = mkdtempSync(join(tmpdir(), "orgos-bant-"));
+    try {
+      const path = join(dir, "notes.txt");
+      writeFileSync(path, "予算: 50万円\n決裁: 課長\nニーズ: 見積\n時期: 11月\n", "utf8");
+      const loaded = loadBantTranscriptInput(path);
+      expect(loaded.inputs_ref).toEqual([path]);
+      const report = render(path);
+      expect(report.depth).toBe("L2");
+      expect(report.inputs_ref).toContain(path);
+      expect(report.liveStt).toBe(false);
+      expect(report.proposedStage).toBe("propose");
+      const wav = join(dir, "call.wav");
+      writeFileSync(wav, "not-audio", "utf8");
+      expect(() => loadBantTranscriptInput(wav)).toThrow(/audio STT/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("followup drafts are unsent", () => {
@@ -406,6 +499,41 @@ describe("hundred point inside doctrine", () => {
     expect(report.stockProposal).toEqual({ sku: "PART-1", qty: 2 });
   });
 
+  it("field interface previews stock from an on-hand map without deducting", async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const { loadFieldReportText, renderFieldInterfaceReport: render } = await import(
+      "../src/lib/propose/job-complete.js"
+    );
+    const dir = mkdtempSync(join(tmpdir(), "orgos-field-"));
+    try {
+      const path = join(dir, "report.txt");
+      writeFileSync(path, "sku:PART-1 qty:2\n", "utf8");
+      expect(loadFieldReportText(path).inputs_ref).toEqual([path]);
+      const report = render({
+        channel: "voice_transcript",
+        jobId: "JOB-1",
+        text: path,
+        onHandBySku: { "PART-1": 5 },
+      });
+      expect(report.depth).toBe("L2");
+      expect(report.stockPreview).toEqual({
+        sku: "PART-1",
+        onHand: 5,
+        nextQty: 3,
+        apply: "human",
+      });
+      expect(report.stockDeducted).toBe(false);
+      expect(report.liveSpeechToText).toBe(false);
+      const wav = join(dir, "note.wav");
+      writeFileSync(wav, "x", "utf8");
+      expect(() => loadFieldReportText(wav)).toThrow(/audio STT/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("stock apply changes quantity only when a human asks", () => {
     expect(
       applyConsumption({ sku: "PART-1", qty: 2, onHand: 5, apply: false }),
@@ -448,6 +576,28 @@ describe("hundred point inside doctrine", () => {
     expect(report.routeOptimized).toBe(false);
     expect(report.applied).toBe(false);
     expect(report.assignments[0]?.staffId).toBe("ST-2");
+  });
+
+  it("dispatch resolves jobs and staff from ledger-shaped inputs", async () => {
+    const { resolveDispatchInputs, renderDispatchReport: render } = await import(
+      "../src/lib/propose/dispatch.js"
+    );
+    const resolved = resolveDispatchInputs({
+      jobs: [{ id: "JOB-001", skill: "electric", waypoint: "site-a" }],
+      staff: [
+        { id: "ST-BUSY", skills: ["electric"], free: true, waypoint: "site-a", load: 3 },
+        { id: "ST-FREE", skills: ["electric"], free: true, waypoint: "site-a", load: 0 },
+      ],
+    });
+    expect(resolved.inputs_ref).toEqual([]);
+    const report = render(resolved.jobs, resolved.staff);
+    expect(report.depth).toBe("L1");
+    expect(report.assignments[0]?.staffId).toBe("ST-FREE");
+    expect(report.gpsTrace).toBe(false);
+    const empty = resolveDispatchInputs();
+    expect(empty.missing_refs).toEqual(
+      expect.arrayContaining(["field_ops/jobs.yaml", "field_ops/staff.yaml"]),
+    );
   });
 
   it("field channels accept text and refuse audio bytes", () => {

@@ -31,20 +31,26 @@ export {
   parseInvoiceFixture,
   proposeInvoiceJournal,
   renderInvoiceJournalReport,
+  resolveInvoiceCatalog,
   type InvoiceCandidate,
 } from "./propose/invoice.js";
-export { extractBant, renderBantReport, type BantProposal } from "./propose/bant.js";
+export { extractBant, loadBantTranscriptInput, renderBantReport, type BantProposal } from "./propose/bant.js";
 export {
+  dispatchJobsFromLedger,
+  dispatchStaffFromLedger,
   proposeDispatch,
   proposeReplan,
   renderDispatchReport,
   renderReplanReport,
+  resolveDispatchInputs,
   scoreDispatch,
   type DispatchJob,
   type DispatchStaff,
 } from "./propose/dispatch.js";
 export {
   acceptFieldReport,
+  loadFieldReportText,
+  previewStockConsumption,
   proposeJobCompletion,
   renderFieldIntakeReport,
   renderFieldInterfaceReport,
@@ -59,7 +65,12 @@ export {
 } from "./propose/stock.js";
 export { analyzeFieldTime, renderFieldAnalyticsReport } from "./propose/analytics.js";
 export { issuePortalGrant, renderPortalGrant } from "./propose/portal.js";
-export { issueTrackingUrl, renderTrackingStatus } from "./propose/tracking.js";
+export {
+  issueTrackingUrl,
+  loadFieldOpsJobs,
+  renderTrackingStatus,
+  resolveFieldOpsJob,
+} from "./propose/tracking.js";
 export {
   assertNoHrSecretFields,
   renderHrLifecycleReport,
@@ -78,6 +89,10 @@ export {
   renderLostDealFollowupReport,
   scanSilentDeals,
 } from "./propose/lost-deal.js";
-export { proposeExpenseIntake, renderExpenseIntakeReport } from "./propose/expense.js";
+export {
+  proposeExpenseIntake,
+  renderExpenseIntakeReport,
+  resolveExpenseClaimRef,
+} from "./propose/expense.js";
 export { proposePayrollTransfer, renderPayrollTransferReport } from "./propose/payroll.js";
 export { proposeAiaCycle, renderAiaCycleReport } from "./propose/aia.js";

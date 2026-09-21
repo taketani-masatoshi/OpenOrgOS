@@ -35,17 +35,33 @@ export const jp_invoice_qualifiedCli: ModuleCliBundle = {
 
     cmd
       .command("intake")
-      .description("Parse an invoice fixture into tax and T-number candidates. Does not post")
-      .requiredOption("--text <text>", "Fixture text")
-      .option("--catalog <json>", "Offline registration catalog JSON")
-      .action(async (opts: { text: string; catalog?: string }) => {
+      .description(
+        "Parse invoice fixture or UTF-8 text file against offline catalog. Does not post or call NTA",
+      )
+      .option("--text <text>", "Fixture text or UTF-8 text file path")
+      .option("--file <path>", "UTF-8 text file (same as --text <path>)")
+      .option("--catalog <json>", "Override offline catalog JSON (default: tenant YAML)")
+      .action(async (opts: { text?: string; file?: string; catalog?: string }) => {
         const { renderInvoiceJournalReport } = await import(
           "../../../../../../src/lib/propose-surface.js"
         );
+        const source = opts.file ?? opts.text;
+        if (!source) {
+          throw new Error("pass --text <fixture|path> or --file <path>");
+        }
         const catalog = opts.catalog
-          ? (JSON.parse(opts.catalog) as { version: 1; registrations: never[] })
-          : { version: 1 as const, registrations: [] };
-        console.log(JSON.stringify(renderInvoiceJournalReport(opts.text, catalog)));
+          ? (JSON.parse(opts.catalog) as {
+              version: 1;
+              registrations: Array<{
+                t_number: string;
+                legal_name: string;
+                status: "verified" | "revoked" | "unknown";
+                verified_as_of: string;
+                source_ref: string;
+              }>;
+            })
+          : undefined;
+        console.log(JSON.stringify(renderInvoiceJournalReport(source, catalog)));
       });
   },
   skillHandlers: {

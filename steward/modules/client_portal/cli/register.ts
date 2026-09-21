@@ -40,12 +40,27 @@ export const clientPortalCli: ModuleCliBundle = {
       });
     portal
       ?.command("track")
-      .description("Tracking URL with assignee and ETA. No map tiles")
+      .description("Tracking URL from job ledger assignee/ETA. No map tiles")
       .requiredOption("--job <id>", "Job id")
-      .requiredOption("--assignee <id>", "Assignee id")
-      .requiredOption("--eta <text>", "ETA")
-      .action((opts: { job: string; assignee: string; eta: string }) => {
-        printJson(renderTrackingStatus({ jobId: opts.job, assigneeId: opts.assignee, eta: opts.eta }));
-      });
+      .option("--assignee <id>", "Assignee id (defaults from field_ops/jobs.yaml)")
+      .option("--eta <text>", "ETA (defaults from field_ops/jobs.yaml)")
+      .option("--status <name>", "departed | enroute | arrived")
+      .action(
+        (opts: {
+          job: string;
+          assignee?: string;
+          eta?: string;
+          status?: "departed" | "enroute" | "arrived";
+        }) => {
+          printJson(
+            renderTrackingStatus({
+              jobId: opts.job,
+              assigneeId: opts.assignee,
+              eta: opts.eta,
+              status: opts.status,
+            }),
+          );
+        },
+      );
   },
 };

@@ -1,4 +1,54 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { findExpenseClaim, loadExpenseClaims } from "../finance/expense-claim.js";
+import { getDataDir } from "../utils.js";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
+
+const CLAIMS_REL = "data/finance/expense-claims.yaml";
+
+/** Resolve a claim id against expense-claims.yaml. Ids and status only — no receipt body. */
+export function resolveExpenseClaimRef(referenceId: string): {
+  found: boolean;
+  claimId?: string;
+  status?: string;
+  amountYen?: number;
+  inputs_ref: string[];
+  missing_refs: string[];
+} {
+  const path = join(getDataDir(), "finance", "expense-claims.yaml");
+  if (!existsSync(path)) {
+    return {
+      found: false,
+      inputs_ref: [],
+      missing_refs: ["finance/expense-claims.yaml"],
+    };
+  }
+  try {
+    loadExpenseClaims();
+  } catch {
+    return {
+      found: false,
+      inputs_ref: [],
+      missing_refs: ["finance/expense-claims.yaml"],
+    };
+  }
+  const claim = findExpenseClaim(referenceId);
+  if (!claim) {
+    return {
+      found: false,
+      inputs_ref: [CLAIMS_REL],
+      missing_refs: [`claim:${referenceId}`],
+    };
+  }
+  return {
+    found: true,
+    claimId: claim.claim_id,
+    status: claim.status,
+    amountYen: claim.amount_yen,
+    inputs_ref: [CLAIMS_REL],
+    missing_refs: [],
+  };
+}
 
 /** Reference id only. Photo bytes are refused. Approval stays human. */
 export function proposeExpenseIntake(input: {
@@ -35,20 +85,33 @@ export function proposeExpenseIntake(input: {
   };
 }
 
-/** One report. Reference id only — no photo bytes, no auto-approve. */
+/** One report. Reference id + optional claims ledger lookup — no photo, no auto-approve. */
 export function renderExpenseIntakeReport(input: {
   channel: "line" | "slack" | "mail" | "chat";
   referenceId: string;
   amountYen?: number;
   photo?: unknown;
 }): Record<string, unknown> {
+  const proposed = proposeExpenseIntake(input);
+  const resolved =
+    proposed.claim.claimId != null
+      ? resolveExpenseClaimRef(proposed.claim.claimId)
+      : { found: false, inputs_ref: [] as string[], missing_refs: [] as string[] };
   return flattenProposeReport(
     makeProposeReport({
       kind: "expense-intake-report",
-      depth: "L1",
+      depth: resolved.inputs_ref.length > 0 ? "L2" : "L1",
+      inputs_ref: resolved.inputs_ref,
       human_gate: { apply: "human" },
       payload: {
-        ...proposeExpenseIntake(input),
+        ...proposed,
+        claim: {
+          ...proposed.claim,
+          amountYen: proposed.claim.amountYen ?? resolved.amountYen,
+          ledgerStatus: resolved.status ?? null,
+          foundInLedger: resolved.found,
+        },
+        missing_refs: resolved.missing_refs,
         photo: null,
         autoApprove: false,
       },

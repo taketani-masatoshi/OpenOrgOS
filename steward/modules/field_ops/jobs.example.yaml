@@ -1,0 +1,16 @@
+# Example field job ledger. Copy to tenants/{id}/data/field_ops/jobs.yaml.
+# No GPS coordinates.
+version: 1
+jobs:
+  - id: JOB-001
+    assignee_id: ST-001
+    eta: "15:00"
+    status: enroute
+    waypoint: site-a
+    skill: electric
+  - id: JOB-002
+    assignee_id: ST-002
+    eta: "16:30"
+    status: departed
+    waypoint: site-b
+    skill: plumbing

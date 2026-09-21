@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import type { SalesDeal } from "../../../schemas/sales.js";
 import { salesDealStageSchema } from "../../../schemas/sales.js";
 import { loadSalesPipeline } from "../data.js";
@@ -31,6 +32,25 @@ export function extractBant(transcript: string): BantProposal {
   };
 }
 
+/**
+ * UTF-8 transcript text or text-file path. Audio / live STT is refused.
+ */
+export function loadBantTranscriptInput(pathOrText: string): {
+  text: string;
+  inputs_ref: string[];
+} {
+  if (existsSync(pathOrText)) {
+    if (/\.(wav|mp3|m4a|webm|ogg|flac)$/i.test(pathOrText)) {
+      throw new Error("audio STT is out of scope; pass a UTF-8 transcript text file");
+    }
+    return {
+      text: readFileSync(pathOrText, "utf8"),
+      inputs_ref: [pathOrText],
+    };
+  }
+  return { text: pathOrText, inputs_ref: [] };
+}
+
 /** Map BANT propose/qualify/stay onto sales deal stages without applying. */
 export function mapBantToDealStage(
   proposedStage: BantProposal["proposedStage"],
@@ -42,22 +62,25 @@ export function mapBantToDealStage(
 
 /** One report. Optionally binds to a deal id from the sales pipeline. */
 export function renderBantReport(
-  transcript: string,
+  transcriptOrPath: string,
   opts?: { dealId?: string; deals?: SalesDeal[] },
 ): Record<string, unknown> {
-  const bant = extractBant(transcript);
+  const loaded = loadBantTranscriptInput(transcriptOrPath);
+  const bant = extractBant(loaded.text);
   const deals = opts?.deals ?? loadSalesPipeline()?.deals ?? [];
-  const inputs_ref: string[] = [];
+  const inputs_ref = [...loaded.inputs_ref];
   let deal: SalesDeal | undefined;
   if (opts?.dealId) {
     deal = deals.find((row) => row.id === opts.dealId);
-    if (deals.length > 0) inputs_ref.push("data/sales/pipeline.yaml");
+    if (deals.length > 0 && !opts.deals) inputs_ref.push("data/sales/pipeline.yaml");
   }
   const mappedStage = mapBantToDealStage(bant.proposedStage);
+  const depth =
+    inputs_ref.length > 0 || (opts?.dealId && deal) ? "L2" : "L1";
   return flattenProposeReport(
     makeProposeReport({
       kind: "bant-report",
-      depth: opts?.dealId && deal ? "L2" : "L1",
+      depth,
       inputs_ref,
       human_gate: { apply: "human" },
       payload: {
@@ -66,6 +89,7 @@ export function renderBantReport(
         currentStage: deal?.stage ?? null,
         mappedStage,
         invoked: false,
+        liveStt: false,
       },
     }),
   );

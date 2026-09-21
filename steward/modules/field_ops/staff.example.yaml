@@ -1,0 +1,14 @@
+# Example field staff ledger. Copy to tenants/{id}/data/field_ops/staff.yaml.
+# No GPS coordinates or traces.
+version: 1
+staff:
+  - id: ST-001
+    skills: [electric, plumbing]
+    free: true
+    waypoint: site-a
+    load: 1
+  - id: ST-002
+    skills: [plumbing]
+    free: true
+    waypoint: site-b
+    load: 0

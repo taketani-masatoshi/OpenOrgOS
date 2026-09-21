@@ -1,5 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { InvoiceRegistrationCatalog } from "../../../schemas/finance/invoice-registration-catalog.js";
+import { loadInvoiceRegistrationCatalog } from "../finance/expense-claim-invoice.js";
+import { getDataDir } from "../utils.js";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
 
 export type InvoiceCandidate = {
@@ -8,6 +11,8 @@ export type InvoiceCandidate = {
   amountYen?: number;
   posting: "proposal";
 };
+
+const CATALOG_REL = "data/finance/invoice-registration-catalog.yaml";
 
 /** Fixture parser. Does not call a live NTA API and does not post a journal. */
 export function parseInvoiceFixture(text: string): InvoiceCandidate {
@@ -39,6 +44,20 @@ export function loadInvoiceTextInput(pathOrText: string): { text: string; inputs
     };
   }
   return { text: pathOrText, inputs_ref: [] };
+}
+
+/** Offline catalog from tenant SoT when callers omit an explicit catalog. */
+export function resolveInvoiceCatalog(explicit?: InvoiceRegistrationCatalog): {
+  catalog: InvoiceRegistrationCatalog;
+  inputs_ref: string[];
+} {
+  if (explicit) return { catalog: explicit, inputs_ref: [] };
+  const catalog = loadInvoiceRegistrationCatalog();
+  const path = join(getDataDir(), "finance", "invoice-registration-catalog.yaml");
+  return {
+    catalog,
+    inputs_ref: existsSync(path) ? [CATALOG_REL] : [],
+  };
 }
 
 export function matchRegistration(
@@ -93,18 +112,23 @@ export function proposeInvoiceJournal(
   };
 }
 
-/** One report. Text fixture or text file path — no live OCR, no live NTA API, no journal post. */
+/**
+ * One report. Text fixture / text file + offline catalog SoT.
+ * No live OCR, no live NTA API, no journal post.
+ */
 export function renderInvoiceJournalReport(
   textOrPath: string,
-  catalog: InvoiceRegistrationCatalog,
+  catalog?: InvoiceRegistrationCatalog,
 ): Record<string, unknown> {
   const loaded = loadInvoiceTextInput(textOrPath);
-  const proposed = proposeInvoiceJournal(loaded.text, catalog);
+  const resolved = resolveInvoiceCatalog(catalog);
+  const proposed = proposeInvoiceJournal(loaded.text, resolved.catalog);
+  const inputs_ref = [...loaded.inputs_ref, ...resolved.inputs_ref];
   return flattenProposeReport(
     makeProposeReport({
       kind: "invoice-journal-report",
-      depth: loaded.inputs_ref.length > 0 ? "L2" : "L1",
-      inputs_ref: loaded.inputs_ref,
+      depth: inputs_ref.length > 0 ? "L2" : "L1",
+      inputs_ref,
       human_gate: { apply: "human" },
       payload: {
         ...proposed,

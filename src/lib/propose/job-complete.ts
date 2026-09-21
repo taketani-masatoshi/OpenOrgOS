@@ -1,4 +1,6 @@
+import { existsSync, readFileSync } from "node:fs";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
+import { proposeConsumption, skusFromRetailModule } from "./stock.js";
 
 export type JobCompletionProposal = {
   report: string;
@@ -25,6 +27,63 @@ export function proposeJobCompletion(text: string, jobId: string): JobCompletion
   };
 }
 
+/**
+ * UTF-8 report text or text-file path.
+ * Audio bytes / audio file paths are refused (live STT stays out of scope).
+ */
+export function loadFieldReportText(pathOrText: string): {
+  text: string;
+  inputs_ref: string[];
+} {
+  if (existsSync(pathOrText)) {
+    if (/\.(wav|mp3|m4a|webm|ogg|flac)$/i.test(pathOrText)) {
+      throw new Error("audio STT is out of scope; pass a UTF-8 transcript text file");
+    }
+    return {
+      text: readFileSync(pathOrText, "utf8"),
+      inputs_ref: [pathOrText],
+    };
+  }
+  return { text: pathOrText, inputs_ref: [] };
+}
+
+/** Preview next on-hand from retail SoT or an explicit map. Does not deduct. */
+export function previewStockConsumption(
+  stockProposal: { sku: string; qty: number } | null,
+  onHandBySku?: Record<string, number>,
+): {
+  preview: { sku: string; onHand: number; nextQty: number; apply: "human" } | null;
+  inputs_ref: string[];
+} {
+  if (!stockProposal) return { preview: null, inputs_ref: [] };
+  if (onHandBySku && stockProposal.sku in onHandBySku) {
+    const onHand = onHandBySku[stockProposal.sku]!;
+    const proposed = proposeConsumption(stockProposal.sku, stockProposal.qty, onHand);
+    return {
+      preview: {
+        sku: proposed.sku,
+        onHand,
+        nextQty: proposed.nextQty,
+        apply: "human",
+      },
+      inputs_ref: [],
+    };
+  }
+  const loaded = skusFromRetailModule();
+  const row = loaded.skus.find((sku) => sku.id === stockProposal.sku);
+  if (!row) return { preview: null, inputs_ref: loaded.inputs_ref };
+  const proposed = proposeConsumption(stockProposal.sku, stockProposal.qty, row.stock_qty);
+  return {
+    preview: {
+      sku: proposed.sku,
+      onHand: row.stock_qty,
+      nextQty: proposed.nextQty,
+      apply: "human",
+    },
+    inputs_ref: loaded.inputs_ref,
+  };
+}
+
 /** Mail, chat, or a voice transcript. Audio bytes are refused. */
 export function acceptFieldReport(input: {
   channel: FieldChannel;
@@ -46,18 +105,29 @@ export function renderFieldInterfaceReport(input: {
   jobId: string;
   audio?: unknown;
   photo?: unknown;
+  onHandBySku?: Record<string, number>;
 }): Record<string, unknown> {
   if (input.photo != null) throw new Error("photo bytes are refused");
-  const accepted = acceptFieldReport(input);
+  const loaded = loadFieldReportText(input.text);
+  const accepted = acceptFieldReport({
+    channel: input.channel,
+    text: loaded.text,
+    jobId: input.jobId,
+    audio: input.audio,
+  });
+  const stock = previewStockConsumption(accepted.stockProposal, input.onHandBySku);
+  const inputs_ref = [...loaded.inputs_ref, ...stock.inputs_ref];
   return flattenProposeReport(
     makeProposeReport({
       kind: "field-interface-report",
-      depth: "L1",
+      depth: inputs_ref.length > 0 || stock.preview ? "L2" : "L1",
+      inputs_ref,
       human_gate: { apply: "human", sent: false },
       payload: {
         channel: accepted.channel,
         report: accepted.report,
         stockProposal: accepted.stockProposal,
+        stockPreview: stock.preview,
         customerNoticeDraft: accepted.customerNoticeDraft,
         sent: false,
         standingBot: false,

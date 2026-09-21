@@ -1,6 +1,7 @@
 id: field_ops
 activation_seeds:
   - jobs.example.yaml
+  - staff.example.yaml
 notes: activation_ready — dispatch and job completion are proposals. GPS traces are not stored
 cli_commands:
   - show

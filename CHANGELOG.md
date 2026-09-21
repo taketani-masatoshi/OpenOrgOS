@@ -8,6 +8,12 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **請求 intake の offline catalog 既定** — `invoice-qualified intake` が `--catalog` 省略時に `data/finance/invoice-registration-catalog.yaml` を読む。`--file` / テキストパス入力可。ライブ OCR・NTA API・自動 post は出さない。
+- **BANT 文字起こしテキストファイル** — `sales bant` が UTF-8 文字起こしファイル（`--file` / パス）を読む。ライブ STT・ステージ自動 apply は出さない。
+- **顧客追跡のジョブ台帳突合** — `client_portal track` が `data/field_ops/jobs.yaml` の担当・ETA を解決する。地図タイルと座標は出さない。
+- **現場 IF の文字起こしファイルと在庫プレビュー** — `field-ops interface` が UTF-8 報告ファイルを読み、retail 在庫から減算案（`stockPreview`）を出す。ライブ STT・実減算は出さない。
+- **現場割当の jobs/staff 台帳** — `field-ops dispatch propose` が `data/field_ops/jobs.yaml` と `staff.yaml` からスキル・通過点・負荷で割当案を出す。GPS 軌跡とルート最適化は出さない。
+- **経費 intake の claims 台帳突合** — `expense-intake` が `data/finance/expense-claims.yaml` の status / amount を解決する。写真バイトと自動承認は出さない。
 - **Propose 面の深度（depth）二軸** — doctrine の「完成」は無人実行をしない完了線のまま。実装厚みは `depth: L0|L1|L2` で併記する（完成 ≠ L2）。共通 `ProposeReport` envelope（`schemas/propose-report.ts` · `makeProposeReport`）を全 `render*` に適用。field IF は `renderFieldInterfaceReport` 正本、intake / job complete はエイリアス。Wave 1 で失注 / followup / BANT / 見積 / 在庫 / 資金繰り / P/L / 給与 / AIA をテナント SoT に接続。Wave 2 で dispatch 負荷スコア、SoD pending-approvals、audit/trace `missing_refs`、invoice テキストファイル、HR 手順 YAML。テスト: `propose-report-schema` · `propose-depth`。
 - **未実装 12 件を提案まで置く** — 監査パック、SoD（発注者≠検収者）、プロジェクト P/L、followup / bottleneck scan、`field_ops` · `client_portal` · `hr_lifecycle`、請求 fixture intake、BANT 候補、在庫減算・発注の提案、現場の時間集計、会社イベント chain への digest index、資金繰りの日次系列、見積 PDF 下書き、失注フォロー文案。送信・振込・自動承認・ステージ適用は人間のまま。`can_approve` と `can_execute` は true にしない。ADR 0079
 - **部分 24 件を方針の内側の 100 点まで上げる** — 文案・索引・配賦・日次資金・見積 PDF・ステージ提案・SoD の宣言組・閲覧許可・在庫の人間 apply・現場テキスト・退社手順・chain 下書き・AIA 提案一覧。無人送信、自動振込、自動承認、ライブ外部 API、GPS 軌跡は入れない。

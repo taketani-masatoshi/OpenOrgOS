@@ -30,28 +30,28 @@ export const fieldOpsCli: ModuleCliBundle = {
     const dispatch = field.command("dispatch").description("Dispatch proposals. GPS traces are not stored");
     dispatch
       .command("propose")
-      .description("Propose an assignee from skill, availability, and waypoint")
-      .requiredOption("--jobs <json>", "JSON array of jobs")
-      .requiredOption("--staff <json>", "JSON array of staff")
-      .action((opts: { jobs: string; staff: string }) => {
+      .description("Propose an assignee from skill, availability, waypoint, and load")
+      .option("--jobs <json>", "JSON array of jobs (omit to read field_ops/jobs.yaml)")
+      .option("--staff <json>", "JSON array of staff (omit to read field_ops/staff.yaml)")
+      .action((opts: { jobs?: string; staff?: string }) => {
         printJson(
           renderDispatchReport(
-            JSON.parse(opts.jobs) as DispatchJob[],
-            JSON.parse(opts.staff) as DispatchStaff[],
+            opts.jobs ? (JSON.parse(opts.jobs) as DispatchJob[]) : undefined,
+            opts.staff ? (JSON.parse(opts.staff) as DispatchStaff[]) : undefined,
           ),
         );
       });
     dispatch
       .command("replan")
       .description("Propose a new assignee, excluding staff ids")
-      .requiredOption("--jobs <json>", "JSON array of jobs")
-      .requiredOption("--staff <json>", "JSON array of staff")
+      .option("--jobs <json>", "JSON array of jobs (omit to read field_ops/jobs.yaml)")
+      .option("--staff <json>", "JSON array of staff (omit to read field_ops/staff.yaml)")
       .requiredOption("--exclude <ids>", "Comma-separated staff ids")
-      .action((opts: { jobs: string; staff: string; exclude: string }) => {
+      .action((opts: { jobs?: string; staff?: string; exclude: string }) => {
         printJson(
           renderReplanReport(
-            JSON.parse(opts.jobs) as DispatchJob[],
-            JSON.parse(opts.staff) as DispatchStaff[],
+            opts.jobs ? (JSON.parse(opts.jobs) as DispatchJob[]) : undefined,
+            opts.staff ? (JSON.parse(opts.staff) as DispatchStaff[]) : undefined,
             opts.exclude.split(",").filter(Boolean),
           ),
         );
@@ -61,11 +61,14 @@ export const fieldOpsCli: ModuleCliBundle = {
       .command("job")
       .description("Job completion text")
       .command("complete")
-      .description("Accept a text report. Stock and notice stay proposals")
+      .description("Accept a text report or UTF-8 file. Stock preview only — no deduct")
       .requiredOption("--job <id>", "Job id")
-      .requiredOption("--text <text>", "Report text")
-      .action((opts: { job: string; text: string }) => {
-        printJson(renderJobCompletionReport(opts.text, opts.job));
+      .option("--text <text>", "Report text or UTF-8 file path")
+      .option("--file <path>", "UTF-8 report file (overrides --text when set)")
+      .action((opts: { job: string; text?: string; file?: string }) => {
+        const source = opts.file ?? opts.text;
+        if (!source) throw new Error("pass --text <fixture|path> or --file <path>");
+        printJson(renderJobCompletionReport(source, opts.job));
       });
 
     field
@@ -73,18 +76,22 @@ export const fieldOpsCli: ModuleCliBundle = {
       .description("Accept mail/chat/text/voice-transcript. No standing bot or live STT")
       .requiredOption("--channel <name>", "mail | chat | voice_transcript | text")
       .requiredOption("--job <id>", "Job id")
-      .requiredOption("--text <text>", "Report text")
+      .option("--text <text>", "Report text or UTF-8 file path")
+      .option("--file <path>", "UTF-8 transcript file")
       .action(
         (opts: {
           channel: "mail" | "chat" | "voice_transcript" | "text";
           job: string;
-          text: string;
+          text?: string;
+          file?: string;
         }) => {
+          const source = opts.file ?? opts.text;
+          if (!source) throw new Error("pass --text <fixture|path> or --file <path>");
           printJson(
             renderFieldIntakeReport({
               channel: opts.channel,
               jobId: opts.job,
-              text: opts.text,
+              text: source,
             }),
           );
         },
@@ -95,18 +102,22 @@ export const fieldOpsCli: ModuleCliBundle = {
       .description("Field IF report. Photo and audio bytes are refused. No standing bot")
       .requiredOption("--channel <name>", "mail | chat | voice_transcript | text")
       .requiredOption("--job <id>", "Job id")
-      .requiredOption("--text <text>", "Report text")
+      .option("--text <text>", "Report text or UTF-8 file path")
+      .option("--file <path>", "UTF-8 transcript file")
       .action(
         (opts: {
           channel: "mail" | "chat" | "voice_transcript" | "text";
           job: string;
-          text: string;
+          text?: string;
+          file?: string;
         }) => {
+          const source = opts.file ?? opts.text;
+          if (!source) throw new Error("pass --text <fixture|path> or --file <path>");
           printJson(
             renderFieldInterfaceReport({
               channel: opts.channel,
               jobId: opts.job,
-              text: opts.text,
+              text: source,
             }),
           );
         },

@@ -165,11 +165,16 @@ export function registerProposeSurfaceCommands(program: Command): void {
 
   sales
     ?.command("bant")
-    .description("BANT candidates from a transcript fixture. Stage apply is human")
-    .requiredOption("--transcript <text>", "Transcript text")
+    .description(
+      "BANT candidates from a transcript fixture or UTF-8 text file. Stage apply is human",
+    )
+    .requiredOption("--transcript <text>", "Transcript text or UTF-8 text file path")
+    .option("--file <path>", "UTF-8 transcript file (overrides --transcript when set)")
     .option("--deal <id>", "Optional deal id to bind stage proposal")
-    .action((opts: { transcript: string; deal?: string }) => {
-      printJson(renderBantReport(opts.transcript, opts.deal ? { dealId: opts.deal } : undefined));
+    .action((opts: { transcript: string; file?: string; deal?: string }) => {
+      printJson(
+        renderBantReport(opts.file ?? opts.transcript, opts.deal ? { dealId: opts.deal } : undefined),
+      );
     });
 
   sales
