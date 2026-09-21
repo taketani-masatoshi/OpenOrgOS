@@ -292,14 +292,15 @@ describe("e-Tax official submission foundation", () => {
     await expect(sendEltaxPackage({ package: etaxPackage, idempotencyKey: "x", transport: {
       name: "eltax-test", certified: true, async send() { return { requestId: "never" }; },
     }})).rejects.toThrow();
-    const result = await sendEltaxPackage({ package: {
+    let called = false;
+    await expect(sendEltaxPackage({ package: {
       schema: "orgos.jp.eltax-official-package.v1", package_id: "ELTAX-1", tax_type: "corporate_local_tax",
       municipality_code: "13101", procedure_id: "LOCAL-TEST", payload_path: xmlPath,
       payload_sha256: hash(readFileSync(xmlPath)), spec_id: "eltax-test", certified_at: "2026-09-21T00:00:00.000Z",
     }, idempotencyKey: "y", transport: {
-      channel: "eltax", name: "eltax-test", certified: true, async send() { return { localReceiptNumber: "ELREQ-1" }; },
-    }});
-    expect(result.localReceiptNumber).toBe("ELREQ-1");
+      channel: "eltax", name: "eltax-test", certified: true, async send() { called = true; return { requestId: "never", status: "accepted", localReceiptNumber: "ELREQ-1" }; },
+    }})).rejects.toThrow("direct eLTAX package send is disabled");
+    expect(called).toBe(false);
   });
 
   it("blocks XSD escape, package-key reuse, legal-hold release, and post-sign swaps", async () => {

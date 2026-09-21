@@ -27,23 +27,27 @@ describe("eLTAX submission separation", () => {
       municipality_code: "13101", procedure_id: "LOCAL-TEST", payload_path: xmlPath,
       payload_sha256: hash("<OfficialReturn/>"), spec_id: "eltax-test", certified_at: "2026-09-21T00:00:00.000Z",
     };
+    let legacySendCalled = false;
     await expect(sendEltaxPackage({
       package: pkg, idempotencyKey: "idem-transport",
-      transport: { name: "etax-transport", certified: true, async send() { return { requestId: "ETAX-REQ" }; }, async lookup() { return { status: "not_found" as const }; } } as never,
-    })).rejects.toThrow("e-Tax transport");
+      transport: { channel: "eltax", name: "legacy-transport", certified: true, async send() { legacySendCalled = true; return { requestId: "ELTAX-REQ", status: "accepted", localReceiptNumber: "MUST-NOT-SEND" }; } },
+    })).rejects.toThrow("direct eLTAX package send is disabled");
+    expect(legacySendCalled).toBe(false);
     const record = store.create(pkg, "idem-local");
     expect(record.status).toBe("prepared");
     expect("receipt" in record).toBe(false);
+    expect("transition" in store).toBe(false);
+    expect(() => store.save({ ...record, status: "approved" }, undefined as never)).toThrow("direct eLTAX state mutation is not allowed");
     const approved = approveEltaxSubmission({ store, submissionId: record.submission_id, operatorId: "OP-TEST", authorize: () => true });
     const signaturePath = join(root, "signature.xmlsig"); writeFileSync(signaturePath, "signed");
-    const signed = await signEltaxSubmission({ store, submissionId: approved.submission_id, signer: { certified: true, async sign() { return { algorithm: "fixture", certificateFingerprintSha256: "b".repeat(64), signaturePath }; } } });
-    const accepted = await sendEltaxSubmission({ store, submissionId: signed.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send(input) { return { requestId: input.requestId, status: "accepted", localReceiptNumber: "LOCAL-RCPT-1" }; } } });
+    const signed = await signEltaxSubmission({ allowUncertifiedTestDouble: true, store, submissionId: approved.submission_id, signer: { certified: true, async sign() { return { algorithm: "fixture", certificateFingerprintSha256: "b".repeat(64), signaturePath }; } } });
+    const accepted = await sendEltaxSubmission({ allowUncertifiedTestDouble: true, store, submissionId: signed.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send(input) { return { requestId: input.requestId, status: "accepted", localReceiptNumber: "LOCAL-RCPT-1" }; } } });
     expect(accepted.local_receipt_number).toBe("LOCAL-RCPT-1");
     expect(accepted).not.toHaveProperty("receipt");
     expect(store.verifyAudit()).toEqual([]);
-    expect(await recoverInterruptedEltaxSubmission({ store, submissionId: accepted.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).toEqual(accepted);
+    expect(await recoverInterruptedEltaxSubmission({ allowUncertifiedTestDouble: true, store, submissionId: accepted.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).toEqual(accepted);
     const prod = new EltaxSubmissionStore(join(root, "eltax-production"), 10, { production: true, encryptedStorage: true });
-    await expect(sendEltaxSubmission({ store: prod, submissionId: "never", transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).rejects.toThrow("production eLTAX send is not enabled");
+    await expect(sendEltaxSubmission({ allowUncertifiedTestDouble: true, store: prod, submissionId: "never", transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).rejects.toThrow("production eLTAX send is not enabled");
     const catalog: EtaxSpecCatalog = {
       schema: "orgos.jp.etax-spec-catalog.v1", updated_at: "2026-09-21T00:00:00.000Z",
       entries: [{

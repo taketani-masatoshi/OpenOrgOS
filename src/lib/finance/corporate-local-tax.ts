@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import {
   corporateLocalTaxCalculationSchema,
   corporateLocalTaxRateProfileSchema,
@@ -25,11 +26,23 @@ function enterpriseTax(income: number, brackets: CorporateLocalTaxRateProfile["e
 /** Rate-data driven calculation. OOO ships no guessed statutory rates. */
 export function calculateCorporateLocalTax(input: {
   profile: CorporateLocalTaxRateProfile;
+  sourceDocumentPath: string;
+  trustedProfileIds: readonly string[];
   fiscalYearEnd: string;
   nationalCorporateTaxYen: number;
   taxableIncomeYen: number;
+  operationalScope?: { officeCount?: number; externalStandardTaxation?: boolean; lossCarryforwardYen?: number; interimFiling?: boolean };
 }): CorporateLocalTaxCalculation {
   const profile = corporateLocalTaxRateProfileSchema.parse(input.profile);
+  if (!input.trustedProfileIds.includes(profile.id)) throw new Error("corporate local tax rate profile is not in the trusted catalog");
+  if (!existsSync(input.sourceDocumentPath)) throw new Error("corporate local tax source document is missing");
+  const sourceHash = createHash("sha256").update(readFileSync(input.sourceDocumentPath)).digest("hex");
+  if (sourceHash !== profile.source_sha256) throw new Error("corporate local tax source document hash mismatch");
+  const scope = input.operationalScope ?? {};
+  if ((scope.officeCount ?? 1) !== 1) throw new Error("multiple-office apportionment is not implemented");
+  if (scope.externalStandardTaxation) throw new Error("external-standard taxation is not implemented");
+  if ((scope.lossCarryforwardYen ?? 0) !== 0) throw new Error("loss carryforward is not implemented");
+  if (scope.interimFiling) throw new Error("interim local-tax filing is not implemented");
   if (input.fiscalYearEnd < profile.effective_from || (profile.effective_to && input.fiscalYearEnd > profile.effective_to)) {
     throw new Error("corporate local tax rate profile is not effective for the fiscal year end");
   }

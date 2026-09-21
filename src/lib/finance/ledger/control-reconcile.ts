@@ -17,6 +17,16 @@ export type ControlReconcileIssue = {
   message: string;
 };
 
+/** The imported statement set must cover the month end; row matching is enforced by the close gate. */
+export function bankControlIntegrityIssuesAt(asOf: string): ControlReconcileIssue[] {
+  const bank = loadBankStatementsLite();
+  if (!bank) return [{ level: "error", message: "bank-statements missing" }];
+  if (!bank.as_of || bank.as_of < asOf) {
+    return [{ level: "error", message: `bank-statements coverage ${bank.as_of ?? "missing"} does not reach ${asOf}` }];
+  }
+  return [];
+}
+
 function tbBalance(
   accountCode: string,
   asOf?: string,

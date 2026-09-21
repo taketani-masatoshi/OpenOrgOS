@@ -33,7 +33,7 @@ import { computePayrollMonth } from "./payroll-jp.js";
 import { isMonthLocked, lockMonth } from "./period-lock.js";
 import type { PeriodLockEvidence } from "../../../schemas/finance/period-lock.js";
 import { withYamlFileLock, writeYamlFileAtomic } from "../yaml-atomic.js";
-import { controlAccountIntegrityIssues } from "./ledger/control-reconcile.js";
+import { bankControlIntegrityIssuesAt } from "./ledger/control-reconcile.js";
 
 const SKIP_MPL_EXPENSE = new Set(["depreciation", "loan_payment", "capex"]);
 
@@ -43,9 +43,26 @@ const monthlyCloseTransactionSchema = z.object({
   operator_id: z.string().min(1),
   phase: z.enum(["prepared", "posting", "validating", "locked"]),
   posted_entry_ids: z.array(z.string()),
+  lease_expires_at: z.string().datetime().optional(),
   updated_at: z.string().datetime(),
 });
 type MonthlyCloseTransaction = z.output<typeof monthlyCloseTransactionSchema>;
+const MONTHLY_CLOSE_LEASE_MS = 15 * 60_000;
+
+function leaseExpiry(now: string): string {
+  return new Date(new Date(now).getTime() + MONTHLY_CLOSE_LEASE_MS).toISOString();
+}
+
+function postedEntryIdsForMonth(month: string): string[] {
+  return loadJournalEntries().entries.filter((entry) =>
+    entry.occurred_at.startsWith(month) && (
+      entry.entry_id === `JE-PAYROLL-${month}` ||
+      entry.entry_id.startsWith(`JE-MPL-${month}-`) ||
+      entry.source?.kind === "depreciation" ||
+      entry.source?.kind === "closing"
+    )
+  ).map((entry) => entry.entry_id);
+}
 
 export function monthlyCloseTransactionPath(month: string): string {
   return join(getDataDir(), "finance", `monthly-close.${month}.yaml`);
@@ -496,9 +513,7 @@ export function evaluateMonthlyCloseGates(
     );
   }
 
-  const bankControlIssues = controlAccountIntegrityIssues().filter(
-    (issue) => issue.message.startsWith("bank-statements"),
-  );
+  const bankControlIssues = tenantUsesBanking() ? bankControlIntegrityIssuesAt(asOf) : [];
   const bankControlErrors = bankControlIssues.filter((issue) => issue.level === "error");
   const bankingRequired = tenantUsesBanking();
   items.push(
@@ -514,11 +529,7 @@ export function evaluateMonthlyCloseGates(
           "bank-gl-tieout",
           "銀行明細と総勘定元帳が一致",
           bankControlErrors.length === 0,
-          bankControlErrors.length > 0
-            ? "error"
-            : bankControlIssues.length > 0
-              ? "warning"
-              : "error",
+          "error",
           bankControlIssues.map((issue) => issue.message).join("; ") || "tied out",
         ),
   );
@@ -687,16 +698,23 @@ export function closeAccountingMonth(input: {
     join(getDataDir(), "finance", ".accounting-close"),
     () => {
       const existing = loadMonthlyCloseTransaction(input.month);
-      if (existing && existing.operator_id !== input.operatorId && existing.phase !== "locked") {
+      const now = new Date().toISOString();
+      const leaseActive = existing?.lease_expires_at ? existing.lease_expires_at > now : Boolean(existing);
+      if (existing && existing.operator_id !== input.operatorId && existing.phase !== "locked" && leaseActive) {
         throw new Error(`monthly close ${input.month} is owned by ${existing.operator_id}`);
       }
-      const now = new Date().toISOString();
-      let transaction: MonthlyCloseTransaction = existing ?? {
+      let transaction: MonthlyCloseTransaction = existing ? {
+        ...existing,
+        operator_id: existing.phase === "locked" ? existing.operator_id : input.operatorId,
+        posted_entry_ids: [...new Set([...existing.posted_entry_ids, ...postedEntryIdsForMonth(input.month)])],
+        lease_expires_at: existing.phase === "locked" ? existing.lease_expires_at : leaseExpiry(now),
+        updated_at: now,
+      } : {
         version: 1, month: input.month, operator_id: input.operatorId,
-        phase: "prepared", posted_entry_ids: [], updated_at: now,
+        phase: "prepared", posted_entry_ids: postedEntryIdsForMonth(input.month), lease_expires_at: leaseExpiry(now), updated_at: now,
       };
-      if (!existing) saveMonthlyCloseTransaction(transaction);
-      transaction = { ...transaction, phase: "posting", updated_at: new Date().toISOString() };
+      saveMonthlyCloseTransaction(transaction);
+      transaction = { ...transaction, phase: "posting", lease_expires_at: leaseExpiry(new Date().toISOString()), updated_at: new Date().toISOString() };
       saveMonthlyCloseTransaction(transaction);
       const posted = isMonthLocked(input.month)
         ? []
@@ -707,7 +725,8 @@ export function closeAccountingMonth(input: {
       transaction = {
         ...transaction,
         phase: "validating",
-        posted_entry_ids: [...new Set([...transaction.posted_entry_ids, ...posted])],
+        posted_entry_ids: [...new Set([...transaction.posted_entry_ids, ...posted, ...postedEntryIdsForMonth(input.month)])],
+        lease_expires_at: leaseExpiry(new Date().toISOString()),
         updated_at: new Date().toISOString(),
       };
       saveMonthlyCloseTransaction(transaction);
@@ -727,7 +746,7 @@ export function closeAccountingMonth(input: {
         locked = true;
       }
       if (locked) {
-        transaction = { ...transaction, phase: "locked", updated_at: new Date().toISOString() };
+        transaction = { ...transaction, phase: "locked", lease_expires_at: undefined, updated_at: new Date().toISOString() };
         saveMonthlyCloseTransaction(transaction);
       }
       return {

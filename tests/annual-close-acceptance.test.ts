@@ -41,7 +41,7 @@ function seedCloseInputs(months: string[]): void {
         `  - id: BS-${month}\n    date: "${month}-10"\n    direction: inflow\n    amount: 1\n    status: matched`,
     )
     .join("\n");
-  writeFileSync(join(finance, "bank-statements.yaml"), `entries:\n${rows}\n`);
+  writeFileSync(join(finance, "bank-statements.yaml"), `as_of: "${months.at(-1)}-31"\nentries:\n${rows}\n`);
   writeFileSync(
     join(finance, `year-end.${FY}.yaml`),
     [

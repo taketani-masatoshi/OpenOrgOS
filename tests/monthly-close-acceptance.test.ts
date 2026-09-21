@@ -30,7 +30,9 @@ function bankPath(): string {
 }
 
 function writeBank(yaml: string): void {
-  writeFileSync(bankPath(), `${yaml.trim()}\n`, "utf-8");
+  const months = [...yaml.matchAll(/date:\s*["']?(\d{4}-\d{2})/g)].map((match) => match[1]!).sort();
+  const coveredMonth = months.at(-1) ?? MONTH;
+  writeFileSync(bankPath(), `as_of: "${lastDayOfMonth(coveredMonth)}"\n${yaml.trim()}\n`, "utf-8");
 }
 
 function removeBank(): void {

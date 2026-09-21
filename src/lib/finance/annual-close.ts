@@ -72,6 +72,11 @@ const annualCloseTransactionSchema = z.object({
     .string()
     .regex(/^[a-f0-9]{64}$/)
     .optional(),
+  committed_evaluation: z.object({
+    fiscal_year: z.string(), as_of: z.string(), next_fiscal_year: z.string(), next_period_start: z.string(),
+    months: z.array(z.object({ month: z.string(), locked: z.boolean(), can_lock: z.boolean() })),
+    can_close: z.boolean(), errors: z.array(z.string()),
+  }).optional(),
   created_at: z.string().min(1),
   updated_at: z.string().min(1),
 });
@@ -145,6 +150,9 @@ export function evaluateAnnualCloseGates(
     const lock = latestLockForMonth(month);
     const locked = lock?.status === "locked";
     if (!locked) errors.push(`${month}: unlocked`);
+    if (locked && (!lock?.sequence || !lock.event_sha256)) {
+      errors.push(`${month}: legacy period lock is not hash-chained; unlock and close the month again`);
+    }
     const evidence = locked ? lock?.evidence : undefined;
     let evidenceValid = Boolean(evidence?.can_lock);
     if (locked && !evidence) {
@@ -154,17 +162,19 @@ export function evaluateAnnualCloseGates(
         evidenceValid = false;
         errors.push(`${month}: close gate evidence hash mismatch`);
       }
-      if (monthlyJournalSnapshotHash(month) !== evidence.journal_entries_sha256) {
+      try {
+        if (monthlyJournalSnapshotHash(month) !== evidence.journal_entries_sha256) {
+          evidenceValid = false; errors.push(`${month}: journal snapshot changed after period lock`);
+        }
+        if (monthlyBankReconciliationSnapshotHash(month) !== evidence.bank_reconciliation_sha256) {
+          evidenceValid = false; errors.push(`${month}: bank reconciliation snapshot changed after period lock`);
+        }
+        if (monthlyTrialBalanceSnapshotHash(month) !== evidence.trial_balance_sha256) {
+          evidenceValid = false; errors.push(`${month}: trial balance snapshot changed after period lock`);
+        }
+      } catch (error) {
         evidenceValid = false;
-        errors.push(`${month}: journal snapshot changed after period lock`);
-      }
-      if (monthlyBankReconciliationSnapshotHash(month) !== evidence.bank_reconciliation_sha256) {
-        evidenceValid = false;
-        errors.push(`${month}: bank reconciliation snapshot changed after period lock`);
-      }
-      if (monthlyTrialBalanceSnapshotHash(month) !== evidence.trial_balance_sha256) {
-        evidenceValid = false;
-        errors.push(`${month}: trial balance snapshot changed after period lock`);
+        errors.push(`${month}: close evidence corrupted: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     monthGates.push({ month, locked, can_lock: evidenceValid });
@@ -301,7 +311,8 @@ function closeAccountingYearUnlocked(input: {
     if (!expected || sha256(proposal) !== expected || sha256(live) !== expected) {
       throw new Error(`Annual close ${input.fiscalYear} committed artifacts changed`);
     }
-    return { ok: true, posted_entry_ids: [], opening_proposal_path: existing.proposal_path, evaluation };
+    if (!existing.committed_evaluation?.can_close) throw new Error(`Annual close ${input.fiscalYear} committed evaluation missing or invalid`);
+    return { ok: true, posted_entry_ids: [], opening_proposal_path: existing.proposal_path, evaluation: existing.committed_evaluation };
   }
   if (!evaluation.can_close) {
     return {
@@ -313,7 +324,7 @@ function closeAccountingYearUnlocked(input: {
   }
   const lockEvidence = evaluation.months.map((row) => {
     const lock = latestLockForMonth(row.month);
-    return { month: row.month, at: lock?.at, evidence: lock?.evidence };
+    return { month: row.month, lock };
   });
   const evidenceHash = sha256(lockEvidence);
   if (existing && existing.evidence_sha256 !== evidenceHash) {
@@ -370,6 +381,7 @@ function closeAccountingYearUnlocked(input: {
     ...transaction,
     phase: "committed",
     opening_sha256: openingHash,
+    committed_evaluation: evaluation,
     updated_at: new Date().toISOString(),
   };
   saveTransaction(transaction);

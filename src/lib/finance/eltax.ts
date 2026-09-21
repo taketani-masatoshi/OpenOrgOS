@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, sep } from "node:path";
 import {
   eltaxOfficialPackageSchema,
@@ -18,6 +18,27 @@ export interface EltaxTransport {
   lookup?(input: { requestId: string; idempotencyKey: string }): Promise<{ status: "not_found" | "unknown" } | { status: "found"; result: "received" | "accepted" | "rejected"; localReceiptNumber?: string }>;
 }
 
+/** Present only on product adapters whose implementation and certification evidence were hash-checked. */
+export const eltaxCertifiedProductAdapter = Symbol.for("orgos.eltax.certifiedProductAdapter");
+
+function assertCertifiedProductAdapter(adapter: object, kind: string, allowTestDouble?: boolean): void {
+  if (allowTestDouble) return;
+  if ((adapter as { [eltaxCertifiedProductAdapter]?: boolean })[eltaxCertifiedProductAdapter] !== true) {
+    throw new Error(`eLTAX ${kind} is not a hash-certified product adapter`);
+  }
+}
+
+export function eltaxProductionReadiness(): { productionReady: false; reasons: string[] } {
+  return {
+    productionReady: false,
+    reasons: [
+      "official specification catalog is not registered",
+      "certified signer implementation hash is not registered",
+      "certified transport implementation hash and connection-test evidence are not registered",
+    ],
+  };
+}
+
 export interface EltaxSigner {
   readonly certified: boolean;
   sign(input: { payloadPath: string; payloadSha256: string }): Promise<{ algorithm: string; certificateFingerprintSha256: string; signaturePath: string }>;
@@ -31,7 +52,30 @@ const transitions: Record<EltaxSubmissionRecord["status"], EltaxSubmissionRecord
   cancelled: [],
 };
 
+function assertRecordEvidence(record: EltaxSubmissionRecord): void {
+  const approvedStatuses = new Set<EltaxSubmissionRecord["status"]>(["approved", "signed", "sending", "received", "accepted", "rejected"]);
+  const signedStatuses = new Set<EltaxSubmissionRecord["status"]>(["signed", "sending", "received", "accepted", "rejected"]);
+  if (approvedStatuses.has(record.status)) {
+    if (!record.approval || record.approval.payload_sha256 !== record.package.payload_sha256) {
+      throw new Error(`eLTAX ${record.status} state requires approval bound to the payload`);
+    }
+  }
+  if (signedStatuses.has(record.status) && !record.signature) {
+    throw new Error(`eLTAX ${record.status} state requires signature evidence`);
+  }
+  if (record.status === "sending") {
+    const lastAttempt = record.attempts.at(-1);
+    if (!record.request_id || lastAttempt?.request_id !== record.request_id || lastAttempt.outcome !== "started") {
+      throw new Error("eLTAX sending state requires a matching started attempt");
+    }
+  }
+  if (record.status === "accepted" && !record.local_receipt_number) {
+    throw new Error("eLTAX acceptance requires a local receipt number");
+  }
+}
+
 const sha256 = (value: Buffer | string) => createHash("sha256").update(value).digest("hex");
+const authorizedTransition = Symbol("eLTAX authorized transition");
 
 function assertSubmissionId(id: string): string {
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(id) || id.includes("..")) throw new Error("invalid eLTAX submission id");
@@ -52,12 +96,38 @@ export class EltaxSubmissionStore {
   constructor(private readonly root: string, private readonly retentionYears = 10, security?: { production?: boolean; encryptedStorage?: boolean; officialIntegrationReady?: boolean }) {
     if (root.split(sep).includes("etax")) throw new Error("eLTAX state cannot use an e-Tax directory");
     this.production = security?.production === true;
-    this.officialIntegrationReady = security?.officialIntegrationReady === true;
+    // A caller supplied boolean must never open the production boundary.
+    this.officialIntegrationReady = security?.officialIntegrationReady === true && eltaxProductionReadiness().productionReady;
     if (this.production && !security?.encryptedStorage) throw new Error("production eLTAX state requires encrypted storage");
   }
   private path(id: string) { return join(this.root, `${assertSubmissionId(id)}.json`); }
   private locked<T>(fn: () => T): T {
-    return withYamlFileLock(join(this.root, ".eltax-submission-store"), fn, { retries: 120, retryDelayMs: 25 });
+    return withYamlFileLock(join(this.root, ".eltax-submission-store"), () => {
+      this.recoverPendingAudits();
+      return fn();
+    }, { retries: 120, retryDelayMs: 25 });
+  }
+  private pendingPath(record: EltaxSubmissionRecord): string {
+    return join(this.root, `.audit-pending.${assertSubmissionId(record.submission_id)}.${record.revision}.json`);
+  }
+  private persist(record: EltaxSubmissionRecord): void {
+    const pending = this.pendingPath(record);
+    atomicJsonWrite(pending, record);
+    atomicJsonWrite(this.path(record.submission_id), record);
+    this.appendAudit(record);
+    unlinkSync(pending);
+  }
+  private recoverPendingAudits(): void {
+    if (!existsSync(this.root)) return;
+    for (const name of readdirSync(this.root).filter((value) => value.startsWith(".audit-pending.") && value.endsWith(".json"))) {
+      const pendingPath = join(this.root, name);
+      const pending = eltaxSubmissionRecordSchema.parse(JSON.parse(readFileSync(pendingPath, "utf8")));
+      if (existsSync(this.path(pending.submission_id))) {
+        const current = this.get(pending.submission_id);
+        if (current.revision === pending.revision && JSON.stringify(current) === JSON.stringify(pending)) this.appendAudit(pending);
+      }
+      unlinkSync(pendingPath);
+    }
   }
   create(pkg: unknown, idempotencyKey: string): EltaxSubmissionRecord {
     return this.locked(() => {
@@ -77,8 +147,7 @@ export class EltaxSubmissionStore {
         schema: "orgos.jp.eltax-submission.v1", submission_id: getIdGenerator().uniqueId("ELTAX"), revision: 0,
         idempotency_key: idempotencyKey, status: "prepared", package: parsedPackage, attempts: [], retention_until: retention.toISOString().slice(0, 10), legal_hold: false, created_at: now, updated_at: now,
       });
-      atomicJsonWrite(this.path(record.submission_id), record);
-      this.appendAudit(record);
+      this.persist(record);
       return record;
     });
   }
@@ -90,29 +159,20 @@ export class EltaxSubmissionStore {
     return readdirSync(this.root).filter((name) => name.endsWith(".json")).map((name) =>
       eltaxSubmissionRecordSchema.parse(JSON.parse(readFileSync(join(this.root, name), "utf8"))));
   }
-  transition(id: string, next: EltaxSubmissionRecord["status"], localReceiptNumber?: string): EltaxSubmissionRecord {
-    return this.locked(() => {
-      const record = this.get(id);
-      if (!transitions[record.status].includes(next)) throw new Error(`invalid eLTAX transition: ${record.status} -> ${next}`);
-      if (next === "accepted" && !localReceiptNumber) throw new Error("eLTAX acceptance requires a local receipt number");
-      const parsed = eltaxSubmissionRecordSchema.parse({
-        ...record, status: next, revision: record.revision + 1, updated_at: getClock().nowIso(),
-        local_receipt_number: localReceiptNumber ?? record.local_receipt_number,
-      });
-      atomicJsonWrite(this.path(parsed.submission_id), parsed);
-      this.appendAudit(parsed);
-      return parsed;
-    });
-  }
-  save(record: EltaxSubmissionRecord): EltaxSubmissionRecord {
+  /** Internal persistence boundary. Only the workflow functions in this module hold the authority token. */
+  save(record: EltaxSubmissionRecord, authority: typeof authorizedTransition): EltaxSubmissionRecord {
+    if (authority !== authorizedTransition) throw new Error("direct eLTAX state mutation is not allowed");
     return this.locked(() => {
       const current = this.get(record.submission_id);
       if (current.revision !== record.revision) throw new Error("stale eLTAX submission revision");
+      if (current.status !== record.status && !transitions[current.status].includes(record.status)) {
+        throw new Error(`invalid eLTAX transition: ${current.status} -> ${record.status}`);
+      }
       if (current.legal_hold && !record.legal_hold) throw new Error("eLTAX legal hold cannot be cleared");
       if (record.retention_until < current.retention_until) throw new Error("eLTAX retention cannot be shortened");
       const parsed = eltaxSubmissionRecordSchema.parse({ ...record, revision: record.revision + 1, updated_at: getClock().nowIso() });
-      atomicJsonWrite(this.path(parsed.submission_id), parsed);
-      this.appendAudit(parsed);
+      assertRecordEvidence(parsed);
+      this.persist(parsed);
       return parsed;
     });
   }
@@ -120,6 +180,10 @@ export class EltaxSubmissionStore {
     mkdirSync(this.root, { recursive: true });
     const auditPath = join(this.root, "audit.jsonl");
     const rows = existsSync(auditPath) ? readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean) : [];
+    if (rows.some((line) => {
+      const row = JSON.parse(line) as { submission_id?: string; revision?: number };
+      return row.submission_id === record.submission_id && row.revision === record.revision;
+    })) return;
     const previous = rows.length > 0 ? JSON.parse(rows.at(-1)!) as { row_sha256: string } : null;
     const base = { seq: rows.length + 1, prev_sha256: previous?.row_sha256 ?? "0".repeat(64), submission_id: record.submission_id, revision: record.revision, status: record.status, payload_sha256: record.package.payload_sha256, receipt: record.local_receipt_number ?? null };
     appendFileSync(auditPath, `${JSON.stringify({ ...base, row_sha256: sha256(JSON.stringify(base)) })}\n`, { encoding: "utf8", mode: 0o600 });
@@ -141,42 +205,45 @@ export class EltaxSubmissionStore {
 export function approveEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; operatorId: string; authorize: (input: { operatorId: string; payloadSha256: string }) => boolean }): EltaxSubmissionRecord {
   const record = input.store.get(input.submissionId);
   if (record.status !== "prepared" || !input.authorize({ operatorId: input.operatorId, payloadSha256: record.package.payload_sha256 })) throw new Error("eLTAX approval denied");
-  return input.store.save({ ...record, status: "approved", approval: { operator_id: input.operatorId, approved_at: getClock().nowIso(), payload_sha256: record.package.payload_sha256 } });
+  return input.store.save({ ...record, status: "approved", approval: { operator_id: input.operatorId, approved_at: getClock().nowIso(), payload_sha256: record.package.payload_sha256 } }, authorizedTransition);
 }
 
-export async function signEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; signer: EltaxSigner }): Promise<EltaxSubmissionRecord> {
+export async function signEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; signer: EltaxSigner; allowUncertifiedTestDouble?: boolean }): Promise<EltaxSubmissionRecord> {
   const record = input.store.get(input.submissionId);
+  assertCertifiedProductAdapter(input.signer, "signer", input.allowUncertifiedTestDouble);
   if (record.status !== "approved" || !record.approval || !input.signer.certified) throw new Error("eLTAX submission requires approval and a certified signer");
   const payload = readFileSync(record.package.payload_path);
   if (sha256(payload) !== record.package.payload_sha256 || record.approval.payload_sha256 !== record.package.payload_sha256) throw new Error("eLTAX approved payload changed");
   const signed = await input.signer.sign({ payloadPath: record.package.payload_path, payloadSha256: record.package.payload_sha256 });
   if (!existsSync(signed.signaturePath)) throw new Error("eLTAX signature file missing");
-  return input.store.save({ ...record, status: "signed", signature: { algorithm: signed.algorithm, certificate_fingerprint_sha256: signed.certificateFingerprintSha256, signature_path: signed.signaturePath, signature_sha256: sha256(readFileSync(signed.signaturePath)), signed_at: getClock().nowIso() } });
+  return input.store.save({ ...record, status: "signed", signature: { algorithm: signed.algorithm, certificate_fingerprint_sha256: signed.certificateFingerprintSha256, signature_path: signed.signaturePath, signature_sha256: sha256(readFileSync(signed.signaturePath)), signed_at: getClock().nowIso() } }, authorizedTransition);
 }
 
-export async function sendEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; transport: EltaxTransport }): Promise<EltaxSubmissionRecord> {
+export async function sendEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; transport: EltaxTransport; allowUncertifiedTestDouble?: boolean }): Promise<EltaxSubmissionRecord> {
   if (input.store.production && !input.store.officialIntegrationReady) throw new Error("production eLTAX send is not enabled");
   let record = input.store.get(input.submissionId);
+  assertCertifiedProductAdapter(input.transport, "transport", input.allowUncertifiedTestDouble);
   if (record.status !== "signed" || !record.signature || !input.transport.certified) throw new Error("eLTAX submission requires a signature and certified transport");
   const signature = record.signature;
   if (sha256(readFileSync(record.package.payload_path)) !== record.package.payload_sha256 || sha256(readFileSync(signature.signature_path)) !== signature.signature_sha256) throw new Error("eLTAX signed evidence changed");
   const requestId = `${record.submission_id}-${record.attempts.length + 1}`;
-  record = input.store.save({ ...record, status: "sending", request_id: requestId, attempts: [...record.attempts, { attempted_at: getClock().nowIso(), request_id: requestId, outcome: "started" }] });
+  record = input.store.save({ ...record, status: "sending", request_id: requestId, attempts: [...record.attempts, { attempted_at: getClock().nowIso(), request_id: requestId, outcome: "started" }] }, authorizedTransition);
   const result = await input.transport.send({ package: record.package, signaturePath: signature.signature_path, idempotencyKey: record.idempotency_key, requestId });
   if (result.requestId !== requestId) throw new Error("eLTAX request id mismatch");
   const attempts = record.attempts.map((row, index) => index === record.attempts.length - 1 ? { ...row, outcome: "received" as const } : row);
-  return input.store.save({ ...record, status: result.status, local_receipt_number: result.localReceiptNumber, attempts });
+  return input.store.save({ ...record, status: result.status, local_receipt_number: result.localReceiptNumber, attempts }, authorizedTransition);
 }
 
-export async function recoverInterruptedEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; transport: EltaxTransport }): Promise<EltaxSubmissionRecord> {
+export async function recoverInterruptedEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; transport: EltaxTransport; allowUncertifiedTestDouble?: boolean }): Promise<EltaxSubmissionRecord> {
   const record = input.store.get(input.submissionId);
   if (record.status !== "sending") return record;
+  assertCertifiedProductAdapter(input.transport, "transport", input.allowUncertifiedTestDouble);
   if (!input.transport.certified || !input.transport.lookup || !record.request_id) throw new Error("certified eLTAX receipt lookup is required");
   const found = await input.transport.lookup({ requestId: record.request_id, idempotencyKey: record.idempotency_key });
   if (found.status === "unknown") return record;
-  if (found.status === "not_found") return input.store.save({ ...record, status: "signed", attempts: record.attempts.map((row, index) => index === record.attempts.length - 1 ? { ...row, outcome: "failed" as const } : row) });
+  if (found.status === "not_found") return input.store.save({ ...record, status: "signed", attempts: record.attempts.map((row, index) => index === record.attempts.length - 1 ? { ...row, outcome: "failed" as const } : row) }, authorizedTransition);
   if (found.status !== "found") return record;
-  return input.store.save({ ...record, status: found.result, local_receipt_number: found.localReceiptNumber, attempts: record.attempts.map((row, index) => index === record.attempts.length - 1 ? { ...row, outcome: "received" as const } : row) });
+  return input.store.save({ ...record, status: found.result, local_receipt_number: found.localReceiptNumber, attempts: record.attempts.map((row, index) => index === record.attempts.length - 1 ? { ...row, outcome: "received" as const } : row) }, authorizedTransition);
 }
 
 /** eLTAX has an independent schema and adapter; an e-Tax package or transport cannot cross this boundary. */
@@ -185,10 +252,6 @@ export async function sendEltaxPackage(input: {
   idempotencyKey: string;
   transport: EltaxTransport;
 }): Promise<{ localReceiptNumber: string }> {
-  if (input.transport.channel !== "eltax") throw new Error("e-Tax transport cannot send an eLTAX package");
-  if (!input.transport.certified) throw new Error("eLTAX transport adapter is not certified");
-  const pkg = eltaxOfficialPackageSchema.parse(input.package);
-  const result = await input.transport.send({ package: pkg, signaturePath: "legacy-boundary", idempotencyKey: input.idempotencyKey, requestId: input.idempotencyKey });
-  if (!result.localReceiptNumber) throw new Error("eLTAX transport did not return a local receipt number");
-  return { localReceiptNumber: result.localReceiptNumber };
+  void input;
+  throw new Error("direct eLTAX package send is disabled; use create, approve, sign, and sendEltaxSubmission");
 }
