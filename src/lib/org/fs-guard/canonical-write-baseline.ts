@@ -82,6 +82,7 @@ export const CANONICAL_WRITE_BASELINE: CanonicalWriteBaselineEntry[] = [
   { file: "src/lib/pdf-esign/digidoc-sidecar-client.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/product/dencho-premium-sku.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/product/ledger-bank-e2e.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
+  { file: "src/lib/product/ledger-bookkeeping-acceptance.ts", symbol: "writeFileSync", count: 1, note: "disposable bookkeeping acceptance evidence in the test workspace, not a tenant canonical file" },
   { file: "src/lib/product/ledger-coa-ensure.ts", symbol: "writeFileSync", count: 2, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/product/ledger-control-plane.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/product/ledger-fleet.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
