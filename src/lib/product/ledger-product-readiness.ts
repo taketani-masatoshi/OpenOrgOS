@@ -243,9 +243,9 @@ export function buildProductReadinessReport(
       label: "e-Tax module registered (optional SKU)",
       weight: 2,
       pass: fileExists(
-        "steward/jurisdiction-packs/JP/modules/jp_tax_corporate/module.manifest.yaml",
+        "steward/jurisdiction-packs/JP/modules/jp_etax/module.manifest.yaml",
       ),
-      detail: "Separate module per ADR 0052",
+      detail: "Independent KSK2 module registered (ADR 0078). Production submission DISABLED — not e-Tax certified.",
     },
     {
       id: "tax-readiness",

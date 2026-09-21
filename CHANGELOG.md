@@ -8,11 +8,19 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **電子提出の機構スコア（M1–M13）** — `orgos efiling score`。e-Tax と eLTAX のチャネル分離、送信中断復旧、訂正申告、証跡保存、HOA110 本体の mapping 生成。本番提出は **NOT CERTIFIED / DISABLED** のまま。**e-Tax対応完了ではない。** D1–D8 は別レーン。
+- **e-Tax 認証レーン（対応完了の定義・ホスト・自動テスト）** — D1–D8 と [CERTIFICATION_CHECKLIST.md](docs/etax/CERTIFICATION_CHECKLIST.md)（T-O*）。Windows `tools/etax-host`（SignToReport / Send / GetResponse、JSON-RPC/stdio）。e-tax18 `receipt-mapping.yaml` · e-tax08 inter-form 正式行 · RHO0010 IT 任意フィールド拡充。`tests/etax-certification.test.ts`（T-A1–T-A10）。`orgos etax production release --approval-id`（`etax.production_enable`）と `etax host status`。本番 gate tip は false のまま。**e-Tax対応完了ではない**（NTA 送信試験・human release·RHO0010 SUPPORTED 後に宣言）。ADR 0078
+- **e-Tax 実装100（契約修復 · RHO0010 · mock E2E）** — 状態機械と CLI 経路を一致（`validateAndAdvance` · xmlHash provenance · filing slot 重複検出 · org approval の etax 適用+rollback）。第一手続 `RHO0010` を公式 XSD 由来 mapping で生成し Layer 1 通過。mock で RECEIVED_BY_ETAX まで手置き xmlHash なし。COM ホストは未接続（[HOST_CONTRACT.md](docs/etax/HOST_CONTRACT.md)）。本番・NTA 送信試験は未実施。**e-Tax対応完了ではない。** ADR 0078
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
+- **e-Tax 独立連携モジュール（KSK2 · Phases 4–8 scaffolding）** — 送受信 catalog（e-tax04 COM `nta.CLCCommunication.Send`、ホスト未接続）。mock 送信・受付は NTA ではない。再送は requestId で冪等、`RECEIVED_BY_ETAX` は再送拒否。承認は `contentHash` 拘束（ADR 0038）。NTA 送信試験は未実施。`etax production enable` は catalog を書き換えない。本番送信は fail-closed。ADR 0078
+- **e-Tax 独立連携モジュール（KSK2 · Phase 3）** — 公式署名インターフェイスを e-tax05 から catalog（Windows COM `nta.CLCXtxSigner.SignToReport` / Cocoa `CLISignature`）。ネイティブホスト未接続は `SPEC_BLOCKED`（CLI や XML-DSig を自作しない）。mock 署名は `--env mock` のみ・`legal: false`。PIN は CLI/YAML に置かない。本番送信は fail-closed。ADR 0078
+- **e-Tax 独立連携モジュール（KSK2 · Phase 2）** — 公式 CAB 展開（MSZIP）· Layer 1 XSD（`xmllint --nonet` · XXE 拒否）· データ駆動 mapper。フィールドマップ未登録の公式 XML は引き続き `SPEC_BLOCKED`。本番送信は fail-closed。ADR 0078
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 
 ### Fixed
 
+- **e-Tax 問題点 1–16（コード口の正直化）** — stub/non-NTA での tip `hostBound` 拒否 · host RPC タイムアウト · COM 失敗の正直 unbound · release の承認順序修正 · receipt root fail-closed · D3 MOCK 拒否 · D4 completion JSON 必須 · promote/ToS の YAML 構造化更新 · tip `hostBound===false` A層固定 · credential 配置契約 · B層は `workflow_dispatch` のみ（通常 CI 緑 ≠ 対応完了）。tip production-gate / RHO0010 は未達のまま。**e-Tax対応完了ではない（コード口のみ）。** [FIXES_1_16.md](docs/etax/FIXES_1_16.md) · [ACCEPTANCE.md](docs/etax/ACCEPTANCE.md)
+- **e-Tax Phase 1–2** — フィールド一覧を form ルートで包む仮 XML 生成を廃止。CAB 展開の `..` パスを拒否。production gate の重複理由を分離。`etax validate` が Layer fail を握りつぶさない。DRAFT 作成は手続マトリクス非加入でも可（XML/送信は fail-closed）。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

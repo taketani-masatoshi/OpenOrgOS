@@ -1,0 +1,21 @@
+schema_version: 1
+specFamily: ksk2
+defaultSupport: UNSUPPORTED
+procedures:
+  - procedureCode: RHO0010
+    title: 普通法人の確定申告（青色）— OpenOrgOS EXPERIMENTAL first procedure
+    taxYearFrom: "2026"
+    support: EXPERIMENTAL
+    productionEligible: false
+    schemaVersion: "15.0.2"
+    specVersion: KSK2-2026-08-28
+    notes: >
+      Official procedure element RHO0010 from e-tax19 hojin/RHO0010-150.xsd
+      (普通法人の確定申告(青色)). Field map sourced from XSD local names
+      (ITdefinition / HOA110-014). Not productionEligible until NTA transmission
+      test and production-gate review.
+notes: >
+  e-tax07.CAB is retrieved locally (gitignored vendor). Rows not listed here
+  remain UNSUPPORTED. Only RHO0010 is EXPERIMENTAL until NTA transmission test
+  (T-O3) succeeds — then promote to SUPPORTED + productionEligible: true by
+  human edit. Do not invent NTA codes or flip eligibility without evidence.

@@ -1,0 +1,8 @@
+skills:
+  - id: jp_etax_spec_status
+    file: jp_etax_spec_status.md
+    runtime: cli
+    cli_command: etax-spec-status
+    handler: jp_etax_spec_status
+    description: KSK2 spec registry and production-disabled banner
+    agent_id: tax

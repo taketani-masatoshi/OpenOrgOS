@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, master, "cursor/**"]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -229,3 +231,112 @@ jobs:
           tests/trusted-operators.test.ts
           tests/community-readiness.test.ts
           tests/eco-production-evidence.test.ts
+
+  etax-certification:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - run: >
+          npm test --
+          tests/etax-certification.test.ts
+          tests/etax-lifecycle-e2e.test.ts
+          tests/etax-phase4-8.test.ts
+          tests/catalog/jp-etax.test.ts
+
+  efiling-implementation-score:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - run: >
+          npm test --
+          tests/efiling-implementation-100.test.ts
+          tests/efiling-core.test.ts
+          tests/efiling-recovery.test.ts
+          tests/efiling-amendment.test.ts
+          tests/efiling-evidence.test.ts
+          tests/efiling-secrets.test.ts
+          tests/efiling-production-gate.test.ts
+          tests/etax-form-hoa110.test.ts
+          tests/etax-accounting-bridge.test.ts
+          tests/eltax-lifecycle.test.ts
+      - name: Write mechanism score
+        run: npm run orgos -- efiling score --json > efiling-score.json || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: efiling-implementation-score
+          path: efiling-score.json
+
+  etax-xsd-vendor:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Fetch KSK2 CABs (dispatch only, not on pull requests)
+        run: npm run orgos -- etax spec fetch
+      - run: npm test -- tests/etax-form-hoa110.test.ts tests/etax-lifecycle-e2e.test.ts
+
+  etax-host-windows-smoke:
+    runs-on: windows-latest
+    continue-on-error: true
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Stub etax-host health (no NTA COM in CI)
+        shell: bash
+        run: |
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"health"}' | ORGOS_ETAX_HOST_MODE=stub node tools/etax-host/etax-host.mjs | head -1
+      - run: npm test -- tests/etax-certification.test.ts
+        env:
+          ORGOS_ETAX_HOST_MODE: stub
+
+  etax-d18-acceptance:
+    # B-layer only: NOT part of normal PR CI. Success here means tip D1–D8;
+    # job absence / skip must never be read as “e-Tax accepted”.
+    # Triggers: workflow_dispatch, or PR label `etax-acceptance` (plan §2.1).
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       contains(join(github.event.pull_request.labels.*.name, ','), 'etax-acceptance'))
+    runs-on: windows-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: B-layer D1–D8 tip acceptance (operator-complete only)
+        run: npm test -- tests/etax-d1-d8-acceptance.test.ts
+        env:
+          ETAX_D18_ACCEPTANCE: "1"

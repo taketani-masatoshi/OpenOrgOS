@@ -48,6 +48,10 @@ import {
   applyMedicalDeviceApproval,
   isMedicalDeviceApprovalSubject,
 } from "../../medical-device/approvals.js";
+import {
+  applyEtaxApproval,
+  isEtaxApprovalSubject,
+} from "../../etax/approval-apply.js";
 
 /** Wire / expenditure ban self-approval. tenant.config is a CEO inbox confirmation of the same person's toggle. */
 export function isSelfApprovalBannedSubject(subjectType: string): boolean {
@@ -307,6 +311,23 @@ export function approveOrgApproval(opts: ApproveOrgApprovalOptions): ApproveOrgA
     if (isMedicalDeviceApprovalSubject(approved.subject_type)) {
       try {
         applyMedicalDeviceApproval(approved);
+      } catch (err) {
+        registry.approvals[idx] = {
+          ...approval,
+          status: "pending_approval",
+          approver_id: undefined,
+          co_approver_id: undefined,
+          approval_tier: undefined,
+          approved_at: undefined,
+          audit_event_id: undefined,
+        };
+        saveOrgApprovalRegistry(registry);
+        throw err;
+      }
+    }
+    if (isEtaxApprovalSubject(approved.subject_type)) {
+      try {
+        applyEtaxApproval(approved);
       } catch (err) {
         registry.approvals[idx] = {
           ...approval,

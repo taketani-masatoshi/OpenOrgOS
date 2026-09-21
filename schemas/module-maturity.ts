@@ -6,6 +6,7 @@ import { z } from "zod";
 
 export const readinessTierSchema = z.enum([
   "skeleton",
+  "experimental",
   "activation_ready",
   "production_ready",
 ]);

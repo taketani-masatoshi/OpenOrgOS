@@ -187,7 +187,13 @@ function scoreTest(moduleId: string): ModuleReadinessAxis {
 
 function scoreTier(tier: ReadinessTier): ModuleReadinessAxis {
   const score =
-    tier === "production_ready" ? WEIGHTS.tier : tier === "activation_ready" ? 7 : 4;
+    tier === "production_ready"
+      ? WEIGHTS.tier
+      : tier === "activation_ready"
+        ? 7
+        : tier === "experimental"
+          ? 5
+          : 4;
   return {
     id: "tier",
     label: "tier",

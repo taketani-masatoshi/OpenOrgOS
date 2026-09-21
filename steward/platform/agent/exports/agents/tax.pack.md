@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · tax
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-21 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent tax`
 
 ---
@@ -177,6 +177,7 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 |------|------|
 | `docs/company/tax/**` | Primary |
 | `data/finance/tax-profile.yaml` | Primary |
+| `data/etax/**` | Primary（`jp_etax` 経路 · 提出状態。自動 submit は禁止） |
 
 ## 要約出力先
 
@@ -198,8 +199,9 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 ## 禁止
 
-- e-Tax 自動提出
+- e-Tax 自動提出（送信は独立モジュール `jp_etax` · ADR 0078。Tax Agent は計算・handoff まで。sign/submit は人間 CLI）
 - 税理士判断の代替
+- `jp_etax` production を有効化すること（catalog gate · NTA 試験が必要）
 
 ## 目的
 

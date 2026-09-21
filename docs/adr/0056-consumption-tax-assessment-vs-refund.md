@@ -68,7 +68,7 @@ Cash / GL（入金）            accounting 仕訳 ＋ finance / treasury
 
 ### 5. 提出は ADR 0052 を維持
 
-OrgOS は e-Tax / 申告書 XML を実行しない。Fulfilment の終端は `ready_to_file` と、人間が書いた `filed_by_human` 記録まで。
+OrgOS の税計算モジュールは e-Tax / 申告書 XML を実行しない。Fulfilment の終端は `ready_to_file` と、人間が書いた `filed_by_human` 記録まで。e-Tax 送信が必要な場合は専用 `jp_etax`（ADR 0078）のみ。
 
 ### 6. 段階
 

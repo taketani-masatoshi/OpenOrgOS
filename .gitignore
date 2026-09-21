@@ -206,8 +206,19 @@ tenants/*/data/secrets/
 data/secrets/
 tests/fixtures/tenant-rosters/sch-verify/
 
-# Ops secret setup notes (local only)
-tenants/*/docs/**/secrets-setup.md
+# Official NTA e-Tax CAB/XSD copies (copyright NTA; hash lives in spec/manifest.json)
+steward/jurisdiction-packs/JP/modules/jp_etax/spec/vendor/**
+!steward/jurisdiction-packs/JP/modules/jp_etax/spec/vendor/.gitignore
+# Tenant e-Tax credentials / signed blobs / PINs
+tenants/*/data/etax/credentials/
+tenants/*/data/etax/signed/
+tenants/*/data/etax/generated/
+tenants/*/data/etax/transmission-test/
+data/etax/
+tenants/*/data/etax/*.key
+tenants/*/data/etax/*.pem
+tenants/*/data/etax/audit.jsonl
+
 
 # Ephemeral debug tenants
 tenants/debug-reminder/

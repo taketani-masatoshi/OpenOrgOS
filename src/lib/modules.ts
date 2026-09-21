@@ -176,6 +176,8 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_inspection: "compliance",
   jp_bank_corporate: "finance",
   jp_tax_corporate: "tax",
+  jp_etax: "tax",
+  jp_eltax: "tax",
   jp_tax_consumption: "tax",
   jp_consumption_refund: "tax",
   jp_invoice_qualified: "tax",
@@ -227,6 +229,8 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_inspection",
   "jp_bank_corporate",
   "jp_tax_corporate",
+  "jp_etax",
+  "jp_eltax",
   "jp_tax_consumption",
   "jp_consumption_refund",
   "jp_invoice_qualified",
@@ -594,7 +598,7 @@ export function checkModuleCatalogOnly(catalogId: string, tier: ReadinessTier): 
 export function checkModuleByTier(catalogId: string, tier?: ReadinessTier): ModuleCheckIssue[] {
   const t = tier ?? getModuleTier(catalogId);
   const catalogIssues = checkModuleCatalogOnly(catalogId, t);
-  if (t === "skeleton") return catalogIssues;
+  if (t === "skeleton" || t === "experimental") return catalogIssues;
   const manifest = loadModuleManifest(catalogId);
   if (!manifest) return catalogIssues;
   return [...catalogIssues, ...checkModuleTenantBinds(catalogId, manifest)];

@@ -18,7 +18,7 @@ Steward Chat の command router は **module 未有効テナントでも** skill
 
 - Chat からの tax skill invoke は ~~Phase 2（module テナント有効化 + route テスト）まで defer~~ **mal `modules.yaml` 4 モジュール有効化済（2026-08-24）**。Chat `chat.enabled` は未付与。
 - `agent-readiness` の tax 95% は registry 行数ベースのまま — **過大評価しない**ため `tax readiness` を併記する。
-- 申告書 XML · e-Tax 提出は引き続きスコープ外（`tax-filing-spec.md`）。
+- 申告書 XML · e-Tax 提出は tax skill のスコープ外（`tax-filing-spec.md`）。送信は専用モジュール `jp_etax`（ADR 0078）のみ。従来モジュールからは非対応。
 
 ## Related
 
