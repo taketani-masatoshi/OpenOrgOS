@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 612
-  static_test_cases: 2842
-  tiered_execution_total: 612
+  vitest_total: 613
+  static_test_cases: 2844
+  tiered_execution_total: 613
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -919,6 +919,10 @@ tests:
     kind: unit
     domain: P01_kernel
   control-reconcile.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  corporate-local-tax.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

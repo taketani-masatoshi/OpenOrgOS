@@ -1,17 +1,18 @@
 /**
  * Monthly accounting close — one gate for CLI and Workbench.
  * Lock only when error-level gates pass.
- * A missing bank file is skipped. An existing unreadable/empty file blocks close.
+ * A missing bank file is skipped only when the tenant has no configured bank account.
  * Monthly-plan reconciliation is advisory and never blocks the ledger close.
  */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
+import { z } from "zod";
 import { runValidateReport } from "../../commands/validate.js";
 import type { ValidateReport } from "../../commands/validate.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
-import { getDataDir } from "../utils.js";
+import { getDataDir, readYamlFile } from "../utils.js";
 import { buildConsumptionTaxSummary, runConsumptionTaxCheck } from "./consumption-tax.js";
 import { resolveCloseAdjustmentAmountFromCoa } from "./close-adjustments.js";
 import { buildDepreciationSchedule, postDepreciationJournalEntries } from "./depreciation.js";
@@ -31,8 +32,33 @@ import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { computePayrollMonth } from "./payroll-jp.js";
 import { isMonthLocked, lockMonth } from "./period-lock.js";
 import type { PeriodLockEvidence } from "../../../schemas/finance/period-lock.js";
+import { withYamlFileLock, writeYamlFileAtomic } from "../yaml-atomic.js";
+import { controlAccountIntegrityIssues } from "./ledger/control-reconcile.js";
 
 const SKIP_MPL_EXPENSE = new Set(["depreciation", "loan_payment", "capex"]);
+
+const monthlyCloseTransactionSchema = z.object({
+  version: z.literal(1),
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  operator_id: z.string().min(1),
+  phase: z.enum(["prepared", "posting", "validating", "locked"]),
+  posted_entry_ids: z.array(z.string()),
+  updated_at: z.string().datetime(),
+});
+type MonthlyCloseTransaction = z.output<typeof monthlyCloseTransactionSchema>;
+
+export function monthlyCloseTransactionPath(month: string): string {
+  return join(getDataDir(), "finance", `monthly-close.${month}.yaml`);
+}
+
+function loadMonthlyCloseTransaction(month: string): MonthlyCloseTransaction | null {
+  try { return readYamlFile(monthlyCloseTransactionPath(month), monthlyCloseTransactionSchema); }
+  catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
+}
+
+function saveMonthlyCloseTransaction(state: MonthlyCloseTransaction): void {
+  writeYamlFileAtomic(monthlyCloseTransactionPath(state.month), monthlyCloseTransactionSchema.parse(state));
+}
 
 export type MonthlyCloseGateLevel = "error" | "warning" | "skip";
 
@@ -125,6 +151,21 @@ function bankRowsForMonth(month: string): number | "missing" | "unreadable" {
   return lite.entries.filter((row) => row.date.slice(0, 7) === month).length;
 }
 
+function tenantUsesBanking(): boolean {
+  if (bankFileExists()) return true;
+  const cashPath = join(getDataDir(), "finance", "cash-balance.yaml");
+  if (!existsSync(cashPath)) return false;
+  try {
+    const raw = YAML.parse(readFileSync(cashPath, "utf8")) as {
+      accounts?: Array<{ bank_account_id?: unknown }>;
+    };
+    return Boolean(raw.accounts?.some((account) => typeof account.bank_account_id === "string"));
+  } catch {
+    // Invalid bank configuration must not silently downgrade reconciliation to skip.
+    return true;
+  }
+}
+
 function stableValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stableValue);
   if (value && typeof value === "object") {
@@ -153,17 +194,31 @@ export function monthlyJournalSnapshotHash(month: string): string {
   );
 }
 
+export function monthlyBankReconciliationSnapshotHash(month: string): string {
+  const rows = bankRowsForMonth(month);
+  const bank = loadBankStatementsLite();
+  const entries = bank?.entries
+    .filter((row) => row.date.slice(0, 7) === month)
+    .sort((a, b) => a.id.localeCompare(b.id)) ?? [];
+  return sha256({
+    state: rows,
+    entries,
+    unmatched:
+      typeof rows === "number" && rows > 0 ? unmatchedBankCountForMonth(month) : null,
+  });
+}
+
+export function monthlyTrialBalanceSnapshotHash(month: string): string {
+  return sha256(buildTrialBalance({
+    asOf: lastDayOfMonth(month),
+    excludeAnnualPlTransfer: true,
+  }));
+}
+
 export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): PeriodLockEvidence {
   if (!evaluation.can_lock) {
     throw new Error(`Cannot capture close evidence for ${evaluation.month}: close gates failed`);
   }
-  const rows = bankRowsForMonth(evaluation.month);
-  const bankSnapshot = {
-    state: rows,
-    unmatched:
-      typeof rows === "number" && rows > 0 ? unmatchedBankCountForMonth(evaluation.month) : null,
-  };
-  const trial = buildTrialBalance({ asOf: evaluation.as_of });
   const gateResults = evaluation.items.map(({ id, pass, level, detail }) => ({
     id,
     pass,
@@ -174,8 +229,8 @@ export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): P
     version: 1,
     algorithm: "sha256",
     journal_entries_sha256: monthlyJournalSnapshotHash(evaluation.month),
-    bank_reconciliation_sha256: sha256(bankSnapshot),
-    trial_balance_sha256: sha256(trial),
+    bank_reconciliation_sha256: monthlyBankReconciliationSnapshotHash(evaluation.month),
+    trial_balance_sha256: monthlyTrialBalanceSnapshotHash(evaluation.month),
     gate_results_sha256: sha256(gateResults),
     can_lock: true,
     gate_results: gateResults,
@@ -400,8 +455,16 @@ export function evaluateMonthlyCloseGates(
 
   const rows = bankRowsForMonth(month);
   if (rows === "missing") {
-    items.push(gate("bank-imported", "銀行明細を取込済み", true, "skip", "no bank file"));
-    items.push(gate("bank-unmatched", "銀行明細の未消込なし", true, "skip", "no bank file"));
+    const required = tenantUsesBanking();
+    const detail = required
+      ? "configured bank account has no statement file"
+      : "tenant has no configured bank account";
+    items.push(
+      gate("bank-imported", "銀行明細を取込済み", !required, required ? "error" : "skip", detail),
+    );
+    items.push(
+      gate("bank-unmatched", "銀行明細の未消込なし", !required, required ? "error" : "skip", detail),
+    );
   } else if (rows === 0) {
     items.push(
       gate("bank-imported", "銀行明細を取込済み", false, "error", "no bank rows for month"),
@@ -429,6 +492,33 @@ export function evaluateMonthlyCloseGates(
       ),
     );
   }
+
+  const bankControlIssues = controlAccountIntegrityIssues().filter(
+    (issue) => issue.message.startsWith("bank-statements"),
+  );
+  const bankControlErrors = bankControlIssues.filter((issue) => issue.level === "error");
+  const bankingRequired = tenantUsesBanking();
+  items.push(
+    rows === "missing"
+      ? gate(
+          "bank-gl-tieout",
+          "銀行明細と総勘定元帳が一致",
+          !bankingRequired,
+          bankingRequired ? "error" : "skip",
+          "no bank statements",
+        )
+      : gate(
+          "bank-gl-tieout",
+          "銀行明細と総勘定元帳が一致",
+          bankControlErrors.length === 0,
+          bankControlErrors.length > 0
+            ? "error"
+            : bankControlIssues.length > 0
+              ? "warning"
+              : "error",
+          bankControlIssues.map((issue) => issue.message).join("; ") || "tied out",
+        ),
+  );
 
   items.push(evaluateInventoryCloseGate(month, asOf));
 
@@ -590,32 +680,61 @@ export function closeAccountingMonth(input: {
   validateReport?: ValidateReport;
 }): MonthlyCloseResult {
   monthKey(input.month);
-  const posted = isMonthLocked(input.month)
-    ? []
-    : postMonthJournals(input.month, input.operatorId, {
-        postDepreciation: input.postDepreciation,
-        postPayroll: input.postPayroll,
+  return withYamlFileLock(
+    join(getDataDir(), "finance", ".accounting-close"),
+    () => {
+      const existing = loadMonthlyCloseTransaction(input.month);
+      if (existing && existing.operator_id !== input.operatorId && existing.phase !== "locked") {
+        throw new Error(`monthly close ${input.month} is owned by ${existing.operator_id}`);
+      }
+      const now = new Date().toISOString();
+      let transaction: MonthlyCloseTransaction = existing ?? {
+        version: 1, month: input.month, operator_id: input.operatorId,
+        phase: "prepared", posted_entry_ids: [], updated_at: now,
+      };
+      if (!existing) saveMonthlyCloseTransaction(transaction);
+      transaction = { ...transaction, phase: "posting", updated_at: new Date().toISOString() };
+      saveMonthlyCloseTransaction(transaction);
+      const posted = isMonthLocked(input.month)
+        ? []
+        : postMonthJournals(input.month, input.operatorId, {
+            postDepreciation: input.postDepreciation,
+            postPayroll: input.postPayroll,
+          });
+      transaction = {
+        ...transaction,
+        phase: "validating",
+        posted_entry_ids: [...new Set([...transaction.posted_entry_ids, ...posted])],
+        updated_at: new Date().toISOString(),
+      };
+      saveMonthlyCloseTransaction(transaction);
+      const evaluation = evaluateMonthlyCloseGates(input.month, {
+        requireDepreciation: input.postDepreciation,
+        requirePayroll: input.postPayroll,
+        validateReport: input.validateReport,
       });
-  const evaluation = evaluateMonthlyCloseGates(input.month, {
-    requireDepreciation: input.postDepreciation,
-    requirePayroll: input.postPayroll,
-    validateReport: input.validateReport,
-  });
-  let locked = isMonthLocked(input.month);
-  if (evaluation.can_lock && !locked) {
-    lockMonth({
-      month: input.month,
-      lockedBy: input.operatorId,
-      reason: "finances close",
-      evidence: buildMonthlyCloseEvidence(evaluation),
-    });
-    locked = true;
-  }
-  return {
-    month: input.month,
-    posted_entry_ids: posted,
-    locked,
-    ok: evaluation.can_lock,
-    evaluation,
-  };
+      let locked = isMonthLocked(input.month);
+      if (evaluation.can_lock && !locked) {
+        lockMonth({
+          month: input.month,
+          lockedBy: input.operatorId,
+          reason: "finances close",
+          evidence: buildMonthlyCloseEvidence(evaluation),
+        });
+        locked = true;
+      }
+      if (locked) {
+        transaction = { ...transaction, phase: "locked", updated_at: new Date().toISOString() };
+        saveMonthlyCloseTransaction(transaction);
+      }
+      return {
+        month: input.month,
+        posted_entry_ids: posted,
+        locked,
+        ok: evaluation.can_lock,
+        evaluation,
+      };
+    },
+    { retries: 120, retryDelayMs: 25 },
+  );
 }

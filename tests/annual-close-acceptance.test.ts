@@ -7,6 +7,7 @@ import {
 } from "../src/lib/finance/expense-claim-journal.js";
 import {
   closeAccountingYear,
+  evaluateAnnualCloseGates,
   annualCloseTransactionPath,
   listFiscalYearMonths,
   proposedOpeningBalancesPath,
@@ -297,27 +298,6 @@ describe("annual close acceptance", () => {
       unlockedBy: OPERATOR,
       reason: "inject imbalance",
     });
-    appendJournalEntry({
-      entry_id: "JE-BAD-TB",
-      occurred_at: `${finalMonth}-15T00:00:00.000Z`,
-      description: "unknown account",
-      source: { kind: "manual", authorized_by: OPERATOR },
-      evidence_refs: ["test:bad-tb"],
-      lines: [
-        {
-          account_code: "9999",
-          debit_yen: 100,
-          credit_yen: 0,
-          tax_category: "out_of_scope",
-        },
-        {
-          account_code: "1100",
-          debit_yen: 0,
-          credit_yen: 100,
-          tax_category: "out_of_scope",
-        },
-      ],
-    });
     lockMonth({
       month: finalMonth,
       lockedBy: OPERATOR,
@@ -340,5 +320,21 @@ describe("annual close acceptance", () => {
       live,
     );
     expect(existsSync(proposedOpeningBalancesPath(closed.evaluation.next_fiscal_year))).toBe(false);
+  });
+
+  it("rejects annual close when locked bank evidence changes", () => {
+    useFinanceFixtureTenant();
+    lockPreparedYear();
+    const bankPath = join(getDataDir(), "finance", "bank-statements.yaml");
+    const bank = readFileSync(bankPath, "utf-8");
+    writeFileSync(bankPath, bank.replace("status: matched", "status: unmatched"), "utf-8");
+
+    const evaluation = evaluateAnnualCloseGates(FY);
+    expect(evaluation.can_close).toBe(false);
+    expect(
+      evaluation.errors.some((issue) =>
+        issue.includes("bank reconciliation snapshot changed after period lock"),
+      ),
+    ).toBe(true);
   });
 });

@@ -37,13 +37,17 @@ function signedBalance(
 export function buildTrialBalance(input?: {
   asOf?: string;
   coa?: ChartOfAccounts;
+  /** When false, ignore opening-balances.yaml and sum journals through asOf only. */
+  includeOpening?: boolean;
+  /** Exclude the year-end P/L transfer so monthly close evidence remains stable after annual close. */
+  excludeAnnualPlTransfer?: boolean;
 }): TrialBalanceReport {
   const asOf = input?.asOf ?? new Date().toISOString().slice(0, 10);
   const coa = input?.coa ?? loadChartOfAccounts();
   const issues: string[] = [];
   const totals = new Map<string, { debit: number; credit: number }>();
 
-  const opening = loadOpeningBalances();
+  const opening = input?.includeOpening === false ? null : loadOpeningBalances();
   const openingAsOf = opening?.as_of;
   const includeOpening = Boolean(opening && openingAsOf && asOf >= openingAsOf);
 
@@ -58,6 +62,11 @@ export function buildTrialBalance(input?: {
 
   for (const raw of loadJournalEntries().entries) {
     const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
+    if (
+      input?.excludeAnnualPlTransfer &&
+      entry.source?.kind === "closing" &&
+      entry.source.adjustment_id === "pl-transfer"
+    ) continue;
     const date = entry.occurred_at.slice(0, 10);
     if (date > asOf) continue;
     // Cutover: opening already reflects activity through opening.as_of.

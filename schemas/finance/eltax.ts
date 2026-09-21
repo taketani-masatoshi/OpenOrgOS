@@ -13,7 +13,9 @@ export const eltaxOfficialPackageSchema = z.object({
   certified_at: z.string().datetime(),
 });
 
-export const eltaxSubmissionStatusSchema = z.enum(["prepared", "accepted", "rejected"]);
+export const eltaxSubmissionStatusSchema = z.enum([
+  "prepared", "approved", "signed", "sending", "received", "accepted", "rejected", "cancelled",
+]);
 export const eltaxSubmissionRecordSchema = z.object({
   schema: z.literal("orgos.jp.eltax-submission.v1"),
   submission_id: z.string().min(1),
@@ -21,7 +23,13 @@ export const eltaxSubmissionRecordSchema = z.object({
   idempotency_key: z.string().min(1),
   status: eltaxSubmissionStatusSchema,
   package: eltaxOfficialPackageSchema,
+  approval: z.object({ operator_id: z.string().min(1), approved_at: z.string().datetime(), payload_sha256: z.string().regex(/^[a-f0-9]{64}$/) }).optional(),
+  signature: z.object({ algorithm: z.string().min(1), certificate_fingerprint_sha256: z.string().regex(/^[a-f0-9]{64}$/), signature_path: z.string().min(1), signature_sha256: z.string().regex(/^[a-f0-9]{64}$/), signed_at: z.string().datetime() }).optional(),
+  request_id: z.string().min(1).optional(),
+  attempts: z.array(z.object({ attempted_at: z.string().datetime(), request_id: z.string().min(1), outcome: z.enum(["started", "received", "failed"]) })).default([]),
   local_receipt_number: z.string().min(1).optional(),
+  retention_until: z.string().date(),
+  legal_hold: z.boolean().default(false),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
 });

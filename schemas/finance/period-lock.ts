@@ -28,6 +28,9 @@ export const periodLockEntrySchema = z.object({
   by: z.string().min(1),
   reason: z.string().optional(),
   evidence: periodLockEvidenceSchema.optional(),
+  sequence: z.number().int().positive().optional(),
+  previous_event_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  event_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 });
 
 export const periodLocksFileSchema = z.object({

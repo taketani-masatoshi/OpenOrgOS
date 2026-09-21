@@ -27,7 +27,11 @@ import {
 } from "./ledger/opening-balance.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { equityChangeAmounts, buildIndividualNotesReport } from "./ledger/balance-sheet.js";
-import { monthlyJournalSnapshotHash } from "./monthly-close.js";
+import {
+  monthlyBankReconciliationSnapshotHash,
+  monthlyJournalSnapshotHash,
+  monthlyTrialBalanceSnapshotHash,
+} from "./monthly-close.js";
 import { latestLockForMonth } from "./period-lock.js";
 import { evaluateTaxAdjustment } from "./tax-adjustment.js";
 import { evaluateYearEndDeclaration } from "./year-end-declaration.js";
@@ -127,7 +131,9 @@ export function proposedOpeningBalancesPath(nextFiscalYearId: string): string {
   return join(getDataDir(), "finance", `opening-balances.${nextFiscalYearId}.yaml`);
 }
 
-export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluation {
+export function evaluateAnnualCloseGates(
+  fiscalYear: string,
+): AnnualCloseEvaluation {
   assertFiscalYear(fiscalYear);
   const endMonth = resolveCompanyFiscalYearEndMonth();
   const asOf = fiscalYearEndDate(fiscalYear, endMonth);
@@ -151,6 +157,14 @@ export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluat
       if (monthlyJournalSnapshotHash(month) !== evidence.journal_entries_sha256) {
         evidenceValid = false;
         errors.push(`${month}: journal snapshot changed after period lock`);
+      }
+      if (monthlyBankReconciliationSnapshotHash(month) !== evidence.bank_reconciliation_sha256) {
+        evidenceValid = false;
+        errors.push(`${month}: bank reconciliation snapshot changed after period lock`);
+      }
+      if (monthlyTrialBalanceSnapshotHash(month) !== evidence.trial_balance_sha256) {
+        evidenceValid = false;
+        errors.push(`${month}: trial balance snapshot changed after period lock`);
       }
     }
     monthGates.push({ month, locked, can_lock: evidenceValid });
@@ -268,7 +282,6 @@ function closeAccountingYearUnlocked(input: {
   operatorId: string;
 }): AnnualCloseResult {
   assertFiscalYear(input.fiscalYear);
-  const evaluation = evaluateAnnualCloseGates(input.fiscalYear);
   const transactionPath = annualCloseTransactionPath(input.fiscalYear);
   const existing = (() => {
     try {
@@ -278,6 +291,9 @@ function closeAccountingYearUnlocked(input: {
       throw error;
     }
   })();
+  const evaluation = evaluateAnnualCloseGates(input.fiscalYear);
+  // After a successful close the live opening belongs to the next year, so
+  // statement/tax gates for this FY may fail. Resume from the committed state.
   if (existing?.phase === "committed") {
     const expected = existing.opening_sha256;
     const proposal = readYamlFile(existing.proposal_path, openingBalancesSchema);
@@ -367,5 +383,9 @@ function closeAccountingYearUnlocked(input: {
 
 export function closeAccountingYear(input: { fiscalYear: string; operatorId: string }): AnnualCloseResult {
   assertFiscalYear(input.fiscalYear);
-  return withYamlFileLock(`${annualCloseTransactionPath(input.fiscalYear)}.operation`, () => closeAccountingYearUnlocked(input), { retries: 120, retryDelayMs: 25 });
+  return withYamlFileLock(
+    join(getDataDir(), "finance", ".accounting-close"),
+    () => closeAccountingYearUnlocked(input),
+    { retries: 120, retryDelayMs: 25 },
+  );
 }

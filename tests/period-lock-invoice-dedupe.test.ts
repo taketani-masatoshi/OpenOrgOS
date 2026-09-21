@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
   lockMonth,
   loadPeriodLocks,
+  periodLockIntegrityIssues,
   unlockMonth,
   resetPeriodLocksForTests,
   savePeriodLocks,
@@ -40,7 +41,12 @@ describe("period-locks append-only", () => {
   it("allows unlock as append", () => {
     lockMonth({ month: "2026-09", lockedBy: "OP-TEST" });
     unlockMonth({ month: "2026-09", unlockedBy: "OP-TEST", reason: "fix" });
-    expect(loadPeriodLocks().locks).toHaveLength(2);
+    const locks = loadPeriodLocks().locks;
+    expect(locks).toHaveLength(2);
+    expect(locks.map((row) => row.sequence)).toEqual([1, 2]);
+    expect(locks[0]?.event_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(locks[1]?.previous_event_sha256).toBe(locks[0]?.event_sha256);
+    expect(periodLockIntegrityIssues()).toEqual([]);
   });
 });
 
@@ -157,6 +163,7 @@ describe("invoice vs JE-MPL dedupe", () => {
           account_code: "1150",
           debit_yen: 110000,
           credit_yen: 0,
+          counterparty_id: "PROP-001",
           tax_category: "out_of_scope",
         },
         {

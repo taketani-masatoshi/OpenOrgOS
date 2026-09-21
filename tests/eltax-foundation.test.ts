@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { EltaxSubmissionStore, sendEltaxPackage } from "../src/lib/finance/eltax.js";
+import { approveEltaxSubmission, EltaxSubmissionStore, recoverInterruptedEltaxSubmission, sendEltaxPackage, sendEltaxSubmission, signEltaxSubmission } from "../src/lib/finance/eltax.js";
 import { prepareOfficialEtaxPackage } from "../src/lib/finance/etax.js";
 import type { EtaxSpecCatalog } from "../schemas/finance/etax.js";
 
@@ -34,9 +34,13 @@ describe("eLTAX submission separation", () => {
     const record = store.create(pkg, "idem-local");
     expect(record.status).toBe("prepared");
     expect("receipt" in record).toBe(false);
-    const accepted = store.transition(record.submission_id, "accepted", "LOCAL-RCPT-1");
+    const approved = approveEltaxSubmission({ store, submissionId: record.submission_id, operatorId: "OP-TEST", authorize: () => true });
+    const signaturePath = join(root, "signature.xmlsig"); writeFileSync(signaturePath, "signed");
+    const signed = await signEltaxSubmission({ store, submissionId: approved.submission_id, signer: { certified: true, async sign() { return { algorithm: "fixture", certificateFingerprintSha256: "b".repeat(64), signaturePath }; } } });
+    const accepted = await sendEltaxSubmission({ store, submissionId: signed.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send(input) { return { requestId: input.requestId, status: "accepted", localReceiptNumber: "LOCAL-RCPT-1" }; } } });
     expect(accepted.local_receipt_number).toBe("LOCAL-RCPT-1");
     expect(accepted).not.toHaveProperty("receipt");
+    expect(await recoverInterruptedEltaxSubmission({ store, submissionId: accepted.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).toEqual(accepted);
     const catalog: EtaxSpecCatalog = {
       schema: "orgos.jp.etax-spec-catalog.v1", updated_at: "2026-09-21T00:00:00.000Z",
       entries: [{
