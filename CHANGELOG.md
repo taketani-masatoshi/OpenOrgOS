@@ -9,6 +9,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 ### Added
 
 - **会社法の計算書類** — 非公開・会計監査人非設置の貸借・損益・株主資本等変動・第98条2項1号の注記・利益準備金を、手計算の金額で採点する。0 の区分も残し、特別利益と特別損失を分ける。利益準備金は仕訳にしない。税額 XML と年度決算ゲートは変えない。
+- **個人事業の元入金・青色申告決算書・所得税** — 法人の別表とは別の行対応と所得税の速算。顧問ドラフトのみで、e-Tax には出さない。
 - **間接税の法域ポート** — 帳簿エンジンは共通のまま、月次締めの消費税ゲートは pack の `indirect_tax_family` 経由。日本の消費税計算は `JP` + `vat_credit` だけ。他法域は日本の税率・税区分必須・別表・適格請求書チェックを走らせない。減価償却率表は pack seed にあるときだけ読む。ADR 0078。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
@@ -21,6 +22,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **個人事業の青色申告特別控除** — 帳簿が揃っていれば 55 万円を所得から引く。65 万円は提出証跡があるときだけ。決算書の元入金は期首残高で、当年の所得と二重にしない。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

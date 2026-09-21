@@ -37,6 +37,8 @@
 | `custom_mds` | 複数固定月日（固定資産税 4 期） |
 | `fiscal_plus_2_months` | 決算日 +2 ヶ月（法人税確定） |
 
+個人事業（`entity_form: sole_proprietorship`）の青色申告決算書（一般用）と所得税は別表四を使わない。行の正本は `jp_tax_individual` の `blue-return-line-map`。複式で貸借と損益が揃えば青色申告特別控除は 55 万円を所得から引く。e-Tax の提出日または優良な電子帳簿の届出日があるときだけ 65 万円。決算書の元入金は期首で、当年の所得とは別行。出力は `submission: not-for-etax` の顧問ドラフトで、送信はしない。
+
 `apply_when` で payroll / 固定資産 / 消費税課税 / 還付 CLAIM（`has_open_consumption_refund`）の有無をフィルタ。
 
 ## 金額推定（3 段階）

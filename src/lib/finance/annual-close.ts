@@ -30,6 +30,7 @@ import { equityChangeAmounts, buildIndividualNotesReport } from "./ledger/balanc
 import { monthlyJournalSnapshotHash } from "./monthly-close.js";
 import { latestLockForMonth } from "./period-lock.js";
 import { evaluateTaxAdjustment } from "./tax-adjustment.js";
+import { isSoleProprietorship } from "./sole-prop-entity.js";
 import { evaluateYearEndDeclaration } from "./year-end-declaration.js";
 
 export type AnnualCloseMonthGate = {
@@ -162,9 +163,11 @@ export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluat
   }
   const notes = buildIndividualNotesReport({ asOf, fiscalYear });
   if (!notes.ready) errors.push(...notes.errors);
-  const tax = evaluateTaxAdjustment(fiscalYear);
-  if (!tax.can_compute) {
-    errors.push(...tax.errors.map((issue) => `tax-adjustment: ${issue}`));
+  if (!isSoleProprietorship()) {
+    const tax = evaluateTaxAdjustment(fiscalYear);
+    if (!tax.can_compute) {
+      errors.push(...tax.errors.map((issue) => `tax-adjustment: ${issue}`));
+    }
   }
   return {
     fiscal_year: fiscalYear,
@@ -177,7 +180,7 @@ export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluat
   };
 }
 
-function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }): string | null {
+export function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }): string | null {
   const coa = loadChartOfAccounts();
   const accounts = resolveJournalSourceAccounts(coa);
   const trial = buildTrialBalance({ asOf: input.asOf });
@@ -215,18 +218,19 @@ function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }): stri
     }
   }
 
-  const netToRetained = revenueTotal - expenseTotal;
-  if (netToRetained > 0) {
+  const netToEquity = revenueTotal - expenseTotal;
+  const equityAccount = accounts.owner_capital ?? accounts.retained_earnings;
+  if (netToEquity > 0) {
     lines.push({
-      account_code: accounts.retained_earnings,
+      account_code: equityAccount,
       debit_yen: 0,
-      credit_yen: netToRetained,
+      credit_yen: netToEquity,
       tax_category: "out_of_scope",
     });
-  } else if (netToRetained < 0) {
+  } else if (netToEquity < 0) {
     lines.push({
-      account_code: accounts.retained_earnings,
-      debit_yen: -netToRetained,
+      account_code: equityAccount,
+      debit_yen: -netToEquity,
       credit_yen: 0,
       tax_category: "out_of_scope",
     });

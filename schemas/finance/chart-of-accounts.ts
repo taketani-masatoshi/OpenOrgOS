@@ -85,6 +85,10 @@ export const journalSourceAccountsSchema = z.object({
   depreciation_expense: z.string().regex(/^\d{4}$/),
   accumulated_depreciation: z.string().regex(/^\d{4}$/),
   retained_earnings: z.string().regex(/^\d{4}$/),
+  /** Sole-prop capital. Must not replace retained_earnings. */
+  owner_capital: z.string().regex(/^\d{4}$/).optional(),
+  owner_drawings: z.string().regex(/^\d{4}$/).optional(),
+  owner_advances: z.string().regex(/^\d{4}$/).optional(),
   consumption_tax_payable: z.string().regex(/^\d{4}$/).optional(),
   consumption_tax_receivable: z.string().regex(/^\d{4}$/).optional(),
   lodging_tax_payable: z.string().regex(/^\d{4}$/).optional(),

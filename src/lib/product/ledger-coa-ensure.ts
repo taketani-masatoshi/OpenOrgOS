@@ -9,6 +9,7 @@ import { chartOfAccountsSchema } from "../../../schemas/finance/chart-of-account
 import type { ChartOfAccounts } from "../../../schemas/finance/types.js";
 import { getDataDir } from "../utils.js";
 import { loadChartOfAccounts } from "../data.js";
+import { isSoleProprietorship } from "../finance/sole-prop-entity.js";
 
 const DEMO_ACCOUNTS: Array<Record<string, unknown>> = [
   {
@@ -113,6 +114,50 @@ const DEMO_ACCOUNTS: Array<Record<string, unknown>> = [
   },
 ];
 
+const SOLE_PROP_ACCOUNTS: Array<Record<string, unknown>> = [
+  {
+    code: "1310",
+    name: "事業主貸",
+    type: "asset",
+    bs_class: "current",
+    normal_balance: "debit",
+  },
+  {
+    code: "2210",
+    name: "事業主借",
+    type: "liability",
+    bs_class: "current",
+    normal_balance: "credit",
+  },
+  {
+    code: "3010",
+    name: "元入金",
+    type: "equity",
+    normal_balance: "credit",
+  },
+  {
+    code: "5410",
+    name: "租税公課",
+    type: "expense",
+    normal_balance: "debit",
+    statement_section: "sga",
+  },
+  {
+    code: "5490",
+    name: "雑費",
+    type: "expense",
+    normal_balance: "debit",
+    statement_section: "sga",
+  },
+  {
+    code: "5210",
+    name: "仕入高",
+    type: "expense",
+    normal_balance: "debit",
+    statement_section: "cogs",
+  },
+];
+
 const DEFAULT_JOURNAL_SOURCE = {
   bank_control: "1100",
   accounts_receivable: "1150",
@@ -155,8 +200,18 @@ export function ensureLedgerDemoTaxProfile(): void {
     ct.invoice_registered = false;
     ct.base_period_sales_jpy = ct.base_period_sales_jpy ?? 0;
     ct.taxpayer_basis = ct.taxpayer_basis ?? "exempt";
-    ct.taxpayer_basis = ct.taxpayer_basis ?? "exempt";
     raw.consumption_tax = ct;
+  }
+  if (isSoleProprietorship()) {
+    const entity = (raw.entity ?? {}) as Record<string, unknown>;
+    entity.type = "個人事業主";
+    raw.entity = entity;
+    const fiscal = (raw.fiscal_year ?? {}) as Record<string, unknown>;
+    fiscal.end_month = 12;
+    raw.fiscal_year = fiscal;
+    delete raw.corporate_tax;
+    writeFileSync(path, YAML.stringify(raw), "utf-8");
+    return;
   }
   const corp = (raw.corporate_tax ?? {}) as Record<string, unknown>;
   if (corp.category === "TBD" || corp.category == null) {
@@ -187,7 +242,7 @@ export function ensureLedgerDemoChartOfAccounts(): ChartOfAccounts {
       (row: { code?: string }) => row.code,
     ),
   );
-  for (const account of DEMO_ACCOUNTS) {
+  for (const account of [...DEMO_ACCOUNTS, ...(isSoleProprietorship() ? SOLE_PROP_ACCOUNTS : [])]) {
     const existing = (raw.accounts ?? []).find(
       (row: { code?: string }) => row.code === account.code,
     );
@@ -207,6 +262,15 @@ export function ensureLedgerDemoChartOfAccounts(): ChartOfAccounts {
     raw.journal_source_accounts = {
       ...DEFAULT_JOURNAL_SOURCE,
       ...raw.journal_source_accounts,
+    };
+  }
+  if (isSoleProprietorship()) {
+    raw.journal_source_accounts = {
+      ...raw.journal_source_accounts,
+      owner_capital: raw.journal_source_accounts.owner_capital ?? "3010",
+      owner_drawings: raw.journal_source_accounts.owner_drawings ?? "1310",
+      owner_advances: raw.journal_source_accounts.owner_advances ?? "2210",
+      retained_earnings: "3200",
     };
   }
 

@@ -163,7 +163,8 @@ export const taxProfileSchema = z.object({
   entity: taxProfileEntitySchema,
   fiscal_year: taxProfileFiscalYearSchema,
   consumption_tax: taxProfileConsumptionTaxSchema,
-  corporate_tax: taxProfileCorporateTaxSchema,
+  /** Absent for a sole proprietorship. Corporate tenants still carry this block. */
+  corporate_tax: taxProfileCorporateTaxSchema.optional(),
   local_tax: z
     .object({
       prefecture: z.string().optional(),
