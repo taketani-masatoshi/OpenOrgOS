@@ -23,3 +23,5 @@ export * from "./opening-balances.js";
 export * from "./expense-evidence.js";
 export * from "./property-scenarios.js";
 export * from "./types.js";
+export * from "./etax.js";
+export * from "./eltax.js";

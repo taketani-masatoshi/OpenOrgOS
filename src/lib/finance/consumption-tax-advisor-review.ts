@@ -7,6 +7,7 @@ import { pinCompanyEventChainTail, verifyCompanyEventsWitnessPin } from "../comp
 import { getCliOperatorContext } from "../console-auth/cli-operator.js";
 import { requireOperatorPermission } from "../console-auth/operator-rbac.js";
 import { loadTaxProfile } from "../data.js";
+import { assessConsumptionTaxProfile } from "./consumption-tax.js";
 import { getDataDir, resolveTenantPath } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 
@@ -87,6 +88,8 @@ export function recordConsumptionTaxAdvisorReview(
     consumption_tax?: Record<string, unknown> & { advisor_reviews?: Array<Record<string, unknown>> };
   };
   if (!profile.consumption_tax) throw new Error("consumption tax profile missing");
+  const blocking = assessConsumptionTaxProfile({ consumption_tax: profile.consumption_tax } as Parameters<typeof assessConsumptionTaxProfile>[0]).issues.filter((issue) => issue.severity === "blocking");
+  if (blocking.length > 0) throw new Error(`advisor review blocked: ${blocking.map((issue) => issue.code).join(", ")}`);
   const current = profile.consumption_tax.advisor_reviews ?? [];
   if (current.some((review) => review.fiscal_year === payload.fiscal_year)) {
     throw new Error(`advisor review already recorded for ${payload.fiscal_year}`);

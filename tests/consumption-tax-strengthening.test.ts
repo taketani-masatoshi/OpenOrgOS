@@ -26,7 +26,37 @@ describe("consumption tax strengthening", () => {
   });
   it("reports missing taxpayer basis and allocation policy", () => {
     const result = assessConsumptionTaxProfile({ consumption_tax: { status: "課税事業者", method: "standard", base_period_sales_jpy: 12_000_000 } });
-    expect(result.issues.map((issue) => issue.code)).toEqual(expect.arrayContaining(["taxpayer_basis_missing", "purchase_allocation_missing"]));
+    for (const code of ["taxpayer_basis_missing", "purchase_allocation_missing"]) {
+      expect(result.issues.find((issue) => issue.code === code)?.severity).toBe("blocking");
+    }
+    const invoice = assessConsumptionTaxProfile({ consumption_tax: {
+      status: "課税事業者", method: "standard", invoice_registered: true, taxpayer_basis: "base_period", purchase_allocation_method: "proportional",
+    } });
+    expect(invoice.issues.find((issue) => issue.code === "invoice_effective_date_missing")?.severity).toBe("blocking");
+  });
+
+  it("refuses advisor approval while filing facts are blocking", () => {
+    const isolated = setupTempCompanyEventsTenant();
+    try {
+      const tenantConfigPath = join(isolated.dir, "tenants", isolated.tenantId, "tenant.yaml");
+      writeFileSync(tenantConfigPath, `${readFileSync(tenantConfigPath, "utf-8")}jurisdiction: JP\n`, "utf-8");
+      const financeDir = join(getDataDir(), "finance");
+      mkdirSync(financeDir, { recursive: true });
+      writeFileSync(join(financeDir, "tax-profile.yaml"), "entity:\n  name: Audit Fixture KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\ncorporate_tax: {}\n", "utf-8");
+      writeFileSync(join(isolated.dir, "tenants", isolated.tenantId, "docs", "advisor-review.txt"), "reviewed", "utf-8");
+      writeFileSync(join(isolated.dir, "tenants", isolated.tenantId, "docs", "advisor-qualification.txt"), "registered", "utf-8");
+      setCliOperatorContext({ record: { operator_id: "advisor:licensed-001", display_name: "Advisor", seat_kind: "standard", role: "approver", status: "active" }, permissions: ["chat:approve"] });
+      expect(() => recordConsumptionTaxAdvisorReview({
+        fiscal_year: "FY2026", status: "approved", reviewer_ref: "advisor:licensed-001",
+        professional_registration_ref: "tax-advisor-registry:licensed-001",
+        qualification_evidence_ref: "docs/advisor-qualification.txt", reviewed_at: "2027-03-01T00:00:00.000Z",
+        evidence_ref: "docs/advisor-review.txt", calculation_sha256: "c".repeat(64),
+      })).toThrow(/advisor review blocked: .*taxpayer_basis_missing/);
+    } finally {
+      isolated.restore();
+      setCliOperatorContext(undefined);
+      useFinanceFixtureTenant();
+    }
   });
 
   it("keeps exactly 10 million yen on the exempt side of the sales threshold", () => {
@@ -484,7 +514,7 @@ describe("consumption tax strengthening", () => {
       writeFileSync(tenantConfigPath, `${readFileSync(tenantConfigPath, "utf-8")}jurisdiction: JP\n`, "utf-8");
       const financeDir = join(getDataDir(), "finance");
       mkdirSync(financeDir, { recursive: true });
-      writeFileSync(join(financeDir, "tax-profile.yaml"), `entity:\n  name: Audit Fixture KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\ncorporate_tax: {}\n`, "utf-8");
+      writeFileSync(join(financeDir, "tax-profile.yaml"), `entity:\n  name: Audit Fixture KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\n  taxpayer_basis: base_period\n  purchase_allocation_method: proportional\ncorporate_tax: {}\n`, "utf-8");
       const evidencePath = join(isolated.dir, "tenants", isolated.tenantId, "docs", "advisor-review.txt");
       writeFileSync(evidencePath, "reviewed", "utf-8");
       writeFileSync(join(isolated.dir, "tenants", isolated.tenantId, "docs", "advisor-qualification.txt"), "registered", "utf-8");

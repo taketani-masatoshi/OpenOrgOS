@@ -7,6 +7,18 @@
 法人の **申告準備**（正データ整備 · 期限可視化 · 税理士引き渡し）を決定論 CLI + YAML 正本で支える。  
 **e-Tax / eLTAX への本番提出はスコープ外**（税理士 · 代表の権限）。
 
+## e-Tax接続境界
+
+`src/lib/finance/etax.ts` は本番提出を解放せず、公式接続に必要な安全境界だけを提供する。
+
+- 税目・手続ID・帳票版・適用期間・公式XSD SHA-256を仕様カタログで固定する。
+- `certified: true` の帳票mapper、XSD validator、送信adapterだけを受け付ける。
+- 既存の `not-for-etax` / `OrgOSCorporateTaxDraft` は公式パッケージへ昇格できない。
+- 承認、署名、送信は同一payload SHA-256に結合する。
+- 状態と試行履歴を原子的に保存し、受付通知と `.xtx` のSHA-256を保全する。
+- 国税庁配布XSD、正式mapper、電子証明書signer、接続試験済みtransportが未登録の間は送信不能とする。
+- 障害復旧、証跡検証、保存、訂正・修正申告、eLTAX分離は [e-Tax運用ランブック](./etax-operations-runbook.md) に従う。
+
 ## 責務境界
 
 | 主体 | 責務 |

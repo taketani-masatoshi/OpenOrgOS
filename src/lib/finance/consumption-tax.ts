@@ -564,9 +564,9 @@ export function assessConsumptionTaxProfile(
     });
   }
 
-  if (!ct?.taxpayer_basis) issues.push({ severity: "warning", code: "taxpayer_basis_missing", message: "課税・免税判定根拠が未設定（申告準備ではblocking）" });
-  if (invoiceRegistered && !ct?.invoice_registration_effective_date) issues.push({ severity: "warning", code: "invoice_effective_date_missing", message: "インボイス登録の効力発生日が未設定（申告準備ではblocking）" });
-  if (ct?.method === "standard" && !ct.purchase_allocation_method) issues.push({ severity: "warning", code: "purchase_allocation_missing", message: "本則課税の仕入税額控除方式が未設定（申告準備ではblocking）" });
+  if (!ct?.taxpayer_basis) issues.push({ severity: "blocking", code: "taxpayer_basis_missing", message: "課税・免税判定根拠が未設定（申告準備ではblocking）" });
+  if (invoiceRegistered && !ct?.invoice_registration_effective_date) issues.push({ severity: "blocking", code: "invoice_effective_date_missing", message: "インボイス登録の効力発生日が未設定（申告準備ではblocking）" });
+  if (ct?.method === "standard" && !ct.purchase_allocation_method) issues.push({ severity: "blocking", code: "purchase_allocation_missing", message: "本則課税の仕入税額控除方式が未設定（申告準備ではblocking）" });
 
   if (
     invoiceRegistered &&

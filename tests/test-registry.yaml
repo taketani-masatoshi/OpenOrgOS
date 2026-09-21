@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 605
-  static_test_cases: 2777
-  tiered_execution_total: 605
+  vitest_total: 612
+  static_test_cases: 2842
+  tiered_execution_total: 612
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -893,11 +893,19 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  consumption-tax-nta-vectors.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   consumption-tax-refund.test.ts:
     axis: catalog
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  consumption-tax-strengthening.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   context-manifest.test.ts:
     axis: platform
     kind: unit
@@ -1099,12 +1107,24 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  eltax-foundation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   escalate.test.ts:
     axis: integration
     kind: integration
     domain: P06_agent_workflow
     integration: I3_workflow
   esign-secrets-store.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  etax-foundation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  etax-production-gate.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1136,6 +1156,10 @@ tests:
     axis: contract
     kind: contract
   extension-skill-runners.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  final-accounts-close.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2976,6 +3000,10 @@ tests:
     kind: unit
     domain: P01_kernel
   workflow-structure-change.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  yaml-atomic-lock.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
