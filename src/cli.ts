@@ -9,6 +9,7 @@ import { registerOrchestrationCommands } from "./cli/registrars/orchestration.js
 import { registerExecutiveCommands } from "./cli/registrars/executive.js";
 import { registerDomainCommands } from "./cli/registrars/domain.js";
 import { registerEtaxCommands } from "./cli/registrars/etax.js";
+import { registerEfilingCommands } from "./cli/registrars/efiling.js";
 import {
   maybeWarnLegacyCli,
   ORGOS_CLI_NAME,
@@ -35,6 +36,7 @@ program
 
 registerDomainCommands(program);
 registerEtaxCommands(program);
+registerEfilingCommands(program);
 registerPlatformCommands(program);
 registerOrchestrationCommands(program);
 registerExecutiveCommands(program);

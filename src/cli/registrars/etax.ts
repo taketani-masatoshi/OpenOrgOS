@@ -87,10 +87,27 @@ export function registerEtaxCommandTree(parent: Command): void {
     .command("build")
     .description("Create ReturnPackage from JSON (official XML needs mapping + unpacked XSD)")
     .option("--from <path>", "Return package JSON")
+    .option("--from-accounting", "Build the payload from evaluateTaxAdjustment. Does not submit.")
+    .option("--fiscal-year <FY####>", "Fiscal year for --from-accounting")
+    .option("--taxpayer-file <path>", "Taxpayer IT identity JSON. Values are never invented.")
     .option("--out <path>", "Write generated official XML here")
     .option("--json", "JSON output")
-    .action((opts: { from?: string; out?: string; json?: boolean }) =>
-      runEtaxBuild({ from: opts.from, out: opts.out, json: Boolean(opts.json) })
+    .action((opts: {
+      from?: string;
+      out?: string;
+      json?: boolean;
+      fromAccounting?: boolean;
+      fiscalYear?: string;
+      taxpayerFile?: string;
+    }) =>
+      runEtaxBuild({
+        from: opts.from,
+        out: opts.out,
+        json: Boolean(opts.json),
+        fromAccounting: Boolean(opts.fromAccounting),
+        fiscalYear: opts.fiscalYear,
+        taxpayerFile: opts.taxpayerFile,
+      }),
     );
 
   etax

@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { buildReturnPackageFromAccounting, type AccountingBridgeTaxpayer } from "../lib/etax/return-package-from-accounting.js";
 import { dirname, join } from "node:path";
 import { EtaxException } from "../../schemas/etax/errors.js";
 import {
@@ -96,17 +97,17 @@ function defaultGeneratedXmlPath(submissionId: string): string {
   return join(getWorkspaceRoot(), "data", "etax", "generated", `${submissionId}.xml`);
 }
 
-export function runEtaxBuild(opts: { from?: string; out?: string; json?: boolean }): void {
+export function runEtaxBuild(opts: {
+  from?: string;
+  out?: string;
+  json?: boolean;
+  fromAccounting?: boolean;
+  fiscalYear?: string;
+  taxpayerFile?: string;
+}): void {
   try {
     requireCliDataWrite({ command: "etax build", permission: "escalate:plan" });
-    if (!opts.from || !existsSync(opts.from)) {
-      throw new EtaxException({
-        code: "ETAX_BUILD_INPUT_MISSING",
-        blocked: "SPEC_BLOCKED",
-        message: "etax build requires --from <return-package.json>",
-      });
-    }
-    const raw = JSON.parse(readFileSync(opts.from, "utf-8")) as {
+    let raw: {
       taxpayerId: string;
       procedureCode: string;
       taxYear: string;
@@ -114,6 +115,44 @@ export function runEtaxBuild(opts: { from?: string; out?: string; json?: boolean
       payload?: unknown;
       sourceReferences?: [];
     };
+    if (opts.fromAccounting) {
+      if (!opts.fiscalYear || !/^FY\d{4}$/.test(opts.fiscalYear)) {
+        throw new EtaxException({
+          code: "ETAX_BUILD_FISCAL_YEAR",
+          blocked: "SPEC_BLOCKED",
+          message: "etax build --from-accounting requires --fiscal-year FY####",
+        });
+      }
+      if (!opts.taxpayerFile || !existsSync(opts.taxpayerFile)) {
+        throw new EtaxException({
+          code: "ETAX_BUILD_TAXPAYER_MISSING",
+          blocked: "SPEC_BLOCKED",
+          message: "Refusing to invent taxpayer identity. Pass --taxpayer-file.",
+        });
+      }
+      const taxpayer = JSON.parse(readFileSync(opts.taxpayerFile, "utf-8")) as AccountingBridgeTaxpayer;
+      const draft = buildReturnPackageFromAccounting({
+        fiscalYear: opts.fiscalYear,
+        taxpayer,
+        createdBy: resolveCliOperatorId(),
+      });
+      raw = {
+        taxpayerId: draft.taxpayerId,
+        procedureCode: draft.procedureCode,
+        taxYear: draft.taxYear,
+        revision: draft.revision,
+        payload: draft.payload,
+        sourceReferences: draft.sourceReferences as [],
+      };
+    } else if (!opts.from || !existsSync(opts.from)) {
+      throw new EtaxException({
+        code: "ETAX_BUILD_INPUT_MISSING",
+        blocked: "SPEC_BLOCKED",
+        message: "etax build requires --from <return-package.json>",
+      });
+    } else {
+      raw = JSON.parse(readFileSync(opts.from, "utf-8")) as typeof raw;
+    }
     const pkg = buildReturnPackage({
       taxpayerId: raw.taxpayerId,
       procedureCode: raw.procedureCode,
