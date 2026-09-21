@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { calculateCorporateLocalTax } from "../src/lib/finance/corporate-local-tax.js";
+import { calculateCorporateLocalTax, calculateCorporateLocalTaxReturn, loadTrustedCorporateLocalTaxCatalog } from "../src/lib/finance/corporate-local-tax.js";
 
 const source = "official local-tax rate fixture";
 const profile = {
@@ -30,5 +30,28 @@ describe("corporate local tax calculation", () => {
   it("fails closed for unverified rates and unsupported statutory scope", () => {
     expect(() => calculateCorporateLocalTax({ profile, sourceDocumentPath, trustedProfileIds: [], fiscalYearEnd: "2027-03-31", nationalCorporateTaxYen: 1, taxableIncomeYen: 1 })).toThrow(/trusted catalog/);
     expect(() => calculateCorporateLocalTax({ profile, sourceDocumentPath, trustedProfileIds: [profile.id], fiscalYearEnd: "2027-03-31", nationalCorporateTaxYen: 1, taxableIncomeYen: 1, operationalScope: { officeCount: 2 } })).toThrow(/multiple-office/);
+  });
+  it("requires a hash-pinned catalog in production", () => {
+    const catalogPath = join(root, "trusted-catalog.json");
+    const catalogBytes = JSON.stringify({ schema: "orgos.jp.corporate-local-tax-trusted-catalog.v1", entries: [{ profile_id: profile.id, source_sha256: profile.source_sha256 }] });
+    writeFileSync(catalogPath, catalogBytes);
+    const trustedCatalog = loadTrustedCorporateLocalTaxCatalog(catalogPath, createHash("sha256").update(catalogBytes).digest("hex"));
+    expect(() => calculateCorporateLocalTax({ profile, sourceDocumentPath, trustedProfileIds: [], production: true,
+      fiscalYearEnd: "2027-03-31", nationalCorporateTaxYen: 1, taxableIncomeYen: 1 })).toThrow(/hash-pinned/);
+    expect(calculateCorporateLocalTax({ profile, sourceDocumentPath, trustedProfileIds: [], trustedCatalog, production: true,
+      fiscalYearEnd: "2027-03-31", nationalCorporateTaxYen: 1, taxableIncomeYen: 1 }).profile_id).toBe(profile.id);
+  });
+  it("apportions multiple establishments, losses, external-standard tax, and interim payments", () => {
+    const result = calculateCorporateLocalTaxReturn({
+      establishments: [
+        { establishmentId: "TOKYO", profile, sourceDocumentPath, apportionmentWeight: 3 },
+        { establishmentId: "OSAKA", profile: { ...profile, id: "fixture-rate-osaka", municipality_code: "27100" }, sourceDocumentPath, apportionmentWeight: 1 },
+      ],
+      trustedProfileIds: [profile.id, "fixture-rate-osaka"], fiscalYearEnd: "2027-03-31",
+      nationalCorporateTaxYen: 1_000_000, taxableIncomeBeforeLossYen: 5_000_000,
+      lossCarryforwardYen: 1_000_000, externalStandardTaxYen: 25_000, interimPaymentsYen: 100_000,
+    });
+    expect(result.allocations.map((row) => row.apportioned_income_yen)).toEqual([3_000_000, 1_000_000]);
+    expect(result.filingBalanceYen).toBe(result.assessedTotalYen - 100_000);
   });
 });

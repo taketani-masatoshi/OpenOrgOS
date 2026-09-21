@@ -47,6 +47,8 @@ describe("eLTAX submission separation", () => {
     expect(store.verifyAudit()).toEqual([]);
     expect(await recoverInterruptedEltaxSubmission({ allowUncertifiedTestDouble: true, store, submissionId: accepted.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).toEqual(accepted);
     const prod = new EltaxSubmissionStore(join(root, "eltax-production"), 10, { production: true, encryptedStorage: true });
+    const prodRecord = prod.create({ ...pkg, package_id: "ELTAX-PROD" }, "prod-approval");
+    expect(() => approveEltaxSubmission({ store: prod, submissionId: prodRecord.submission_id, operatorId: "OP-TEST", authorize: () => true })).toThrow("human approval context");
     await expect(sendEltaxSubmission({ allowUncertifiedTestDouble: true, store: prod, submissionId: "never", transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).rejects.toThrow("production eLTAX send is not enabled");
     const catalog: EtaxSpecCatalog = {
       schema: "orgos.jp.etax-spec-catalog.v1", updated_at: "2026-09-21T00:00:00.000Z",
@@ -82,5 +84,7 @@ describe("eLTAX submission separation", () => {
     approveEltaxSubmission({ store, submissionId: record.submission_id, operatorId: "OP-TEST", authorize: () => true });
     expect(readFileSync(join(stateRoot, "audit.jsonl"), "utf8").trim().split("\n")).toHaveLength(2);
     expect(store.verifyAudit()).toEqual([]);
+    writeFileSync(join(stateRoot, "audit.jsonl"), "{broken\n");
+    expect(() => store.create({ ...record.package, package_id: "ELTAX-NEXT" }, "idem-next")).toThrow("audit integrity failed");
   });
 });

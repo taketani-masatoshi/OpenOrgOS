@@ -13,14 +13,14 @@ import {
   proposedOpeningBalancesPath,
 } from "../src/lib/finance/annual-close.js";
 import { loadChartOfAccounts } from "../src/lib/data.js";
-import { resolveCompanyFiscalYearEndMonth } from "../src/lib/finance/fiscal-year.js";
+import { lastDayOfMonth, resolveCompanyFiscalYearEndMonth } from "../src/lib/finance/fiscal-year.js";
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
 import { loadOpeningBalances } from "../src/lib/finance/ledger/opening-balance.js";
 import { closeAccountingMonth } from "../src/lib/finance/monthly-close.js";
 import { isMonthLocked, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { openingBalancesSchema } from "../schemas/finance/opening-balances.js";
-import { parse as parseYaml } from "yaml";
+import YAML, { parse as parseYaml } from "yaml";
 import {
   applyFixtureStatementRoles,
   resetFixtureJournalEntries,
@@ -35,13 +35,19 @@ let extraMonthly: string[] = [];
 
 function seedCloseInputs(months: string[]): void {
   const finance = join(getDataDir(), "finance");
-  const rows = months
-    .map(
-      (month) =>
-        `  - id: BS-${month}\n    date: "${month}-10"\n    direction: inflow\n    amount: 1\n    status: matched`,
-    )
-    .join("\n");
-  writeFileSync(join(finance, "bank-statements.yaml"), `as_of: "${months.at(-1)}-31"\nentries:\n${rows}\n`);
+  const entries: Array<Record<string, unknown>> = [];
+  const importBatches = months.map((month) => {
+    const asOf = lastDayOfMonth(month);
+    const closing = buildTrialBalance({ asOf }).rows.find((row) => row.account_code === "1100")?.balance_yen ?? 0;
+    const direction = closing > 0 ? "inflow" : "outflow";
+    entries.push({ id: `BS-${month}`, date: `${month}-10`, direction, amount: 1, status: "matched",
+      category: "fixture", description: `fixture ${month}`, source: "import",
+      account_id: "BANK-001", chart_account_id: "1100" });
+    return { id: `BATCH-${month}`, fingerprint: "a".repeat(64), imported_at: `${asOf}T00:00:00.000Z`, adapter: "fixture",
+      account_id: "BANK-001", period_start: `${month}-01`, period_end: asOf,
+      opening_balance: direction === "inflow" ? closing - 1 : closing + 1, closing_balance: closing, entry_ids: [`BS-${month}`] };
+  });
+  writeFileSync(join(finance, "bank-statements.yaml"), YAML.stringify({ as_of: importBatches.at(-1)!.period_end, import_batches: importBatches, entries }));
   writeFileSync(
     join(finance, `year-end.${FY}.yaml`),
     [
@@ -266,6 +272,8 @@ describe("annual close acceptance", () => {
         ...state,
         version: undefined,
         phase: "committing",
+        operator_id: "OP-DEAD",
+        lease_expires_at: "2020-01-01T00:00:00.000Z",
       })
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
@@ -287,6 +295,7 @@ describe("annual close acceptance", () => {
       ),
     ).toHaveLength(1);
     expect(parseYaml(readFileSync(statePath, "utf-8")).phase).toBe("committed");
+    expect(parseYaml(readFileSync(statePath, "utf-8")).operator_id).toBe(OPERATOR);
   });
 
   it("writes nothing when a month is relocked without valid close evidence", () => {

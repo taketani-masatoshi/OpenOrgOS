@@ -77,10 +77,13 @@ const annualCloseTransactionSchema = z.object({
     months: z.array(z.object({ month: z.string(), locked: z.boolean(), can_lock: z.boolean() })),
     can_close: z.boolean(), errors: z.array(z.string()),
   }).optional(),
+  lease_expires_at: z.string().datetime().optional(),
   created_at: z.string().min(1),
   updated_at: z.string().min(1),
 });
 type AnnualCloseTransaction = z.output<typeof annualCloseTransactionSchema>;
+const ANNUAL_CLOSE_LEASE_MS = 30 * 60_000;
+const annualLeaseExpiry = (now: string): string => new Date(new Date(now).getTime() + ANNUAL_CLOSE_LEASE_MS).toISOString();
 
 function stableValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stableValue);
@@ -314,6 +317,10 @@ function closeAccountingYearUnlocked(input: {
     if (!existing.committed_evaluation?.can_close) throw new Error(`Annual close ${input.fiscalYear} committed evaluation missing or invalid`);
     return { ok: true, posted_entry_ids: [], opening_proposal_path: existing.proposal_path, evaluation: existing.committed_evaluation };
   }
+  const leaseNow = new Date().toISOString();
+  if (existing && existing.operator_id !== input.operatorId && existing.lease_expires_at && existing.lease_expires_at > leaseNow) {
+    throw new Error(`annual close ${input.fiscalYear} is owned by ${existing.operator_id}`);
+  }
   if (!evaluation.can_close) {
     return {
       ok: false,
@@ -331,7 +338,9 @@ function closeAccountingYearUnlocked(input: {
     throw new Error(`Annual close ${input.fiscalYear} evidence changed after prepare`);
   }
   const now = new Date().toISOString();
-  let transaction: AnnualCloseTransaction = existing ?? {
+  let transaction: AnnualCloseTransaction = existing ? {
+    ...existing, operator_id: input.operatorId, lease_expires_at: annualLeaseExpiry(now), updated_at: now,
+  } : {
     version: 1,
     transaction_id: randomUUID(),
     fiscal_year: input.fiscalYear,
@@ -340,6 +349,7 @@ function closeAccountingYearUnlocked(input: {
     evidence_sha256: evidenceHash,
     transfer_entry_id: `JE-CLOSE-${input.fiscalYear}-PL-TRANSFER`,
     proposal_path: proposedOpeningBalancesPath(evaluation.next_fiscal_year),
+    lease_expires_at: annualLeaseExpiry(now),
     created_at: now,
     updated_at: now,
   };
@@ -348,6 +358,7 @@ function closeAccountingYearUnlocked(input: {
     transaction = {
       ...transaction,
       phase: "validated",
+      lease_expires_at: annualLeaseExpiry(new Date().toISOString()),
       updated_at: new Date().toISOString(),
     };
     saveTransaction(transaction);
@@ -356,6 +367,7 @@ function closeAccountingYearUnlocked(input: {
     transaction = {
       ...transaction,
       phase: "committing",
+      lease_expires_at: annualLeaseExpiry(new Date().toISOString()),
       updated_at: new Date().toISOString(),
     };
     saveTransaction(transaction);
@@ -382,6 +394,7 @@ function closeAccountingYearUnlocked(input: {
     phase: "committed",
     opening_sha256: openingHash,
     committed_evaluation: evaluation,
+    lease_expires_at: undefined,
     updated_at: new Date().toISOString(),
   };
   saveTransaction(transaction);

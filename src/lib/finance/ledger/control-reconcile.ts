@@ -24,7 +24,36 @@ export function bankControlIntegrityIssuesAt(asOf: string): ControlReconcileIssu
   if (!bank.as_of || bank.as_of < asOf) {
     return [{ level: "error", message: `bank-statements coverage ${bank.as_of ?? "missing"} does not reach ${asOf}` }];
   }
-  return [];
+  const month = asOf.slice(0, 7);
+  const monthEntries = bank.entries.filter((entry) => entry.date.slice(0, 7) === month && entry.status !== "voided");
+  const batches = bank.import_batches.filter((batch) => batch.period_end === asOf);
+  if (batches.length === 0) return [{ level: "error", message: `bank-statements has no balance-certified import batch ending ${asOf}` }];
+  const covered = new Set(batches.flatMap((batch) => batch.entry_ids));
+  const uncovered = monthEntries.filter((entry) => !covered.has(entry.id));
+  if (uncovered.length > 0) return [{ level: "error", message: `bank-statements has ${uncovered.length} month rows outside a balance-certified batch` }];
+  const issues: ControlReconcileIssue[] = [];
+  const closingByChart = new Map<string, number>();
+  for (const batch of batches) {
+    if (batch.opening_balance == null || batch.closing_balance == null || !batch.account_id) {
+      issues.push({ level: "error", message: `bank import batch ${batch.id} lacks account/opening/closing balance` });
+      continue;
+    }
+    const entries = monthEntries.filter((entry) => batch.entry_ids.includes(entry.id));
+    const movement = entries.reduce((sum, entry) => sum + (entry.direction === "inflow" ? entry.amount : -entry.amount), 0);
+    if (batch.opening_balance + movement !== batch.closing_balance) {
+      issues.push({ level: "error", message: `bank import batch ${batch.id}: opening + movement != closing` });
+    }
+    const chart = entries.find((entry) => entry.chart_account_id)?.chart_account_id ?? resolveJournalSourceAccounts().bank_control;
+    closingByChart.set(chart, (closingByChart.get(chart) ?? 0) + batch.closing_balance);
+  }
+  const opening = loadOpeningBalances();
+  if (!opening?.as_of || asOf >= opening.as_of) {
+    for (const [chart, closing] of closingByChart) {
+      const gl = tbBalance(chart, asOf);
+      if (gl !== closing) issues.push({ level: "error", message: `bank-statements ${chart}: GL ${gl} != bank closing ${closing} (${asOf})` });
+    }
+  }
+  return issues;
 }
 
 function tbBalance(

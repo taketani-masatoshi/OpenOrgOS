@@ -23,7 +23,7 @@ export const eltaxSubmissionRecordSchema = z.object({
   idempotency_key: z.string().min(1),
   status: eltaxSubmissionStatusSchema,
   package: eltaxOfficialPackageSchema,
-  approval: z.object({ operator_id: z.string().min(1), approved_at: z.string().datetime(), payload_sha256: z.string().regex(/^[a-f0-9]{64}$/) }).optional(),
+  approval: z.object({ operator_id: z.string().min(1), approved_at: z.string().datetime(), payload_sha256: z.string().regex(/^[a-f0-9]{64}$/), company_event_id: z.string().min(1).optional() }).optional(),
   signature: z.object({ algorithm: z.string().min(1), certificate_fingerprint_sha256: z.string().regex(/^[a-f0-9]{64}$/), signature_path: z.string().min(1), signature_sha256: z.string().regex(/^[a-f0-9]{64}$/), signed_at: z.string().datetime() }).optional(),
   request_id: z.string().min(1).optional(),
   attempts: z.array(z.object({ attempted_at: z.string().datetime(), request_id: z.string().min(1), outcome: z.enum(["started", "received", "failed"]) })).default([]),

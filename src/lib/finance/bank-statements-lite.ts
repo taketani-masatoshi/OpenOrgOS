@@ -5,6 +5,10 @@ import { getDataDir, readYamlFile } from "../utils.js";
 
 const bankStatementFileLiteSchema = z.object({
   as_of: z.string().optional(),
+  import_batches: z.array(z.object({
+    id: z.string(), account_id: z.string().optional(), period_start: z.string().optional(), period_end: z.string().optional(),
+    opening_balance: z.number().optional(), closing_balance: z.number().optional(), entry_ids: z.array(z.string()).default([]),
+  })).default([]),
   entries: z
     .array(
       z.object({
@@ -12,6 +16,8 @@ const bankStatementFileLiteSchema = z.object({
         date: z.string(),
         direction: z.enum(["inflow", "outflow"]),
         amount: z.number(),
+        account_id: z.string().optional(),
+        chart_account_id: z.string().optional(),
         status: z.string().optional(),
       }),
     )

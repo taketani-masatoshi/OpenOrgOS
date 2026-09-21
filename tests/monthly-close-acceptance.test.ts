@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import YAML from "yaml";
 import { runValidateReport } from "../src/commands/validate.js";
 import { appendJournalEntry, loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
 import { lastDayOfMonth } from "../src/lib/finance/fiscal-year.js";
@@ -31,9 +32,25 @@ function bankPath(): string {
 }
 
 function writeBank(yaml: string): void {
-  const months = [...yaml.matchAll(/date:\s*["']?(\d{4}-\d{2})/g)].map((match) => match[1]!).sort();
-  const coveredMonth = months.at(-1) ?? MONTH;
-  writeFileSync(bankPath(), `as_of: "${lastDayOfMonth(coveredMonth)}"\n${yaml.trim()}\n`, "utf-8");
+  let raw: { entries: Array<{ id: string; direction: "inflow" | "outflow"; amount: number; date: string; status?: string }> };
+  try { raw = YAML.parse(yaml) as typeof raw; } catch { writeFileSync(bankPath(), yaml, "utf-8"); return; }
+  const entries = raw.entries.map((entry) => ({ ...entry, category: "fixture", description: entry.id,
+    account_id: "BANK-001", chart_account_id: "1100", source: "import" }));
+  const months = [...new Set(entries.map((entry) => entry.date.slice(0, 7)))].sort();
+  const batches = months.map((month) => {
+    const asOf = lastDayOfMonth(month);
+    const monthEntries = entries.filter((entry) => entry.date.slice(0, 7) === month);
+    const movement = monthEntries.reduce((sum, entry) => sum + (entry.direction === "inflow" ? entry.amount : -entry.amount), 0);
+    const closing = buildTrialBalance({ asOf }).rows.find((row) => row.account_code === "1100")?.balance_yen ?? 0;
+    return { id: `BATCH-${month}`, fingerprint: "a".repeat(64), imported_at: `${asOf}T00:00:00.000Z`, adapter: "fixture",
+      account_id: "BANK-001", period_start: `${month}-01`, period_end: asOf,
+      opening_balance: closing - movement, closing_balance: closing, entry_ids: monthEntries.map((entry) => entry.id) };
+  });
+  writeFileSync(bankPath(), YAML.stringify({
+    as_of: batches.at(-1)?.period_end ?? lastDayOfMonth(MONTH),
+    import_batches: batches,
+    entries,
+  }), "utf-8");
 }
 
 function removeBank(): void {
@@ -263,14 +280,6 @@ entries:
   it("warns but locks when monthly YAML and journals differ", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     manualEntry({
       entryId: "JE-EXTRA-RENT",
       occurredAt: "2026-09-12T00:00:00.000Z",
@@ -279,6 +288,14 @@ entries:
         { account_code: "4100", debit_yen: 0, credit_yen: 1000, tax_category: "non_taxable" },
       ],
     });
+    writeBank(`
+entries:
+  - id: BS-2026-09-1
+    date: "2026-09-10"
+    direction: inflow
+    amount: 1000
+    status: matched
+`);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.evaluation.warnings.some((warning) => warning.startsWith("monthly-reconcile"))).toBe(
       true,
@@ -305,14 +322,6 @@ entries:
   it("corrects a locked month only after a reasoned unlock, then re-locks", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     manualEntry({
       entryId: "JE-BS-ONLY",
       occurredAt: "2026-09-11T00:00:00.000Z",
@@ -321,6 +330,14 @@ entries:
         { account_code: "1300", debit_yen: 0, credit_yen: 2, tax_category: "out_of_scope" },
       ],
     });
+    writeBank(`
+entries:
+  - id: BS-2026-09-1
+    date: "2026-09-10"
+    direction: inflow
+    amount: 1000
+    status: matched
+`);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(true);
     const reversal = reverseJournalEntry({
@@ -350,6 +367,14 @@ entries:
       reason: "correct depreciation",
     });
     appendJournalEntry(reversal);
+    writeBank(`
+entries:
+  - id: BS-2026-09-1
+    date: "2026-09-10"
+    direction: inflow
+    amount: 1000
+    status: matched
+`);
     const count = loadJournalEntries().entries.length;
     const relocked = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(relocked.locked).toBe(true);

@@ -154,6 +154,31 @@ export function unlockMonth(input: {
   return entry;
 }
 
+/** Re-attest legacy lock rows without deleting or rewriting history. */
+export function attestLegacyPeriodLock(input: {
+  month: string;
+  attestedBy: string;
+  reason: string;
+  attestedAt?: string;
+}): PeriodLockEntry {
+  if (!input.reason.trim()) throw new Error("Legacy period-lock attestation requires a reason");
+  const file = loadPeriodLocks();
+  const latest = latestLockForMonth(input.month, file);
+  if (!latest || latest.status !== "locked") throw new Error(`Legacy period ${input.month} is not locked`);
+  if (latest.sequence && latest.event_sha256) return latest;
+  const entry = chainedEntry(periodLockEntrySchema.omit({ sequence: true, previous_event_sha256: true, event_sha256: true }).parse({
+    month: input.month,
+    status: "locked",
+    at: input.attestedAt ?? new Date().toISOString(),
+    by: input.attestedBy,
+    reason: `legacy-attestation: ${input.reason.trim()}`,
+    evidence: latest.evidence,
+  }), file.locks);
+  file.locks.push(entry);
+  savePeriodLocks(file);
+  return entry;
+}
+
 export function periodLockIntegrityIssues(): string[] {
   return periodLockIntegrityIssuesForFile(loadPeriodLocks());
 }

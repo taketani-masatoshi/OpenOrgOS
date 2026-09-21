@@ -9,6 +9,12 @@ import {
 } from "../../../schemas/finance/eltax.js";
 import { getClock, getIdGenerator } from "../runtime-context.js";
 import { withYamlFileLock } from "../yaml-atomic.js";
+import { findOperatorById } from "../org/operators.js";
+import { operatorHasPermission } from "../console-auth/operator-rbac.js";
+import { assertHumanApprovalContext } from "../org/human-approval-context.js";
+import type { HumanApprovalContext } from "../../../schemas/org/human-approval-context.js";
+import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
+import { createCompanyEvent } from "../company-events.js";
 
 export interface EltaxTransport {
   readonly channel: "eltax";
@@ -104,6 +110,8 @@ export class EltaxSubmissionStore {
   private locked<T>(fn: () => T): T {
     return withYamlFileLock(join(this.root, ".eltax-submission-store"), () => {
       this.recoverPendingAudits();
+      const auditIssues = this.verifyAudit();
+      if (auditIssues.length > 0) throw new Error(`eLTAX audit integrity failed: ${auditIssues.join("; ")}`);
       return fn();
     }, { retries: 120, retryDelayMs: 25 });
   }
@@ -172,6 +180,9 @@ export class EltaxSubmissionStore {
       if (record.retention_until < current.retention_until) throw new Error("eLTAX retention cannot be shortened");
       const parsed = eltaxSubmissionRecordSchema.parse({ ...record, revision: record.revision + 1, updated_at: getClock().nowIso() });
       assertRecordEvidence(parsed);
+      if (this.production && parsed.status !== "prepared" && parsed.status !== "cancelled" && !parsed.approval?.company_event_id) {
+        throw new Error("production eLTAX state requires a Company Event approval anchor");
+      }
       this.persist(parsed);
       return parsed;
     });
@@ -190,22 +201,73 @@ export class EltaxSubmissionStore {
   }
   verifyAudit(): string[] {
     const auditPath = join(this.root, "audit.jsonl");
-    if (!existsSync(auditPath)) return [];
+    if (!existsSync(auditPath)) return this.list().length > 0 ? ["eLTAX audit log is missing"] : [];
     const issues: string[] = []; let previous = "0".repeat(64);
+    const audited = new Set<string>();
     for (const [index, line] of readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean).entries()) {
-      const row = JSON.parse(line) as Record<string, unknown> & { prev_sha256: string; row_sha256: string };
+      let row: Record<string, unknown> & { prev_sha256: string; row_sha256: string };
+      try { row = JSON.parse(line) as typeof row; }
+      catch { issues.push(`eLTAX audit row ${index + 1} is unreadable`); continue; }
       const { row_sha256, ...base } = row;
       if (row.prev_sha256 !== previous || row_sha256 !== sha256(JSON.stringify(base))) issues.push(`eLTAX audit chain mismatch at ${index + 1}`);
       previous = row_sha256;
+      audited.add(`${String(row.submission_id)}:${String(row.revision)}`);
+    }
+    for (const record of this.list()) {
+      if (!audited.has(`${record.submission_id}:${record.revision}`)) issues.push(`eLTAX audit missing ${record.submission_id} revision ${record.revision}`);
     }
     return issues;
+  }
+  auditHeadSha256(): string {
+    const issues = this.verifyAudit();
+    if (issues.length > 0) throw new Error(`eLTAX audit integrity failed: ${issues.join("; ")}`);
+    const auditPath = join(this.root, "audit.jsonl");
+    const rows = readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean);
+    const last = JSON.parse(rows.at(-1)!) as { row_sha256: string };
+    return last.row_sha256;
   }
 }
 
 export function approveEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; operatorId: string; authorize: (input: { operatorId: string; payloadSha256: string }) => boolean }): EltaxSubmissionRecord {
+  if (input.store.production) throw new Error("production eLTAX approval requires human approval context");
   const record = input.store.get(input.submissionId);
   if (record.status !== "prepared" || !input.authorize({ operatorId: input.operatorId, payloadSha256: record.package.payload_sha256 })) throw new Error("eLTAX approval denied");
   return input.store.save({ ...record, status: "approved", approval: { operator_id: input.operatorId, approved_at: getClock().nowIso(), payload_sha256: record.package.payload_sha256 } }, authorizedTransition);
+}
+
+export function approveEltaxSubmissionWithHumanContext(input: {
+  store: EltaxSubmissionStore;
+  submissionId: string;
+  operatorId: string;
+  approval: OrgApprovalRequest;
+  humanContext: HumanApprovalContext;
+}): EltaxSubmissionRecord {
+  const record = input.store.get(input.submissionId);
+  if (input.approval.subject_type !== "eltax.submission" || input.approval.subject_ref !== record.package.payload_sha256) {
+    throw new Error("human approval is not bound to this eLTAX payload");
+  }
+  const operator = findOperatorById(input.operatorId);
+  if (!operatorHasPermission(operator, "chat:approve")) throw new Error("operator lacks chat:approve for eLTAX submission");
+  assertHumanApprovalContext({ context: input.humanContext, approval: input.approval, operatorId: input.operatorId });
+  const companyEventId = recordEltaxAuditEvent({ ...record, status: "approved" }, input.store.auditHeadSha256());
+  const approved = input.store.save({
+    ...record,
+    status: "approved",
+    approval: { operator_id: input.operatorId, approved_at: getClock().nowIso(), payload_sha256: record.package.payload_sha256, company_event_id: companyEventId },
+  }, authorizedTransition);
+  return approved;
+}
+
+export function recordEltaxAuditEvent(record: EltaxSubmissionRecord, auditHeadSha256: string): string {
+  if (!/^[a-f0-9]{64}$/.test(auditHeadSha256)) throw new Error("invalid eLTAX audit head");
+  const event = createCompanyEvent({
+    kind: "finance",
+    title: `eLTAX ${record.package.tax_type} ${record.status}`,
+    slug: `eltax-${record.submission_id.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`,
+    related: { application_id: record.submission_id },
+    notes: `payload_sha256=${record.package.payload_sha256}\naudit_head_sha256=${auditHeadSha256}\nstatus=${record.status}\nreceipt=${record.local_receipt_number ?? "pending"}`,
+  });
+  return event.id;
 }
 
 export async function signEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; signer: EltaxSigner; allowUncertifiedTestDouble?: boolean }): Promise<EltaxSubmissionRecord> {
