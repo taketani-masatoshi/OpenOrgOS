@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 608
-  static_test_cases: 2789
-  tiered_execution_total: 608
-  catalog_total: 46
-  catalog_cli_registered: 47
+  vitest_total: 609
+  static_test_cases: 2790
+  tiered_execution_total: 609
+  catalog_total: 47
+  catalog_cli_registered: 48
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 7
+  catalog_only: 8
 platform_domains:
   P01_kernel:
     layer: 1
@@ -224,6 +224,12 @@ catalog_modules:
     tests:
       - catalog/jp-tax-modules.test.ts
   jp_tax_corporate:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-tax-modules.test.ts
+  jp_tax_individual:
     tier: activation_ready
     coverage_tier: catalog_only
     cli: true
@@ -708,6 +714,7 @@ tests:
     kind: unit
     catalog_ids:
       - jp_tax_corporate
+      - jp_tax_individual
       - jp_tax_consumption
       - jp_invoice_qualified
       - jp_withholding_statutory
@@ -2421,6 +2428,10 @@ tests:
     kind: unit
     domain: P01_kernel
   slack-connector.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sole-prop-lane-f-acceptance.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

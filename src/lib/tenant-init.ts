@@ -57,7 +57,9 @@ export function runTenantInit(options: TenantInitOptions): void {
   const displayName = options.name ?? id;
   writeTenantYaml(dest, id, displayName, options);
   applyModuleBindings(dest, options.fromModules);
-  writeSkeletonData(dest, id, displayName, options.fromModules);
+  writeSkeletonData(dest, id, displayName, options.fromModules, {
+    entityForm: options.entityForm,
+  });
 
   setTenantId(id);
   const seedResult = seedRegulationDocs();
@@ -187,6 +189,7 @@ export function scaffoldMissingTenantData(): ScaffoldTenantDataResult {
 
 interface WriteSkeletonOptions {
   skipExisting?: boolean;
+  entityForm?: string;
 }
 
 function writeSkeletonData(
@@ -210,7 +213,8 @@ function writeSkeletonData(
     result.created.push(rel);
   };
 
-  put("data/company.yaml", skeletonCompany(name, id));
+  const entityForm = options?.entityForm;
+  put("data/company.yaml", skeletonCompany(name, id, entityForm));
   put("data/ops-config.yaml", skeletonOpsConfig());
   put("data/classification-registry.yaml", skeletonClassificationRegistry());
   put("data/document-io.yaml", "inbox_items: []\noutbox_items: []\n");
@@ -232,10 +236,7 @@ function writeSkeletonData(
     "data/finance/fixed-assets.yaml",
     `as_of: "2027-01-31"\nfiscal_year: FY2026\ncurrency: JPY\nassets: []\nsummary:\n  total_acquisition_cost: 0\n  total_accumulated_depreciation: 0\n  total_book_value: 0\n  annual_depreciation_fy_current: 0\n`
   );
-  put(
-    "data/finance/tax-profile.yaml",
-    `entity:\n  name: "${name}"\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: TBD\ncorporate_tax:\n  category: TBD\n  capital_stock: TBD\n`
-  );
+  put("data/finance/tax-profile.yaml", skeletonTaxProfile(name, options?.entityForm));
   put(
     "data/finance/chart-of-accounts.yaml",
     `version: "1"\ncurrency: JPY\naccounts:\n  - code: "1100"\n    name: 現金及び預金\n    type: asset\n    normal_balance: debit\ncategory_mapping:\n  revenue: {}\n  expense: {}\n`
@@ -336,14 +337,22 @@ function writeFile(path: string, content: string): void {
   writeFileSync(path, content, "utf-8");
 }
 
-function skeletonCompany(name: string, tenantId: string): string {
+function skeletonCompany(name: string, tenantId: string, entityForm?: string): string {
+  const endMonth = entityForm === "sole_proprietorship" ? 12 : 1;
   return `name: "${name}"
-fiscal_year_end_month: 1
+fiscal_year_end_month: ${endMonth}
 business_description: |
   スケルトン — 事業概要を記載
 public_disclosure:
   representative_email: ceo@${tenantId}.orgos.local
 `;
+}
+
+function skeletonTaxProfile(name: string, entityForm?: string): string {
+  if (entityForm === "sole_proprietorship") {
+    return `entity:\n  name: "${name}"\n  type: 個人事業主\nfiscal_year:\n  end_month: 12\nconsumption_tax:\n  status: TBD\n`;
+  }
+  return `entity:\n  name: "${name}"\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: TBD\ncorporate_tax:\n  category: TBD\n  capital_stock: TBD\n`;
 }
 
 function skeletonOpsConfig(): string {

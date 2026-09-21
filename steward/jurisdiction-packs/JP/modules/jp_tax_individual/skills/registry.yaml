@@ -1,0 +1,8 @@
+skills:
+  - id: jp_individual_income_tax
+    file: jp_individual_income_tax.md
+    runtime: cli
+    cli_command: tax-individual
+    handler: jp_individual_income_tax
+    description: 個人の青色申告決算書と所得税の顧問ドラフト。提出しない。
+    agent_id: tax
