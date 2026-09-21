@@ -2,16 +2,22 @@
 rows:
   - sheet: schedule_1_3
     line: "①-1A"
-    formula: "tax_exclusive*108/100*100/108|floor_unit:1000"
+    formula: "restore:108/100|rollback_once:100/108"
   - sheet: schedule_1_3
     line: "①-1B"
-    formula: "tax_exclusive*110/100*100/110|floor_unit:1000"
+    formula: "restore:110/100|rollback_once:100/110"
+  - sheet: schedule_1_3
+    line: "①A"
+    formula: "floor_unit:1000:schedule_1_3:①-1A"
+  - sheet: schedule_1_3
+    line: "①B"
+    formula: "floor_unit:1000:schedule_1_3:①-1B"
   - sheet: schedule_1_3
     line: "②A"
-    formula: "rate:624/10000:schedule_1_3:①-1A"
+    formula: "rate:624/10000:schedule_1_3:①A"
   - sheet: schedule_1_3
     line: "②B"
-    formula: "rate:78/1000:schedule_1_3:①-1B"
+    formula: "rate:78/1000:schedule_1_3:①B"
   - sheet: schedule_2_3
     line: "㉖"
     formula: "purchase_credit"
@@ -20,10 +26,10 @@ rows:
     formula: "copy:schedule_2_3:㉖"
   - sheet: return_page2
     line: "⑤"
-    formula: "copy:schedule_1_3:①-1A"
+    formula: "copy:schedule_1_3:①A"
   - sheet: return_page2
     line: "⑥"
-    formula: "copy:schedule_1_3:①-1B"
+    formula: "copy:schedule_1_3:①B"
   - sheet: return_page2
     line: "①"
     formula: "sum:return_page2:⑤+return_page2:⑥"

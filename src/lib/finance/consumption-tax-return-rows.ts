@@ -358,6 +358,15 @@ function signedRateThenPayableFloor(
   return rated >= 0 ? floorTo(rated, transform.payable_unit_yen) : rated;
 }
 
+/** Yen truncation of tax-inclusive consideration times 100/108 or 100/110, once. */
+export function consumptionTaxConsiderationYen(
+  inclusiveYen: number,
+  rollbackNumerator: number,
+  rollbackDenominator: number
+): number {
+  return Number((BigInt(inclusiveYen) * BigInt(rollbackNumerator)) / BigInt(rollbackDenominator));
+}
+
 function inclusiveRollbackFloor(
   exclusive: number,
   transform: {
@@ -365,15 +374,17 @@ function inclusiveRollbackFloor(
     inclusive_denominator: number;
     rollback_numerator: number;
     rollback_denominator: number;
-    unit_yen: number;
   }
 ): number {
-  const rolled =
-    (BigInt(exclusive) *
-      BigInt(transform.inclusive_numerator) *
-      BigInt(transform.rollback_numerator)) /
-    (BigInt(transform.inclusive_denominator) * BigInt(transform.rollback_denominator));
-  return floorTo(Number(rolled), transform.unit_yen);
+  const inclusive = Number(
+    (BigInt(exclusive) * BigInt(transform.inclusive_numerator)) /
+      BigInt(transform.inclusive_denominator)
+  );
+  return consumptionTaxConsiderationYen(
+    inclusive,
+    transform.rollback_numerator,
+    transform.rollback_denominator
+  );
 }
 
 function floorTo(value: number, unit: number): number {

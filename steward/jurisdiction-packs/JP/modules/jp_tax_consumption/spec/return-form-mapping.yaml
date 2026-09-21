@@ -1,6 +1,7 @@
 # 法人・本則・割戻し・一般用の公表欄対応。電子申告の手続や様式定義は持たない。
 # 欄番号の出典: 国税庁「消費税及び地方消費税の申告書（一般用）の書き方」（令和7年11月作成）
-# 仕訳の本体が税抜なら、①-1 は一度税込へ戻してから 100/108 または 100/110 を一回だけ掛け、千円未満を切捨てる。
+# 仕訳の本体が税抜なら、①-1 は一度税込へ戻して端数を切り、そのあと 100/108 または 100/110 を一回だけ掛ける。
+# 千円未満の切捨ては課税標準の行。①-1 には置かない。
 id: jp-consumption-return-general-standard-reiwa7-2025-11
 form: 法人・本則・割戻し・一般用
 source_label: 国税庁 消費税及び地方消費税の申告書（一般用）の書き方（令和7年11月作成）
@@ -47,6 +48,17 @@ rows:
       inclusive_denominator: 100
       rollback_numerator: 100
       rollback_denominator: 108
+
+  - id: schedule_1_3_standard_8
+    sheet: schedule_1_3
+    line: "①A"
+    label_ja: 課税標準額（6.24%適用分）
+    required: true
+    source:
+      kind: row
+      id: schedule_1_3_base_8
+    transform:
+      op: floor_unit
       unit_yen: 1000
 
   - id: schedule_1_3_base_10
@@ -63,6 +75,17 @@ rows:
       inclusive_denominator: 100
       rollback_numerator: 100
       rollback_denominator: 110
+
+  - id: schedule_1_3_standard_10
+    sheet: schedule_1_3
+    line: "①B"
+    label_ja: 課税標準額（7.8%適用分）
+    required: true
+    source:
+      kind: row
+      id: schedule_1_3_base_10
+    transform:
+      op: floor_unit
       unit_yen: 1000
 
   - id: schedule_1_3_tax_8
@@ -72,7 +95,7 @@ rows:
     required: true
     source:
       kind: row
-      id: schedule_1_3_base_8
+      id: schedule_1_3_standard_8
     transform:
       op: rate_floor
       numerator: 624
@@ -85,7 +108,7 @@ rows:
     required: true
     source:
       kind: row
-      id: schedule_1_3_base_10
+      id: schedule_1_3_standard_10
     transform:
       op: rate_floor
       numerator: 78
@@ -119,7 +142,7 @@ rows:
     required: true
     source:
       kind: row
-      id: schedule_1_3_base_8
+      id: schedule_1_3_standard_8
     transform:
       op: identity
 
@@ -130,7 +153,7 @@ rows:
     required: true
     source:
       kind: row
-      id: schedule_1_3_base_10
+      id: schedule_1_3_standard_10
     transform:
       op: identity
 

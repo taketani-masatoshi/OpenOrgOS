@@ -67,7 +67,7 @@ function formulaOf(
   const transform = row.transform;
   if (transform.op === "purchase_credit") return "purchase_credit";
   if (transform.op === "inclusive_rollback_floor" && row.source.kind === "input") {
-    return `tax_exclusive*${transform.inclusive_numerator}/${transform.inclusive_denominator}*${transform.rollback_numerator}/${transform.rollback_denominator}|floor_unit:${transform.unit_yen}`;
+    return `restore:${transform.inclusive_numerator}/${transform.inclusive_denominator}|rollback_once:${transform.rollback_numerator}/${transform.rollback_denominator}`;
   }
   if (transform.op === "identity" && row.source.kind === "input") {
     return `required_input:${row.source.key}`;
@@ -80,6 +80,9 @@ function formulaOf(
   }
   if (transform.op === "subtract" && row.source.kind === "rows") {
     return `subtract:${row.source.ids.map((id) => expressionOf(id, byId)).join("-")}`;
+  }
+  if (transform.op === "floor_unit" && row.source.kind === "row") {
+    return `floor_unit:${transform.unit_yen}:${expressionOf(row.source.id, byId)}`;
   }
   if (transform.op === "rate_floor" && row.source.kind === "row") {
     return `rate:${transform.numerator}/${transform.denominator}:${expressionOf(row.source.id, byId)}`;

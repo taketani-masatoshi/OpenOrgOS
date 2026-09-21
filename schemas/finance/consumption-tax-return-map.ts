@@ -30,7 +30,6 @@ export const consumptionTaxReturnTransformSchema = z.discriminatedUnion("op", [
       inclusive_denominator: z.literal(100),
       rollback_numerator: z.literal(100),
       rollback_denominator: z.union([z.literal(108), z.literal(110)]),
-      unit_yen: z.literal(1000),
     })
     .strict(),
   z
