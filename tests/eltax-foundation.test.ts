@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
@@ -64,5 +64,23 @@ describe("eLTAX submission separation", () => {
       validator: () => ({ valid: true, validatorName: "fixture", validatorVersion: "1" }),
       schema: "orgos.jp.eltax-official-package.v1",
     } as Parameters<typeof prepareOfficialEtaxPackage>[0])).toThrow("eLTAX package");
+  });
+
+  it("repairs an audit append interrupted after the submission record write", () => {
+    const root = mkdtempSync(join(tmpdir(), "orgos-eltax-wal-"));
+    const payloadPath = join(root, "return.xml");
+    writeFileSync(payloadPath, "<OfficialReturn/>");
+    const stateRoot = join(root, "state");
+    const store = new EltaxSubmissionStore(stateRoot);
+    const record = store.create({
+      schema: "orgos.jp.eltax-official-package.v1", package_id: "ELTAX-WAL", tax_type: "corporate_local_tax",
+      municipality_code: "13101", procedure_id: "LOCAL-TEST", payload_path: payloadPath,
+      payload_sha256: hash("<OfficialReturn/>"), spec_id: "eltax-test", certified_at: "2026-09-21T00:00:00.000Z",
+    }, "idem-wal");
+    writeFileSync(join(stateRoot, "audit.jsonl"), "");
+    writeFileSync(join(stateRoot, `.audit-pending.${record.submission_id}.${record.revision}.json`), `${JSON.stringify(record, null, 2)}\n`);
+    approveEltaxSubmission({ store, submissionId: record.submission_id, operatorId: "OP-TEST", authorize: () => true });
+    expect(readFileSync(join(stateRoot, "audit.jsonl"), "utf8").trim().split("\n")).toHaveLength(2);
+    expect(store.verifyAudit()).toEqual([]);
   });
 });

@@ -11,6 +11,7 @@ import { subsidiaryLedgerIntegrityIssues } from "../src/lib/finance/ledger/subsi
 import {
   closeAccountingMonth,
   evaluateMonthlyCloseGates,
+  monthlyCloseTransactionPath,
 } from "../src/lib/finance/monthly-close.js";
 import { buildConsumptionTaxSummary } from "../src/lib/finance/consumption-tax.js";
 import { isMonthLocked, loadPeriodLocks, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
@@ -134,6 +135,28 @@ entries:
     expect(checklist.checklist_complete).toBe(checklist.ready);
     expect(checklist.period_locked).toBe(true);
     expect(checklist.ready).toBe(true);
+  });
+
+  it("takes over an expired monthly-close lease and safely resumes", () => {
+    useFinanceFixtureTenant();
+    lockPrior();
+    writeBank(`
+entries:
+  - id: BS-2026-09-1
+    date: "2026-09-10"
+    direction: inflow
+    amount: 1000
+    status: matched
+`);
+    writeFileSync(monthlyCloseTransactionPath(MONTH), [
+      "version: 1", `month: ${MONTH}`, "operator_id: OP-DEAD", "phase: posting",
+      "posted_entry_ids: []", 'lease_expires_at: "2020-01-01T00:00:00.000Z"',
+      'updated_at: "2020-01-01T00:00:00.000Z"', "",
+    ].join("\n"));
+    const resumed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(resumed.ok).toBe(true);
+    expect(resumed.locked).toBe(true);
+    expect(loadJournalEntries().entries.map((entry) => entry.entry_id).length).toBeGreaterThan(0);
   });
 
   it("does not lock when the trial balance does not balance", () => {
