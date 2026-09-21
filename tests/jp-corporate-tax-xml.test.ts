@@ -11,10 +11,14 @@ describe("jp corporate tax xml draft", () => {
     });
     expect(draft.submission).toBe("not-for-etax");
     expect(draft.xml).toContain('submission="not-for-etax"');
+    expect(draft.xml).toContain('schemaVersion="2"');
     expect(draft.xml).toContain("OrgOSCorporateTaxDraft");
     expect(draft.xml).toContain("<NetIncomeYen>");
-    expect(draft.xml).toContain('id="betsu-4-like"');
-    expect(draft.xml).toContain('id="betsu-5-1-like"');
+    expect(draft.xml).toContain('form="別表四"');
+    expect(draft.xml).toContain('form="別表五（一）"');
+    expect(draft.xml).not.toContain('id="betsu-4-like"');
+    expect(draft.xml).not.toContain("taxable_income_estimate");
+    expect(draft.xml).not.toContain("<EstimatedTaxYen>");
     expect(draft.xml).toContain("<Completeness>");
     expect(draft.xml).not.toContain(">TBD<");
     expect(draft.relative_path).toContain("corporate-tax-draft.xml");
