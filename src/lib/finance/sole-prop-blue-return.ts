@@ -173,6 +173,31 @@ function inFiscalYear(date: string, fiscalYear: string): boolean {
   return date >= start && date <= end;
 }
 
+/** Books flags default to false. A draft must not claim them without ledger evidence. */
+export function deriveSolePropBooksFlags(input: {
+  entries: ReadonlyArray<{ lines: ReadonlyArray<{ debit_yen: number; credit_yen: number }> }>;
+  ownerCapitalCode: string | undefined;
+  formHasProfitAndLoss: boolean;
+  formHasBalanceSheet: boolean;
+}): { doubleEntry: boolean; hasBalanceSheet: boolean; hasProfitAndLoss: boolean } {
+  const doubleEntry =
+    input.entries.length > 0 &&
+    input.entries.every((entry) => {
+      let debit = 0;
+      let credit = 0;
+      for (const line of entry.lines) {
+        debit += line.debit_yen;
+        credit += line.credit_yen;
+      }
+      return debit === credit && debit > 0;
+    });
+  return {
+    doubleEntry,
+    hasProfitAndLoss: doubleEntry && input.formHasProfitAndLoss,
+    hasBalanceSheet: doubleEntry && input.formHasBalanceSheet && Boolean(input.ownerCapitalCode),
+  };
+}
+
 export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnDraft {
   if (!isSoleProprietorship()) return blocked(["sole proprietorship entity_form is required"]);
   const method = returnMethod();
@@ -223,7 +248,11 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     if (account.type === "expense") openPl -= row.balance_yen;
   }
   let transferred = 0;
+  const yearEntries: Array<{ lines: Array<{ debit_yen: number; credit_yen: number }> }> = [];
   for (const entry of loadJournalEntries().entries) {
+    const date = entry.occurred_at.slice(0, 10);
+    if (!inFiscalYear(date, fiscalYear)) continue;
+    yearEntries.push(entry);
     if (!(entry.source?.kind === "closing" && entry.source.adjustment_id === "pl-transfer")) continue;
     for (const line of entry.lines) {
       if (line.account_code !== sources.owner_capital) continue;
@@ -253,17 +282,22 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
   }
 
   const evidence = filingEvidence();
+  const books = deriveSolePropBooksFlags({
+    entries: yearEntries,
+    ownerCapitalCode: sources.owner_capital,
+    formHasProfitAndLoss: map.lines.some((line) => line.section === "pl"),
+    formHasBalanceSheet: map.lines.some((line) => line.section === "bs"),
+  });
   const gate = assessBlueReturnDeduction({
     businessIncomeYen: plIncome,
-    doubleEntry: true,
-    hasBalanceSheet: true,
-    hasProfitAndLoss: true,
+    doubleEntry: books.doubleEntry,
+    hasBalanceSheet: books.hasBalanceSheet,
+    hasProfitAndLoss: books.hasProfitAndLoss,
     etaxSubmittedAt: evidence.etaxSubmittedAt,
     denshiYuryoNotifiedAt: evidence.denshiYuryoNotifiedAt,
   });
-  const takeDeduction = Boolean(evidence.etaxSubmittedAt || evidence.denshiYuryoNotifiedAt);
-  const taken = takeDeduction ? gate.applied_yen : 0;
-  if (taken > plIncome) return blocked(["blue deduction exceeds business income"]);
+  const taken = gate.applied_yen;
+  if (taken > 0 && taken > plIncome) return blocked(["blue deduction exceeds business income"]);
 
   const amountFor = (source: string, accountName?: string): number | null => {
     if (source === "revenue") return sales;
@@ -275,7 +309,7 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     if (source === "income_after") return plIncome - taken;
     if (source === "owner_drawings") return balanceOf(sources.owner_drawings, trial);
     if (source === "owner_advances") return balanceOf(sources.owner_advances, trial);
-    if (source === "owner_capital") return balanceOf(sources.owner_capital, trial);
+    if (source === "owner_capital") return openingCapitalYen(sources.owner_capital, trial, transferred);
     return null;
   };
 
@@ -310,4 +344,15 @@ function balanceOf(
 ): number | null {
   if (!code) return null;
   return trial.rows.find((row) => row.account_code === code)?.balance_yen ?? 0;
+}
+
+/** 元入金 on the general-use form is opening capital, not the post-close balance. */
+function openingCapitalYen(
+  code: string | undefined,
+  trial: ReturnType<typeof buildTrialBalance>,
+  transferredNet: number,
+): number | null {
+  const closing = balanceOf(code, trial);
+  if (closing == null) return null;
+  return closing - transferredNet;
 }

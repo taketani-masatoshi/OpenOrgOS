@@ -307,6 +307,8 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
         restored.status === "ready" &&
           restored.income_before_blue_deduction_yen === 6_000 &&
           restored.bs_income_before_blue_deduction_yen === 6_000 &&
+          restored.lines.find((row) => row.id === "bs_capital")?.amount_yen === 0 &&
+          counted.lines.find((row) => row.id === "bs_capital")?.amount_yen === 0 &&
           restored.cogs_yen == null &&
           counted.cogs_yen === 60 &&
           counted.income_before_blue_deduction_yen === 5_940 &&
@@ -360,7 +362,9 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
           capSmall.applied_yen <= 100_000 &&
           capDefault.applied_yen === 0 &&
           scaled.deduction_gate.applied_yen === 550_000 &&
-          scaled.deduction_gate.applied_yen !== 650_000,
+          scaled.deduction_gate.applied_yen !== 650_000 &&
+          scaled.lines.find((row) => row.id === "blue_deduction")?.amount_yen === 550_000 &&
+          scaled.income_yen === 4_450_500,
         `high=${capHigh.applied_yen} electronic=${capElectronic.applied_yen} draft=${scaled.deduction_gate.applied_yen}`,
       ),
     );
@@ -374,7 +378,7 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
         8,
         tax.ready &&
           tax.business_income_yen === blueForTax.income_yen &&
-          tax.business_income_yen === 5_000_500 &&
+          tax.business_income_yen === 4_450_500 &&
           tax.income_tax_yen !== 999 &&
           tax.estimated_tax_yen === 999 &&
           tax.taxpayer_kind === "sole_proprietorship",
@@ -386,17 +390,20 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
       "etax_submitted_at: 2027-03-15\n",
     );
     const withEvidence = buildSolePropIncomeTaxReturnDraft(FY);
+    const evidencedBlue = buildSolePropBlueReturn(FY);
     checks.push(
       check(
         "progressive-floors",
         10,
-        tax.taxable_before_thousand_floor_yen === 5_000_500 &&
-          tax.taxable_yen === 5_000_000 &&
-          tax.income_tax_before_floor_yen === 572_500 &&
-          tax.income_tax_yen === 572_500 &&
-          tax.reconstruction_yen === 12_022 &&
-          tax.remaining_yen === 584_522 &&
-          tax.payable_yen === 584_500 &&
+        tax.taxable_before_thousand_floor_yen === 4_450_500 &&
+          tax.taxable_yen === 4_450_000 &&
+          tax.income_tax_before_floor_yen === 462_500 &&
+          tax.income_tax_yen === 462_500 &&
+          tax.reconstruction_yen === 9_712 &&
+          tax.remaining_yen === 472_212 &&
+          tax.payable_yen === 472_200 &&
+          evidencedBlue.lines.find((row) => row.id === "blue_deduction")?.amount_yen === 650_000 &&
+          evidencedBlue.income_yen === 4_350_500 &&
           withEvidence.taxable_yen === 4_350_000 &&
           withEvidence.income_tax_yen === 442_500,
         `base=${tax.taxable_yen}/${tax.income_tax_yen}/${tax.reconstruction_yen}/${tax.payable_yen} evidence=${withEvidence.taxable_yen}/${withEvidence.income_tax_yen}`,

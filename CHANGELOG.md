@@ -15,6 +15,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **個人事業の青色申告特別控除** — 帳簿が揃っていれば 55 万円を所得から引く。65 万円は提出証跡があるときだけ。決算書の元入金は期首残高で、当年の所得と二重にしない。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

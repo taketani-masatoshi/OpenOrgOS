@@ -194,20 +194,40 @@ describe("tax adjustment acceptance", () => {
     expect(evaluateTaxAdjustment(FY).can_compute).toBe(false);
 
     resetFixtureJournalEntries();
-    appendJournalEntry({
-      entry_id: "JE-BAD",
-      occurred_at: "2026-09-15T00:00:00.000Z",
-      description: "unknown",
-      source: { kind: "manual", authorized_by: "OP-TEST" },
-      evidence_refs: ["test:bad"],
-      lines: [
-        { account_code: "9999", debit_yen: 10, credit_yen: 0, tax_category: "out_of_scope" },
-        { account_code: "1100", debit_yen: 0, credit_yen: 10, tax_category: "out_of_scope" },
-      ],
-    });
+    expect(() =>
+      appendJournalEntry({
+        entry_id: "JE-BAD",
+        occurred_at: "2026-09-15T00:00:00.000Z",
+        description: "unknown",
+        source: { kind: "manual", authorized_by: "OP-TEST" },
+        evidence_refs: ["test:bad"],
+        lines: [
+          { account_code: "9999", debit_yen: 10, credit_yen: 0, tax_category: "out_of_scope" },
+          { account_code: "1100", debit_yen: 0, credit_yen: 10, tax_category: "out_of_scope" },
+        ],
+      }),
+    ).toThrow(/Unknown account code in journal: 9999/);
+    writeFileSync(
+      join(getDataDir(), "finance", "journal-entries.yaml"),
+      `version: 1
+entries:
+  - entry_id: JE-BAD
+    occurred_at: "2026-09-15T00:00:00.000Z"
+    description: unknown
+    source:
+      kind: manual
+      authorized_by: OP-TEST
+    evidence_refs:
+      - "test:bad"
+    lines:
+      - { account_code: "9999", debit_yen: 10, credit_yen: 0, tax_category: out_of_scope }
+      - { account_code: "1100", debit_yen: 0, credit_yen: 10, tax_category: out_of_scope }
+`,
+    );
     const unbalanced = evaluateTaxAdjustment(FY);
     expect(unbalanced.can_compute).toBe(false);
     expect(unbalanced.taxable_income_yen).toBeNull();
+    expect(unbalanced.errors).toContain("trial-balance");
   });
 
   it("does not add when book depreciation and entertainment are within the tax figures", () => {
