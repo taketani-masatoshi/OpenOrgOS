@@ -39,6 +39,7 @@
 | [customer-admin.md](customer-admin.md) | 顧客 admin |
 | [fleet-operations.md](fleet-operations.md) | 5 社フリート運用 |
 | [onboarding.md](onboarding.md) | オンボーディングチェックリスト |
+| [customer-journey-evidence.md](customer-journey-evidence.md) | 顧客業務の完走経路と証跡区分 |
 | [control-plane.md](control-plane.md) | 共有コントロールプレーン（P3） |
 | [deploy/product/stripe.md](../../deploy/product/stripe.md) | Stripe 設定 |
 
@@ -92,3 +93,7 @@ orgos ledger product stripe-status
 | `readiness` | 製品層 P0–P4（実装・パイロット骨格） |
 | `readiness --commercial` | 有料顧客受入ゲート C0–C3（課金 live・復旧 drill・監視等） |
 | `readiness --accounting` | 経理実務受入ゲート A0–A3（通年帳簿・銀行・締め・税務 handoff） |
+
+### 証拠の読み方
+
+readiness のスコアは実装・自動検証の成熟度を示すもので、本番実証や顧客継続利用を意味しません。顧客業務の完走状況は [customer-journey-evidence.md](customer-journey-evidence.md) の区分で確認します。

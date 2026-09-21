@@ -10,7 +10,7 @@ import {
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
 import { provisionLedgerTenant } from "../src/lib/product/ledger-provision.js";
-import { setTenantId } from "../src/lib/tenant.js";
+import { clearTenantId, setTenantId } from "../src/lib/tenant.js";
 import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
 
 describe("customer journey http", () => {
@@ -27,6 +27,7 @@ describe("customer journey http", () => {
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";
     refreshOrgOsPaths();
+    clearTenantId();
     provisionLedgerTenant({
       tenantId: "cux-journey-001",
       companyName: "Journey KK",
@@ -45,6 +46,7 @@ describe("customer journey http", () => {
     });
     if (workspace) rmSync(workspace, { recursive: true, force: true });
     process.env = { ...env };
+    clearTenantId();
     refreshOrgOsPaths();
   });
 
