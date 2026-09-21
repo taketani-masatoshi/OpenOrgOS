@@ -1,6 +1,6 @@
 import type { ModuleCliBundle } from "../../../../src/lib/module-cli-types.js";
 import { registerStandardModuleCommands } from "../../../../src/lib/module-cli-factory.js";
-import { issuePortalGrant, issueTrackingUrl } from "../../../../src/lib/propose-surface.js";
+import { renderPortalGrant, renderTrackingStatus } from "../../../../src/lib/propose-surface.js";
 
 export const MODULE_ID = "client_portal";
 
@@ -30,7 +30,7 @@ export const clientPortalCli: ModuleCliBundle = {
       .option("--order-status <status>", "Order status")
       .action((opts: { grantee: string; contract?: string; invoice?: string; orderStatus?: string }) => {
         printJson(
-          issuePortalGrant({
+          renderPortalGrant({
             granteeId: opts.grantee,
             contractId: opts.contract,
             invoiceId: opts.invoice,
@@ -45,7 +45,7 @@ export const clientPortalCli: ModuleCliBundle = {
       .requiredOption("--assignee <id>", "Assignee id")
       .requiredOption("--eta <text>", "ETA")
       .action((opts: { job: string; assignee: string; eta: string }) => {
-        printJson(issueTrackingUrl({ jobId: opts.job, assigneeId: opts.assignee, eta: opts.eta }));
+        printJson(renderTrackingStatus({ jobId: opts.job, assigneeId: opts.assignee, eta: opts.eta }));
       });
   },
 };

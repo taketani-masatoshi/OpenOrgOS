@@ -1,3 +1,5 @@
+import { makeProposeReport, flattenProposeReport } from "./report.js";
+
 /** Reference id only. Photo bytes are refused. Approval stays human. */
 export function proposeExpenseIntake(input: {
   channel: "line" | "slack" | "mail" | "chat";
@@ -31,4 +33,25 @@ export function proposeExpenseIntake(input: {
       status: "proposal",
     },
   };
+}
+
+/** One report. Reference id only — no photo bytes, no auto-approve. */
+export function renderExpenseIntakeReport(input: {
+  channel: "line" | "slack" | "mail" | "chat";
+  referenceId: string;
+  amountYen?: number;
+  photo?: unknown;
+}): Record<string, unknown> {
+  return flattenProposeReport(
+    makeProposeReport({
+      kind: "expense-intake-report",
+      depth: "L1",
+      human_gate: { apply: "human" },
+      payload: {
+        ...proposeExpenseIntake(input),
+        photo: null,
+        autoApprove: false,
+      },
+    }),
+  );
 }

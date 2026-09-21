@@ -1,3 +1,5 @@
+import { makeProposeReport, flattenProposeReport } from "./report.js";
+
 export function analyzeFieldTime(
   rows: Array<{ staffId: string; minutes: number; travelMinutes: number }>,
 ): {
@@ -18,4 +20,24 @@ export function analyzeFieldTime(
     suggestion,
     note: { observation: suggestion, ordered: false },
   };
+}
+
+/** One report. Does not issue overtime orders. */
+export function renderFieldAnalyticsReport(
+  rows: Array<{ staffId: string; minutes: number; travelMinutes: number }>,
+): Record<string, unknown> {
+  const analysis = analyzeFieldTime(rows);
+  return flattenProposeReport(
+    makeProposeReport({
+      kind: "field-analytics-report",
+      depth: "L1",
+      human_gate: { apply: "human" },
+      payload: {
+        totalMinutes: analysis.totalMinutes,
+        travelMinutes: analysis.travelMinutes,
+        suggestion: analysis.suggestion,
+        ordered: false,
+      },
+    }),
+  );
 }

@@ -2,34 +2,82 @@
  * Propose-only surfaces. Path: src/lib/propose-surface.ts
  * Re-exports domain modules. No send, no transfer, no approval. ADR 0079.
  */
-export { buildAuditPackIndex, type AuditSampleRef } from "./audit-pack/index.js";
+export { buildAuditPackIndex, renderAuditPack, type AuditSampleRef } from "./audit-pack/index.js";
 export {
   assertPurchaserIsNotAcceptor,
   assertSodAllowsApply,
+  dutiesFromPendingApprovals,
   findSodConflicts,
+  renderSodReport,
   type SodDuty,
 } from "./org/sod.js";
-export { summarizeProjectPl, type ProjectLine } from "./propose/project-pl.js";
-export { scanFollowups, type DueItem } from "./propose/followup.js";
-export { scanBottlenecks, type StuckItem } from "./propose/bottleneck.js";
+export { makeProposeReport, flattenProposeReport, type ProposeDepth } from "./propose/report.js";
 export {
+  renderProjectPlReport,
+  summarizeProjectPl,
+  type AllocationRule,
+  type ProjectLine,
+} from "./propose/project-pl.js";
+export {
+  dueItemsFromDeals,
+  renderFollowupReport,
+  scanFollowups,
+  type DueItem,
+} from "./propose/followup.js";
+export { renderBottleneckReport, scanBottlenecks, type StuckItem } from "./propose/bottleneck.js";
+export {
+  loadInvoiceTextInput,
   matchRegistration,
   parseInvoiceFixture,
+  proposeInvoiceJournal,
+  renderInvoiceJournalReport,
   type InvoiceCandidate,
 } from "./propose/invoice.js";
-export { extractBant, type BantProposal } from "./propose/bant.js";
-export { proposeDispatch, proposeReplan, scoreDispatch, type DispatchJob, type DispatchStaff } from "./propose/dispatch.js";
-export { acceptFieldReport, proposeJobCompletion, type JobCompletionProposal } from "./propose/job-complete.js";
-export { applyConsumption, proposeConsumption, proposeReorder } from "./propose/stock.js";
-export { analyzeFieldTime } from "./propose/analytics.js";
-export { issuePortalGrant } from "./propose/portal.js";
-export { issueTrackingUrl } from "./propose/tracking.js";
-export { assertNoHrSecretFields, startOffboarding, startOnboarding } from "./propose/hr.js";
-export { buildDailyCashSeries, type CashFlow } from "./propose/cashflow.js";
-export { renderQuotePdf, renderSalesQuotePdf } from "./propose/quote.js";
-export { bridgeEventIndex, draftChainEvent } from "./propose/trace.js";
-export { draftLostDealFollowup } from "./propose/lost-deal.js";
-export { proposeExpenseIntake } from "./propose/expense.js";
-export { proposePayrollTransfer } from "./propose/payroll.js";
-export { proposeAiaCycle } from "./propose/aia.js";
-export { proposeInvoiceJournal } from "./propose/invoice.js";
+export { extractBant, renderBantReport, type BantProposal } from "./propose/bant.js";
+export {
+  proposeDispatch,
+  proposeReplan,
+  renderDispatchReport,
+  renderReplanReport,
+  scoreDispatch,
+  type DispatchJob,
+  type DispatchStaff,
+} from "./propose/dispatch.js";
+export {
+  acceptFieldReport,
+  proposeJobCompletion,
+  renderFieldIntakeReport,
+  renderFieldInterfaceReport,
+  renderJobCompletionReport,
+  type JobCompletionProposal,
+} from "./propose/job-complete.js";
+export {
+  applyConsumption,
+  proposeConsumption,
+  proposeReorder,
+  renderStockReorderReport,
+} from "./propose/stock.js";
+export { analyzeFieldTime, renderFieldAnalyticsReport } from "./propose/analytics.js";
+export { issuePortalGrant, renderPortalGrant } from "./propose/portal.js";
+export { issueTrackingUrl, renderTrackingStatus } from "./propose/tracking.js";
+export {
+  assertNoHrSecretFields,
+  renderHrLifecycleReport,
+  startOffboarding,
+  startOnboarding,
+} from "./propose/hr.js";
+export {
+  buildDailyCashSeries,
+  renderCashflowReport,
+  type CashFlow,
+} from "./propose/cashflow.js";
+export { renderQuoteDraftReport, renderQuotePdf, renderSalesQuotePdf } from "./propose/quote.js";
+export { bridgeEventIndex, draftChainEvent, renderTraceBridgeReport } from "./propose/trace.js";
+export {
+  draftLostDealFollowup,
+  renderLostDealFollowupReport,
+  scanSilentDeals,
+} from "./propose/lost-deal.js";
+export { proposeExpenseIntake, renderExpenseIntakeReport } from "./propose/expense.js";
+export { proposePayrollTransfer, renderPayrollTransferReport } from "./propose/payroll.js";
+export { proposeAiaCycle, renderAiaCycleReport } from "./propose/aia.js";

@@ -1,4 +1,6 @@
+import { existsSync, readFileSync } from "node:fs";
 import type { InvoiceRegistrationCatalog } from "../../../schemas/finance/invoice-registration-catalog.js";
+import { makeProposeReport, flattenProposeReport } from "./report.js";
 
 export type InvoiceCandidate = {
   tNumber?: string;
@@ -21,6 +23,22 @@ export function parseInvoiceFixture(text: string): InvoiceCandidate {
     amountYen: amount ? Number(amount[1]) : undefined,
     posting: "proposal",
   };
+}
+
+/**
+ * Read UTF-8 text from a path (fixture / extracted text). PDF binary OCR is refused.
+ */
+export function loadInvoiceTextInput(pathOrText: string): { text: string; inputs_ref: string[] } {
+  if (existsSync(pathOrText)) {
+    if (/\.pdf$/i.test(pathOrText) || /\.(png|jpe?g|webp)$/i.test(pathOrText)) {
+      throw new Error("PDF/image OCR is out of scope; pass a text file or fixture string");
+    }
+    return {
+      text: readFileSync(pathOrText, "utf8"),
+      inputs_ref: [pathOrText],
+    };
+  }
+  return { text: pathOrText, inputs_ref: [] };
 }
 
 export function matchRegistration(
@@ -73,4 +91,26 @@ export function proposeInvoiceJournal(
     lines,
     posted: false,
   };
+}
+
+/** One report. Text fixture or text file path — no live OCR, no live NTA API, no journal post. */
+export function renderInvoiceJournalReport(
+  textOrPath: string,
+  catalog: InvoiceRegistrationCatalog,
+): Record<string, unknown> {
+  const loaded = loadInvoiceTextInput(textOrPath);
+  const proposed = proposeInvoiceJournal(loaded.text, catalog);
+  return flattenProposeReport(
+    makeProposeReport({
+      kind: "invoice-journal-report",
+      depth: loaded.inputs_ref.length > 0 ? "L2" : "L1",
+      inputs_ref: loaded.inputs_ref,
+      human_gate: { apply: "human" },
+      payload: {
+        ...proposed,
+        liveOcr: false,
+        liveNtaApi: false,
+      },
+    }),
+  );
 }

@@ -1,3 +1,5 @@
+import { makeProposeReport, flattenProposeReport } from "./report.js";
+
 export type StuckItem = { id: string; ownerId: string; waitingSince: string; kind: string };
 
 export function scanBottlenecks(
@@ -21,4 +23,25 @@ export function scanBottlenecks(
     })
     .filter((item) => item.stuckDays >= stuckDays)
     .sort((a, b) => b.stuckDays - a.stuckDays);
+}
+
+/** One report. Does not notify owners. */
+export function renderBottleneckReport(
+  items: StuckItem[],
+  asOf: string,
+  stuckDays: number,
+): Record<string, unknown> {
+  return flattenProposeReport(
+    makeProposeReport({
+      kind: "bottleneck-report",
+      depth: "L1",
+      human_gate: { apply: "human", sent: false },
+      payload: {
+        asOf,
+        stuckDaysThreshold: stuckDays,
+        items: scanBottlenecks(items, asOf, stuckDays),
+        notified: false,
+      },
+    }),
+  );
 }

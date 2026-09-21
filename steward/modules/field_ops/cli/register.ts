@@ -1,9 +1,12 @@
 import type { ModuleCliBundle } from "../../../../src/lib/module-cli-types.js";
 import { registerStandardModuleCommands } from "../../../../src/lib/module-cli-factory.js";
 import {
-  analyzeFieldTime,
-  proposeDispatch,
-  proposeJobCompletion,
+  renderDispatchReport,
+  renderFieldAnalyticsReport,
+  renderFieldIntakeReport,
+  renderFieldInterfaceReport,
+  renderJobCompletionReport,
+  renderReplanReport,
   type DispatchJob,
   type DispatchStaff,
 } from "../../../../src/lib/propose-surface.js";
@@ -32,7 +35,7 @@ export const fieldOpsCli: ModuleCliBundle = {
       .requiredOption("--staff <json>", "JSON array of staff")
       .action((opts: { jobs: string; staff: string }) => {
         printJson(
-          proposeDispatch(
+          renderDispatchReport(
             JSON.parse(opts.jobs) as DispatchJob[],
             JSON.parse(opts.staff) as DispatchStaff[],
           ),
@@ -46,7 +49,7 @@ export const fieldOpsCli: ModuleCliBundle = {
       .requiredOption("--exclude <ids>", "Comma-separated staff ids")
       .action((opts: { jobs: string; staff: string; exclude: string }) => {
         printJson(
-          proposeDispatch(
+          renderReplanReport(
             JSON.parse(opts.jobs) as DispatchJob[],
             JSON.parse(opts.staff) as DispatchStaff[],
             opts.exclude.split(",").filter(Boolean),
@@ -62,15 +65,59 @@ export const fieldOpsCli: ModuleCliBundle = {
       .requiredOption("--job <id>", "Job id")
       .requiredOption("--text <text>", "Report text")
       .action((opts: { job: string; text: string }) => {
-        printJson(proposeJobCompletion(opts.text, opts.job));
+        printJson(renderJobCompletionReport(opts.text, opts.job));
       });
+
+    field
+      .command("intake")
+      .description("Accept mail/chat/text/voice-transcript. No standing bot or live STT")
+      .requiredOption("--channel <name>", "mail | chat | voice_transcript | text")
+      .requiredOption("--job <id>", "Job id")
+      .requiredOption("--text <text>", "Report text")
+      .action(
+        (opts: {
+          channel: "mail" | "chat" | "voice_transcript" | "text";
+          job: string;
+          text: string;
+        }) => {
+          printJson(
+            renderFieldIntakeReport({
+              channel: opts.channel,
+              jobId: opts.job,
+              text: opts.text,
+            }),
+          );
+        },
+      );
+
+    field
+      .command("interface")
+      .description("Field IF report. Photo and audio bytes are refused. No standing bot")
+      .requiredOption("--channel <name>", "mail | chat | voice_transcript | text")
+      .requiredOption("--job <id>", "Job id")
+      .requiredOption("--text <text>", "Report text")
+      .action(
+        (opts: {
+          channel: "mail" | "chat" | "voice_transcript" | "text";
+          job: string;
+          text: string;
+        }) => {
+          printJson(
+            renderFieldInterfaceReport({
+              channel: opts.channel,
+              jobId: opts.job,
+              text: opts.text,
+            }),
+          );
+        },
+      );
 
     field
       .command("analytics")
       .description("Summarize job time and write an improvement note")
       .requiredOption("--rows <json>", "JSON array of {staffId,minutes,travelMinutes}")
       .action((opts: { rows: string }) => {
-        printJson({ ...analyzeFieldTime(JSON.parse(opts.rows) as never), ordered: false });
+        printJson(renderFieldAnalyticsReport(JSON.parse(opts.rows) as never));
       });
   },
 };

@@ -1,6 +1,6 @@
 import type { ModuleCliBundle } from "../../../../src/lib/module-cli-types.js";
 import { registerStandardModuleCommands } from "../../../../src/lib/module-cli-factory.js";
-import { startOnboarding } from "../../../../src/lib/propose-surface.js";
+import { renderHrLifecycleReport } from "../../../../src/lib/propose-surface.js";
 
 export const MODULE_ID = "hr_lifecycle";
 
@@ -27,7 +27,27 @@ export const hrLifecycleCli: ModuleCliBundle = {
       .requiredOption("--person <ref>", "Person reference id")
       .option("--esign-case <id>", "pdf_esign case id")
       .action((opts: { person: string; esignCase?: string }) => {
-        printJson(startOnboarding({ personRef: opts.person, esignCaseId: opts.esignCase }));
+        printJson(
+          renderHrLifecycleReport({
+            mode: "onboarding",
+            personRef: opts.person,
+            esignCaseId: opts.esignCase,
+          }),
+        );
+      });
+    hr
+      ?.command("leave")
+      .description("Open an offboarding procedure draft. Does not file")
+      .requiredOption("--person <ref>", "Person reference id")
+      .requiredOption("--esign-case <id>", "pdf_esign case id")
+      .action((opts: { person: string; esignCase: string }) => {
+        printJson(
+          renderHrLifecycleReport({
+            mode: "offboarding",
+            personRef: opts.person,
+            esignCaseId: opts.esignCase,
+          }),
+        );
       });
   },
 };

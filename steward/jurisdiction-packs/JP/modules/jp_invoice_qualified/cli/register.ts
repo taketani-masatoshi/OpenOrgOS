@@ -39,14 +39,13 @@ export const jp_invoice_qualifiedCli: ModuleCliBundle = {
       .requiredOption("--text <text>", "Fixture text")
       .option("--catalog <json>", "Offline registration catalog JSON")
       .action(async (opts: { text: string; catalog?: string }) => {
-        const { matchRegistration, parseInvoiceFixture } = await import(
+        const { renderInvoiceJournalReport } = await import(
           "../../../../../../src/lib/propose-surface.js"
         );
-        const candidate = parseInvoiceFixture(opts.text);
-        const registration = opts.catalog
-          ? matchRegistration(JSON.parse(opts.catalog), candidate.tNumber)
-          : undefined;
-        console.log(JSON.stringify({ ...candidate, registration }));
+        const catalog = opts.catalog
+          ? (JSON.parse(opts.catalog) as { version: 1; registrations: never[] })
+          : { version: 1 as const, registrations: [] };
+        console.log(JSON.stringify(renderInvoiceJournalReport(opts.text, catalog)));
       });
   },
   skillHandlers: {

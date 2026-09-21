@@ -59,8 +59,8 @@ export const retailStoreCli: ModuleCliBundle = {
       .description("Propose reorders for low stock. Does not send to a supplier")
       .requiredOption("--skus <json>", "JSON array of {id,stock_qty,threshold}")
       .action(async (opts: { skus: string }) => {
-        const { proposeReorder } = await import("../../../../src/lib/propose-surface.js");
-        console.log(JSON.stringify(proposeReorder(JSON.parse(opts.skus) as never)));
+        const { renderStockReorderReport } = await import("../../../../src/lib/propose-surface.js");
+        console.log(JSON.stringify(renderStockReorderReport(JSON.parse(opts.skus) as never)));
       });
   },
   skillHandlers: {

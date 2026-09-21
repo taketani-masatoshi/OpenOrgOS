@@ -8,8 +8,33 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **Propose 面の深度（depth）二軸** — doctrine の「完成」は無人実行をしない完了線のまま。実装厚みは `depth: L0|L1|L2` で併記する（完成 ≠ L2）。共通 `ProposeReport` envelope（`schemas/propose-report.ts` · `makeProposeReport`）を全 `render*` に適用。field IF は `renderFieldInterfaceReport` 正本、intake / job complete はエイリアス。Wave 1 で失注 / followup / BANT / 見積 / 在庫 / 資金繰り / P/L / 給与 / AIA をテナント SoT に接続。Wave 2 で dispatch 負荷スコア、SoD pending-approvals、audit/trace `missing_refs`、invoice テキストファイル、HR 手順 YAML。テスト: `propose-report-schema` · `propose-depth`。
 - **未実装 12 件を提案まで置く** — 監査パック、SoD（発注者≠検収者）、プロジェクト P/L、followup / bottleneck scan、`field_ops` · `client_portal` · `hr_lifecycle`、請求 fixture intake、BANT 候補、在庫減算・発注の提案、現場の時間集計、会社イベント chain への digest index、資金繰りの日次系列、見積 PDF 下書き、失注フォロー文案。送信・振込・自動承認・ステージ適用は人間のまま。`can_approve` と `can_execute` は true にしない。ADR 0079
 - **部分 24 件を方針の内側の 100 点まで上げる** — 文案・索引・配賦・日次資金・見積 PDF・ステージ提案・SoD の宣言組・閲覧許可・在庫の人間 apply・現場テキスト・退社手順・chain 下書き・AIA 提案一覧。無人送信、自動振込、自動承認、ライブ外部 API、GPS 軌跡は入れない。
+- **監査パックを要望どおりの1件にする** — `orgos audit pack` が契約・請求・振込参照・仕訳の id を1つの `audit-pack` 文書にする。本文はコピーしない。
+- **現場の動態分析を要望どおりの1件にする** — `field analytics` が作業時間と移動を `field-analytics-report` にする。残業の自動指示は出さない。
+- **ボトルネック検知を要望どおりの1件にする** — `bottleneck scan` が滞留を `bottleneck-report` にする。当事者への自動通知は出さない。
+- **期日フォローを要望どおりの1件にする** — `followup scan` が期日内下書きを `followup-report` にする。顧客への無人配信は出さない。
+- **失注フォローを要望どおりの1件にする** — `lost-deal-draft` が `lost-deal-followup-report` にする。予測モデルと Slack / LINE 自動プッシュは出さない。
+- **顧客追跡を要望どおりの1件にする** — `client_portal track` が担当と ETA を `tracking-status` にする。地図タイルと座標は出さない。
+- **職務分掌（SoD）を要望どおりの1件にする** — `orgos sod check` が宣言ペアの衝突を `sod-report` にする。承認者の自動代理は出さない。
+- **BANT 抽出を要望どおりの1件にする** — `sales bant` が文字起こしから `bant-report` にする。ステージの自動 apply は出さない。
+- **顧客ポータルを要望どおりの1件にする** — `client_portal grant` が参照 id を `portal-grant` にする。文書本文は出さない。
+- **プロジェクト P/L を要望どおりの1件にする** — `ledger pl` が人間配賦つき集計を `project-pl-report` にする。売上などの自動搭載は出さない。
+- **資金繰りを要望どおりの1件にする** — `ledger cashflow-daily` が日次系列を `cashflow-report` にする。自動取込とグラフ UI は出さない。
+- **給与振込提案を要望どおりの1件にする** — `payroll-propose` が dry-run を `payroll-transfer-report` にする。銀行実行と税納付は出さない。
+- **経費 intake を要望どおりの1件にする** — `expense-intake` が参照 id を `expense-intake-report` にする。写真バイトと自動承認は出さない。
+- **請求 intake を要望どおりの1件にする** — `invoice-qualified intake` が fixture から `invoice-journal-report` にする。ライブ OCR / NTA API / 自動 post は出さない。
+- **見積 PDF を要望どおりの1件にする** — `sales quote render` が `quote-draft-report` にする。自動組立と顧客自動送付は出さない。
+- **AIA 提案一覧を要望どおりの1件にする** — `aia propose-cycle` が提案を `aia-cycle-report` にする。自律ループと無人実行は出さない。
+- **リ・ディスパッチを要望どおりの1件にする** — `dispatch replan` が再割当を `replan-report` にする。GPS 自動組み替えと自動 apply は出さない。
+- **在庫発注案を要望どおりの1件にする** — `retail reorder-propose` が低在庫を `stock-reorder-report` にする。実減算と仕入先送信は出さない。
+- **GPS 割当案を要望どおりの1件にする** — `dispatch propose` がスキル・通過点を `dispatch-report` にする。GPS 軌跡・ルート最適化・自動 apply は出さない。
+- **ジョブ完了報告を要望どおりの1件にする** — `field job complete` がテキストを `job-completion-report` にする。ライブ STT・実減算・顧客送信は出さない。
+- **入退社手順を要望どおりの1件にする** — `hr-lifecycle` が手順を `hr-lifecycle-report` にする。マイナンバー保存と届出の自動提出は出さない。
+- **trace bridge を要望どおりの1件にする** — `trace bridge` が digest 索引を `trace-bridge-report` にする。巨大ログ統合と chain 書き込みは出さない。
+- **現場入力を要望どおりの1件にする** — `field-ops intake` がテキスト経路を `field-intake-report` にする。常駐ボットとライブ STT は出さない。
+- **現場 IF を要望どおりの1件にする** — `field-ops interface` が `field-interface-report` にする。写真・音声バイトと常駐ボットは出さない。
 - **モジュール AI 権限の未宣言を失敗にする** — `security.ai` の 6 キーが YAML に無い、または `can_approve` / `can_execute` が true のモジュールは `orgos modules check` と `orgos platform extension-check`（`doctrine:module-ai`）が拒否する。zod の既定値では未宣言を隠せない。新規モジュールの雛形にも同じ宣言を入れる。ADR 0079
 - **モジュールの AI 権限を宣言にする** — `module.manifest.yaml` の `security.ai` を 46 件すべてで明示。`can_approve` と `can_execute` は全件 false、`can_propose` は観測可能な根拠のある 16 件のみ true。`security:` が無かった 19 件に `limits.concurrent_jobs` を補う（core 2 · JP pack 1）。強制は registrar と capability 解決に置き、モジュール側のコードは触らない。ADR 0079 · [ai-permission-declaration.md](steward/rules/ai-permission-declaration.md)
 - **カタログ id は実体のあるものだけ置く** — `org_pdf_sign` · `document_attestation` · `iso_cms` · `receipt_qr` を `CORE_BUSINESS_MODULE_IDS` から外し、`pdf_esign` を実体化する方針を決定（本変更は決定と宣言のみ。core-ids の編集は次段）。ADR 0080
