@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · accounting
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-21 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent accounting`
 
 ---
@@ -165,6 +165,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 **Path:** `steward/core/agents/accounting_agent.md`
 **English role:** Accounting Operations · **日本語:** 経理実務
 **優先度:** P0 · **報告:** finance · **4 層:** **Agent**
+
+**権限:** propose まで。post と期間ロックの確定は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
 
 ---
 

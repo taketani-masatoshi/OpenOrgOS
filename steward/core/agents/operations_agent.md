@@ -3,6 +3,8 @@
 **English role:** Operations & Document I/O · **日本語:** 業務運用エージェント  
 **4 層:** **Agent** — `docs/io/` · `data/document-io.yaml` · `docs/company/hr/` を管轄。正データ YAML は編集しない。
 
+**権限:** propose まで。確定は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
+
 **構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---

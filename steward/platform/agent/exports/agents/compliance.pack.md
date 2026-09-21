@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · compliance
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-21 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent compliance`
 
 ---
@@ -164,6 +164,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 **English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント
 **4 層:** **Agent** — 有効社内規程 · `docs/compliance/` を管轄。テンプレは [steward/standards/regulations/](../standards/regulations/00-このフォルダについて.md) · [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（Read）。
+
+**権限:** propose まで。統制判定は事実の提示で、確定は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
 
 **構成:** [repository_layout.md](steward/rules/repository_layout.md)
 

@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · data_analytics
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-21 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent data_analytics`
 
 ---
@@ -164,6 +164,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 **English role:** Data & Analytics · **日本語:** データ分析
 **優先度:** P1 · **報告:** executive_steward · **4 層:** **Agent**
+
+**権限:** 読取と分析のみ。SSOT を書かない · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
 
 ---
 

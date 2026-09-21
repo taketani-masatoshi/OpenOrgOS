@@ -3,6 +3,8 @@
 **English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント  
 **4 層:** **Agent** — 有効社内規程 · `docs/compliance/` を管轄。テンプレは [steward/standards/regulations/](../standards/regulations/00-このフォルダについて.md) · [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（Read）。
 
+**権限:** propose まで。統制判定は事実の提示で、確定は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
+
 **構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---

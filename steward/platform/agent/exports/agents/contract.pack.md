@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · contract
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-21 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent contract`
 
 ---
@@ -164,6 +164,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 **English role:** Contract Management · **日本語:** 契約管理エージェント
 **4 層:** **Agent** — `data/contracts/` · `docs/contracts/` · `docs/exports/契約管理表.csv` を管轄。
+
+**権限:** propose まで。締結と相手方への送付は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
 
 **構成:** [repository_layout.md](steward/rules/repository_layout.md)
 

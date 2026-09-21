@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · finance
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-21 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent finance`
 
 ---
@@ -165,6 +165,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 **Path:** `steward/core/agents/finance_agent.md`
 **English role:** Finance & Planning · **日本語:** 財務・計画エージェント
 **4 層:** **Agent** — `data/finance/` · `data/plans/` · `docs/plans/` · `docs/exports/` を管轄。
+
+**権限:** propose まで。仕訳の post と振込の確定は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
 
 **構成:** [repository_layout.md](steward/rules/repository_layout.md)
 

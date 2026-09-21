@@ -3,6 +3,8 @@
 **English role:** Contract Management · **日本語:** 契約管理エージェント  
 **4 層:** **Agent** — `data/contracts/` · `docs/contracts/` · `docs/exports/契約管理表.csv` を管轄。
 
+**権限:** propose まで。締結と相手方への送付は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
+
 **構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---

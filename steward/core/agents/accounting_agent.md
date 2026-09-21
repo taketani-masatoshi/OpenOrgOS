@@ -4,6 +4,8 @@
 **English role:** Accounting Operations · **日本語:** 経理実務  
 **優先度:** P0 · **報告:** finance · **4 層:** **Agent**
 
+**権限:** propose まで。post と期間ロックの確定は人間の apply · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
+
 ---
 
 ## 目的

@@ -10,3 +10,13 @@ cli_commands:
   - show
   - validate
   - margin
+security:
+  ai:
+    can_observe: true
+    can_analyze: true
+    can_draft: true
+    can_propose: false
+    can_approve: false
+    can_execute: false
+  limits:
+    concurrent_jobs: 2

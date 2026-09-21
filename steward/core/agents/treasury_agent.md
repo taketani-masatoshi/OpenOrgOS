@@ -4,6 +4,8 @@
 **English role:** Treasury · **日本語:** 資金・FX  
 **優先度:** P2 · **報告:** finance · **4 層:** **Agent**
 
+**権限:** propose まで。broker 経由の事前委任枠は未設置（現時点 0 件） · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
+
 ---
 
 ## 役割

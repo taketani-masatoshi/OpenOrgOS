@@ -3,6 +3,8 @@
 **English role:** Data & Analytics · **日本語:** データ分析  
 **優先度:** P1 · **報告:** executive_steward · **4 層:** **Agent**
 
+**権限:** 読取と分析のみ。SSOT を書かない · 正本 [ADR 0079](../../docs/adr/0079-module-ai-permission-declaration.md)
+
 ---
 
 ## 役割
