@@ -64,6 +64,8 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0075](0075-wire-demo-walkthrough.md) | Wire Demo Walkthrough（MAL ↔ Southwood 一本道） | Accepted |
 | [0076](0076-public-web-mal-usecase.md) | Public Web 実ユースケース訴求（oorgos.org） | Accepted |
 | [0077](0077-workflow-structure-discussion-gate.md) | Workflow 構成議論ゲート（evaluate · WFS · APR） | Accepted |
+| [0079](0079-module-ai-permission-declaration.md) | モジュールの AI 権限は manifest で宣言し registrar で強制する | Accepted |
+| [0080](0080-catalog-id-materialism.md) | カタログ id は実体のあるものだけ置く（core-ids の整理） | Accepted |
 
 ## 新規 ADR
 

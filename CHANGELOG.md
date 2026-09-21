@@ -8,6 +8,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **モジュールの AI 権限を宣言にする** — `module.manifest.yaml` の `security.ai` を 46 件すべてで明示。`can_approve` と `can_execute` は全件 false、`can_propose` は観測可能な根拠のある 16 件のみ true。`security:` が無かった 19 件に `limits.concurrent_jobs` を補う（core 2 · JP pack 1）。強制は registrar と capability 解決に置き、モジュール側のコードは触らない。ADR 0079 · [ai-permission-declaration.md](steward/rules/ai-permission-declaration.md)
+- **カタログ id は実体のあるものだけ置く** — `org_pdf_sign` · `document_attestation` · `iso_cms` · `receipt_qr` を `CORE_BUSINESS_MODULE_IDS` から外し、`pdf_esign` を実体化する方針を決定（本変更は決定と宣言のみ。core-ids の編集は次段）。ADR 0080
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
