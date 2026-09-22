@@ -23,6 +23,8 @@ import {
   type PdfTableRow,
 } from "./pdf.js";
 import { buildIndividualNotes } from "./finance/ledger/balance-sheet.js";
+import { buildSurplusDisposalParagraph } from "./finance/ledger/financial-statement-disclosures.js";
+import { buildStatutoryStatements } from "./finance/ledger/statutory-statements.js";
 import { ensurePdfOutputDir, formatCurrency, formatJapaneseDate } from "./utils.js";
 
 export interface KessanReportInput {
@@ -160,40 +162,49 @@ export async function generateKessanPdf(
     pdfMutedNote(w, "※ 本報告書の数値は月次実績の再構成に基づきます。税理士確認後に確定版へ更新してください。");
   }
 
-  pdfSection(w, "1. 損益の状況");
-  pdfTable(w, input.plRows ?? buildKessanPlRows(yojitsu));
+  if (yojitsu.closing?.basis === "gl") {
+    const statutory = buildStatutoryStatements(input.fiscalYear);
+    pdfSection(w, "貸借対照表");
+    pdfTable(w, statutory.bsRows);
+    pdfSection(w, "損益計算書");
+    pdfTable(w, statutory.plRows);
+    pdfSection(w, "株主資本等変動計算書");
+    pdfTable(w, statutory.equityRows);
+    pdfSection(w, "個別注記表");
+    for (const note of statutory.noteLines) pdfParagraph(w, note);
+    pdfSection(w, "剰余金の処分");
+    pdfParagraph(w, statutory.surplusText);
+  } else {
+    let section = 1;
+    if (input.bsRows && input.bsRows.length > 0) {
+      pdfSection(w, `${section}. 貸借対照表`);
+      pdfTable(w, input.bsRows);
+      section += 1;
+    }
 
-  if (input.bsRows && input.bsRows.length > 0) {
-    pdfSection(w, "2. 財政状態");
-    pdfTable(w, input.bsRows);
-  }
+    pdfSection(w, `${section}. 損益計算書`);
+    pdfTable(w, input.plRows ?? buildKessanPlRows(yojitsu));
+    section += 1;
 
-  if (input.equityRows && input.equityRows.length > 0) {
-    pdfSection(w, input.bsRows ? "3. 株主資本等変動" : "2. 株主資本等変動");
-    pdfTable(w, input.equityRows);
-  }
+    if (input.equityRows && input.equityRows.length > 0) {
+      pdfSection(w, `${section}. 株主資本等変動計算書`);
+      pdfTable(w, input.equityRows);
+      section += 1;
+    }
 
-  const surplusIndex = input.bsRows ? (input.equityRows ? 4 : 3) : 2;
-  pdfSection(w, `${surplusIndex}. 剰余金の処分`);
-  pdfParagraph(
-    w,
-    "当期純利益は、内部留保として積み立てることといたします。（株主総会決議事項）"
-  );
+    const notes = (input.noteRows ?? buildIndividualNotes({ fiscalYear: input.fiscalYear })).filter(Boolean);
+    pdfSection(w, `${section}. 個別注記表`);
+    for (const note of notes) {
+      pdfParagraph(w, note);
+    }
+    section += 1;
 
-  pdfSection(w, `${surplusIndex + 1}. 重要な会計方針`);
-  pdfParagraph(
-    w,
-    "減価償却は定額法により計上しています。収益は発生主義（売掛金）、費用は発生主義（買掛金）で認識しています。",
-  );
-
-  const notes = [
-    ...(yojitsu.closing?.notes ? [yojitsu.closing.notes.trim()] : []),
-    ...(input.noteRows ?? []),
-    ...buildIndividualNotes({ fiscalYear: input.fiscalYear }),
-  ].filter(Boolean);
-  pdfSection(w, `${surplusIndex + 2}. 注記`);
-  for (const note of notes) {
-    pdfParagraph(w, note);
+    const surplus = buildSurplusDisposalParagraph(input.fiscalYear);
+    pdfSection(w, `${section}. 剰余金の処分`);
+    pdfParagraph(
+      w,
+      surplus.text || "剰余金の処分: 宣言または仕訳が不足しています（年度宣言を確認してください）。",
+    );
   }
 
   const reps = (company.directors ?? [])

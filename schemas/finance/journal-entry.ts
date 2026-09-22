@@ -14,6 +14,8 @@ export const journalEntryLineSchema = z.object({
   account_code: z.string().regex(/^\d{4}$/),
   debit_yen: z.number().int().nonnegative().default(0),
   credit_yen: z.number().int().nonnegative().default(0),
+  /** 仕訳帳の丁数。手引きの記載例照合では空は不一致。 */
+  folio: z.string().optional(),
   org_unit_id: z.string().min(1).optional(),
   person_id: z.string().min(1).optional(),
   counterparty_id: z.string().min(1).optional(),
