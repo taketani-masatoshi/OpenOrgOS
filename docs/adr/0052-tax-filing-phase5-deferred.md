@@ -1,6 +1,6 @@
 # ADR 0052: Tax Filing Phase 5 — e-Tax · Return XML · Lodging Ledger
 
-**Status:** Accepted · **Date:** 2026-08-24 · **Updated:** 2026-08-29
+**Status:** Accepted · **Date:** 2026-08-24 · **Updated:** 2026-09-22
 
 ## Context
 
@@ -15,10 +15,20 @@ Phase 5 を **3 サブフェーズ** で defer し、トリガー条件を明文
 |------|------|----------|------|
 | **5a** | 会計 SoT 完成（試算表 · 仕訳 · 月次整合） | Phase 3 完了 · 税理士 B/S 確定 | Accounting |
 | **5b** | 申告書 XML / 別表ドラフト生成 | **実装済（handoff のみ）** — `writeCorporateTaxXmlDraft` · 別表四/五相当の Completeness。e-Tax 送信はしない | Dev + 税理士 |
-| **5c** | e-Tax / eLTAX 本番提出 | 5b + 代表/税理士署名 | 人間のみ |
+| **5c** | e-Tax / eLTAX 本番提出 | 認証済みの人間が電子証明書で公式エンドポイントへ送る | 人間のみ |
 | **5d** | 宿泊税 `obligation_rhythms` `from_ledger` | **実装済** — `lodgingTaxFromLedger` が `data/operations/lodging-tax.yaml` assessments を読む | Dev |
 
-**OrgOS は 5c の実行を実装しない** — 提出は税理士ワークフロー外注。
+**5c の提出境界。** クライアントは公式エンドポイント以外へ向けず、ソケットは開かない。**法定の 5c は未充足のまま**（公式受付番号がディスク上に無い）。製品側の拒否・採点・人間記録口は実装済み。自動試験は使い捨て gitignore ツリーだけで行う。ダミー申告で法定充足にしない。
+
+- LLM と MCP は送信しない。
+- Agent は承認も送信もしない。
+- 送れるのは認証済みの人間だけで、電子証明書を使う。
+- クライアントは公式ホスト（`https://www.e-tax.nta.go.jp` · `https://www.eltax.lta.go.jp`）だけを許可する。ソケットは開かない。
+- 秘密鍵は結果にもログにも書かない。
+- 申告 XML はオペレータが公式サイトから取得した XSD のローカルパス（`xsdPath`）で `xmllint --schema` が通るときだけ次段へ進む。`tests/fixtures` 配下は拒否（`xsd_invalid`）。著作権上再配布できない公式 XSD はリポジトリに vendoring しない。
+- 公式の受付番号が無い応答は成功にしない。受付番号の偽造・fixture 形の見本を gitignore パスへ書くことはしない。
+- 点数は項目ごとに全部か 0（法人 e-Tax 2 · 法人 eLTAX 2 · 個人 e-Tax 4 · 個人 eLTAX 4）。gitignore された `records/finance/official-filing-receipt.yaml` に、実提出由来の数字形受付番号があるときだけ付く。tracked の見本は数えない。
+- 人間が公式サイトで受け取った番号の保存は `orgos tax record-official-receipt --i-recorded-from-official-site`（`recordOfficialFilingReceipt`）のみ。現状の点数確認は `orgos tax filing-score`。
 
 ## Lodging tax ledger（5d）
 
