@@ -975,6 +975,7 @@ agents:
       - jp_consumption_refund_show
       - jp_consumption_tax_return
       - jp_corporate_tax_return
+      - jp_individual_income_tax
       - jp_invoice_registration
       - jp_qualified_invoice_issue
       - jp_withholding_payment

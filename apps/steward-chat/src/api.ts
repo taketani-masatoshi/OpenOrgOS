@@ -2517,7 +2517,7 @@ export async function fetchTaxLinesRead(): Promise<{
   lines: Array<{ id: string; label: string; status: string; detail: string }>;
   pin_diff_rows: Array<{ id: string; label: string; diff_empty: boolean; note: string }>;
 }> {
-  return chatJson("/chat/v1/tax/lines-read");
+  return chatApi("/chat/v1/tax/lines-read");
 }
 
 export async function fetchTaxFilingScore(): Promise<{
@@ -2527,7 +2527,7 @@ export async function fetchTaxFilingScore(): Promise<{
   socket_opens: boolean;
   note: string;
 }> {
-  return chatJson("/chat/v1/tax/filing-score");
+  return chatApi("/chat/v1/tax/filing-score");
 }
 
 export async function fetchTaxReadiness(): Promise<{

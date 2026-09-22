@@ -234,6 +234,19 @@ describe("finance filing product gate", () => {
     ).toBe(false);
   });
 
+  it("live schedule4 collation reports projectedReady when worksheet builds", async () => {
+    const { buildLiveFormPinCollations } = await import(
+      "../src/lib/product/tax-form-pin-collations.js"
+    );
+    const rows = buildLiveFormPinCollations();
+    const schedule = rows.find((r) => r.id === "schedule4-yen");
+    const companies = rows.find((r) => r.id === "companies-act-yen");
+    expect(companies?.pinPresent).toBe(false);
+    expect(schedule?.pinPresent).toBe(true);
+    // Without a tenant worksheet this may be false; with demo books it may be true.
+    expect(typeof schedule?.projectedReady).toBe("boolean");
+  });
+
   it("ledger product tree requires git-tracked paths (not mere existence)", () => {
     const status = ledgerUnifyProductTreeStatus();
     expect(status.missing, JSON.stringify(status.missing)).toEqual([]);

@@ -30,6 +30,7 @@ import { buildTaxCalendarPortfolio } from "../../finance/tax-calendar-portfolio.
 import { summarizeTaxFilingGaps, tryLoadTaxFilingGaps } from "../../finance/tax-filing-gaps.js";
 import { runConsumptionTaxCheck } from "../../finance/consumption-tax.js";
 import { buildTaxLinesReadModel } from "../../product/tax-lines-read-model.js";
+import { buildLiveFormPinCollations } from "../../product/tax-form-pin-collations.js";
 import { officialFilingProductStatus } from "../../finance/filing/official-receipt.js";
 import { computePayrollMonth } from "../../finance/payroll-jp.js";
 
@@ -54,7 +55,10 @@ export async function handleTaxApi(
 
   if (pathname === "/chat/v1/tax/lines-read" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
-    json(res, 200, { ok: true, ...buildTaxLinesReadModel() });
+    json(res, 200, {
+      ok: true,
+      ...buildTaxLinesReadModel(undefined, buildLiveFormPinCollations()),
+    });
     return true;
   }
 

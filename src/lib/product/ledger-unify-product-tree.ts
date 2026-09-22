@@ -15,6 +15,7 @@ const REQUIRED_RELATIVE = [
   "src/lib/finance/sole-prop-consumption-tax.ts",
   "src/lib/finance/consumption-tax-return-rows.ts",
   "src/lib/product/tax-lines-read-model.ts",
+  "src/lib/product/tax-form-pin-collations.ts",
   "schemas/finance/consumption-tax-return-map.ts",
   "src/lib/product/ledger-provision.ts",
   "src/lib/finance/ledger/companies-act-score.ts",
