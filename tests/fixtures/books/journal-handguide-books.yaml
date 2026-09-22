@@ -1,0 +1,78 @@
+# 令和7年分「青色申告者のための貸借対照表作成の手引き」仕訳帳の記載例を、会社の仕訳帳として載せたもの。
+# 円・丁数は公表の記載例のみ。摘要は勘定科目名（売上の内訳は科目名に全角コロンを含む）。
+# source: nta-bs-handguide-r7-journal
+accounts:
+  "1100": 現金
+  "1110": 当座預金
+  "1150": 売掛金
+  "4001": 売上：食料品
+  "4002": 売上：日用品
+  "5200": 地代家賃
+entries:
+  - entry_id: JE-HG-1101
+    occurred_at: "2025-11-01T00:00:00.000Z"
+    description: "手引き記載例 11-01"
+    source:
+      kind: manual
+      authorized_by: handguide
+    evidence_refs:
+      - nta-bs-handguide-r7-journal
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        folio: "1"
+        tax_category: out_of_scope
+      - account_code: "1150"
+        debit_yen: 200000
+        credit_yen: 0
+        folio: "4"
+        tax_category: out_of_scope
+      - account_code: "4001"
+        debit_yen: 0
+        credit_yen: 300000
+        folio: "3"
+        tax_category: taxable_10
+      - account_code: "4002"
+        debit_yen: 0
+        credit_yen: 200000
+        folio: "3"
+        tax_category: taxable_10
+  - entry_id: JE-HG-1102
+    occurred_at: "2025-11-02T00:00:00.000Z"
+    description: "手引き記載例 11-02"
+    source:
+      kind: manual
+      authorized_by: handguide
+    evidence_refs:
+      - nta-bs-handguide-r7-journal
+    lines:
+      - account_code: "1110"
+        debit_yen: 200000
+        credit_yen: 0
+        folio: "2"
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 200000
+        folio: "1"
+        tax_category: out_of_scope
+  - entry_id: JE-HG-1125
+    occurred_at: "2025-11-25T00:00:00.000Z"
+    description: "手引き記載例 11-25"
+    source:
+      kind: manual
+      authorized_by: handguide
+    evidence_refs:
+      - nta-bs-handguide-r7-journal
+    lines:
+      - account_code: "5200"
+        debit_yen: 180000
+        credit_yen: 0
+        folio: "5"
+        tax_category: out_of_scope
+      - account_code: "1110"
+        debit_yen: 0
+        credit_yen: 180000
+        folio: "2"
+        tax_category: out_of_scope

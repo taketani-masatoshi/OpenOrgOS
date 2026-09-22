@@ -18,7 +18,9 @@ import { buildGlProfitLossSummary, buildGlKessanPlRows } from "../lib/finance/gl
 import {
   buildGlEquityChangeRows,
   buildGlKessanBsRows,
+  buildIndividualNotes,
 } from "../lib/finance/ledger/balance-sheet.js";
+import { synthesizeYojitsuFromGl } from "../lib/finance/kessan-gl.js";
 import {
   buildComparativeBalanceSheet,
   buildComparativeProfitLoss,
@@ -55,6 +57,19 @@ function loadReportData(fiscalYear: string) {
   };
 }
 
+function loadKessanYojitsu(fiscalYear: string, basis: "gl" | "yojitsu"): YojitsuPlan {
+  const stored = loadYojitsuFyPlan(fiscalYear);
+  if (!stored && basis === "yojitsu") {
+    throw new Error(
+      `Yojitsu plan not found for ${fiscalYear}. Expected data/plans/yojitsu-${fiscalYear.toLowerCase()}.yaml`,
+    );
+  }
+  if (stored && stored.closing?.status !== "closed") {
+    console.warn(`⚠ ${fiscalYear} is not marked as closed in yojitsu plan.`);
+  }
+  return stored ?? synthesizeYojitsuFromGl(fiscalYear);
+}
+
 function applyReportBasis(
   yojitsu: YojitsuPlan,
   fiscalYear: string,
@@ -89,9 +104,9 @@ export async function runReportKessan(options: {
 }): Promise<void> {
   requireCliReportWrite("report kessan");
   const fiscalYear = resolveFiscalYear(options.fy);
-  const data = loadReportData(fiscalYear);
-  const yojitsuBase = data.yojitsu;
   const basis = options.basis ?? "gl";
+  const company = loadOrgCompanyReport() as Company;
+  const yojitsuBase = loadKessanYojitsu(fiscalYear, basis);
   const yojitsu = applyReportBasis(yojitsuBase, fiscalYear, basis);
   const endMonth = resolveCompanyFiscalYearEndMonth();
   const asOf =
@@ -156,7 +171,7 @@ export async function runReportKessan(options: {
 
   const path = await generateKessanPdf(
     {
-      ...data,
+      company,
       yojitsu,
       fiscalYear,
       plRows,
@@ -168,13 +183,7 @@ export async function runReportKessan(options: {
               ...(priorAsOf ? { priorAsOf } : {}),
             }),
             equityRows: buildGlEquityChangeRows({ fiscalYear, asOf }),
-            noteRows: [
-              "貸借対照表の当期純利益は税引後です。",
-              "未計上月の月次 YAML は予実差異であり、GL を埋めません。",
-              ...(priorAsOf
-                ? [`前期比較列: prior_as_of ${priorAsOf}`]
-                : []),
-            ],
+            noteRows: buildIndividualNotes({ fiscalYear, asOf }),
           }
         : {}),
     },
