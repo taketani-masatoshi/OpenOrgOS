@@ -22,7 +22,7 @@ import { preloadOidcJwks } from "../wire-console/auth/oidc.js";
 import { getSessionUser, sessionTokenFromRequest } from "../wire-console/auth/session.js";
 import { runWithTenantIdAsync } from "../tenant.js";
 import {
-  resolveTenantFromRequest,
+  resolveExplicitTenantFromRequest,
   isRequestTenantRequired,
 } from "../product/ledger-control-plane.js";
 import {
@@ -35,17 +35,19 @@ async function withLoginTenantAsync<T>(
   res: ServerResponse,
   fn: () => Promise<T>,
 ): Promise<T | undefined> {
+  const explicitTenant = resolveExplicitTenantFromRequest(req);
   const tenantId = resolveLoginTenantId(req);
   const sessionUser = getSessionUser(sessionTokenFromRequest(req));
   if (sessionUser) {
-    const match = matchSessionTenant(sessionUser, tenantId);
+    // Do not compare session to ORGOS_TENANT env — only header/host may assert.
+    const match = matchSessionTenant(sessionUser, explicitTenant);
     if (!match.ok) {
       json(res, match.status, { ok: false, error: match.error });
       return undefined;
     }
     return runWithTenantIdAsync(match.tenantId, fn);
   }
-  if (isRequestTenantRequired() && !tenantId) {
+  if (isRequestTenantRequired() && !explicitTenant) {
     json(res, 400, {
       ok: false,
       error: "X-OrgOS-Tenant or tenant host required (ORGOS_REQUIRE_REQUEST_TENANT=1)",
@@ -251,8 +253,7 @@ export async function startOperatorConsoleServer(
       if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
         const user = requireChatAuth(req, res);
         if (!user) return;
-        const requestTenant = resolveTenantFromRequest(req);
-        const match = matchSessionTenant(user, requestTenant);
+        const match = matchSessionTenant(user, resolveExplicitTenantFromRequest(req));
         if (!match.ok) {
           json(res, match.status, { ok: false, error: match.error });
           return;

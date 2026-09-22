@@ -19,6 +19,8 @@ export function resolveLoginTenantId(req: IncomingMessage): string | null {
 
 /**
  * Authenticated request: session.tenant_id is authoritative.
+ * `requestTenant` must be client-asserted (X-OrgOS-Tenant / tenant host) only —
+ * never ORGOS_TENANT env (process-global; would false-mismatch fixture sessions).
  * A client header cannot elevate into another tenant.
  */
 export function matchSessionTenant(
