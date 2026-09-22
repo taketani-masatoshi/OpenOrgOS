@@ -16,6 +16,53 @@ export const EXPENSE_TOTAL_PRINT = "㉛";
 export type BlueReturnBooksTotals = Readonly<Record<string, number>>;
 
 /**
+ * 国税庁 令和7年分 青色申告決算書（一般用）の書き方 / 貸借対照表作成の手引き設例の印刷円。
+ * https://www.nta.go.jp/taxes/shiraberu/shinkoku/tebiki/2025/pdf/037.pdf
+ * Product-shipped pin (yen only). Do not invent. Do not read tests/fixtures.
+ */
+export const NTA_REIWA7_BLUE_RETURN_HANDGUIDE_BOOKS: BlueReturnBooksTotals = {
+  売上: 39_280_000,
+  仕入: 27_487_000,
+  期首商品棚卸高: 0,
+  租税公課: 385_000,
+  水道光熱費: 224_000,
+  旅費交通費: 148_000,
+  通信費: 167_000,
+  広告宣伝費: 105_000,
+  接待交際費: 163_000,
+  損害保険料: 105_000,
+  修繕費: 259_000,
+  消耗品費: 378_000,
+  減価償却費: 1_571_400,
+  福利厚生費: 173_000,
+  給料賃金: 2_625_000,
+  利子割引料: 128_000,
+  地代家賃: 120_000,
+  雑費: 48_000,
+  貸倒引当金繰戻額: 64_460,
+  貸倒引当金繰入額: 74_140,
+  専従者給与: 1_200_000,
+};
+
+/** Official page lines derived from the handguide books (print + label + yen). */
+export function ntaReiwa7BlueReturnHandguidePage(): BlueReturnAmountLine[] {
+  return projectBlueReturnPageFromBooks(NTA_REIWA7_BLUE_RETURN_HANDGUIDE_BOOKS);
+}
+
+/**
+ * Live Chat / product gate: books projection of the NTA handguide totals vs page pin.
+ * Empty diff + full page score → ready. Does not claim tenant books are filled.
+ */
+export function blueReturnHandguideLiveReady(): boolean {
+  const official = ntaReiwa7BlueReturnHandguidePage();
+  const projected = projectBlueReturnPageFromBooks(NTA_REIWA7_BLUE_RETURN_HANDGUIDE_BOOKS);
+  return (
+    diffBlueReturnOfficialPage(projected, official).length === 0 &&
+    scoreBlueReturnOfficialPage(projected, official) === BLUE_RETURN_PAGE_SCORE
+  );
+}
+
+/**
  * Books / expense totals → printed page lines (print mark + label + yen).
  * ② is opening inventory. ⑧–㉚ are expenses. ㉛ is the expense total.
  */

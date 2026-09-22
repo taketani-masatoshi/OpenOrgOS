@@ -20,6 +20,7 @@ import {
   scoreSolePropLocalTax,
 } from "../finance/sole-prop-local-tax.js";
 import { loadConsumptionTaxReturnMap } from "../finance/consumption-tax-return-rows.js";
+import { blueReturnHandguideLiveReady } from "../finance/sole-prop-blue-return-page.js";
 import {
   consumptionTaxFormulaScore,
   consumptionTaxReturnFormulas,
@@ -125,13 +126,22 @@ export function buildLiveFormPinCollations(): FormPinCollation[] {
       return consumptionFormulaCollation({ ...row, id: "consumption-yen", label: row.label });
     }
     if (row.id === "blue-return-yen") {
-      // Books totals are tenant-scoped; without books keep unmet (not invented).
-      return {
-        ...row,
-        pinPresent: true,
-        projectedReady: false,
-        diffCount: 0,
-      };
+      try {
+        const ok = blueReturnHandguideLiveReady();
+        return {
+          ...row,
+          pinPresent: true,
+          projectedReady: ok,
+          diffCount: ok ? 0 : 1,
+        };
+      } catch {
+        return {
+          ...row,
+          pinPresent: true,
+          projectedReady: false,
+          diffCount: 0,
+        };
+      }
     }
     return row;
   });

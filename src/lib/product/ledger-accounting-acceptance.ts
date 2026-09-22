@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { closeAccountingYear, listFiscalYearMonths } from "../finance/annual-close.js";
 import { runValidateReport } from "../../commands/validate.js";
 import { resolveCompanyFiscalYearEndMonth } from "../finance/fiscal-year.js";
-import { closeAccountingMonth } from "../finance/monthly-close.js";
+import { closeAccountingMonth, monthCashGlDelta } from "../finance/monthly-close.js";
 import { getDataDir } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
@@ -83,14 +83,18 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
     if (!result.bank_reconcile.pass) return result;
 
     const months = listFiscalYearMonths(fiscalYear, resolveCompanyFiscalYearEndMonth());
+    // Bank rows must match GL cash movement (bank-gl-tieout). Dummy amount:1 fails close.
     writeYamlFileAtomic(join(getDataDir(), "finance", "bank-statements.yaml"), {
-      entries: months.map((month, index) => ({
-        id: `BS-ACCEPTANCE-${String(index + 1).padStart(2, "0")}`,
-        date: `${month}-15`,
-        direction: "inflow",
-        amount: 1,
-        status: "matched",
-      })),
+      entries: months.map((month, index) => {
+        const glDelta = monthCashGlDelta(month);
+        return {
+          id: `BS-ACCEPTANCE-${String(index + 1).padStart(2, "0")}`,
+          date: `${month}-15`,
+          direction: glDelta < 0 ? "outflow" : "inflow",
+          amount: Math.abs(glDelta),
+          status: "matched",
+        };
+      }),
     });
     const monthly = months.map((month) =>
       closeAccountingMonth({

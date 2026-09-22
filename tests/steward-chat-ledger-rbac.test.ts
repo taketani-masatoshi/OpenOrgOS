@@ -7,11 +7,17 @@ import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
 import {
   registerSession,
+  resetSessionsForTests,
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
+import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
 import { postPayrollJournalEntry } from "../src/lib/finance/journal-sources.js";
-import { resetFixtureJournalEntries } from "./helpers/finance-fixture.js";
+import { lockMonth } from "../src/lib/finance/period-lock.js";
+import {
+  FINANCE_FIXTURE_TENANT,
+  resetFixtureJournalEntries,
+} from "./helpers/finance-fixture.js";
 import { getPendingApprovalsPath } from "../src/lib/org/paths.js";
 
 describe("steward chat ledger workbench api", () => {
@@ -20,11 +26,14 @@ describe("steward chat ledger workbench api", () => {
   const env = { ...process.env };
 
   beforeEach(() => {
-    setTenantId("_fixture-books");
+    resetSessionsForTests();
+    clearOperatorsRegistryCacheForTests();
+    setTenantId(FINANCE_FIXTURE_TENANT);
     resetFixtureJournalEntries();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";
+    process.env.ORGOS_RATE_LIMIT = "0";
   });
 
   afterEach(async () => {
@@ -34,6 +43,7 @@ describe("steward chat ledger workbench api", () => {
       handle = undefined;
     });
     resetFixtureJournalEntries();
+    resetSessionsForTests();
     process.env = { ...env };
   });
 
@@ -47,6 +57,7 @@ describe("steward chat ledger workbench api", () => {
       operator_id: operatorId,
       approver_id: operatorId,
       mode: "prod",
+      tenant_id: FINANCE_FIXTURE_TENANT,
     });
     return `${WIRE_CONSOLE_SESSION_COOKIE}=${token}`;
   }
@@ -56,18 +67,13 @@ describe("steward chat ledger workbench api", () => {
     rmSync(auditPath, { force: true });
     process.env.ORGOS_CHAT_AUDIT = "1";
     process.env.ORGOS_CHAT_AUDIT_LOG = auditPath;
+    // RBAC unlock path — seed lock without month-close checklist (API lock gates that).
+    lockMonth({ month: "2026-08", lockedBy: "OP-001" });
     await start();
     const headers = {
       Cookie: cookieFor("OP-001"),
       "Content-Type": "application/json",
     };
-
-    const lock = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ month: "2026-08", action: "lock" }),
-    });
-    expect(lock.status).toBe(200);
 
     const noReason = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
       method: "POST",
@@ -91,7 +97,6 @@ describe("steward chat ledger workbench api", () => {
       .trim()
       .split("\n")
       .map((line) => JSON.parse(line) as { action: string; detail?: string });
-    expect(lines.some((l) => l.action === "ledger_period_lock")).toBe(true);
     const unlocked = lines.find((l) => l.action === "ledger_period_unlock");
     expect(unlocked?.detail).toContain("監査対応で再計上");
     rmSync(auditPath, { force: true });
@@ -241,12 +246,8 @@ describe("steward chat ledger workbench api", () => {
     });
     expect(reverse.status).toBe(200);
 
-    const lock = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ month: "2026-09", action: "lock" }),
-    });
-    expect(lock.status).toBe(200);
+    // Period lock via API requires month-close checklist; seed lock for unlock RBAC.
+    lockMonth({ month: "2026-09", lockedBy: "OP-001" });
 
     const unlock = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
       method: "POST",
