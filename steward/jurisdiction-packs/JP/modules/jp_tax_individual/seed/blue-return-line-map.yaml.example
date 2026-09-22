@@ -1,0 +1,40 @@
+form: blue_return_general
+# 一般用の行役割。②は期首棚卸。租税公課は⑧。経費は⑧から㉛。売上原価は②に置かない。
+lines:
+  - { id: sales_1, print: "①", label: 売上（収入）金額, section: pl, source: revenue, role: sales }
+  - { id: inventory_open_2, print: "②", label: 期首商品棚卸高, section: pl, source: opening_inventory, role: opening_inventory }
+  - { id: purchases_3, print: "③", label: 仕入金額, section: pl, source: purchases, role: purchases }
+  - { id: inventory_close_5, print: "⑤", label: 期末商品棚卸高, section: pl, source: ending_inventory, role: ending_inventory }
+  - { id: cogs_6, print: "⑥", label: 差引原価, section: pl, source: cogs, role: cogs }
+  - { id: gross_7, print: "⑦", label: 差引金額, section: pl, source: gross, role: gross }
+  - { id: expense_8, print: "⑧", label: 租税公課, section: pl, source: account_name, account_name: 租税公課, role: taxes_and_dues }
+  - { id: expense_9, print: "⑨", label: 荷造運賃, section: pl, source: account_name, account_name: 荷造運賃, role: expense }
+  - { id: expense_10, print: "⑩", label: 水道光熱費, section: pl, source: account_name, account_name: 水道光熱費, role: expense }
+  - { id: expense_11, print: "⑪", label: 旅費交通費, section: pl, source: account_name, account_name: 旅費交通費, role: expense }
+  - { id: expense_12, print: "⑫", label: 通信費, section: pl, source: account_name, account_name: 通信費, role: expense }
+  - { id: expense_13, print: "⑬", label: 広告宣伝費, section: pl, source: account_name, account_name: 広告宣伝費, role: expense }
+  - { id: expense_14, print: "⑭", label: 接待交際費, section: pl, source: account_name, account_name: 接待交際費, role: expense }
+  - { id: expense_15, print: "⑮", label: 損害保険料, section: pl, source: account_name, account_name: 損害保険料, role: expense }
+  - { id: expense_16, print: "⑯", label: 修繕費, section: pl, source: account_name, account_name: 修繕費, role: expense }
+  - { id: expense_17, print: "⑰", label: 消耗品費, section: pl, source: account_name, account_name: 消耗品費, role: expense }
+  - { id: expense_18, print: "⑱", label: 減価償却費, section: pl, source: account_name, account_name: 減価償却費, role: depreciation }
+  - { id: expense_19, print: "⑲", label: 福利厚生費, section: pl, source: account_name, account_name: 福利厚生費, role: expense }
+  - { id: expense_20, print: "⑳", label: 給料賃金, section: pl, source: account_name, account_name: 給料賃金, role: wages }
+  - { id: expense_21, print: "㉑", label: 外注工賃, section: pl, source: account_name, account_name: 外注工賃, role: expense }
+  - { id: expense_22, print: "㉒", label: 利子割引料, section: pl, source: account_name, account_name: 利子割引料, role: expense }
+  - { id: expense_23, print: "㉓", label: 地代家賃, section: pl, source: account_name, account_name: 地代家賃, role: expense }
+  - { id: expense_24, print: "㉔", label: 貸倒金, section: pl, source: account_name, account_name: 貸倒金, role: expense }
+  - { id: expense_25, print: "㉕", label: 追加科目1, section: pl, source: account_name, account_name: 追加科目1, role: expense }
+  - { id: expense_26, print: "㉖", label: 追加科目2, section: pl, source: account_name, account_name: 追加科目2, role: expense }
+  - { id: expense_27, print: "㉗", label: 追加科目3, section: pl, source: account_name, account_name: 追加科目3, role: expense }
+  - { id: expense_28, print: "㉘", label: 追加科目4, section: pl, source: account_name, account_name: 追加科目4, role: expense }
+  - { id: expense_29, print: "㉙", label: 追加科目5, section: pl, source: account_name, account_name: 追加科目5, role: expense }
+  - { id: expense_30, print: "㉚", label: 雑費, section: pl, source: account_name, account_name: 雑費, role: expense }
+  - { id: expense_31, print: "㉛", label: 経費計, section: pl, source: expense_total, role: expense }
+  - { id: income_before_blue, print: "", label: 所得金額（青色申告特別控除前）, section: pl, source: computed_pl, role: income }
+  - { id: blue_deduction, print: "", label: 青色申告特別控除, section: pl, source: blue_deduction, role: blue_deduction }
+  - { id: income_after_blue, print: "", label: 所得金額, section: pl, source: income_after, role: income_after }
+  - { id: bs_drawings, print: "", label: 事業主貸, section: bs, source: owner_drawings, role: owner_drawings }
+  - { id: bs_advances, print: "", label: 事業主借, section: bs, source: owner_advances, role: owner_advances }
+  - { id: bs_capital, print: "", label: 元入金, section: bs, source: owner_capital, role: owner_capital }
+  - { id: bs_income_before_blue, print: "", label: 所得金額（控除前）, section: bs, source: computed_bs, role: bs_income }

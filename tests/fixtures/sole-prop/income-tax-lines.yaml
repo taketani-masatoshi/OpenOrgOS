@@ -1,0 +1,21 @@
+# 令和7年分の所得税。申告書の行名と基礎控除。
+# 出典: 国税庁 No.1199 基礎控除（令和8年4月1日現在法令等）の令和7年分の列。
+# https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm
+year: 2025
+era: 令和7年分
+lines:
+  - { id: income, label: 所得金額 }
+  - { id: deduction, label: 所得控除 }
+  - { id: taxable_income, label: 課税される所得金額 }
+  - { id: tax, label: 所得税額 }
+  - { id: basic_deduction, label: 基礎控除 }
+bands:
+  - { max_income_yen: 1320000, deduction_yen: 950000 }
+  - { max_income_yen: 3360000, deduction_yen: 880000 }
+  - { max_income_yen: 4890000, deduction_yen: 680000 }
+  - { max_income_yen: 6550000, deduction_yen: 630000 }
+  - { max_income_yen: 23500000, deduction_yen: 580000 }
+  - { max_income_yen: 24000000, deduction_yen: 480000 }
+  - { max_income_yen: 24500000, deduction_yen: 320000 }
+  - { max_income_yen: 25000000, deduction_yen: 160000 }
+  - { max_income_yen: null, deduction_yen: 0 }

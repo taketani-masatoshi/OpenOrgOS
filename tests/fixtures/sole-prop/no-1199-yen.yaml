@@ -1,0 +1,13 @@
+# Official printed yen only — from NTA No.1199 Reiwa 7 column.
+# Source: https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm
+# Total income ≤ 4,890,000 (and over 3,360,000) → 基礎控除 680,000.
+# Do NOT use Reiwa 8's 1,040,000. Do not invent yen. Do not copy from implementation.
+source:
+  label: 国税庁 No.1199 基礎控除（令和8年4月1日現在法令等）の令和7年分の列
+  url: https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm
+era: 令和7年分
+# Return-form line ids + printed yen for the fixture income band.
+rows:
+  - id: basic_deduction
+    label: 基礎控除
+    amount_yen: 680000
