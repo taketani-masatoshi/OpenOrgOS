@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 612
-  static_test_cases: 2822
-  tiered_execution_total: 612
+  vitest_total: 628
+  static_test_cases: 2928
+  tiered_execution_total: 628
   catalog_total: 47
   catalog_cli_registered: 48
   catalog_gap: 0
@@ -917,6 +917,14 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  consumption-tax-return-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  consumption-tax-return-rows.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   context-manifest.test.ts:
     axis: platform
     kind: unit
@@ -930,6 +938,10 @@ tests:
     kind: unit
     domain: P01_kernel
   control-reconcile.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  corporate-local-tax-acceptance.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1021,6 +1033,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  country-module.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   csrf-guard.test.ts:
     axis: platform
     kind: unit
@@ -1158,6 +1174,18 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  external-connector-runtime.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  external-provider-adapters.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  external-reconciliation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   final-accounts-close.test.ts:
     axis: platform
     kind: unit
@@ -1167,6 +1195,14 @@ tests:
     kind: unit
     domain: P02_business_data
   finance-briefing.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-filing-product-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-official-filing-receipt.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
@@ -1396,6 +1432,10 @@ tests:
     kind: unit
     domain: P01_kernel
   journal-audit-backfill.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  journal-display-columns.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1838,6 +1878,10 @@ tests:
     axis: meta
     kind: meta
   outbox-permissions-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  owner-capital-display.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2439,11 +2483,28 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  sole-prop-consumption-tax.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sole-prop-income-tax-coverage.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   sole-prop-lane-f-acceptance.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
+  sole-prop-monthly-cashbook.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   standalone-org-demo.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I2_protocol_e2e
+  standards-integration.test.ts:
     axis: integration
     kind: integration
     domain: P01_kernel
@@ -2453,6 +2514,10 @@ tests:
     kind: unit
     domain: P01_kernel
   statutory-filing-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  statutory-notes-skeleton.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -3018,10 +3083,3 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
-
-  finance-filing-product-gate.test.ts:
-    taxonomy: unit
-    tags: [finance, tax, filing-gate]
-  sole-prop-monthly-cashbook.test.ts:
-    taxonomy: unit
-    tags: [finance, sole-prop, cashbook]
