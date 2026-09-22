@@ -11,6 +11,14 @@ export const entityFormIdSchema = z.string().regex(/^[a-z][a-z0-9_]*$/);
 
 export const taxProfileSchemaKindSchema = z.enum(["jp", "us", "corporate"]);
 
+/** Indirect tax shape. Statutory rates and returns stay in the jurisdiction adapter. */
+export const indirectTaxFamilySchema = z.enum([
+  "vat_credit",
+  "sales_tax",
+  "single_stage",
+  "none",
+]);
+
 export const packTierSchema = z.enum(["full", "stub"]);
 
 export const countryRegistryEntrySchema = z.object({
@@ -57,6 +65,8 @@ export const jurisdictionPackManifestSchema = z.object({
   regulations_catalog: z.string(),
   regulations_templates_dir: z.string(),
   tax_profile_schema: taxProfileSchemaKindSchema,
+  /** Dispatch key for the indirect-tax port. Not inferred from tax-profile seed text. */
+  indirect_tax_family: indirectTaxFamilySchema,
   corporate_core: z.object({
     officer_comp: z.string(),
     board: z.string(),
@@ -103,6 +113,7 @@ export const tenantJurisdictionOverrideSchema = z.object({
 });
 
 export type JurisdictionCode = z.output<typeof jurisdictionCodeSchema>;
+export type IndirectTaxFamily = z.output<typeof indirectTaxFamilySchema>;
 export type EntityFormId = z.output<typeof entityFormIdSchema>;
 export type PackTier = z.output<typeof packTierSchema>;
 export type CountryRegistryEntry = z.output<typeof countryRegistryEntrySchema>;
