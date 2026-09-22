@@ -2,7 +2,7 @@
 
 **規程ID:** REG-032  
 **版:** v1.1（テンプレート）  
-**例示:** 株式会社サンプル商事  
+**例示: 株式会社MAL
 **連動モジュール:** `jp_tax_consumption` · `jp_consumption_refund`（還付は本規程に吸収）
 
 ---
@@ -82,3 +82,8 @@
 ---
 
 *テンプレ正本: steward/jurisdiction-packs/JP/regulations/templates/ · 施行文: tenants/{id}/docs/company/regulations/*
+
+
+---
+
+> [TBD] 施行日・条項詳細はテナント側で確定してください。

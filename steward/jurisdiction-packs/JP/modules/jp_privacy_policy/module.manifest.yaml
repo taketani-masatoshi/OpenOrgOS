@@ -5,6 +5,8 @@ activation_seeds:
   - privacy-policy-template.md.example
 optional_regulations:
   - REG-010
+required_regulations:
+  - REG-010
 notes: activation_ready — 外部向け個人情報保護方針 · REG-010 社内規程と整合
 cli_commands:
   - show

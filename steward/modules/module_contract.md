@@ -35,7 +35,8 @@ steward/modules/{id}/
 | `id` | string | ○ | カタログ id（ディレクトリ名と一致） |
 | `required_seeds` | string[] | （既定 `[]`） | production_ready に必須の seed。`invoice-*` を含むと billing 連携が必須 |
 | `activation_seeds` | string[] | （既定 `[]`） | activation_ready で必要な seed 一式 |
-| `optional_regulations` | string[] | 任意 | 関連する REG カタログ id |
+| `optional_regulations` | string[] | 任意 | 関連する REG カタログ id（推奨） |
+| `required_regulations` | string[] | 任意 | モジュール有効時にテナントで `enabled: true` 必須（validate error · リスク領域） |
 | `notes` | string | 任意 | tier 根拠等のメモ |
 
 ## 3. readiness tier 別の要件

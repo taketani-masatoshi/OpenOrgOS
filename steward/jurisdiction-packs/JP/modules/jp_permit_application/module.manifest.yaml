@@ -4,6 +4,8 @@ activation_seeds:
   - application-registry.yaml.example
 optional_regulations:
   - REG-012
+required_regulations:
+  - REG-037
 notes: skeleton — JP 業免許取得プロジェクト · TeX PDF · handoff · approve→PER
 cli_commands:
   - create

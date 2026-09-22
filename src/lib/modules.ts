@@ -492,6 +492,11 @@ const moduleManifestSchema = z.object({
   required_seeds: z.array(z.string()).default([]),
   activation_seeds: z.array(z.string()).default([]),
   optional_regulations: z.array(z.string()).optional(),
+  /**
+   * When this module is enabled on a tenant, each id must be enabled in
+   * regulations.yaml (validateRegulations error). Prefer risk-domain REGs.
+   */
+  required_regulations: z.array(z.string()).optional(),
   cli_commands: z.array(z.string()).optional(),
   notes: z.string().optional(),
   /**
