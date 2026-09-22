@@ -59,6 +59,8 @@ regulations:
     template: core/REG-027-keiri/template.md
     tenant_doc: keiri-kisoku.md
     binds_to: { type: core, group: governance }
+    risk_domains: [cash]
+    notes: 記帳 · 決算 · 資金（jp_bank_corporate は本規程を必須化）
 
   - id: REG-028
     name: クレジットカード規程
@@ -72,26 +74,37 @@ regulations:
     tenant_doc: yakuin-taishoku-kisoku.md
     binds_to: { type: core, group: governance }
 
-  # ── 税務モジュール連動（申告準備 · 提出は人間/税理士） ──
+  - id: REG-030
+    name: 組織情報システム権限管理規程
+    template: core/REG-030-soshiki-joho-system/template.md
+    tenant_doc: soshiki-joho-system-kengen-kisoku.md
+    binds_to: { type: core, group: governance }
+    risk_domains: [access]
+    notes: Operator Console · Wire · 承認/振込の横断権限
+
+  # ── 税務・金流リスク領域（申告準備 · 提出は人間/税理士） ──
   - id: REG-031
     name: 法人税務・申告準備規程
     template: by-module/jp_tax_corporate/REG-031-hojin-zeimu/template.md
     tenant_doc: hojin-zeimu-kisoku.md
     binds_to: { type: module, module_id: jp_tax_corporate }
+    risk_domains: [cash, tax]
     notes: 申告 XML · e-Tax 送信はスコープ外（社内準備手続）
 
   - id: REG-032
     name: 消費税務規程
     template: by-module/jp_tax_consumption/REG-032-shohi-zeimu/template.md
     tenant_doc: shohi-zeimu-kisoku.md
-    binds_to: { type: module, module_id: jp_tax_consumption }
-    notes: 課税区分 · 期間集計 · 還付の社内統制
+    binds_to: { type: module_any, module_ids: [jp_tax_consumption, jp_consumption_refund] }
+    risk_domains: [cash, tax]
+    notes: 課税区分 · 期間集計 · 還付（jp_consumption_refund を同規程に吸収）
 
   - id: REG-033
     name: 適格請求書管理規程
     template: by-module/jp_invoice_qualified/REG-033-tekikaku-seikyusho/template.md
     tenant_doc: tekikaku-seikyusho-kisoku.md
     binds_to: { type: module, module_id: jp_invoice_qualified }
+    risk_domains: [cash, tax]
     notes: インボイス登録番号 · 発行/受領確認
 
   - id: REG-034
@@ -99,7 +112,34 @@ regulations:
     template: by-module/jp_withholding_statutory/REG-034-gensen-hoteichosho/template.md
     tenant_doc: gensen-hoteichosho-kisoku.md
     binds_to: { type: module, module_id: jp_withholding_statutory }
+    risk_domains: [cash, tax, pii]
     notes: 源泉 · 年末調整 · 法定調書の期限管理
+
+  - id: REG-035
+    name: 給与規程
+    template: by-module/jp_payroll/REG-035-kyuyo/template.md
+    tenant_doc: kyuyo-kisoku.md
+    binds_to: { type: module, module_id: jp_payroll }
+    risk_domains: [cash, pii]
+    notes: 給与計算 · 個人明細分離（社保は REG-036）
+
+  - id: REG-036
+    name: 社会保険手続規程
+    template: by-module/jp_social_insurance/REG-036-shakai-hoken/template.md
+    tenant_doc: shakai-hoken-kisoku.md
+    binds_to: { type: module, module_id: jp_social_insurance }
+    risk_domains: [pii]
+    notes: 資格 · 算定 · 月変の社内準備
+
+  - id: REG-037
+    name: 許認可管理規程
+    template: by-module/jp_permit/REG-037-kyoka-kanri/template.md
+    tenant_doc: kyoka-kanri-kisoku.md
+    binds_to:
+      type: module_any
+      module_ids: [jp_permit_application, jp_permit_registry, jp_minpaku]
+    risk_domains: [permit]
+    notes: 申請 · 台帳 · 民泊運用を1本化
 
   # ── MS / ISO 連動 ──
   - id: REG-009
@@ -115,7 +155,8 @@ regulations:
     tenant_doc: kojin-joho-hogo-kisoku.md
     binds_to: { type: core, group: governance }
     iso_ids: [ISO-27001, ISO-21401]
-    notes: 全事業横断 · 常時施行想定
+    risk_domains: [pii]
+    notes: 全事業横断 · 常時施行想定 · PII ゲートで厚化必須
 
   - id: REG-011
     name: 品質管理規程
@@ -153,6 +194,7 @@ regulations:
     tenant_doc: naibu-kansa-kisoku.md
     binds_to: { type: core, group: ms }
     iso_ids: [ISO-9001, ISO-27001, ISO-21401]
+    notes: J-SOX 社内評価は本規程＋REG-027 で分界（専用 REG なし）
 
   # ── 事業モジュール連動 ──
   - id: REG-012

@@ -15,12 +15,26 @@ describe("regulations", () => {
   beforeEach(() => {
     setTenantId("mal");
   });
-  it("loads catalog with 33 regulations", () => {
+  it("loads catalog with 37 regulations", () => {
     const catalog = loadRegulationsCatalog();
-    expect(catalog.regulations.length).toBe(33);
+    expect(catalog.regulations.length).toBe(37);
     expect(catalog.regulations.map((r) => r.id)).toEqual(
-      expect.arrayContaining(["REG-031", "REG-032", "REG-033", "REG-034"])
+      expect.arrayContaining([
+        "REG-030",
+        "REG-031",
+        "REG-032",
+        "REG-033",
+        "REG-034",
+        "REG-035",
+        "REG-036",
+        "REG-037",
+      ])
     );
+  });
+
+  it("requires risk-domain regulations when money modules are enabled", () => {
+    const issues = validateRegulations();
+    expect(issues.filter((i) => i.message.includes("requires regulation"))).toEqual([]);
   });
 
   it("mal effective regulations exclude disabled ISO/module binds", () => {

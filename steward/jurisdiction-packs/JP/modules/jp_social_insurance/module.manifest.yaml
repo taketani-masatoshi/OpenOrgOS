@@ -4,7 +4,10 @@ required_seeds:
 activation_seeds:
   - enrollment-summary.yaml.example
 optional_regulations:
-  - REG-005
+  - REG-035
+  - REG-010
+required_regulations:
+  - REG-036
 notes: 算定基礎届・月額変更届の準備データ — 料率は seed YAML 正本
 security:
   limits:

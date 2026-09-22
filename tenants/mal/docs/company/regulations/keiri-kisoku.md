@@ -2,7 +2,7 @@
 
 **規程ID:** REG-027  
 **版:** v1.2（テンプレート）  
-**例示:** 株式会社サンプル商事
+**例示: 株式会社MAL
 
 ---
 
@@ -123,3 +123,8 @@
 ---
 
 *テンプレ正本: steward/jurisdiction-packs/JP/regulations/templates/ · 施行文: tenants/{id}/docs/company/regulations/*
+
+
+---
+
+> [TBD] 施行日・条項詳細はテナント側で確定してください。

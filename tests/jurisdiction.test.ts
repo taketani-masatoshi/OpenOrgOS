@@ -128,7 +128,7 @@ describe("jurisdiction catalogs", () => {
 
   it("loads JP catalog with 29 regulations", () => {
     const catalog = loadRegulationsCatalog();
-    expect(catalog.regulations.length).toBe(33);
+    expect(catalog.regulations.length).toBe(37);
     expect(existsSync(getRegulationsCatalogPath())).toBe(true);
   });
 

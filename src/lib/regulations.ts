@@ -16,7 +16,7 @@ import {
   getRegulationTemplateRelPath,
 } from "./jurisdiction.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
-import { loadModulesFile } from "./modules.js";
+import { loadModulesFile, loadModuleManifest } from "./modules.js";
 import { getTenantDir, tenantDocsPath, loadTenantConfig } from "./tenant.js";
 import { readYamlFile } from "./utils.js";
 
@@ -65,6 +65,8 @@ function isBindSatisfied(bind: RegulationBind, enabledIso: string[]): boolean {
       return bind.iso_ids.some((id) => enabledIso.includes(id));
     case "module":
       return isModuleEnabled(bind.module_id);
+    case "module_any":
+      return bind.module_ids.some((id) => isModuleEnabled(id));
     default:
       return false;
   }
@@ -118,6 +120,8 @@ function describeBindBlock(bind: RegulationBind): string {
       return `いずれの ISO (${bind.iso_ids.join(", ")}) も無効`;
     case "module":
       return `モジュール ${bind.module_id} が無効`;
+    case "module_any":
+      return `モジュール (${bind.module_ids.join(", ")}) がいずれも無効`;
     case "core":
       return bind.group === "ms" ? "有効 ISO なし" : "—";
     default:
@@ -189,6 +193,50 @@ export function validateRegulations(): RegulationValidationIssue[] {
         file: logicalFile,
         message: `regulation ${entry.id} enabled but ineffective: ${effective.blockReason} (set enabled: false or enable bind target)`,
       });
+    }
+  }
+
+  issues.push(...validateRequiredRegulationsForEnabledModules(logicalFile));
+
+  return issues;
+}
+
+/** Module ON → each manifest.required_regulations must be tenant-enabled (error). */
+function validateRequiredRegulationsForEnabledModules(
+  logicalFile: string
+): RegulationValidationIssue[] {
+  const issues: RegulationValidationIssue[] = [];
+  let modulesFile;
+  try {
+    modulesFile = loadModulesFile();
+  } catch {
+    return issues;
+  }
+
+  const tenantById = new Map(
+    loadTenantRegulationsFile().regulations.map((r) => [r.id, r])
+  );
+  const catalogIds = new Set(loadRegulationsCatalog().regulations.map((r) => r.id));
+
+  for (const mod of modulesFile.modules) {
+    if (!mod.enabled) continue;
+    const manifest = loadModuleManifest(mod.id);
+    const required = manifest?.required_regulations ?? [];
+    for (const regId of required) {
+      if (!catalogIds.has(regId)) {
+        issues.push({
+          file: logicalFile,
+          message: `module "${mod.id}" required_regulations references unknown ${regId}`,
+        });
+        continue;
+      }
+      const entry = tenantById.get(regId);
+      if (!entry?.enabled) {
+        issues.push({
+          file: logicalFile,
+          message: `module "${mod.id}" requires regulation ${regId} enabled in regulations.yaml (risk-domain bind)`,
+        });
+      }
     }
   }
 
