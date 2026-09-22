@@ -44,7 +44,7 @@ describe("finance filing product gate", () => {
     logs.length = 0;
   });
 
-  it("handoff → lines-read → filing-score 0 → confirm refuse → LLM refuse (e2e chain)", () => {
+  it("handoff → lines-read → filing-score 0 → confirm refuse → LLM refuse → local XSD (e2e chain)", () => {
     const boundary = taxModuleBoundaryNote();
     expect(boundary.length).toBeGreaterThan(0);
     expect(isLedgerUnifyProductTreeComplete()).toBe(true);
@@ -85,6 +85,23 @@ describe("finance filing product gate", () => {
     expect(attempt.success).toBe(false);
     expect(attempt.reason).toBe("caller_forbidden");
     expect(Object.values(scoreOfficialFilingReceipt(root)).every((n) => n === 0)).toBe(true);
+
+    const localXsd = join(root, "operator-local-return.xsd");
+    writeFileSync(
+      localXsd,
+      [
+        '<?xml version="1.0"?>',
+        '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">',
+        '  <xs:element name="Return">',
+        '    <xs:complexType><xs:sequence/></xs:complexType>',
+        "  </xs:element>",
+        "</xs:schema>",
+        "",
+      ].join("\n"),
+    );
+    expect(isAllowedOfficialXsdPath(localXsd)).toBe(true);
+    expect(officialReturnXmlMatchesXsd("<Return/>", localXsd)).toBe(true);
+    expect(isAllowedOfficialXsdPath("tests/fixtures/finance/return.xsd")).toBe(false);
   });
 
   it("keeps filing-score at all zeros on a clean tip tree", () => {

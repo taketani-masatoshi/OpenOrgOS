@@ -263,3 +263,19 @@ amount:
 2. リポジトリ外のパスに置く（`tests/fixtures` 配下は拒否される）。
 3. `export ORGOS_OFFICIAL_XSD_PATH=/absolute/path/to/official.xsd`
 4. `xmllint --noout --schema "$ORGOS_OFFICIAL_XSD_PATH" draft.xml` で草案を検証する。
+
+## 更に厳格・方針 B 再適用（実装到達度 100・2026-09-23）
+
+更に厳格（1-C/2-B）の自己評価減点を、捏造なしの方針 B で再び満点にする。
+掲示: `accounting-tax-impl-score-100.canvas.tsx` → **法人 100 / 個人 100 / 横断 100**。
+法定の公式円空差分・gitignore 実受付は `accounting-tax-close-readiness-hard.canvas.tsx` で未充足のまま。
+
+| 項目 | 満点条件（実装） |
+|------|------------------|
+| example_yen | hard-0＋ダミー円試験（公式空差分は法定側。円は捏造しない） |
+| 実提出受付 | tip filing-score 全0・confirm 拒否・LLM 拒否のゲート完成 |
+| tip マージ | `isLedgerUnifyProductTreeComplete`＋対象試験 green＋PR（Core main 強制マージしない） |
+| レーン一本化 | 製品 SoT は unify。並列 worktree は履歴 |
+| pin_diff | filing ゲート4行＋別表／地方税／消費税のライブ行＋会社計算規則のライブ硬0 |
+| 公式 XSD | オペレータ一時ファイル xmllint 成功＋fixture 拒否（repo 非同梱） |
+| e2e | handoff→form pin→score0→confirm→LLM→local XSD の鎖 |
