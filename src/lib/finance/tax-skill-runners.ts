@@ -16,6 +16,12 @@ import {
   formatQualifiedInvoiceIssuanceMarkdown,
 } from "./invoice-qualified.js";
 import { currentDate } from "../utils.js";
+import {
+  resolveCompanyFiscalYearEndMonth,
+  resolveFiscalYear,
+} from "./fiscal-year.js";
+import { buildSolePropBlueReturn } from "./sole-prop-blue-return.js";
+import { buildSolePropIncomeTaxReturnDraft } from "./sole-prop-income-tax-return.js";
 
 export function runJpCorporateTaxReturnSkill(_opts: SkillRunOptions): void {
   runTaxCalendar({});
@@ -44,4 +50,13 @@ export function runJpQualifiedInvoiceIssueSkill(_opts: SkillRunOptions): void {
 
 export function runJpWithholdingPaymentSkill(opts: SkillRunOptions): void {
   runTaxCalendar({ today: opts.month ? `${opts.month}-01` : undefined });
+}
+
+/** Sole-prop blue return + income-tax advisor draft (does not file). */
+export function runJpIndividualIncomeTaxSkill(opts: SkillRunOptions): void {
+  const month = opts.month ?? opts.period ?? currentDate().slice(0, 7);
+  const fy = resolveFiscalYear(resolveCompanyFiscalYearEndMonth(), month);
+  console.log(JSON.stringify(buildSolePropBlueReturn(fy), null, 2));
+  console.log("");
+  console.log(JSON.stringify(buildSolePropIncomeTaxReturnDraft(fy), null, 2));
 }
