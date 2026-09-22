@@ -9,6 +9,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 ### Added
 
 - **JP 社内規程のモジュール連動方針** — リスク領域単位（金流・PII・許認可等）。REG-027 に資金章、REG-032 に還付吸収、REG-030/035/036/037 をカタログ化。`required_regulations` + validate error。J-SOX は REG-016+027 分界。
+- **モジュール有効化時の規程ワークフロー** — 分類（reuse/thicken/fork_family/new/none）→ Compliance Work Order → LLM 草案のみ → 人間承認。化粧品系は医療機器 QMS を上書きしない。`orgos modules regulation-plan` / `activate --skip-regulation-wo`。
 - **JP 社内規程（会計・税務）雛形の増強** — 経理（REG-027）· 経費精算（REG-005）を起草スタイル準拠で拡充。モジュール連動の REG-031〜034（法人税務準備 · 消費税務 · 適格請求書 · 源泉・法定調書）をカタログ追加。提出・e-Tax は人間/税理士権限のまま。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。

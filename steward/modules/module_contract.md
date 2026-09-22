@@ -66,5 +66,9 @@ steward/modules/{id}/
 6. `npm run orgos -- modules check {id}` で契約検証 → `npm run check`
 7. テナントで使う場合のみ `tenants/{id}/modules.yaml` にエントリ追加（パスバインドのみ）
 8. `MODULE_DEFAULT_DOCS_ROOT` / `PROPERTY_OPERATIONS_SUBDIRS` を `src/lib/tenant-document-zones.ts` に登録（docs_root 既定値）
-9. `orgos modules activate {id}` または `orgos modules scaffold-docs` で **Zone B** フォルダ展開
+9. `orgos modules activate {id}` または `orgos modules scaffold-docs` で **Zone B** フォルダ展開  
+   - activate 時は規程分類プランを計算し、既定で Compliance 向け Work Order を起票する（`--skip-regulation-wo` で省略可）  
+   - 分類だけ見る: `orgos modules regulation-plan {id}`  
+   - 方針: [JP regulations 00-モジュール連動方針](../jurisdiction-packs/JP/regulations/00-モジュール連動方針.md)
 10. CLI がある場合 `{id}/cli/register.ts` で `ModuleCliBundle` を export し `src/lib/module-cli.ts` の `MODULE_CLI_BUNDLES` に追加
+11. 規程参照: `required_regulations` / `optional_regulations` を空にしない（不要なら `[]` + notes で理由）
