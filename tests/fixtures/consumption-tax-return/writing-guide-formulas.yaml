@@ -1,0 +1,77 @@
+# 一般用の第一表・第二表、付表1-3、付表2-3。書き方の本文は転記しない。
+rows:
+  - sheet: schedule_1_3
+    line: "①-1A"
+    formula: "restore:108/100|rollback_once:100/108"
+  - sheet: schedule_1_3
+    line: "①-1B"
+    formula: "restore:110/100|rollback_once:100/110"
+  - sheet: schedule_1_3
+    line: "①A"
+    formula: "floor_unit:1000:schedule_1_3:①-1A"
+  - sheet: schedule_1_3
+    line: "①B"
+    formula: "floor_unit:1000:schedule_1_3:①-1B"
+  - sheet: schedule_1_3
+    line: "②A"
+    formula: "rate:624/10000:schedule_1_3:①A"
+  - sheet: schedule_1_3
+    line: "②B"
+    formula: "rate:78/1000:schedule_1_3:①B"
+  - sheet: schedule_2_3
+    line: "㉖"
+    formula: "purchase_credit"
+  - sheet: schedule_1_3
+    line: "④"
+    formula: "copy:schedule_2_3:㉖"
+  - sheet: return_page2
+    line: "⑤"
+    formula: "copy:schedule_1_3:①A"
+  - sheet: return_page2
+    line: "⑥"
+    formula: "copy:schedule_1_3:①B"
+  - sheet: return_page2
+    line: "①"
+    formula: "sum:return_page2:⑤+return_page2:⑥"
+  - sheet: return_page1
+    line: "①"
+    formula: "copy:return_page2:①"
+  - sheet: return_page1
+    line: "②"
+    formula: "sum:schedule_1_3:②A+schedule_1_3:②B"
+  - sheet: return_page1
+    line: "③"
+    formula: "required_input:excess_adjustment_yen"
+  - sheet: return_page1
+    line: "④"
+    formula: "copy:schedule_1_3:④"
+  - sheet: return_page1
+    line: "⑤"
+    formula: "required_input:return_tax_yen"
+  - sheet: return_page1
+    line: "⑥"
+    formula: "required_input:bad_debt_yen"
+  - sheet: return_page1
+    line: "⑦"
+    formula: "sum:return_page1:④+return_page1:⑤+return_page1:⑥"
+  - sheet: return_page1
+    line: "⑨"
+    formula: "floor100:(return_page1:②+return_page1:③-return_page1:⑦)"
+  - sheet: return_page1
+    line: "⑩"
+    formula: "required_input:interim_payment_yen"
+  - sheet: return_page1
+    line: "⑪"
+    formula: "subtract:return_page1:⑨-return_page1:⑩"
+  - sheet: schedule_1_3
+    line: "⑪"
+    formula: "copy:return_page1:⑨"
+  - sheet: schedule_1_3
+    line: "⑬"
+    formula: "local:22/78:schedule_1_3:⑪|payable_floor:100"
+  - sheet: return_page1
+    line: "⑱"
+    formula: "copy:schedule_1_3:⑪"
+  - sheet: return_page1
+    line: "⑳"
+    formula: "copy:schedule_1_3:⑬"
