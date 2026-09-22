@@ -58,7 +58,10 @@ export function missingLineTaxCodes(month: string): string[] {
 function defaultJpEngine(): JpIndirectTaxEngine {
   return {
     missingLineTaxCodes,
-    summarize: (month) => buildConsumptionTaxSummary({ period: month }),
+    summarize: (month) => {
+      buildConsumptionTaxSummary({ period: month });
+      return {};
+    },
     profileBlocking: () =>
       runConsumptionTaxCheck().issues.filter((issue) => issue.severity === "blocking"),
   };

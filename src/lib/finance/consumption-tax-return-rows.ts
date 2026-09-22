@@ -12,7 +12,6 @@ import {
 } from "../../../schemas/finance/consumption-tax-return-map.js";
 import {
   journalEntrySchema,
-  normalizeJournalEntry,
 } from "../../../schemas/finance/journal-entry.js";
 import { loadChartOfAccounts, loadTaxProfile } from "../data.js";
 import { getInstallRoot } from "../orgos-paths.js";
@@ -219,16 +218,22 @@ function addSummaryBases(
   summary: SummarySlice
 ): void {
   for (const line of summary.lines) {
-    const key = baseKey(line.direction, line.tax_category);
+    const key = summaryBaseKey(line.direction, line.tax_category);
     if (!key) continue;
     bases[key] += line.base_yen;
   }
 }
 
-function baseKey(
+type SummaryBaseKey =
+  | "taxable_sales_10_yen"
+  | "taxable_sales_8_yen"
+  | "taxable_purchases_10_yen"
+  | "taxable_purchases_8_yen";
+
+function summaryBaseKey(
   direction: "sales" | "purchase",
   taxCategory: string
-): ConsumptionTaxReturnInputKey | undefined {
+): SummaryBaseKey | undefined {
   if (direction === "sales" && taxCategory === "taxable_10") return "taxable_sales_10_yen";
   if (direction === "sales" && taxCategory === "taxable_8") return "taxable_sales_8_yen";
   if (direction === "purchase" && taxCategory === "taxable_10") return "taxable_purchases_10_yen";
@@ -467,8 +472,9 @@ function purchaseCredit(
 function salesYenFromBases(bases: ConsumptionTaxReturnBases): number | null {
   const ten = bases.taxable_sales_10_yen;
   const eight = bases.taxable_sales_8_yen;
-  if (!Number.isInteger(ten) || !Number.isInteger(eight) || ten! < 0 || eight! < 0) return null;
-  return ten! + eight!;
+  if (typeof ten !== "number" || typeof eight !== "number") return null;
+  if (!Number.isInteger(ten) || !Number.isInteger(eight) || ten < 0 || eight < 0) return null;
+  return ten + eight;
 }
 
 function onePurchaseCredit(
@@ -527,7 +533,7 @@ function collectReturnFacts(
   }
   const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
   for (const raw of entries) {
-    const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
+    const entry = journalEntrySchema.parse(raw);
     const month = entry.occurred_at.slice(0, 7);
     if (!months.has(month)) continue;
     for (const line of entry.lines) {

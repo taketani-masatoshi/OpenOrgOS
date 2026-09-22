@@ -419,7 +419,6 @@ export function runIsolatedSolePropLaneFAcceptance(
           capSmall.applied_yen <= 100_000 &&
           capDefault.applied_yen === 0 &&
           scaled.deduction_gate.applied_yen === 550_000 &&
-          scaled.deduction_gate.applied_yen !== 650_000 &&
           scaled.lines.find((row) => row.id === "blue_deduction")?.amount_yen === 550_000 &&
           scaled.income_yen === 4_450_500,
         `high=${capHigh.applied_yen} electronic=${capElectronic.applied_yen} draft=${scaled.deduction_gate.applied_yen}`,
