@@ -15,7 +15,7 @@ import { loadChartOfAccounts } from "../src/lib/data.js";
 import { resolveCompanyFiscalYearEndMonth } from "../src/lib/finance/fiscal-year.js";
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
 import { loadOpeningBalances } from "../src/lib/finance/ledger/opening-balance.js";
-import { closeAccountingMonth } from "../src/lib/finance/monthly-close.js";
+import { closeAccountingMonth, monthCashGlDelta } from "../src/lib/finance/monthly-close.js";
 import { isMonthLocked, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { openingBalancesSchema } from "../schemas/finance/opening-balances.js";
@@ -32,14 +32,18 @@ let openingBackup = "";
 let assetsBackup = "";
 let extraMonthly: string[] = [];
 
+function statementLines(month: string): string {
+  const delta = monthCashGlDelta(month);
+  if (delta === 0) {
+    return `  - id: BS-${month}-IN\n    date: "${month}-10"\n    direction: inflow\n    amount: 1\n    status: matched\n  - id: BS-${month}-OUT\n    date: "${month}-11"\n    direction: outflow\n    amount: 1\n    status: matched`;
+  }
+  const direction = delta > 0 ? "inflow" : "outflow";
+  return `  - id: BS-${month}\n    date: "${month}-10"\n    direction: ${direction}\n    amount: ${Math.abs(delta)}\n    status: matched`;
+}
+
 function seedCloseInputs(months: string[]): void {
   const finance = join(getDataDir(), "finance");
-  const rows = months
-    .map(
-      (month) =>
-        `  - id: BS-${month}\n    date: "${month}-10"\n    direction: inflow\n    amount: 1\n    status: matched`,
-    )
-    .join("\n");
+  const rows = months.map((month) => statementLines(month)).join("\n");
   writeFileSync(join(finance, "bank-statements.yaml"), `entries:\n${rows}\n`);
   writeFileSync(
     join(finance, `year-end.${FY}.yaml`),

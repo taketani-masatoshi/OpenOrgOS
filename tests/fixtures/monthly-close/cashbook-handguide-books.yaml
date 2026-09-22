@@ -1,0 +1,40 @@
+# 手引き ⑴ 現金出納帳の 1 月記載例を、会社の現金仕訳として載せたもの。
+# 円は公表の記載例のみ。摘要は出納帳の相手科目名。
+# source: nta-bs-handguide-r7-cashbook-january
+cash_account_code: "1100"
+opening:
+  month: 1
+  day: 1
+  summary: "前年より繰越"
+  balance_yen: 292300
+movements:
+  - occurred_on: "2025-01-03"
+    summary: "現金売上"
+    cash_debit_yen: 270000
+    cash_credit_yen: 0
+    counter_account_code: "4100"
+  - occurred_on: "2025-01-04"
+    summary: "当座預金"
+    cash_debit_yen: 0
+    cash_credit_yen: 180000
+    counter_account_code: "1110"
+  - occurred_on: "2025-01-06"
+    summary: "消耗品費"
+    cash_debit_yen: 0
+    cash_credit_yen: 2500
+    counter_account_code: "5100"
+  - occurred_on: "2025-01-18"
+    summary: "現金仕入"
+    cash_debit_yen: 0
+    cash_credit_yen: 60000
+    counter_account_code: "5000"
+  - occurred_on: "2025-01-25"
+    summary: "事業主貸"
+    cash_debit_yen: 0
+    cash_credit_yen: 200000
+    counter_account_code: "2100"
+  - occurred_on: "2025-01-25"
+    summary: "買掛金"
+    cash_debit_yen: 0
+    cash_credit_yen: 36000
+    counter_account_code: "2101"
