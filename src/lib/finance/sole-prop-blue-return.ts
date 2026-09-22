@@ -287,7 +287,7 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     return {
       ...blocked(["profit and loss income does not match the balance-sheet income"]),
       ...capitalFields,
-      inventory: inventory.status === "invalid" ? "undeclared" : inventory.status,
+      inventory: inventory.status,
       income_before_blue_deduction_yen: plIncome,
       bs_income_before_blue_deduction_yen: bsIncome,
       cogs_yen: inventory.status === "undeclared" ? null : cogs,

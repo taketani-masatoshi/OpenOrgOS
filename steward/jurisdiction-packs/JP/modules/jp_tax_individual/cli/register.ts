@@ -1,5 +1,6 @@
 import type { ModuleCliBundle } from "../../../../../../src/lib/module-cli-types.js";
 import { loadChartOfAccounts } from "../../../../../../src/lib/data.js";
+import { runJpIndividualIncomeTaxSkill } from "../../../../../../src/lib/finance/tax-skill-runners.js";
 import { buildSolePropBlueReturn } from "../../../../../../src/lib/finance/sole-prop-blue-return.js";
 import { buildSolePropIncomeTaxReturnDraft } from "../../../../../../src/lib/finance/sole-prop-income-tax-return.js";
 
@@ -42,5 +43,8 @@ export const jp_tax_individualCli: ModuleCliBundle = {
       .action(() => {
         console.log("提出は人間。このコマンドは送信しない。");
       });
+  },
+  skillHandlers: {
+    jp_individual_income_tax: runJpIndividualIncomeTaxSkill,
   },
 };
