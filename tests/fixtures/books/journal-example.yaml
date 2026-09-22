@@ -1,0 +1,12 @@
+# 国税庁「青色申告者のための貸借対照表作成の手引き」（令和7年分、表紙 R7.10）
+# 仕訳帳の記載例。本文は転記しない。丁数は記載例の 1433 / 21 / 52。
+source: nta-bs-handguide-r7-journal
+rows:
+  - { date: "11-01", summary: "現金", folio: "1", debit_yen: 300000, credit_yen: 0 }
+  - { date: "11-01", summary: "売掛金", folio: "4", debit_yen: 200000, credit_yen: 0 }
+  - { date: "11-01", summary: "売上：食料品", folio: "3", debit_yen: 0, credit_yen: 300000 }
+  - { date: "11-01", summary: "売上：日用品", folio: "3", debit_yen: 0, credit_yen: 200000 }
+  - { date: "11-02", summary: "当座預金", folio: "2", debit_yen: 200000, credit_yen: 0 }
+  - { date: "11-02", summary: "現金", folio: "1", debit_yen: 0, credit_yen: 200000 }
+  - { date: "11-25", summary: "地代家賃", folio: "5", debit_yen: 180000, credit_yen: 0 }
+  - { date: "11-25", summary: "当座預金", folio: "2", debit_yen: 0, credit_yen: 180000 }

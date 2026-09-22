@@ -1,0 +1,501 @@
+# 製品コードは読まない。試験がこの率を渡し、出力との差分が空のときだけ 6。
+# 地方法人税の 10.3% は国税庁 No.5759（法人税の税率）には無い。
+# 充足: 東京都主税局「分割基準のガイドブック」の印刷円＋第6号様式欄⑬/㉜。
+# ピン: tests/fixtures/local-tax/tokyo-bunkatu-example.yaml
+
+sources:
+  local_corporate: "国税庁「地方法人税の税率の改正のお知らせ」令和元年10月1日以後10.3% https://www.nta.go.jp/publication/pamph/hojin/chihou_hojin/01.htm 。地方法人税法第10条。端数は国税通則法第119条第1項の百円未満切捨て。"
+  inhabitant_rates: "総務省「法人住民税」法人税割は都道府県1.0%・市町村6.0%、均等割は資本金等と従業者数の表 https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_08.html"
+  inhabitant_split: "地方税法第57条第2項・第321条の13第2項。法人税割は算定期間末日の従業者数で按分する。総務省の計算例（資本金5,000万円・法人税額200万円・A20人B60人C20人）と同じ円。"
+  inhabitant_tokyo_equal: "東京都主税局 FAQ 均等割計算例（Ａ区分／Ｂ区分）年額70000・6か月35000・5か月29100・合計64100 https://www.tax.metro.tokyo.lg.jp/shitsumon/work/a1 — 住民税のみでは充足にしない。"
+  enterprise_rates: "総務省「法人事業税」資本金1億円以下の普通法人は所得400万円以下3.5%・800万円以下5.3%・超7.0%、特別法人は400万円以下3.5%・超4.9% https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_09.html — 税率表のみ。"
+  enterprise_tokyo_split_guide: "東京都主税局「分割基準のガイドブック」所得割計算例（所得36173千円・区分1412/1412/9953千円・都税率で税額52900/79900/744400・計877200）と法人税割（557千円×10.4%=57900） https://www.tax.metro.tokyo.lg.jp/documents/d/tax/houjin_bunkatu"
+  form6_line_ids: "第6号様式記載要領の差引法人税割額⑬・所得割計㉜ https://www.tax.metro.tokyo.lg.jp/documents/d/tax/06_6-3-b"
+  enterprise_per_capita: "総務省「法人事業税」は付加価値割・資本割・所得割・収入割であり、均等割は置かない。同URL。"
+  enterprise_split: "地方税法第72条の48第3項第1号は製造業を従業者数、第5号はその他の事業を課税標準の2分の1ずつ事業所数と従業者数。"
+  local_rounding: "地方税法第20条の4の2第1項は課税標準の千円未満切捨て、第3項は確定金額の百円未満切捨て。"
+
+local_corporate:
+  numerator: 103
+  denominator: 1000
+  truncate_unit_yen: 100
+
+inhabitant:
+  prefecture:
+    numerator: 1
+    denominator: 100
+  municipality:
+    numerator: 6
+    denominator: 100
+  apportionment: headcount
+  headcount_over: 50
+  tax_base_truncate_unit_yen: 1000
+  determined_truncate_unit_yen: 100
+  full_year_months: 12
+  per_capita:
+    - capital_yen_max: 10000000
+      prefecture_yen: 20000
+      municipality_over_50_yen: 120000
+      municipality_up_to_50_yen: 50000
+    - capital_yen_max: 100000000
+      prefecture_yen: 50000
+      municipality_over_50_yen: 150000
+      municipality_up_to_50_yen: 130000
+    - capital_yen_max: 1000000000
+      prefecture_yen: 130000
+      municipality_over_50_yen: 400000
+      municipality_up_to_50_yen: 160000
+    - capital_yen_max: 5000000000
+      prefecture_yen: 540000
+      municipality_over_50_yen: 1750000
+      municipality_up_to_50_yen: 410000
+    - capital_yen_max: null
+      prefecture_yen: 800000
+      municipality_over_50_yen: 3000000
+      municipality_up_to_50_yen: 410000
+
+enterprise:
+  ordinary_capital_max_inclusive_yen: 100000000
+  tax_base_truncate_unit_yen: 1000
+  determined_truncate_unit_yen: 100
+  full_year_months: 12
+  per_capita: not_levied
+  other_office_share:
+    numerator: 1
+    denominator: 2
+  other_headcount_share:
+    numerator: 1
+    denominator: 2
+  ordinary_income:
+    - up_to_annual_yen: 4000000
+      numerator: 35
+      denominator: 1000
+    - up_to_annual_yen: 8000000
+      numerator: 53
+      denominator: 1000
+    - up_to_annual_yen: null
+      numerator: 70
+      denominator: 1000
+  special_income:
+    - up_to_annual_yen: 4000000
+      numerator: 35
+      denominator: 1000
+    - up_to_annual_yen: null
+      numerator: 49
+      denominator: 1000
+  # 総務省の同じ表。付加価値額・収入金額が無いので計算には使わない。
+  value_added_and_revenue:
+    ordinary_over_100m_yen_capital:
+      value_added_numerator: 12
+      value_added_denominator: 1000
+      capital_numerator: 5
+      capital_denominator: 1000
+      income_numerator: 1
+      income_denominator: 100
+    revenue_utilities_and_insurance_numerator: 1
+    revenue_utilities_and_insurance_denominator: 100
+
+scenarios:
+  - id: handoff
+    from_tax_adjustment: true
+    fiscal_year: FY2026
+    capital_yen: 50000000
+    fiscal_months: 12
+    business: other
+    corporation_kind: ordinary
+    offices:
+      - municipality_id: city
+        prefecture_id: pref
+        headcount: 20
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: national
+        status: complete
+        yen: 171300
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:city
+        status: complete
+        yen: 99800
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:pref
+        status: complete
+        yen: 16600
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:city
+        status: complete
+        yen: 130000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:pref
+        status: complete
+        yen: 50000
+      - tax: enterprise_income
+        jurisdiction: pref:pref
+        status: complete
+        yen: 492000
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null
+
+  - id: mic_inhabitant
+    corporate_tax_yen: 2000000
+    taxable_income_yen: null
+    capital_yen: 50000000
+    fiscal_months: 12
+    business: other
+    corporation_kind: ordinary
+    offices:
+      - municipality_id: A
+        prefecture_id: alpha
+        headcount: 20
+        office_month_ends: 12
+      - municipality_id: B
+        prefecture_id: alpha
+        headcount: 60
+        office_month_ends: 12
+      - municipality_id: C
+        prefecture_id: beta
+        headcount: 20
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: national
+        status: complete
+        yen: 206000
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:A
+        status: complete
+        yen: 24000
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:B
+        status: complete
+        yen: 72000
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:C
+        status: complete
+        yen: 24000
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:alpha
+        status: complete
+        yen: 16000
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:beta
+        status: complete
+        yen: 4000
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:A
+        status: complete
+        yen: 130000
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:B
+        status: complete
+        yen: 150000
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:C
+        status: complete
+        yen: 130000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:alpha
+        status: complete
+        yen: 50000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:beta
+        status: complete
+        yen: 50000
+      - tax: enterprise_income
+        jurisdiction: "*"
+        status: incomplete
+        yen: null
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null
+
+  - id: enterprise_other_split
+    corporate_tax_yen: 0
+    taxable_income_yen: 10000000
+    capital_yen: 10000000
+    fiscal_months: 12
+    business: other
+    corporation_kind: ordinary
+    offices:
+      - municipality_id: p1
+        prefecture_id: p1
+        headcount: 20
+        office_month_ends: 12
+      - municipality_id: p2
+        prefecture_id: p2
+        headcount: 60
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: national
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:p1
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:p2
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:p1
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:p2
+        status: complete
+        yen: 0
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:p1
+        status: complete
+        yen: 50000
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:p2
+        status: complete
+        yen: 120000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:p1
+        status: complete
+        yen: 20000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:p2
+        status: complete
+        yen: 20000
+      - tax: enterprise_income
+        jurisdiction: pref:p1
+        status: complete
+        yen: 184500
+      - tax: enterprise_income
+        jurisdiction: pref:p2
+        status: complete
+        yen: 307500
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null
+
+  - id: enterprise_manufacturing_split
+    corporate_tax_yen: 0
+    taxable_income_yen: 10000000
+    capital_yen: 10000000
+    fiscal_months: 12
+    business: manufacturing
+    corporation_kind: ordinary
+    offices:
+      - municipality_id: p1
+        prefecture_id: p1
+        headcount: 20
+        office_month_ends: 12
+      - municipality_id: p2
+        prefecture_id: p2
+        headcount: 60
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: national
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:p1
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:p2
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:p1
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:p2
+        status: complete
+        yen: 0
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:p1
+        status: complete
+        yen: 50000
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:p2
+        status: complete
+        yen: 120000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:p1
+        status: complete
+        yen: 20000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:p2
+        status: complete
+        yen: 20000
+      - tax: enterprise_income
+        jurisdiction: pref:p1
+        status: complete
+        yen: 123000
+      - tax: enterprise_income
+        jurisdiction: pref:p2
+        status: complete
+        yen: 369000
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null
+
+  - id: special_corporation
+    corporate_tax_yen: 0
+    taxable_income_yen: 10000000
+    capital_yen: 10000000
+    fiscal_months: 12
+    business: other
+    corporation_kind: special
+    offices:
+      - municipality_id: city
+        prefecture_id: pref
+        headcount: 10
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: national
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:city
+        status: complete
+        yen: 0
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:pref
+        status: complete
+        yen: 0
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:city
+        status: complete
+        yen: 50000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:pref
+        status: complete
+        yen: 20000
+      - tax: enterprise_income
+        jurisdiction: pref:pref
+        status: complete
+        yen: 434000
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null
+
+  - id: null_corporate_tax
+    corporate_tax_yen: null
+    taxable_income_yen: null
+    capital_yen: 50000000
+    fiscal_months: 12
+    business: other
+    corporation_kind: ordinary
+    offices:
+      - municipality_id: city
+        prefecture_id: pref
+        headcount: 20
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: "*"
+        status: incomplete
+        yen: null
+      - tax: inhabitant_corporate_levy
+        jurisdiction: "*"
+        status: incomplete
+        yen: null
+      - tax: inhabitant_per_capita
+        jurisdiction: muni:city
+        status: complete
+        yen: 130000
+      - tax: inhabitant_per_capita
+        jurisdiction: pref:pref
+        status: complete
+        yen: 50000
+      - tax: enterprise_income
+        jurisdiction: "*"
+        status: incomplete
+        yen: null
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null
+
+  - id: missing_capital
+    corporate_tax_yen: 1664000
+    taxable_income_yen: 10000000
+    capital_yen: null
+    fiscal_months: 12
+    business: other
+    corporation_kind: ordinary
+    offices:
+      - municipality_id: city
+        prefecture_id: pref
+        headcount: 20
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: national
+        status: complete
+        yen: 171300
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:city
+        status: complete
+        yen: 99800
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:pref
+        status: complete
+        yen: 16600
+      - tax: inhabitant_per_capita
+        jurisdiction: "*"
+        status: incomplete
+        yen: null
+      - tax: enterprise_income
+        jurisdiction: "*"
+        status: incomplete
+        yen: null
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null
+
+  - id: missing_headcount
+    corporate_tax_yen: 1664000
+    taxable_income_yen: 10000000
+    capital_yen: 50000000
+    fiscal_months: 12
+    business: other
+    corporation_kind: ordinary
+    offices:
+      - municipality_id: city
+        prefecture_id: pref
+        headcount: null
+        office_month_ends: 12
+    lines:
+      - tax: local_corporate
+        jurisdiction: national
+        status: complete
+        yen: 171300
+      - tax: inhabitant_corporate_levy
+        jurisdiction: muni:city
+        status: complete
+        yen: 99800
+      - tax: inhabitant_corporate_levy
+        jurisdiction: pref:pref
+        status: complete
+        yen: 16600
+      - tax: inhabitant_per_capita
+        jurisdiction: "*"
+        status: incomplete
+        yen: null
+      - tax: enterprise_income
+        jurisdiction: pref:pref
+        status: complete
+        yen: 492000
+      - tax: enterprise_per_capita
+        jurisdiction: "*"
+        status: not_levied
+        yen: null

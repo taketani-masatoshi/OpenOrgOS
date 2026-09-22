@@ -5,6 +5,11 @@ export const taxAdjustmentLineSchema = z.object({
   kind: z.enum(["add", "subtract"]),
   amount_yen: z.number().int().nonnegative(),
   label: z.string().min(1),
+  /** 別表四の行番号。行11または行22に入る許可行だけが公式合計に入る。 */
+  form_row: z
+    .string()
+    .regex(/^\d{1,2}$/)
+    .optional(),
 });
 
 export const taxAdjustmentsFileSchema = z.object({
