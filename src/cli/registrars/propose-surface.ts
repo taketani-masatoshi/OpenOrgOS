@@ -132,14 +132,14 @@ export function registerProposeSurfaceCommands(program: Command): void {
     )
     .requiredOption("--from <date>", "YYYY-MM-DD")
     .requiredOption("--to <date>", "YYYY-MM-DD")
-    .requiredOption("--flows <json>", "JSON array of {date,yen}")
-    .action((opts: { openingYen?: number; from: string; to: string; flows: string }) => {
+    .option("--flows <json>", "JSON array of {date,yen} (omit to use forecast month-end nets)")
+    .action((opts: { openingYen?: number; from: string; to: string; flows?: string }) => {
       printJson(
         renderCashflowReport({
           openingYen: opts.openingYen,
           from: opts.from,
           to: opts.to,
-          flows: readJson(opts.flows),
+          flows: opts.flows ? readJson(opts.flows) : undefined,
         }),
       );
     });

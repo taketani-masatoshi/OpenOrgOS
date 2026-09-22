@@ -11,6 +11,7 @@ import { lastDayOfMonth } from "./fiscal-year.js";
 import {
   shouldSkipInvoiceJournal,
 } from "./ledger/invoice-mpl-dedupe.js";
+import { resolveProjectCodeForProperty } from "./project-codes.js";
 
 const SKIP_EXPENSE_CATEGORIES = new Set(["depreciation", "loan_payment", "capex"]);
 const CASH_PL_TYPES = new Set(["revenue", "expense"]);
@@ -34,6 +35,8 @@ type JournalLine = {
   tax_category: TaxCategory;
   tax_rate_pct?: number;
   counterparty_id?: string;
+  /** P/L lines only — BS contra lines stay uncoded so project P/L is not zeroed. */
+  project_code?: string;
 };
 
 type MonthlyBucket = {
@@ -80,6 +83,7 @@ function buildMonthlyRevenueLines(input: {
   taxPayable?: string;
   counterpartyId?: string;
 }): JournalLine[] {
+  const projectCode = resolveProjectCodeForProperty(input.counterpartyId);
   const split =
     input.taxCategory === "taxable_10" &&
     input.taxPayable &&
@@ -99,6 +103,7 @@ function buildMonthlyRevenueLines(input: {
         credit_yen: split.net_yen,
         tax_category: "taxable_10",
         tax_rate_pct: 10,
+        ...(projectCode ? { project_code: projectCode } : {}),
       },
       {
         account_code: input.taxPayable!,
@@ -121,6 +126,7 @@ function buildMonthlyRevenueLines(input: {
       debit_yen: 0,
       credit_yen: input.amount,
       tax_category: input.taxCategory,
+      ...(projectCode ? { project_code: projectCode } : {}),
     },
   ];
 }
@@ -133,6 +139,7 @@ function buildMonthlyExpenseLines(input: {
   taxReceivable?: string;
   counterpartyId?: string;
 }): JournalLine[] {
+  const projectCode = resolveProjectCodeForProperty(input.counterpartyId);
   const split =
     input.taxCategory === "taxable_10" &&
     input.taxReceivable &&
@@ -145,6 +152,7 @@ function buildMonthlyExpenseLines(input: {
         credit_yen: 0,
         tax_category: "taxable_10",
         tax_rate_pct: 10,
+        ...(projectCode ? { project_code: projectCode } : {}),
       },
       {
         account_code: input.taxReceivable!,
@@ -167,6 +175,7 @@ function buildMonthlyExpenseLines(input: {
       debit_yen: input.amount,
       credit_yen: 0,
       tax_category: input.taxCategory,
+      ...(projectCode ? { project_code: projectCode } : {}),
     },
     {
       account_code: input.contra,

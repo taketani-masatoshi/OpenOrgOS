@@ -19,6 +19,7 @@ export * from "./expense-claim.js";
 export * from "./invoice-registration-catalog.js";
 export * from "./employee-reimbursement-payable.js";
 export * from "./journal-entry.js";
+export * from "./project-codes.js";
 export * from "./opening-balances.js";
 export * from "./expense-evidence.js";
 export * from "./property-scenarios.js";

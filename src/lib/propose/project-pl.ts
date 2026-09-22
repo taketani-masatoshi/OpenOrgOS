@@ -1,4 +1,5 @@
 import { loadJournalEntries } from "../finance/expense-claim-journal.js";
+import { loadProjectCodes } from "../finance/project-codes.js";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
 
 export type ProjectLine = {
@@ -96,7 +97,10 @@ export function renderProjectPlReport(
       inputs_ref,
       human_gate: { apply: "human" },
       payload: {
-        rows: summarizeProjectPl(source, rules),
+        rows: summarizeProjectPl(source, rules).map((row) => {
+          const name = loadProjectCodes()?.projects.find((p) => p.code === row.project_code)?.name;
+          return name ? { ...row, name } : row;
+        }),
         autoLoad: false,
       },
     }),

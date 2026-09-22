@@ -8,6 +8,7 @@ import { ROOT_DIR } from "../utils.js";
 import { appendJournalEntry } from "./expense-claim-journal.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
+import { resolveProjectCodeForProperty } from "./project-codes.js";
 
 const MONTHS_PER_YEAR = 12;
 
@@ -29,6 +30,7 @@ const depreciationRatesSchema = z.object({
 export type DepreciationScheduleLine = {
   asset_id: string;
   asset_name: string;
+  property_id?: string;
   period: string;
   method: string;
   monthly_depreciation_yen: number;
@@ -106,6 +108,7 @@ export function buildDepreciationSchedule(period: string): DepreciationScheduleL
       {
         asset_id: asset.id,
         asset_name: asset.name,
+        property_id: asset.property_id,
         period,
         method: asset.depreciation_method,
         monthly_depreciation_yen: monthly,
@@ -216,6 +219,7 @@ export function postDepreciationJournalEntries(input: {
   const posted: string[] = [];
   for (const line of schedule) {
     const entryId = `JE-DEP-${line.asset_id}-${input.period}`;
+    const projectCode = resolveProjectCodeForProperty(line.property_id);
     appendJournalEntry({
       entry_id: entryId,
       occurred_at: `${lastDayOfMonth(input.period)}T00:00:00.000Z`,
@@ -232,6 +236,7 @@ export function postDepreciationJournalEntries(input: {
           debit_yen: line.monthly_depreciation_yen,
           credit_yen: 0,
           tax_category: "out_of_scope",
+          ...(projectCode ? { project_code: projectCode } : {}),
         },
         {
           account_code: line.accumulated_account_code,

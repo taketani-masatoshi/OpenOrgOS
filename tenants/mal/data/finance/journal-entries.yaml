@@ -17,6 +17,7 @@ entries:
         debit_yen: 29432
         credit_yen: 0
         tax_category: out_of_scope
+        project_code: PRJ-BANCHO
       - account_code: "1290"
         debit_yen: 0
         credit_yen: 29432
@@ -43,6 +44,7 @@ entries:
         debit_yen: 0
         credit_yen: 100000
         tax_category: non_taxable
+        project_code: PRJ-BANCHO
   - entry_id: JE-MPL-2026-08-REV-HOTEL-REVENUE
     occurred_at: 2026-08-28T12:00:00.000Z
     description: Monthly P/L revenue hotel_revenue 2026-08
@@ -66,6 +68,7 @@ entries:
         credit_yen: 954546
         tax_category: taxable_10
         tax_rate_pct: 10
+        project_code: PRJ-KAMEZAWA
       - account_code: "2160"
         debit_yen: 0
         credit_yen: 95454
@@ -88,6 +91,7 @@ entries:
         credit_yen: 0
         tax_category: taxable_10
         tax_rate_pct: 10
+        project_code: PRJ-KAMEZAWA
       - account_code: "2170"
         debit_yen: 45159
         credit_yen: 0
@@ -114,6 +118,7 @@ entries:
         debit_yen: 29432
         credit_yen: 0
         tax_category: out_of_scope
+        project_code: PRJ-BANCHO
       - account_code: "1290"
         debit_yen: 0
         credit_yen: 29432
@@ -140,6 +145,7 @@ entries:
         debit_yen: 0
         credit_yen: 100000
         tax_category: non_taxable
+        project_code: PRJ-BANCHO
   - entry_id: JE-MPL-2026-09-REV-HOTEL-REVENUE
     occurred_at: 2026-09-28T12:00:00.000Z
     description: Monthly P/L revenue hotel_revenue 2026-09
@@ -163,6 +169,7 @@ entries:
         credit_yen: 954546
         tax_category: taxable_10
         tax_rate_pct: 10
+        project_code: PRJ-KAMEZAWA
       - account_code: "2160"
         debit_yen: 0
         credit_yen: 95454
@@ -185,6 +192,7 @@ entries:
         credit_yen: 0
         tax_category: taxable_10
         tax_rate_pct: 10
+        project_code: PRJ-KAMEZAWA
       - account_code: "2170"
         debit_yen: 45159
         credit_yen: 0

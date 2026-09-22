@@ -1,0 +1,9 @@
+# 物件 → プロジェクト採算コード（ledger pl --by-project）
+version: 1
+projects:
+  - code: PRJ-BANCHO
+    name: 二番町（番町ハイム312）
+    property_id: PROP-001
+  - code: PRJ-KAMEZAWA
+    name: 亀沢旅館
+    property_id: PROP-002

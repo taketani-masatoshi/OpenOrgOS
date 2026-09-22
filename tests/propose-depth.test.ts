@@ -81,6 +81,7 @@ describe("propose depth / SoT", () => {
       flows: [],
     });
     expect(cashEmpty.depth).toBe("L1");
+    expect(cashEmpty.autoImport).toBe(false);
     expect(cashEmpty.series).toEqual([{ date: "2026-09-21", balanceYen: 0 }]);
 
     const cash = renderCashflowReport({
@@ -90,6 +91,7 @@ describe("propose depth / SoT", () => {
       flows: [{ date: "2026-09-22", yen: -10 }],
     });
     expect(cash.series[1]?.balanceYen).toBe(90);
+    expect(cash.autoImport).toBe(false);
 
     const payroll = renderPayrollTransferReport({ payrollRunId: "RUN-1", totalYen: 50_000 });
     expect(payroll.depth).toBe("L0");

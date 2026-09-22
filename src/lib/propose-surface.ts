@@ -89,7 +89,9 @@ export {
 } from "./propose/hr.js";
 export {
   buildDailyCashSeries,
+  flowsFromForecast,
   renderCashflowReport,
+  resolveOpeningYen,
   type CashFlow,
 } from "./propose/cashflow.js";
 export { renderQuoteDraftReport, renderQuotePdf, renderSalesQuotePdf } from "./propose/quote.js";
