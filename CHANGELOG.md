@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **JP 社内規程（会計・税務）雛形の増強** — 経理（REG-027）· 経費精算（REG-005）を起草スタイル準拠で拡充。モジュール連動の REG-031〜034（法人税務準備 · 消費税務 · 適格請求書 · 源泉・法定調書）をカタログ追加。提出・e-Tax は人間/税理士権限のまま。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
