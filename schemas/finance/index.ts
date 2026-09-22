@@ -23,3 +23,6 @@ export * from "./opening-balances.js";
 export * from "./expense-evidence.js";
 export * from "./property-scenarios.js";
 export * from "./types.js";
+export * from "./external-transaction.js";
+export * from "./external-accounts.js";
+export * from "./iso20022.js";
