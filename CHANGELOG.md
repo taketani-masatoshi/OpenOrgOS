@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **インバウンド FAQ → 回答提案 → 送付一歩前** — `data/sales/inbound/faq.yaml` 照合。`sales inquiry-reply-propose` / `inquiry-reply-draft` / `inquiry-sla-gate`。L2 本文・連絡先は `body_ref` / `reply_to_contact_ref` のみ（チャット転記禁止）。送信は人間承認後。
 - **請求 intake の offline catalog 既定** — `invoice-qualified intake` が `--catalog` 省略時に `data/finance/invoice-registration-catalog.yaml` を読む。`--file` / テキストパス入力可。ライブ OCR・NTA API・自動 post は出さない。
 - **BANT 文字起こしテキストファイル** — `sales bant` が UTF-8 文字起こしファイル（`--file` / パス）を読む。ライブ STT・ステージ自動 apply は出さない。
 - **顧客追跡のジョブ台帳突合** — `client_portal track` が `data/field_ops/jobs.yaml` の担当・ETA を解決する。地図タイルと座標は出さない。

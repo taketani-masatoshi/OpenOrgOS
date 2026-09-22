@@ -36,6 +36,11 @@ import {
   createSalesInquiryResponseDraft,
   createSalesOutreachDraft,
 } from "../lib/sales-correspondence.js";
+import {
+  renderInquiryReplyProposeReport,
+  renderInquirySlaGateReport,
+  writeInquiryReplyDraft,
+} from "../lib/sales-inquiry-faq.js";
 import { buildSalesCrmDashboardView } from "../lib/sales-dashboard-view.js";
 import { setInquiryStatus } from "../lib/sales-inquiry-stage.js";
 import { followUpFromSent } from "../lib/sales-follow-up.js";
@@ -562,6 +567,43 @@ export function runSalesDraftInquiryResponse(opts: {
 }): void {
   const draft = createSalesInquiryResponseDraft(opts);
   console.log(JSON.stringify({ draft_id: draft.draft_id }, null, 2));
+}
+
+export function runSalesInquiryReplyPropose(opts: {
+  inquiryId: string;
+  asOf?: string;
+}): void {
+  console.log(JSON.stringify(renderInquiryReplyProposeReport(opts), null, 2));
+}
+
+export function runSalesInquiryReplyDraft(opts: {
+  inquiryId: string;
+  to: string;
+  actor: string;
+  asOf?: string;
+  subject?: string;
+  body?: string;
+}): void {
+  const result = writeInquiryReplyDraft(opts);
+  console.log(
+    JSON.stringify(
+      {
+        draft_id: result.draft_id,
+        sent: false,
+        inquiryId: opts.inquiryId,
+        faq_id: result.report.faq_id,
+        deadline_gate: result.report.deadline_gate,
+        l2: result.report.l2,
+        note: "Draft written. Approve then mail outbound send — L2 body not printed",
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+export function runSalesInquirySlaGate(opts?: { asOf?: string }): void {
+  console.log(JSON.stringify(renderInquirySlaGateReport(opts), null, 2));
 }
 
 export function runSalesCrmDashboard(opts?: { json?: boolean }): void {

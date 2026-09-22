@@ -54,6 +54,7 @@ export * from "./workflow-canvas.js";
 export * from "./workflow-structure-change.js";
 export * from "./attention-midterm.js";
 export * from "./sales.js";
+export * from "./sales-faq.js";
 export * from "./customer-success/index.js";
 export * from "./operating-review.js";
 export * from "./projects/index.js";

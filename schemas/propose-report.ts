@@ -55,6 +55,8 @@ export const proposeReportKindSchema = z.enum([
   "tower-classify-report",
   "jsox-status-report",
   "jsox-evaluate-report",
+  "inquiry-reply-propose-report",
+  "inquiry-sla-gate-report",
 ]);
 
 export type ProposeReportKind = z.output<typeof proposeReportKindSchema>;

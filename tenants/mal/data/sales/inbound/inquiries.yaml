@@ -25,6 +25,10 @@ inquiries:
     received_on: "2026-08-19"
     priority: normal
     tags: [hospitality, corporate]
+    body_ref: records/sales/inbound/INQ-2026-101-body.md
+    reply_to_contact_ref: stakeholder:STK-FUTURE-RESORT
+    next_action: 初回回答下書きを承認待ち
+    next_action_due: "2026-08-22"
 
   - id: INQ-2026-102
     subject: 宿泊提携の条件確認

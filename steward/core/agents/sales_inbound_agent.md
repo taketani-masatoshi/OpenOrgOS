@@ -85,6 +85,9 @@ orgos sales inbound
 orgos sales inbound --json
 orgos sales inbound intake --dry-run
 orgos sales inquiry-set-status INQ-… --status triaged
+orgos sales inquiry-reply-propose --inquiry-id INQ-… --as-of YYYY-MM-DD
+orgos sales inquiry-sla-gate --as-of YYYY-MM-DD
+orgos sales inquiry-reply-draft --inquiry-id INQ-… --to recipient@example.com
 orgos sales inquiry-promote INQ-…
 orgos sales mail-link
 orgos sales mail-link-resolve --triage-id … --deal DEAL-…

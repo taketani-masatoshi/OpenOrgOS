@@ -36,6 +36,9 @@ import {
   runSalesDealUpdate,
   runSalesInquiryPromote,
   runSalesInquirySetStatus,
+  runSalesInquiryReplyPropose,
+  runSalesInquiryReplyDraft,
+  runSalesInquirySlaGate,
   runSalesClassify,
   runSalesMailLink,
   runSalesMailLinkResolve,
@@ -651,6 +654,58 @@ export function registerDomainCommands(program: Command): void {
         status: opts.status as import("../../../schemas/sales.js").SalesInquiryStatus,
         actor: resolveCliOperatorId(),
       });
+    });
+
+  sales
+    .command("inquiry-reply-propose")
+    .description(
+      "FAQ match + proposed reply (one step before send). L2 body/contact refs only — no chat dump",
+    )
+    .requiredOption("--inquiry-id <id>", "INQ id")
+    .option("--as-of <date>", "YYYY-MM-DD for SLA gate")
+    .action((opts: { inquiryId: string; asOf?: string }) => {
+      runSalesInquiryReplyPropose({ inquiryId: opts.inquiryId, asOf: opts.asOf });
+    });
+
+  sales
+    .command("inquiry-reply-draft")
+    .description(
+      "Write correspondence draft from FAQ proposal. Does not send (chat:approve / mail send later)",
+    )
+    .requiredOption("--inquiry-id <id>", "INQ id")
+    .requiredOption("--to <email>", "Recipient email (human-supplied; not read from L2 vault to stdout)")
+    .option("--as-of <date>", "YYYY-MM-DD")
+    .option("--subject <text>", "Override FAQ subject")
+    .option("--body <text>", "Override FAQ body")
+    .action(async (opts: {
+      inquiryId: string;
+      to: string;
+      asOf?: string;
+      subject?: string;
+      body?: string;
+    }) => {
+      const { requireCliDataWrite, resolveCliOperatorId } = await import(
+        "../../lib/console-auth/cli-operator.js"
+      );
+      requireCliDataWrite({ command: "sales inquiry-reply-draft", permission: "escalate:plan" });
+      runSalesInquiryReplyDraft({
+        inquiryId: opts.inquiryId,
+        to: opts.to,
+        asOf: opts.asOf,
+        subject: opts.subject,
+        body: opts.body,
+        actor: resolveCliOperatorId() ?? "operator",
+      });
+    });
+
+  sales
+    .command("inquiry-sla-gate")
+    .description(
+      "List SLA/期限超過 inquiries and FAQ reply proposals. Soft gate only — no auto send",
+    )
+    .option("--as-of <date>", "YYYY-MM-DD")
+    .action((opts: { asOf?: string }) => {
+      runSalesInquirySlaGate({ asOf: opts.asOf });
     });
 
   sales

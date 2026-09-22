@@ -26,7 +26,10 @@ cli_commands:
   - crm-dashboard
   - bant
   - lost-deal-draft
-notes: production_ready — pipeline · outbound · inbound · CRM wave 2b (write CLI + Console)
+  - inquiry-reply-propose
+  - inquiry-reply-draft
+  - inquiry-sla-gate
+notes: production_ready — pipeline · outbound · inbound · FAQ reply propose · CRM wave 2b (write CLI + Console)
 security:
   ai:
     can_observe: true

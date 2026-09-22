@@ -195,6 +195,15 @@ export const salesInquirySchema = z.object({
   notes: z.string().min(1).optional(),
   /** L1 pointer to source channel (triage entry id, eml_ref, form id) */
   source_ref: z.string().min(1).optional(),
+  /**
+   * Tenant-relative path to inquiry body vault (L2). Never print contents to chat.
+   * Example: records/sales/inbound/INQ-2026-101-body.md
+   */
+  body_ref: z.string().min(1).optional(),
+  /**
+   * Contact pointer only (stakeholder_id / contact vault path). Never print email/phone to chat.
+   */
+  reply_to_contact_ref: z.string().min(1).optional(),
   mail_thread_ids: z.array(z.string().min(1)).optional(),
   gmail_thread_ids: z.array(z.string().min(1)).optional(),
   demo: z.boolean().optional(),

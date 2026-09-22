@@ -1,0 +1,53 @@
+# インバウンド FAQ（想定回答テンプレ · L0/L1 のみ）
+# 問合せ本文・個人連絡先は書かない。照合は subject / tags / notes のみ。
+version: 1
+updated_at: "2026-09-22T00:00:00+09:00"
+first_response_sla_days: 3
+entries:
+  - id: FAQ-001
+    title: 法人宿泊・研修合宿の空室確認
+    tags: [hospitality, corporate]
+    keywords: [空室, 合宿, 研修, 法人泊, パッケージ]
+    subject_template: "【ご回答】{{subject}}"
+    body_template: |
+      {{company}} 様
+
+      お問い合わせ「{{subject}}」を拝見しました。
+      法人・研修合宿のご利用について、空室と概算条件を確認のうえご案内いたします。
+
+      ご希望の日程（チェックイン／アウト）、人数、食事の有無をお知らせください。
+      正式なお見積り・契約条件は担当より別途ご連絡します（本メールは自動返信ではなく下書き段階です）。
+
+      株式会社MAL
+    next_action: 日程・人数の確認を返信待ち
+  - id: FAQ-002
+    title: 宿泊提携・パートナー条件
+    tags: [hospitality]
+    keywords: [提携, 条件, パートナー, OTA, 卸]
+    subject_template: "【ご回答】宿泊提携についてのお問い合わせ"
+    body_template: |
+      {{company}} 様
+
+      宿泊提携・卸条件についてのお問い合わせありがとうございます。
+      提携可否と標準条件の概要を整理し、担当よりご案内します。
+
+      貴社のチャネル種別（法人直・OTA・旅行会社）と想定ボリュームが分かるとスムーズです。
+      金額・契約条項の確約は、承認後の正式文書でのみ行います。
+
+      株式会社MAL
+    next_action: チャネル種別の確認を返信待ち
+  - id: FAQ-003
+    title: 汎用・初回受付
+    tags: []
+    keywords: []
+    subject_template: "【受付】{{subject}}"
+    body_template: |
+      {{company}} 様
+
+      お問い合わせを受け付けました（参照: お問い合わせ ID はメールヘッダ／ポータル上でご確認ください）。
+      内容を確認のうえ、担当よりご回答いたします。
+
+      お急ぎの場合は、希望連絡手段のみ（本文・個人情報は改めてのご連絡で）お知らせください。
+
+      株式会社MAL
+    next_action: FAQ照合結果を確認し送付承認
