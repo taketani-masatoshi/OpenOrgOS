@@ -94,30 +94,30 @@ rows:
   - sheet: return_page1
     line: "③"
     label_ja: 控除過大調整税額
-    required: false
-    status: unverified
-    citation: ""
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。控除過大調整税額③。事実が無いときは該当なし。0で完成させない
   - sheet: return_page1
     line: "⑥"
     label_ja: 貸倒れに係る税額
-    required: false
-    status: unverified
-    citation: ""
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。貸倒れに係る税額⑥。事実が無いときは該当なし
   - sheet: return_page1
     line: "⑦"
     label_ja: 控除税額小計
-    required: false
-    status: unverified
-    citation: ""
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。控除税額小計⑦は④＋⑤＋⑥
   - sheet: return_page1
     line: "⑩"
     label_ja: 中間納付税額
-    required: false
-    status: unverified
-    citation: ""
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。中間納付税額⑩。事実が無いときは該当なし
   - sheet: return_page1
     line: "⑪"
     label_ja: 納付税額
-    required: false
-    status: unverified
-    citation: ""
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。納付税額⑪は⑨−⑩

@@ -181,21 +181,37 @@ describe("consumption tax return row mapping", () => {
     expect(amount(result.rows, "schedule_1_3_tax_8")).toBe(62);
   });
 
-  it("matches the November 2025 writing-guide yen and does not floor ①-1 to thousands", () => {
+  it("projects tax-inclusive writing-guide consideration onto official yen rows", () => {
     const consideration8 = consumptionTaxConsiderationYen(203_878_000, 100, 108);
     const consideration10 = consumptionTaxConsiderationYen(135_400_000, 100, 110);
     expect(consideration8).toBe(188_775_925);
     expect(consideration10).toBe(123_090_909);
     expect(consideration8 + consideration10).toBe(311_866_834);
-    const standard8 = Math.floor(consideration8 / 1000) * 1000;
-    const standard10 = Math.floor(consideration10 / 1000) * 1000;
-    expect(standard8).toBe(188_775_000);
-    expect(standard10).toBe(123_090_000);
-    expect(standard8 + standard10).toBe(311_865_000);
-    expect(Math.floor((standard8 * 624) / 10_000)).toBe(11_779_560);
-    expect(Math.floor((standard10 * 78) / 1000)).toBe(9_601_020);
-    expect(11_779_560 + 9_601_020).toBe(21_380_580);
 
+    const result = projectConsumptionTaxReturnRows({
+      mapping,
+      sales_basis: "tax_inclusive",
+      bases: {
+        taxable_sales_8_yen: 203_878_000,
+        taxable_sales_10_yen: 135_400_000,
+        ...NONE_FACTS,
+      },
+      purchases: { lines: [] },
+    });
+    expect(amount(result.rows, "schedule_1_3_base_8")).toBe(188_775_925);
+    expect(amount(result.rows, "schedule_1_3_base_10")).toBe(123_090_909);
+    expect(amount(result.rows, "schedule_1_3_standard_8")).toBe(188_775_000);
+    expect(amount(result.rows, "schedule_1_3_standard_10")).toBe(123_090_000);
+    expect(amount(result.rows, "return_page1_1")).toBe(311_865_000);
+    expect(amount(result.rows, "schedule_1_3_tax_8")).toBe(11_779_560);
+    expect(amount(result.rows, "schedule_1_3_tax_10")).toBe(9_601_020);
+    expect(amount(result.rows, "return_page1_2")).toBe(21_380_580);
+    expect(amount(result.rows, "schedule_1_3_base_8")).not.toBe(
+      amount(result.rows, "schedule_1_3_standard_8")
+    );
+  });
+
+  it("keeps tax-exclusive journal bases on the restore-then-rollback path", () => {
     const result = projectConsumptionTaxReturnRows({
       mapping,
       bases: {

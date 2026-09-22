@@ -1,6 +1,8 @@
 # 法人・本則・割戻し・一般用の公表欄対応。電子申告の手続や様式定義は持たない。
 # 欄番号の出典: 国税庁「消費税及び地方消費税の申告書（一般用）の書き方」（令和7年11月作成）
-# 仕訳の本体が税抜なら、①-1 は一度税込へ戻して端数を切り、そのあと 100/108 または 100/110 を一回だけ掛ける。
+# https://www.nta.go.jp/publication/pamph/shohi/kaisei/yoshiki/pdf/202411_01.pdf
+# 仕訳の本体が税抜なら sales_basis=tax_exclusive: ①-1 は一度税込へ戻して端数を切り、そのあと 100/108 または 100/110 を一回だけ掛ける。
+# 書き方が税込対価を示すとき sales_basis=tax_inclusive: その税込額を入力し、restore を飛ばして rollback_once のみ。
 # 千円未満の切捨ては課税標準の行。①-1 には置かない。
 id: jp-consumption-return-general-standard-reiwa7-2025-11
 form: 法人・本則・割戻し・一般用

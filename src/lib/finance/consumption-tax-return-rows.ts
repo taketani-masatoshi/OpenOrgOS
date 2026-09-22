@@ -58,6 +58,12 @@ export type ConsumptionTaxPurchaseContext = {
 
 export type ConsumptionTaxReturnMethod = "standard" | "simplified" | "unavailable";
 
+/**
+ * tax_exclusive: journal / summary bases (税抜). Row 1-1 restores to inclusive once, then rolls back.
+ * tax_inclusive: printed tax-inclusive consideration as in the writing guide — skip restore; rollback_once only.
+ */
+export type ConsumptionTaxSalesBasis = "tax_exclusive" | "tax_inclusive";
+
 type SummarySlice = {
   method: ConsumptionTaxSummary["method"];
   lines: Array<{
@@ -126,6 +132,8 @@ export function projectConsumptionTaxReturnRows(input: {
   bases?: ConsumptionTaxReturnBases;
   purchases?: ConsumptionTaxPurchaseContext;
   method?: ConsumptionTaxReturnMethod;
+  /** Defaults to tax_exclusive (仕訳本体が税抜のとき). */
+  sales_basis?: ConsumptionTaxSalesBasis;
   mapping?: ConsumptionTaxReturnMap;
   fiscalYear?: string;
   blockers?: string[];
@@ -133,11 +141,12 @@ export function projectConsumptionTaxReturnRows(input: {
   const mapping = input.mapping ?? loadConsumptionTaxReturnMap();
   const bases = input.bases ?? {};
   const method = input.method ?? "standard";
+  const salesBasis = input.sales_basis ?? "tax_exclusive";
   const filled = new Map<string, number | null>();
   const blockers = [...(input.blockers ?? [])];
   if (method !== "standard") blockers.push("standard method required");
   const projected = orderedRows(mapping.rows).map((row) =>
-    projectRow(row, bases, input.purchases, method, mapping, filled, blockers)
+    projectRow(row, bases, input.purchases, method, mapping, filled, blockers, salesBasis)
   );
   const status = projected.some((row) => row.required && row.row_status !== "filled")
     ? "blocked"
@@ -268,7 +277,8 @@ function projectRow(
   method: ConsumptionTaxReturnMethod,
   mapping: ConsumptionTaxReturnMap,
   filled: Map<string, number | null>,
-  blockers: string[]
+  blockers: string[],
+  salesBasis: ConsumptionTaxSalesBasis
 ): ConsumptionTaxReturnRows["rows"][number] {
   if (row.transform.op === "out_of_scope") {
     filled.set(row.id, null);
@@ -291,7 +301,7 @@ function projectRow(
     if (row.required) blockers.push(`${row.id} is not filled`);
     return rowResult(row, "blocked", null);
   }
-  const amount = applyTransform(row, amounts);
+  const amount = applyTransform(row, amounts, salesBasis);
   filled.set(row.id, amount);
   return rowResult(row, "filled", amount);
 }
@@ -328,12 +338,25 @@ function oneInput(
   return [amount];
 }
 
-function applyTransform(row: ConsumptionTaxReturnMapRow, values: number[]): number {
+function applyTransform(
+  row: ConsumptionTaxReturnMapRow,
+  values: number[],
+  salesBasis: ConsumptionTaxSalesBasis
+): number {
   const transform = row.transform;
   const first = values[0] ?? 0;
   if (transform.op === "identity") return first;
   if (transform.op === "floor_unit") return floorTo(first, transform.unit_yen);
-  if (transform.op === "inclusive_rollback_floor") return inclusiveRollbackFloor(first, transform);
+  if (transform.op === "inclusive_rollback_floor") {
+    if (salesBasis === "tax_inclusive") {
+      return consumptionTaxConsiderationYen(
+        first,
+        transform.rollback_numerator,
+        transform.rollback_denominator
+      );
+    }
+    return inclusiveRollbackFloor(first, transform);
+  }
   if (transform.op === "rate_floor") {
     return Math.floor((first * transform.numerator) / transform.denominator);
   }
