@@ -6,6 +6,7 @@ import { writeFileSync } from "node:fs";
 import type { Command } from "commander";
 import {
   renderAiaCycleReport,
+  renderAiaCycleReportFromLedgers,
   renderBantReport,
   renderBottleneckReport,
   renderCashflowReport,
@@ -116,7 +117,7 @@ export function registerProposeSurfaceCommands(program: Command): void {
 
   const ledger = program.commands.find((cmd) => cmd.name() === "ledger");
   ledger
-    ?    .command("pl")
+    ?.command("pl")
     .description("Project P/L from journal lines that carry project_code")
     .requiredOption("--by-project", "Group by project_code")
     .option("--entries <json>", "JSON array of {lines} (omit to read journal-entries.yaml)")
@@ -147,12 +148,12 @@ export function registerProposeSurfaceCommands(program: Command): void {
   const quote = sales?.commands.find((cmd) => cmd.name() === "quote");
   quote
     ?.command("render")
-    .description("Render a quote PDF draft. Sending stays on chat:approve")
+    .description("Render a quote PDF draft from quotes.yaml or explicit fields. Sending stays on chat:approve")
     .requiredOption("--quote-id <id>", "Quote id")
-    .requiredOption("--title <text>", "Title")
-    .requiredOption("--amount-yen <n>", "Amount yen", (value) => Number(value))
+    .option("--title <text>", "Title (omit to read quotes.yaml)")
+    .option("--amount-yen <n>", "Amount yen (omit to read quotes.yaml)", (value) => Number(value))
     .option("--out <path>", "Write the PDF here")
-    .action(async (opts: { quoteId: string; title: string; amountYen: number; out?: string }) => {
+    .action(async (opts: { quoteId: string; title?: string; amountYen?: number; out?: string }) => {
       const { renderQuoteDraftReport } = await import("../../lib/propose-surface.js");
       const report = await renderQuoteDraftReport({
         quoteId: opts.quoteId,
@@ -162,6 +163,8 @@ export function registerProposeSurfaceCommands(program: Command): void {
       if (opts.out) writeFileSync(opts.out, report.pdf);
       printJson({
         kind: report.kind,
+        depth: report.depth,
+        inputs_ref: report.inputs_ref,
         quoteId: report.quoteId,
         bytes: report.bytes,
         sent: report.sent,
@@ -211,17 +214,47 @@ export function registerProposeSurfaceCommands(program: Command): void {
   const aia = program.commands.find((cmd) => cmd.name() === "aia");
   aia
     ?.command("propose-cycle")
-    .description("List followup, bottleneck, and dispatch proposals. Does not loop or execute")
-    .requiredOption("--followups <json>", "JSON array of {id}")
-    .requiredOption("--bottlenecks <json>", "JSON array of {id}")
-    .requiredOption("--dispatch <json>", "JSON array of {jobId}")
-    .action((opts: { followups: string; bottlenecks: string; dispatch: string }) => {
-      printJson(
-        renderAiaCycleReport({
-          followups: readJson(opts.followups),
-          bottlenecks: readJson(opts.bottlenecks),
-          dispatch: readJson(opts.dispatch),
-        }),
-      );
-    });
+    .description(
+      "List followup, bottleneck, and dispatch proposals. Omit JSON lists to read ledgers. Does not loop or execute",
+    )
+    .option("--followups <json>", "JSON array of {id} (with --bottlenecks and --dispatch)")
+    .option("--bottlenecks <json>", "JSON array of {id}")
+    .option("--dispatch <json>", "JSON array of {jobId}")
+    .option("--as-of <date>", "YYYY-MM-DD (required when reading ledgers)")
+    .option("--within-days <n>", "Followup horizon", (value) => Number(value), 7)
+    .option("--stuck-days <n>", "Bottleneck threshold", (value) => Number(value), 3)
+    .action(
+      (opts: {
+        followups?: string;
+        bottlenecks?: string;
+        dispatch?: string;
+        asOf?: string;
+        withinDays: number;
+        stuckDays: number;
+      }) => {
+        const hasAny = Boolean(opts.followups || opts.bottlenecks || opts.dispatch);
+        const hasAll = Boolean(opts.followups && opts.bottlenecks && opts.dispatch);
+        if (hasAny && !hasAll) {
+          throw new Error("pass all of --followups --bottlenecks --dispatch, or omit all three to read ledgers");
+        }
+        if (hasAll) {
+          printJson(
+            renderAiaCycleReport({
+              followups: readJson(opts.followups!),
+              bottlenecks: readJson(opts.bottlenecks!),
+              dispatch: readJson(opts.dispatch!),
+            }),
+          );
+          return;
+        }
+        if (!opts.asOf) throw new Error("--as-of is required when reading ledgers");
+        printJson(
+          renderAiaCycleReportFromLedgers({
+            asOf: opts.asOf,
+            withinDays: opts.withinDays,
+            stuckDays: opts.stuckDays,
+          }),
+        );
+      },
+    );
 }

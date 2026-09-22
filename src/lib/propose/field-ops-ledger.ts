@@ -79,3 +79,27 @@ export function loadFieldOpsStaff(): {
     return { staff: [], inputs_ref: [] };
   }
 }
+
+/** Resolve a job row; missing id is reported, not invented. */
+export function resolveFieldOpsJob(
+  jobId: string,
+  jobs?: FieldOpsJob[],
+): {
+  job: FieldOpsJob | null;
+  inputs_ref: string[];
+  missing_refs: string[];
+} {
+  const loaded = jobs ? { jobs, inputs_ref: [] as string[] } : loadFieldOpsJobs();
+  const job = loaded.jobs.find((row) => row.id === jobId) ?? null;
+  const missing_refs: string[] = [];
+  if (
+    !jobs &&
+    loaded.inputs_ref.length === 0 &&
+    !existsSync(join(getDataDir(), "field_ops", "jobs.yaml"))
+  ) {
+    missing_refs.push("field_ops/jobs.yaml");
+  } else if (!job) {
+    missing_refs.push(`job:${jobId}`);
+  }
+  return { job, inputs_ref: loaded.inputs_ref, missing_refs };
+}

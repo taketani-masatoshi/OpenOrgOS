@@ -1,6 +1,11 @@
-import { scanBottlenecks, type StuckItem } from "./bottleneck.js";
-import { proposeDispatch, type DispatchJob, type DispatchStaff } from "./dispatch.js";
-import { scanFollowups, type DueItem } from "./followup.js";
+import { loadSalesPipeline } from "../data.js";
+import {
+  stuckItemsFromPendingApprovals,
+  scanBottlenecks,
+  type StuckItem,
+} from "./bottleneck.js";
+import { resolveDispatchInputs, proposeDispatch, type DispatchJob, type DispatchStaff } from "./dispatch.js";
+import { dueItemsFromDeals, scanFollowups, type DueItem } from "./followup.js";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
 
 /** One proposal list. Does not run a loop and does not execute. */
@@ -52,6 +57,7 @@ export function renderAiaCycleReport(
         asOf: string;
         withinDays?: number;
         stuckDays?: number;
+        inputs_ref?: string[];
       },
 ): Record<string, unknown> {
   if ("dueItems" in input) {
@@ -69,10 +75,12 @@ export function renderAiaCycleReport(
       .filter((row) => row.staffId)
       .map((row) => ({ jobId: row.jobId }));
     const cycle = proposeAiaCycle({ followups, bottlenecks, dispatch });
+    const inputs_ref = input.inputs_ref ?? [];
     return flattenProposeReport(
       makeProposeReport({
         kind: "aia-cycle-report",
-        depth: "L2",
+        depth: inputs_ref.length > 0 ? "L2" : "L1",
+        inputs_ref,
         human_gate: { apply: "human", executed: false, looping: false },
         payload: { ...cycle },
       }),
@@ -87,4 +95,32 @@ export function renderAiaCycleReport(
       payload: { ...cycle },
     }),
   );
+}
+
+/**
+ * Read sales pipeline, pending-approvals, and field_ops ledgers.
+ * Omitting hand JSON → SoT path (depth L2 when any ledger is present).
+ */
+export function renderAiaCycleReportFromLedgers(opts: {
+  asOf: string;
+  withinDays?: number;
+  stuckDays?: number;
+}): Record<string, unknown> {
+  const inputs_ref: string[] = [];
+  const deals = loadSalesPipeline()?.deals ?? [];
+  if (deals.length > 0) inputs_ref.push("data/sales/pipeline.yaml");
+  const stuck = stuckItemsFromPendingApprovals();
+  inputs_ref.push(...stuck.inputs_ref);
+  const dispatch = resolveDispatchInputs({});
+  inputs_ref.push(...dispatch.inputs_ref);
+  return renderAiaCycleReport({
+    dueItems: dueItemsFromDeals(deals),
+    stuckItems: stuck.items,
+    jobs: dispatch.jobs,
+    staff: dispatch.staff,
+    asOf: opts.asOf,
+    withinDays: opts.withinDays,
+    stuckDays: opts.stuckDays,
+    inputs_ref,
+  });
 }

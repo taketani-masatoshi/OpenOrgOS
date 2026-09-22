@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
+import { resolveFieldOpsJob } from "./field-ops-ledger.js";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
 import { proposeConsumption, skusFromRetailModule } from "./stock.js";
-import { resolveFieldOpsJob } from "./tracking.js";
 
 export type JobCompletionProposal = {
   report: string;

@@ -1,41 +1,14 @@
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { getDataDir } from "../utils.js";
 import {
-  loadFieldOpsJobs,
+  resolveFieldOpsJob,
   type FieldOpsJob,
 } from "./field-ops-ledger.js";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
 
 export type { FieldOpsJob } from "./field-ops-ledger.js";
-export { loadFieldOpsJobs } from "./field-ops-ledger.js";
+export { loadFieldOpsJobs, resolveFieldOpsJob } from "./field-ops-ledger.js";
 
 export type TrackingStatus = "departed" | "enroute" | "arrived";
-
-/** Resolve a job row; missing id is reported, not invented. */
-export function resolveFieldOpsJob(
-  jobId: string,
-  jobs?: FieldOpsJob[],
-): {
-  job: FieldOpsJob | null;
-  inputs_ref: string[];
-  missing_refs: string[];
-} {
-  const loaded = jobs ? { jobs, inputs_ref: [] as string[] } : loadFieldOpsJobs();
-  const job = loaded.jobs.find((row) => row.id === jobId) ?? null;
-  const missing_refs: string[] = [];
-  if (
-    !jobs &&
-    loaded.inputs_ref.length === 0 &&
-    !existsSync(join(getDataDir(), "field_ops", "jobs.yaml"))
-  ) {
-    missing_refs.push("field_ops/jobs.yaml");
-  } else if (!job) {
-    missing_refs.push(`job:${jobId}`);
-  }
-  return { job, inputs_ref: loaded.inputs_ref, missing_refs };
-}
 
 export function issueTrackingUrl(input: {
   jobId: string;
@@ -85,25 +58,23 @@ export function renderTrackingStatus(input: {
   longitude?: unknown;
   jobs?: FieldOpsJob[];
 }): Record<string, unknown> {
-  const resolved = resolveFieldOpsJob(input.jobId, input.jobs);
   const track = issueTrackingUrl(input);
-  const depth = track.jobFound ? "L2" : resolved.inputs_ref.length > 0 ? "L1" : "L0";
+  const resolved = resolveFieldOpsJob(input.jobId, input.jobs);
   return flattenProposeReport(
     makeProposeReport({
       kind: "tracking-status",
-      depth,
+      depth: resolved.inputs_ref.length > 0 ? "L2" : track.jobFound ? "L1" : "L0",
       inputs_ref: resolved.inputs_ref,
       human_gate: { apply: "human" },
       payload: {
         path: track.path,
-        jobId: input.jobId,
         assigneeId: track.assigneeId,
         eta: track.eta,
         status: track.status,
-        jobFound: track.jobFound,
         coordinates: null,
-        missing_refs: track.missing_refs,
         mapTiles: false,
+        missing_refs: track.missing_refs,
+        jobFound: track.jobFound,
       },
     }),
   );

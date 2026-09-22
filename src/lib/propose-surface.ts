@@ -78,8 +78,8 @@ export { issuePortalGrant, renderPortalGrant } from "./propose/portal.js";
 export {
   issueTrackingUrl,
   loadFieldOpsJobs,
-  renderTrackingStatus,
   resolveFieldOpsJob,
+  renderTrackingStatus,
 } from "./propose/tracking.js";
 export {
   assertNoHrSecretFields,
@@ -105,6 +105,6 @@ export {
   resolveExpenseClaimRef,
 } from "./propose/expense.js";
 export { proposePayrollTransfer, renderPayrollTransferReport } from "./propose/payroll.js";
-export { proposeAiaCycle, renderAiaCycleReport } from "./propose/aia.js";
+export { proposeAiaCycle, renderAiaCycleReport, renderAiaCycleReportFromLedgers } from "./propose/aia.js";
 export { renderTowerClassifyReport } from "./propose/tower.js";
 export { renderJsoxEvaluateReport, renderJsoxStatusReport } from "./propose/jsox.js";

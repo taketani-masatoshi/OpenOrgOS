@@ -129,7 +129,7 @@ describe("propose depth / SoT", () => {
     expect(report.gpsTrace).toBe(false);
   });
 
-  it("aia cycle from real scans is L2 and does not execute", () => {
+  it("aia cycle from real scans without ledger refs is L1 and does not execute", () => {
     const report = renderAiaCycleReport({
       dueItems: [{ id: "A", dueOn: "2026-09-22", kind: "invoice" }],
       stuckItems: [{ id: "B", ownerId: "OP-1", waitingSince: "2026-09-01", kind: "job" }],
@@ -139,7 +139,7 @@ describe("propose depth / SoT", () => {
       withinDays: 7,
       stuckDays: 3,
     });
-    expect(report.depth).toBe("L2");
+    expect(report.depth).toBe("L1");
     expect(report.executed).toBe(false);
     expect(report.looping).toBe(false);
     expect(report.proposals.map((p: { id: string }) => p.id)).toEqual(["A", "B", "JOB-1"]);

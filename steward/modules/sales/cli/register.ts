@@ -484,21 +484,31 @@ function registerSalesOperationsCommands(operationsCmd: Command): void {
   const quote = sales.command("quote").description("Quote mutations");
   quote
     .command("render")
-    .description("Render a quote PDF draft. Sending stays on chat:approve")
+    .description("Render a quote PDF draft from quotes.yaml or explicit fields. Sending stays on chat:approve")
     .requiredOption("--quote-id <id>", "Quote id")
-    .requiredOption("--title <text>", "Title")
-    .requiredOption("--amount-yen <n>", "Amount yen", (value) => Number(value))
+    .option("--title <text>", "Title (omit to read quotes.yaml)")
+    .option("--amount-yen <n>", "Amount yen (omit to read quotes.yaml)", (value) => Number(value))
     .option("--out <path>", "Write the PDF here")
-    .action(async (opts: { quoteId: string; title: string; amountYen: number; out?: string }) => {
+    .action(async (opts: { quoteId: string; title?: string; amountYen?: number; out?: string }) => {
       const { writeFileSync } = await import("node:fs");
-      const { renderQuotePdf } = await import("../../../../src/lib/propose-surface.js");
-      const pdf = await renderQuotePdf({
+      const { renderQuoteDraftReport } = await import("../../../../src/lib/propose-surface.js");
+      const report = await renderQuoteDraftReport({
         quoteId: opts.quoteId,
         title: opts.title,
         amountYen: opts.amountYen,
       });
-      if (opts.out) writeFileSync(opts.out, pdf);
-      console.log(JSON.stringify({ quoteId: opts.quoteId, bytes: pdf.length, sent: false }));
+      if (opts.out) writeFileSync(opts.out, report.pdf);
+      console.log(
+        JSON.stringify({
+          kind: report.kind,
+          depth: report.depth,
+          inputs_ref: report.inputs_ref,
+          quoteId: report.quoteId,
+          bytes: report.bytes,
+          sent: report.sent,
+          autoAssemble: report.autoAssemble,
+        }),
+      );
     });
   quote
     .command("create")
@@ -610,24 +620,52 @@ function registerSalesOperationsCommands(operationsCmd: Command): void {
 
   sales
     .command("bant")
-    .description("BANT candidates from a transcript fixture. Stage apply is human")
-    .requiredOption("--transcript <text>", "Transcript text")
-    .action(async (opts: { transcript: string }) => {
-      const { extractBant } = await import("../../../../src/lib/propose-surface.js");
-      console.log(JSON.stringify(extractBant(opts.transcript)));
+    .description(
+      "BANT candidates from a transcript fixture or UTF-8 text file. Stage apply is human",
+    )
+    .requiredOption("--transcript <text>", "Transcript text or UTF-8 text file path")
+    .option("--file <path>", "UTF-8 transcript file (overrides --transcript when set)")
+    .option("--deal <id>", "Optional deal id to bind stage proposal")
+    .action(async (opts: { transcript: string; file?: string; deal?: string }) => {
+      const { renderBantReport } = await import("../../../../src/lib/propose-surface.js");
+      console.log(
+        JSON.stringify(
+          renderBantReport(opts.file ?? opts.transcript, opts.deal ? { dealId: opts.deal } : undefined),
+          null,
+          2,
+        ),
+      );
     });
 
   sales
     .command("lost-deal-draft")
     .description("Draft a follow-up for a silent deal. Does not push")
-    .requiredOption("--deal <id>", "Deal id")
-    .requiredOption("--silent-days <n>", "Days without movement", (value) => Number(value))
-    .action(async (opts: { deal: string; silentDays: number }) => {
-      const { draftLostDealFollowup } = await import("../../../../src/lib/propose-surface.js");
-      console.log(
-        JSON.stringify(draftLostDealFollowup({ dealId: opts.deal, silentDays: opts.silentDays })),
-      );
-    });
+    .option("--deal <id>", "Deal id (omit with --as-of to scan pipeline)")
+    .option("--silent-days <n>", "Days without movement", (value) => Number(value))
+    .option("--as-of <date>", "YYYY-MM-DD for pipeline scan")
+    .option("--silent-days-threshold <n>", "Pipeline scan threshold", (value) => Number(value), 14)
+    .action(
+      async (opts: {
+        deal?: string;
+        silentDays?: number;
+        asOf?: string;
+        silentDaysThreshold: number;
+      }) => {
+        const { renderLostDealFollowupReport } = await import("../../../../src/lib/propose-surface.js");
+        console.log(
+          JSON.stringify(
+            renderLostDealFollowupReport({
+              dealId: opts.deal,
+              silentDays: opts.silentDays,
+              asOf: opts.asOf,
+              silentDaysThreshold: opts.silentDaysThreshold,
+            }),
+            null,
+            2,
+          ),
+        );
+      },
+    );
 }
 
 export const salesCli: ModuleCliBundle = {

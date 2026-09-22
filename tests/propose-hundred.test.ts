@@ -13,6 +13,7 @@ import {
   findSodConflicts,
   issuePortalGrant,
   issueTrackingUrl,
+  loadInvoiceTextInput,
   proposeAiaCycle,
   proposeConsumption,
   proposeExpenseIntake,
@@ -111,7 +112,7 @@ describe("hundred point inside doctrine", () => {
       { id: "JOB-001", assignee_id: "ST-001", eta: "15:00", status: "enroute" as const },
     ];
     const report = renderTrackingStatus({ jobId: "JOB-001", jobs });
-    expect(report.depth).toBe("L2");
+    expect(report.depth).toBe("L1");
     expect(report.jobFound).toBe(true);
     expect(report.assigneeId).toBe("ST-001");
     expect(report.eta).toBe("15:00");
@@ -912,8 +913,39 @@ describe("hundred point inside doctrine", () => {
       dispatch: [{ jobId: "JOB-1" }],
     });
     expect(report.kind).toBe("aia-cycle-report");
+    expect(report.depth).toBe("L1");
     expect(report.looping).toBe(false);
     expect(report.executed).toBe(false);
+  });
+
+  it("refuses PDF/OCR, photo bytes, and tracking coordinates", async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const dir = mkdtempSync(join(tmpdir(), "orgos-refuse-"));
+    try {
+      const pdf = join(dir, "scan.pdf");
+      writeFileSync(pdf, "%PDF-1.4", "utf8");
+      expect(() => loadInvoiceTextInput(pdf)).toThrow(/PDF\/image OCR/);
+      expect(() =>
+        renderFieldInterfaceReport({
+          channel: "text",
+          jobId: "JOB-1",
+          text: "done",
+          photo: Buffer.from("x"),
+        }),
+      ).toThrow(/photo bytes/);
+      expect(() =>
+        issueTrackingUrl({
+          jobId: "JOB-1",
+          assigneeId: "ST-1",
+          eta: "15:00",
+          latitude: 35.0,
+        }),
+      ).toThrow(/coordinates are refused/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("tower classify report wraps registry classification without assigning", async () => {
