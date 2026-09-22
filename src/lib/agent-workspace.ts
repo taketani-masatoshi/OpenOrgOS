@@ -20,6 +20,7 @@ import { resolveTenantPath, writeYamlFile } from "./utils.js";
 import { scaffoldModuleExtensionDocs } from "./tenant-document-zones.js";
 import { tenantRegulationsFileSchema } from "../../schemas/tenant-regulations.js";
 import { tenantStandardsFileSchema } from "../../schemas/tenant-standards.js";
+import { fileRegulationWorkflowWorkOrder } from "./regulation-module-workflow.js";
 
 export interface WorkspaceInitResult {
   created: string[];
@@ -179,12 +180,15 @@ export interface ActivateModuleResult {
   isoEnabled: string[];
   regulationsSeeded: string[];
   controlsInitialized: number;
+  regulationWorkOrderId?: string;
 }
 
 export interface ActivateModuleOptions {
   skipRegs?: boolean;
   skipIso?: boolean;
   skipControls?: boolean;
+  /** Skip Compliance Work Order for regulation classify → LLM draft → human approve. */
+  skipRegulationWo?: boolean;
 }
 
 export function activateTenantModule(
@@ -215,9 +219,14 @@ export function activateTenantModule(
   const workspace = agentId ? ensureAgentWorkspace(agentId) : { created: [], skipped: [] };
 
   const regulationsEnabled =
-    opts.skipRegs || !manifest.optional_regulations?.length
+    opts.skipRegs
       ? []
-      : enableRegulations(manifest.optional_regulations.filter((id) => id.startsWith("REG-")));
+      : enableRegulations(
+          [
+            ...(manifest.required_regulations ?? []),
+            ...(manifest.optional_regulations ?? []),
+          ].filter((id) => id.startsWith("REG-"))
+        );
 
   const isoEnabled =
     opts.skipIso || !MODULE_ISO[moduleId]?.length
@@ -234,6 +243,12 @@ export function activateTenantModule(
       ? 0
       : initTenantControlsFile().count;
 
+  let regulationWorkOrderId: string | undefined;
+  if (!opts.skipRegulationWo) {
+    const wo = fileRegulationWorkflowWorkOrder(moduleId);
+    regulationWorkOrderId = wo.workOrderId;
+  }
+
   return {
     moduleId,
     module: mod,
@@ -243,6 +258,7 @@ export function activateTenantModule(
     isoEnabled,
     regulationsSeeded,
     controlsInitialized,
+    regulationWorkOrderId,
   };
 }
 
@@ -269,6 +285,11 @@ export function formatActivateModuleResult(result: ActivateModuleResult): string
   }
   if (result.controlsInitialized) {
     lines.push(`  controls initialized: ${result.controlsInitialized} entries`);
+  }
+  if (result.regulationWorkOrderId) {
+    lines.push(
+      `  regulation Work Order: ${result.regulationWorkOrderId} (LLM draft only · human approve)`
+    );
   }
   return lines.join("\n");
 }
