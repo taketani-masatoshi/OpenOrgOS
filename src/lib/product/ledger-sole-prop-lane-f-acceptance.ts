@@ -247,7 +247,7 @@ export function runIsolatedSolePropLaneFAcceptance(
       closingYen: tbRow("元入金")?.balance_yen ?? 0,
       incomeYen: 6_000,
       capitalTransferYen: transferName === "元入金" ? 6_000 : 0,
-      incomeIsSeparateLine: transferName !== "元入金" && transferName.length > 0,
+      incomeIsSeparateLine: Boolean(transferName && transferName !== "元入金"),
     });
     checks.push(
       check(
