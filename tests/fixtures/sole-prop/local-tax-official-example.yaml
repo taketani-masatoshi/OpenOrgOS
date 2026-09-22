@@ -1,0 +1,49 @@
+# Official printed yen + calculation-example / form row ids only.
+# Product code must not import this file. Tests pass the pin in.
+#
+# Inhabitant: 練馬区「住民税の計算例（令和8年度）」太郎さん 行7・行8
+#   https://www.city.nerima.tokyo.jp/kurashi/zei/jyuminzei/keisan/keisanrei-26-1.html
+#   差引所得割額 区民税 197280・都民税 131520 / 均等割額 区民税 3000・都民税 1000
+#   森林環境税（国税）は含めない。
+#
+# Enterprise: 大阪府「個人事業税 Q8」事例1 税額
+#   https://www.pref.osaka.lg.jp/o050040/zei/alacarte/qakojnjgyoa9.html
+#   （4,000,000 + 650,000 − 2,900,000）× 5% = 87,500
+source:
+  inhabitant:
+    label: 練馬区 住民税の計算例（令和8年度）太郎さん
+    url: https://www.city.nerima.tokyo.jp/kurashi/zei/jyuminzei/keisan/keisanrei-26-1.html
+  enterprise:
+    label: 大阪府 個人事業税 Q8 事例1
+    url: https://www.pref.osaka.lg.jp/o050040/zei/alacarte/qakojnjgyoa9.html
+lines:
+  - tax: inhabitant_income
+    form_line: "7"
+    jurisdiction: ward:nerima
+    status: complete
+    yen: 197280
+    label: 差引所得割額
+  - tax: inhabitant_income
+    form_line: "7"
+    jurisdiction: pref:tokyo
+    status: complete
+    yen: 131520
+    label: 差引所得割額
+  - tax: inhabitant_per_capita
+    form_line: "8"
+    jurisdiction: ward:nerima
+    status: complete
+    yen: 3000
+    label: 均等割額
+  - tax: inhabitant_per_capita
+    form_line: "8"
+    jurisdiction: pref:tokyo
+    status: complete
+    yen: 1000
+    label: 均等割額
+  - tax: enterprise_income
+    form_line: 税額
+    jurisdiction: pref:osaka
+    status: complete
+    yen: 87500
+    label: 税額

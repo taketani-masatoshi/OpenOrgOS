@@ -1,0 +1,42 @@
+# Line roles for the general-use blue return. Roles only.
+# Source: NTA 令和7年分 青色申告決算書（一般用）の書き方
+# https://www.nta.go.jp/taxes/shiraberu/shinkoku/tebiki/2025/pdf/037.pdf
+# ② is opening inventory. ⑧ is taxes and dues. Expense lines run ⑧ through ㉛.
+form: blue_return_general
+opening_inventory_print: "②"
+taxes_and_dues_print: "⑧"
+expense_prints:
+  - "⑧"
+  - "⑨"
+  - "⑩"
+  - "⑪"
+  - "⑫"
+  - "⑬"
+  - "⑭"
+  - "⑮"
+  - "⑯"
+  - "⑰"
+  - "⑱"
+  - "⑲"
+  - "⑳"
+  - "㉑"
+  - "㉒"
+  - "㉓"
+  - "㉔"
+  - "㉕"
+  - "㉖"
+  - "㉗"
+  - "㉘"
+  - "㉙"
+  - "㉚"
+  - "㉛"
+lines:
+  - { print: "②", role: opening_inventory }
+  - { print: "③", role: purchases }
+  - { print: "⑤", role: ending_inventory }
+  - { print: "⑧", role: taxes_and_dues }
+  - { print: "⑱", role: depreciation }
+  - { print: "⑳", role: wages }
+reject:
+  - { print: "②", role: cogs }
+  - { print: "⑦", role: taxes_and_dues }

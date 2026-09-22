@@ -1,0 +1,16 @@
+# 個人事業主向け現金出納帳ピン（青色申告の手引き・貸借対照表作成の手引きと同じ公表1月例）。
+# 法人の monthly-close ピンとは別ファイル。kind が sole_prop_handguide でないと個人月次の様式点は 0。
+# 本文は転記しない。円・月日・摘要は公表の記載例のみ。
+kind: sole_prop_handguide
+source:
+  label: 国税庁 青色申告者のための貸借対照表作成の手引き（令和7年分）現金出納帳1月記載例
+  url: https://www.nta.go.jp/
+year_end_cash_yen: 372772
+rows:
+  - { month: 1, day: 1, summary: "前年より繰越", inflow_yen: 0, outflow_yen: 0, balance_yen: 292300 }
+  - { month: 1, day: 3, summary: "現金売上", inflow_yen: 270000, outflow_yen: 0, balance_yen: 562300 }
+  - { month: 1, day: 4, summary: "当座預金", inflow_yen: 0, outflow_yen: 180000, balance_yen: 382300 }
+  - { month: 1, day: 6, summary: "消耗品費", inflow_yen: 0, outflow_yen: 2500, balance_yen: 379800 }
+  - { month: 1, day: 18, summary: "現金仕入", inflow_yen: 0, outflow_yen: 60000, balance_yen: 319800 }
+  - { month: 1, day: 25, summary: "事業主貸", inflow_yen: 0, outflow_yen: 200000, balance_yen: 119800 }
+  - { month: 1, day: 25, summary: "買掛金", inflow_yen: 0, outflow_yen: 36000, balance_yen: 83800 }
