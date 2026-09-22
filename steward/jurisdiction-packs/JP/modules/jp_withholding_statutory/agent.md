@@ -6,6 +6,8 @@
 
 源泉徴収 · 法定調書 · 社保納付 rhythm のカレンダー展開（概算）。
 
+**社内規程雛形:** REG-034 — Path: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_withholding_statutory/REG-034-gensen-hoteichosho/template.md`（テナント `regulations.yaml` で有効化）
+
 ## CLI
 
 ```bash

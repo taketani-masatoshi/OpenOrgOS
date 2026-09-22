@@ -72,6 +72,35 @@ regulations:
     tenant_doc: yakuin-taishoku-kisoku.md
     binds_to: { type: core, group: governance }
 
+  # ── 税務モジュール連動（申告準備 · 提出は人間/税理士） ──
+  - id: REG-031
+    name: 法人税務・申告準備規程
+    template: by-module/jp_tax_corporate/REG-031-hojin-zeimu/template.md
+    tenant_doc: hojin-zeimu-kisoku.md
+    binds_to: { type: module, module_id: jp_tax_corporate }
+    notes: 申告 XML · e-Tax 送信はスコープ外（社内準備手続）
+
+  - id: REG-032
+    name: 消費税務規程
+    template: by-module/jp_tax_consumption/REG-032-shohi-zeimu/template.md
+    tenant_doc: shohi-zeimu-kisoku.md
+    binds_to: { type: module, module_id: jp_tax_consumption }
+    notes: 課税区分 · 期間集計 · 還付の社内統制
+
+  - id: REG-033
+    name: 適格請求書管理規程
+    template: by-module/jp_invoice_qualified/REG-033-tekikaku-seikyusho/template.md
+    tenant_doc: tekikaku-seikyusho-kisoku.md
+    binds_to: { type: module, module_id: jp_invoice_qualified }
+    notes: インボイス登録番号 · 発行/受領確認
+
+  - id: REG-034
+    name: 源泉徴収・法定調書規程
+    template: by-module/jp_withholding_statutory/REG-034-gensen-hoteichosho/template.md
+    tenant_doc: gensen-hoteichosho-kisoku.md
+    binds_to: { type: module, module_id: jp_withholding_statutory }
+    notes: 源泉 · 年末調整 · 法定調書の期限管理
+
   # ── MS / ISO 連動 ──
   - id: REG-009
     name: 情報セキュリティ管理規程
