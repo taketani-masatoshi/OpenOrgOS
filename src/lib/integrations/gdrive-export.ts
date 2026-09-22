@@ -266,6 +266,25 @@ async function resolveDriveAccessToken(fetchImpl: typeof fetch): Promise<string 
   return refreshed.access_token;
 }
 
+export const AIA_DELIVERY_DESCRIPTION =
+  "AIA の写し。正本ではない。Drive 側の編集は OrgOS に戻らない。";
+
+export function aiaDeliveryFileName(fileName: string): string {
+  const base = fileName.replace(/^AIA-/, "");
+  return `AIA-${base}`;
+}
+
+export function buildDriveDeliveryMetadata(
+  fileName: string,
+  folderId: string,
+): { name: string; parents: string[]; description: string } {
+  return {
+    name: aiaDeliveryFileName(fileName),
+    parents: [folderId],
+    description: AIA_DELIVERY_DESCRIPTION,
+  };
+}
+
 export interface DriveExportResult {
   ok: boolean;
   reason?: string;
@@ -304,7 +323,7 @@ export async function exportToGoogleDrive(opts: {
   }
 
   const boundary = `orgos-${Date.now().toString(36)}`;
-  const metadata = JSON.stringify({ name: document.fileName, parents: [folderId] });
+  const metadata = JSON.stringify(buildDriveDeliveryMetadata(document.fileName, folderId));
   const body = Buffer.concat([
     Buffer.from(
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`,

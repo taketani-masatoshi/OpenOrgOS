@@ -1,0 +1,30 @@
+form: blue_return_general
+# 青色申告決算書（一般用）損益の印刷項目。⑦租税公課 … ㉔雑費。
+lines:
+  - { id: sales_1, print: "①", label: 売上（収入）金額, section: pl, source: revenue }
+  - { id: cogs_2, print: "②", label: 売上原価, section: pl, source: cogs }
+  - { id: expense_7, print: "⑦", label: 租税公課, section: pl, source: account_name, account_name: 租税公課 }
+  - { id: expense_8, print: "⑧", label: 荷造運賃, section: pl, source: account_name, account_name: 荷造運賃 }
+  - { id: expense_9, print: "⑨", label: 水道光熱費, section: pl, source: account_name, account_name: 水道光熱費 }
+  - { id: expense_10, print: "⑩", label: 旅費交通費, section: pl, source: account_name, account_name: 旅費交通費 }
+  - { id: expense_11, print: "⑪", label: 通信費, section: pl, source: account_name, account_name: 通信費 }
+  - { id: expense_12, print: "⑫", label: 広告宣伝費, section: pl, source: account_name, account_name: 広告宣伝費 }
+  - { id: expense_13, print: "⑬", label: 接待交際費, section: pl, source: account_name, account_name: 接待交際費 }
+  - { id: expense_14, print: "⑭", label: 損害保険料, section: pl, source: account_name, account_name: 損害保険料 }
+  - { id: expense_15, print: "⑮", label: 修繕費, section: pl, source: account_name, account_name: 修繕費 }
+  - { id: expense_16, print: "⑯", label: 消耗品費, section: pl, source: account_name, account_name: 消耗品費 }
+  - { id: expense_17, print: "⑰", label: 減価償却費, section: pl, source: account_name, account_name: 減価償却費 }
+  - { id: expense_18, print: "⑱", label: 福利厚生費, section: pl, source: account_name, account_name: 福利厚生費 }
+  - { id: expense_19, print: "⑲", label: 給料賃金, section: pl, source: account_name, account_name: 給料賃金 }
+  - { id: expense_20, print: "⑳", label: 外注工賃, section: pl, source: account_name, account_name: 外注工賃 }
+  - { id: expense_21, print: "㉑", label: 利子割引料, section: pl, source: account_name, account_name: 利子割引料 }
+  - { id: expense_22, print: "㉒", label: 地代家賃, section: pl, source: account_name, account_name: 地代家賃 }
+  - { id: expense_23, print: "㉓", label: 貸倒金, section: pl, source: account_name, account_name: 貸倒金 }
+  - { id: expense_24, print: "㉔", label: 雑費, section: pl, source: account_name, account_name: 雑費 }
+  - { id: income_before_blue, print: "", label: 所得金額（青色申告特別控除前）, section: pl, source: computed_pl }
+  - { id: blue_deduction, print: "", label: 青色申告特別控除, section: pl, source: blue_deduction }
+  - { id: income_after_blue, print: "", label: 所得金額, section: pl, source: income_after }
+  - { id: bs_drawings, print: "", label: 事業主貸, section: bs, source: owner_drawings }
+  - { id: bs_advances, print: "", label: 事業主借, section: bs, source: owner_advances }
+  - { id: bs_capital, print: "", label: 元入金, section: bs, source: owner_capital }
+  - { id: bs_income_before_blue, print: "", label: 所得金額（控除前）, section: bs, source: computed_bs }

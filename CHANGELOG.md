@@ -10,13 +10,23 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 - **月次締めの銀行・証跡・排他** — 現金台帳があるテナントは明細なしで月を閉じない。当月の現金預金増減と明細純額が違うとロックしない。次月の締めは直前月の銀行と試算表の hash を再計算する。既にロックした月の再締めは拒否し、再ロックは unlock の理由と直前証跡の hash を残す。
 - **月次の銀行突合** — 開始残高が当月の試算表に初めて載る分は現金の動きに数えない。明細がその金額の入金だけだと、月はロックしない。
+- **会社法の計算書類** — 非公開・会計監査人非設置の貸借・損益・株主資本等変動・第98条2項1号の注記・利益準備金を、手計算の金額で採点する。0 の区分も残し、特別利益と特別損失を分ける。利益準備金は仕訳にしない。税額 XML と年度決算ゲートは変えない。
+- **個人事業の元入金・青色申告決算書・所得税** — 法人の別表とは別の行対応と所得税の速算。顧問ドラフトのみで、e-Tax には出さない。
+- **間接税の法域ポート** — 帳簿エンジンは共通のまま、月次締めの消費税ゲートは pack の `indirect_tax_family` 経由。日本の消費税計算は `JP` + `vat_credit` だけ。他法域は日本の税率・税区分必須・別表・適格請求書チェックを走らせない。減価償却率表は pack seed にあるときだけ読む。ADR 0078。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
+- **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **テナント退避を隣の仕組みに合わせる** — 実行中の `data/scratch/aia-runs` も tar から除く。validate は退避先が設定済みで週次条件を外れたときだけ warning（未設定は黙る）。週次の作業指示は `orgos tenant backup snapshot` で、連鎖の再署名は書かない。連携ハブは説明のままで退避を実行しない。テナント直下の `.git` が公開フォージなら snapshot を拒否する。本番の snapshot / restore は ceo / approver。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **テナント退避の穴** — 公開フォージはサブドメインと末尾ドットも含めて拒否し、届く `file://` は中の git remote を見る。未マウントは未検査で、週次は設定済みの公開リモートだけ失敗にする。アーカイブは一時ファイルから `0600` で確定し、同じ秒でも上書きしない。復元は `..` と絶対パスを拒み、失敗しても指定先を空のままにする。スタンプは日付・パス・バイト数・sha256 が実体と一致したときだけ週次を通し、日付だけは通さない。ボリュームが非暗号化と読めたときだけ snapshot を拒否し、読めない先は `declared` のまま検証済みとは書かない。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **テナントの復元用コピー** — `orgos tenant backup snapshot|restore|status`。最新は Mac のまま、NAS は暗号化ボリュームへの退避（ツールは鍵を作らない）。作業中の `scratch/aia-runs` は含めず、スタンプは成功後だけ。未設定のテナントは週次を失敗にしない。`orgos tenant git-remote check` はテナント履歴のリモートを `file://` または社内 ssh に限り、github.com / gitlab.com / bitbucket.org を拒否する（製品リポジトリの origin は見ない）。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **Drive の配達名** — アップロードするファイル名を `AIA-` で始め、説明に「写し。正本ではない」を付ける。削除も、Drive から正本へ戻す取り込みもしない。
+- **連携ハブの置き場説明** — コンソール `/?integrations=1` に「このマシン（最新）· NAS（復元）· Git（NAS 上の履歴。GitHub には実テナントを出さない）· Drive（AIA 成果物の配達口）」を明示。Drive は社員ファイルを消さない写しで、正本はテナント YAML / MD。セットアップ画面からも同じ説明でハブへ送る。
 
 ### Fixed
 
+- **個人事業の青色申告特別控除** — 帳簿が揃っていれば 55 万円を所得から引く。65 万円は提出証跡があるときだけ。決算書の元入金は期首残高で、当年の所得と二重にしない。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
-
+- AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 
 ## [0.9.0-beta.1] — 2026-08-30

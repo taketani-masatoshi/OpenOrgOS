@@ -50,12 +50,19 @@ Community 側（governance Bearer + bind nonce の二重）:
 | 秘密の GET | 経路が無い。**投入はできるが取り出せない** |
 | 想定外の例外 | catch して JSON |
 
+## コンソール
+
+`/?integrations=1` の先頭に **このマシン（最新）· NAS（復元）· Git（NAS 上の履歴）· Drive（配達口）** を置く。
+GitHub には実テナントを出さない。Drive カードは AIA 成果物のアップロード面で、社員が置いたファイルは削除・上書きしないと明示する。
+セットアップ（`/?onboarding=1`）からも同じ説明でハブへ送る。
+
 ## 正本とレプリカ
 
 - 書き込み正本は OrgOS の YAML / MD。Asana の status も Drive の PDF も戻さない。
 - Asana へ出すのは id・件名・状態・期限だけ（`buildAsanaTargetPayload`）。メール本文・金額・住所は入れない。
 - Drive へ出せるのは人が読む文書（`docs/company` · `docs/compliance` · `docs/reports` の一部）と
   領収書・Work Order 要約・社長タスク一覧のみ。`assertDocumentExportAllowed` が許可リスト外を弾く。
+  格納時の名前は `AIA-` で始まり、説明は「写し。正本ではない」。削除も取り込みもしない。
 - 対応台帳は `data/integrations/gdrive-exports.yaml`（正本パスと Drive ファイル ID。秘密なし）。
 
 ## 秘密の扱い
@@ -67,7 +74,7 @@ Slack Webhook と Asana PAT は `data/secrets/connector-secrets.env`（0600 · g
 ## やらないこと
 
 - Slack Events API での双方向同期、Asana Webhook から OrgOS を書き換えること
-- Drive の全ファイル同期、YAML の Drive ホスティング
+- Drive の全ファイル同期、YAML の Drive ホスティング、Drive 上のファイルの削除、Drive から正本へ戻す取り込み
 - LLM / MCP による接続・送信・格納
 
 ## テスト
