@@ -75,11 +75,13 @@ import {
   runTaxConsumptionEligibility,
   runTaxDepreciation,
   runTaxGaps,
+  runTaxFilingScore,
   runTaxHandoff,
   runTaxGapResolveCommand,
   runTaxInvoiceRegistrationCheck,
   runTaxQualifiedInvoiceCheck,
   runTaxReadiness,
+  runTaxRecordOfficialReceipt,
 } from "../../commands/tax.js";
 import {
   runExpenseClaimApprove,
@@ -979,6 +981,48 @@ export function registerDomainCommands(program: Command): void {
     .description("List open tax filing gaps overlay")
     .option("--json", "Print JSON")
     .action((opts: { json?: boolean }) => runTaxGaps({ json: Boolean(opts.json) }));
+  tax
+    .command("filing-score")
+    .description(
+      "Show e-Tax/eLTAX gate scores (0 without gitignored real receipt; does not submit)",
+    )
+    .option("--json", "Print JSON")
+    .action((opts: { json?: boolean }) => runTaxFilingScore({ json: Boolean(opts.json) }));
+  tax
+    .command("record-official-receipt")
+    .description(
+      "Human-only: save a digit receipt already issued by NTA/LTA (no socket; gitignored path only)",
+    )
+    .requiredOption(
+      "--item <id>",
+      "corporate_etax | corporate_eltax | sole_etax | sole_eltax",
+    )
+    .requiredOption("--number <digits>", "Official 10–20 digit receipt number")
+    .requiredOption(
+      "--endpoint <url>",
+      "https://www.e-tax.nta.go.jp or https://www.eltax.lta.go.jp",
+    )
+    .option(
+      "--i-recorded-from-official-site",
+      "Confirm a human already submitted on the official site",
+    )
+    .option("--json", "Print JSON")
+    .action(
+      (opts: {
+        item: string;
+        number: string;
+        endpoint: string;
+        iRecordedFromOfficialSite?: boolean;
+        json?: boolean;
+      }) =>
+        runTaxRecordOfficialReceipt({
+          item: opts.item,
+          number: opts.number,
+          endpoint: opts.endpoint,
+          confirmHumanSubmission: Boolean(opts.iRecordedFromOfficialSite),
+          json: Boolean(opts.json),
+        }),
+    );
   tax
     .command("consumption-check")
     .description("Verify consumption tax classification consistency")
