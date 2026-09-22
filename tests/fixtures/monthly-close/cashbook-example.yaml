@@ -1,0 +1,14 @@
+# 国税庁「青色申告者のための貸借対照表作成の手引き」（令和7年分、表紙 R7.10）
+# ⑴ 現金出納帳の記載例のうち、残高が連続する 1 月分（月次の完結例）。
+# 本文は転記しない。円・月日・摘要は公表の記載例のみ。
+# 通年の期末現金 372,772 は貸借対照表の現金（中間の 10/15 残高 540,000 は期末ではない）。
+source: nta-bs-handguide-r7-cashbook-january
+year_end_cash_yen: 372772
+rows:
+  - { month: 1, day: 1, summary: "前年より繰越", inflow_yen: 0, outflow_yen: 0, balance_yen: 292300 }
+  - { month: 1, day: 3, summary: "現金売上", inflow_yen: 270000, outflow_yen: 0, balance_yen: 562300 }
+  - { month: 1, day: 4, summary: "当座預金", inflow_yen: 0, outflow_yen: 180000, balance_yen: 382300 }
+  - { month: 1, day: 6, summary: "消耗品費", inflow_yen: 0, outflow_yen: 2500, balance_yen: 379800 }
+  - { month: 1, day: 18, summary: "現金仕入", inflow_yen: 0, outflow_yen: 60000, balance_yen: 319800 }
+  - { month: 1, day: 25, summary: "事業主貸", inflow_yen: 0, outflow_yen: 200000, balance_yen: 119800 }
+  - { month: 1, day: 25, summary: "買掛金", inflow_yen: 0, outflow_yen: 36000, balance_yen: 83800 }

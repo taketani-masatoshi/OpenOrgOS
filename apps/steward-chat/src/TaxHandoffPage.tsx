@@ -11,6 +11,8 @@ import {
   postTaxPayrollCalc,
   postTaxXmlDraft,
   postTaxYeaCompute,
+  fetchTaxLinesRead,
+  fetchTaxFilingScore,
 } from "./api";
 import { OpsPage } from "./OpsPage";
 import { STEWARD_COPY } from "./steward-copy";
@@ -26,6 +28,8 @@ export function TaxHandoffPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [linesRead, setLinesRead] = useState<Awaited<ReturnType<typeof fetchTaxLinesRead>> | null>(null);
+  const [filingScore, setFilingScore] = useState<Awaited<ReturnType<typeof fetchTaxFilingScore>> | null>(null);
   const [bonusPeriod, setBonusPeriod] = useState("2026-12");
   const [bonusGross, setBonusGross] = useState("500000");
   const [lastHandoffPath, setLastHandoffPath] = useState<string | null>(null);
@@ -90,6 +94,28 @@ export function TaxHandoffPage() {
         setConsumptionIssues(r.issues);
       })
       .catch(() => setConsumption(null));
+  }, []);
+
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [lines, filing] = await Promise.all([fetchTaxLinesRead(), fetchTaxFilingScore()]);
+        if (!cancelled) {
+          setLinesRead(lines);
+          setFilingScore(filing);
+        }
+      } catch {
+        if (!cancelled) {
+          setLinesRead(null);
+          setFilingScore(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function run<T>(fn: () => Promise<T>, okMsg: (result: T) => string) {
@@ -317,6 +343,55 @@ export function TaxHandoffPage() {
         {" · "}
         <a href="/contracts/">契約</a>
       </p>
+      <section style={{ marginTop: 24 }}>
+        <h2>申告行の読取（送信なし）</h2>
+        <p>e-Tax / eLTAX への提出は行いません。submission は not-for-etax のままです。</p>
+        {filingScore ? (
+          <p>
+            filing-score: corporate_etax={filingScore.scores?.corporate_etax ?? 0},
+            corporate_eltax={filingScore.scores?.corporate_eltax ?? 0},
+            sole_etax={filingScore.scores?.sole_etax ?? 0},
+            sole_eltax={filingScore.scores?.sole_eltax ?? 0}
+            {" · "}
+            statutory_filing_met={String(filingScore.statutory_filing_met)}
+            {" · "}
+            socket_opens={String(filingScore.socket_opens)}
+          </p>
+        ) : (
+          <p>filing-score を読込中、または取得できませんでした。</p>
+        )}
+        {linesRead ? (
+          <ul>
+            {linesRead.lines.map((row) => (
+              <li key={row.id}>
+                [{row.status}] {row.label}: {row.detail}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {linesRead?.pin_diff_rows ? (
+          <table className="ops-table" style={{ width: "100%", marginTop: 12 }}>
+            <thead>
+              <tr>
+                <th>行</th>
+                <th>差分空</th>
+                <th>メモ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {linesRead.pin_diff_rows.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.label}</td>
+                  <td>{row.diff_empty ? "空" : "非空"}</td>
+                  <td>{row.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+        {linesRead ? <p>{linesRead.boundary}</p> : null}
+      </section>
+
     </OpsPage>
   );
 }

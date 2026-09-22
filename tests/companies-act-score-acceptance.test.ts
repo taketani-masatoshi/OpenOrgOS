@@ -1,21 +1,44 @@
 /**
- * Hand-computed Companies Act score. Expected yen are literals in this file.
- * Do not rebuild them with inferBsClass or the statement pack.
+ * The 12-point gate does not invent yen.
+ * The pin is e-Gov labels only until an official filled-yen worked example exists.
+ * This test sums the trial balance itself; score stays 0 without printed yen.
  */
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { parse as parseYaml } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { chartOfAccountsSchema } from "../schemas/finance/chart-of-accounts.js";
 import { loadChartOfAccounts } from "../src/lib/data.js";
-import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
+import { appendJournalEntry, loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
 import { yearEndDeclarationPath } from "../src/lib/finance/year-end-file.js";
-import { runCompaniesActScore } from "../src/lib/finance/ledger/companies-act-score.js";
+import {
+  fiscalYearEndDate,
+  resolveCompanyFiscalYearEndMonth,
+} from "../src/lib/finance/fiscal-year.js";
+import {
+  companiesActDisplayScore,
+  runCompaniesActScore,
+  type CompaniesActPinLine,
+} from "../src/lib/finance/ledger/companies-act-score.js";
+import { legalReserveAdditionYen, buildStatutoryStatements } from "../src/lib/finance/ledger/statutory-statements.js";
+import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
 import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
 import { provisionLedgerTenant } from "../src/lib/product/ledger-provision.js";
 import { refreshOrgOsPaths } from "../src/lib/orgos-paths.js";
 import { clearTenantId, runWithTenantId } from "../src/lib/tenant.js";
 import { getDataDir, writeYamlFile } from "../src/lib/utils.js";
+
+const pinFileSchema = z.object({
+  lines: z.array(z.object({ article: z.string(), label: z.string().min(1) })),
+});
+
+function loadPin(): CompaniesActPinLine[] {
+  const path = fileURLToPath(new URL("./fixtures/companies-act/display-lines.yaml", import.meta.url));
+  return pinFileSchema.parse(parseYaml(readFileSync(path, "utf8"))).lines;
+}
 
 const FISCAL_YEAR = "FY2026";
 const OCCURRED_AT = "2027-01-15T00:00:00.000Z";
@@ -32,61 +55,6 @@ const DEPRECIATION = "固定資産はない。";
 const PROVISIONS = "引当金の計上基準は該当なし。";
 const REVENUE_AND_EXPENSE = "収益は役務の提供が完了した時に認識し、費用は発生した時に認識する。";
 const REVENUE_RECOGNITION = "収益は役務の提供が完了した時に認識する。";
-
-const EXPECTED_AMOUNTS = {
-  current_assets: 330_000,
-  noncurrent_assets: 0,
-  total_assets: 330_000,
-  current_liabilities: 0,
-  noncurrent_liabilities: 0,
-  total_liabilities: 0,
-  capital: CAPITAL_YEN,
-  capital_surplus: 0,
-  retained_earnings: 30_000,
-  total_net_assets: 330_000,
-  total_liabilities_and_net_assets: 330_000,
-  unclassified_balance: 0,
-  revenue: REVENUE_YEN,
-  cogs: 0,
-  gross_profit: 100_000,
-  sga: SGA_YEN,
-  operating_profit: 60_000,
-  non_operating_income: 0,
-  non_operating_expense: 0,
-  ordinary_profit: 60_000,
-  extraordinary_gain: 0,
-  extraordinary_loss: 0,
-  pretax_profit: 60_000,
-  income_tax: INCOME_TAX_YEN,
-  net_profit: 50_000,
-  retained_opening: 0,
-  retained_net_income: 50_000,
-  retained_dividend: DIVIDEND_YEN,
-  retained_closing: 30_000,
-  capital_contribution: CAPITAL_YEN,
-  legal_reserve_addition: 2_000,
-  surplus_carryforward: 28_000,
-} as const;
-
-const NOTE_ARTICLE_IDS = [
-  "reg-98-2-2",
-  "reg-98-2-3",
-  "reg-98-2-4",
-  "reg-98-2-6",
-  "reg-98-2-9",
-  "reg-98-2-18-2",
-  "reg-98-2-19",
-];
-
-const NOTE_HEADINGS = [
-  "重要な会計方針",
-  "会計方針の変更",
-  "表示方法の変更",
-  "誤謬の訂正",
-  "株主資本等変動",
-  "収益認識",
-  "その他",
-];
 
 let workspace: string | null = null;
 const originalWorkspace = process.env.ORGOS_WORKSPACE;
@@ -126,8 +94,45 @@ function post(input: {
   });
 }
 
+function declarationYaml(goingConcern: boolean): string {
+  return [
+    `fiscal_year: ${FISCAL_YEAR}`,
+    "inventory: none",
+    "accruals: []",
+    "subsequent_events:",
+    "  status: none",
+    "consumption_tax: exempt",
+    "surplus_disposal:",
+    "  status: dividend",
+    "statutory_notes:",
+    `  asset_valuation: ${JSON.stringify(ASSET_VALUATION)}`,
+    `  depreciation: ${JSON.stringify(DEPRECIATION)}`,
+    `  provisions: ${JSON.stringify(PROVISIONS)}`,
+    `  revenue_and_expense: ${JSON.stringify(REVENUE_AND_EXPENSE)}`,
+    "  policy_change:",
+    "    status: none",
+    "  presentation_change:",
+    "    status: none",
+    "  error_correction:",
+    "    status: none",
+    `  revenue_recognition: ${JSON.stringify(REVENUE_RECOGNITION)}`,
+    "  other:",
+    "    status: none",
+    goingConcern ? "  going_concern:\n    status: none" : "",
+    "  tax_effect:",
+    "    status: none",
+    "  related_party:",
+    "    status: none",
+    "  per_share:",
+    "    status: none",
+    "",
+  ]
+    .filter((line) => line.length > 0)
+    .join("\n");
+}
+
 describe("companies act score acceptance", () => {
-  it("scores the hand-computed statements at 100", () => {
+  it("keeps the ordinance labels and scores 0 without a printed yen example", () => {
     workspace = mkdtempSync(join(tmpdir(), "orgos-companies-act-score-"));
     process.env.ORGOS_WORKSPACE = workspace;
     process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = "1";
@@ -200,49 +205,179 @@ describe("companies act score acceptance", () => {
         amount: DIVIDEND_YEN,
       });
 
-      writeFileSync(
-        yearEndDeclarationPath(FISCAL_YEAR),
-        [
-          `fiscal_year: ${FISCAL_YEAR}`,
-          "inventory: none",
-          "accruals: []",
-          "subsequent_events:",
-          "  status: none",
-          "consumption_tax: exempt",
-          "surplus_disposal:",
-          "  status: dividend",
-          "statutory_notes:",
-          `  asset_valuation: ${JSON.stringify(ASSET_VALUATION)}`,
-          `  depreciation: ${JSON.stringify(DEPRECIATION)}`,
-          `  provisions: ${JSON.stringify(PROVISIONS)}`,
-          `  revenue_and_expense: ${JSON.stringify(REVENUE_AND_EXPENSE)}`,
-          "  policy_change:",
-          "    status: none",
-          "  presentation_change:",
-          "    status: none",
-          "  error_correction:",
-          "    status: none",
-          `  revenue_recognition: ${JSON.stringify(REVENUE_RECOGNITION)}`,
-          "  other:",
-          "    status: none",
-          "",
-        ].join("\n"),
-      );
+      writeFileSync(yearEndDeclarationPath(FISCAL_YEAR), declarationYaml(true));
 
-      return runCompaniesActScore(FISCAL_YEAR, {
-        amounts: EXPECTED_AMOUNTS,
-        texts: {
-          valuation_and_translation: "該当なし",
-          share_warrants: "該当なし",
-        },
-        noteArticleIds: NOTE_ARTICLE_IDS,
-        noteHeadings: NOTE_HEADINGS,
-        policyFragments: [ASSET_VALUATION, DEPRECIATION, PROVISIONS, REVENUE_AND_EXPENSE],
-        titles: ["貸借対照表", "損益計算書", "株主資本等変動計算書", "個別注記表", "剰余金の処分"],
-      });
+      const pin = loadPin();
+      const statement = buildStatutoryStatements(FISCAL_YEAR);
+      const asOf = fiscalYearEndDate(FISCAL_YEAR, resolveCompanyFiscalYearEndMonth());
+      const trial = buildTrialBalance({ asOf });
+      const sectionTotal = (section: string) =>
+        trial.rows.reduce((sum, row) => {
+          const account = coa.accounts.find((item) => item.code === row.account_code);
+          if (account?.statement_section !== section) return sum;
+          return sum + Math.abs(row.balance_yen);
+        }, 0);
+      const currentAssets = trial.rows.reduce((sum, row) => {
+        const account = coa.accounts.find((item) => item.code === row.account_code);
+        if (!account || account.bs_class !== "current") return sum;
+        if (account.type !== "asset" && account.type !== "asset_contra") return sum;
+        const signed = account.type === "asset_contra" ? -Math.abs(row.balance_yen) : row.balance_yen;
+        return sum + signed;
+      }, 0);
+      const pinLabels = pin.map((line) => line.label);
+      const emitted = [
+        ...statement.bsRows.map((row) => row.label),
+        ...statement.plRows.map((row) => row.label),
+        ...statement.equityRows.map((row) => row.label),
+        ...statement.notes.map((note) => note.heading),
+      ];
+      const reserveCodes = new Set(
+        coa.accounts.filter((account) => account.statutory_role === "legal_reserve").map((account) => account.code),
+      );
+      const postedReserve = loadJournalEntries().entries.some((entry) =>
+        entry.lines.some(
+          (line) => reserveCodes.has(line.account_code) && (line.debit_yen !== 0 || line.credit_yen !== 0),
+        ),
+      );
+      return {
+        score: runCompaniesActScore(FISCAL_YEAR, pin),
+        displayLabels: statement.displayLabels,
+        pinLabels,
+        emitted,
+        notes: statement.notes,
+        revenue: statement.amounts.revenue,
+        trialRevenue: sectionTotal("revenue"),
+        sga: statement.amounts.sga,
+        trialSga: sectionTotal("sga"),
+        incomeTax: statement.amounts.income_tax,
+        trialIncomeTax: sectionTotal("income_tax"),
+        currentAssets: statement.amounts.current_assets,
+        trialCurrentAssets: currentAssets,
+        reserve: statement.amounts.legal_reserve_addition,
+        postedReserve,
+        complete: statement.complete,
+      };
     });
 
-    expect(result.score).toBe(100);
-    expect(result.checks.every((item) => item.pass)).toBe(true);
+    expect(result.displayLabels.filter((label) => !result.pinLabels.includes(label))).toEqual([]);
+    expect(result.pinLabels.filter((label) => !result.displayLabels.includes(label))).toEqual([]);
+    expect(result.displayLabels).toEqual(result.pinLabels);
+    for (const label of result.emitted) expect(result.pinLabels).toContain(label);
+    expect(result.revenue).toBe(result.trialRevenue);
+    expect(result.sga).toBe(result.trialSga);
+    expect(result.incomeTax).toBe(result.trialIncomeTax);
+    expect(result.currentAssets).toBe(result.trialCurrentAssets);
+    expect(result.reserve).toBe(Math.min(Math.floor(DIVIDEND_YEN / 10), Math.floor(CAPITAL_YEN / 4)));
+    expect(result.postedReserve).toBe(false);
+    expect(
+      legalReserveAdditionYen({
+        capitalYen: CAPITAL_YEN,
+        existingReserveYen: 0,
+        dividendYen: 1_000_000,
+      }).additionYen,
+    ).toBe(Math.floor(CAPITAL_YEN / 4));
+    expect(result.complete).toBe(true);
+    const noneBodies = result.notes.filter((note) => note.heading !== "重要な会計方針に係る事項に関する注記");
+    expect(noneBodies.every((note) => note.body === "該当なし")).toBe(true);
+    expect(result.score.score).toBe(0);
+    expect(result.score.checks.every((item) => item.pass)).toBe(false);
+    expect(result.score.checks[0]?.detail).toContain("official printed yen missing on pin");
+  });
+
+  
+  it("dummy example_yen integers still score 0 (no invented official yen pin)", () => {
+    const pin = loadPin().map((line) => ({ ...line, example_yen: 1 }));
+    const labels = pin.map((line) => line.label);
+    expect(companiesActDisplayScore(labels, pin)).toBe(0);
+    expect(companiesActDisplayScore(labels, loadPin())).toBe(0);
+  });
+
+  it("scores 0 when extraordinary profit and loss are one line", () => {
+    const pin = loadPin();
+    const collapsed = pin.map((line) =>
+      line.label === "特別利益" || line.label === "特別損失" ? "特別損益" : line.label,
+    );
+    expect(companiesActDisplayScore(collapsed, pin)).toBe(0);
+    expect(companiesActDisplayScore(pin.map((line) => line.label), pin)).toBe(0);
+    expect(
+      companiesActDisplayScore(
+        pin.map((line) => line.label),
+        pin.map((line) => ({ ...line, article: " " })),
+      ),
+    ).toBe(0);
+  });
+
+  it("scores 0 when a dividend has no capital account", () => {
+    workspace = mkdtempSync(join(tmpdir(), "orgos-companies-act-score-"));
+    process.env.ORGOS_WORKSPACE = workspace;
+    process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = "1";
+    console.log = () => undefined;
+    refreshOrgOsPaths();
+    const provisioned = provisionLedgerTenant({
+      tenantId: "companies-act-score-no-capital",
+      companyName: "Companies Act Score KK",
+      adminEmail: "ceo@companies-act-score.example",
+      plan: "business",
+    });
+    const result = runWithTenantId(provisioned.tenant_id, () => {
+      ensureLedgerDemoChartOfAccounts();
+      const coa = loadChartOfAccounts();
+      const retained = coa.accounts.find((account) => account.code === "3200");
+      if (retained) retained.equity_class = "retained";
+      for (const account of coa.accounts) {
+        if (account.equity_class === "capital") delete account.equity_class;
+      }
+      writeYamlFile(join(getDataDir(), "finance", "chart-of-accounts.yaml"), chartOfAccountsSchema.parse(coa));
+      post({
+        entryId: "JE-SCORE-DIVIDEND",
+        description: "dividend",
+        source: { kind: "dividend", period: PERIOD },
+        debit: "3200",
+        credit: "1100",
+        amount: DIVIDEND_YEN,
+      });
+      writeFileSync(yearEndDeclarationPath(FISCAL_YEAR), declarationYaml(true));
+      const statement = buildStatutoryStatements(FISCAL_YEAR);
+      return {
+        score: runCompaniesActScore(FISCAL_YEAR, loadPin()),
+        complete: statement.complete,
+        errors: statement.errors,
+        reserve: statement.amounts.legal_reserve_addition,
+      };
+    });
+    expect(result.complete).toBe(false);
+    expect(result.errors).toContain("dividend without a capital account");
+    expect(result.reserve).toBe(0);
+    expect(result.score.score).toBe(0);
+  });
+
+  it("scores 0 when a note fact is missing and does not say 該当なし", () => {
+    workspace = mkdtempSync(join(tmpdir(), "orgos-companies-act-score-"));
+    process.env.ORGOS_WORKSPACE = workspace;
+    process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = "1";
+    console.log = () => undefined;
+    refreshOrgOsPaths();
+    const provisioned = provisionLedgerTenant({
+      tenantId: "companies-act-score-missing-note",
+      companyName: "Companies Act Score KK",
+      adminEmail: "ceo@companies-act-score.example",
+      plan: "business",
+    });
+    const result = runWithTenantId(provisioned.tenant_id, () => {
+      ensureLedgerDemoChartOfAccounts();
+      writeFileSync(yearEndDeclarationPath(FISCAL_YEAR), declarationYaml(false));
+      const statement = buildStatutoryStatements(FISCAL_YEAR);
+      const goingConcern = statement.notes.find((note) => note.heading === "継続企業の前提に関する注記");
+      return {
+        score: runCompaniesActScore(FISCAL_YEAR, loadPin()),
+        heading: goingConcern?.heading ?? "",
+        body: goingConcern?.body ?? "該当なし",
+      };
+    });
+    expect(result.heading.length).toBeGreaterThan(0);
+    expect(result.body).toBe("");
+    expect(result.body).not.toBe("該当なし");
+    expect(result.score.score).toBe(0);
+    expect(result.score.checks[0]?.detail).toContain("note");
   });
 });

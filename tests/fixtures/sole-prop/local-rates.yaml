@@ -1,0 +1,21 @@
+# 個人住民税の標準税率と個人事業税の標準税率。確認できたものだけ。
+# 住民税: 総務省「個人住民税」（所得割 4%+6%、均等割 1,000円+3,000円）
+# https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_06.html
+# 森林環境税は国税であり、ここには入れない。
+# 事業税: 地方税法第72条の49の14（事業主控除 290万円）、第72条の49の17（標準税率）
+# 資本金・従業員数が無い均等割を 0 円の完成値にしない。個人の均等割は定額。
+inhabitant:
+  prefecture_income: { numerator: 4, denominator: 100 }
+  municipality_income: { numerator: 6, denominator: 100 }
+  designated_city_prefecture_income: { numerator: 2, denominator: 100 }
+  designated_city_municipality_income: { numerator: 8, denominator: 100 }
+  per_capita:
+    basis: individual_flat
+    prefecture_yen: 1000
+    municipality_yen: 3000
+enterprise:
+  owner_deduction_yen: 2900000
+  type1: { numerator: 5, denominator: 100 }
+  type2: { numerator: 4, denominator: 100 }
+  type3: { numerator: 5, denominator: 100 }
+  type3_reduced: { numerator: 3, denominator: 100 }

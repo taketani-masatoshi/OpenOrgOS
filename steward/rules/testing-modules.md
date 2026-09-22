@@ -127,6 +127,17 @@ npm run test:platform -- P04_wire_stack
 - stale lock: `orgos doctor --repair`（または `rm -rf tests/.fixture-restore.lock`）
 - テナント runtime 生成物: [tenant-runtime-artifacts.md](../../docs/org-os/tenant-runtime-artifacts.md)
 
+### 7.0 e-Tax / eLTAX 提出ゲート試験
+
+- 試験ファイル: `tests/finance-official-filing-receipt.test.ts`
+- 製品ゲート通し: `tests/finance-filing-product-gate.test.ts`（filing-score 0 · confirm 無し拒否 · LLM 拒否 · fixture XSD 拒否 · 任意ローカル XSD）
+- 個人現金出納帳ピン分離: `tests/sole-prop-monthly-cashbook.test.ts`
+- 決算書硬0: `tests/companies-act-score-acceptance.test.ts`（ダミー example_yen でも 0）
+- **政府へ送らない**（ソケット非開通）。採点試験は一時ディレクトリに `.gitignore` で `/records/` を置いた使い捨てルートだけ使う
+- tip の `records/finance/official-filing-receipt.yaml` に偽番号を書いて法定充足にしない
+- 現状確認 CLI: `orgos tax filing-score`（受付が無い間は 0）
+- 正本: [tax-filing-spec.md](../../docs/org-os/tax-filing-spec.md) · ADR [0052](../../docs/adr/0052-tax-filing-phase5-deferred.md)
+
 ### 7.2 全件 `npm test`（305 files · 直列 · 10 分超のことあり）
 
 ```bash

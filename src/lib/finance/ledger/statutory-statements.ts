@@ -12,6 +12,7 @@ import {
 import { readYearEndDeclaration } from "../year-end-file.js";
 import type { PdfTableRow } from "../../pdf.js";
 import { equityChangeAmounts, inferBsClass } from "./balance-sheet.js";
+import { noteWhenDeclared } from "./financial-statement-disclosures.js";
 import { buildTrialBalance } from "./trial-balance.js";
 
 export type StatutoryNote = {
@@ -33,16 +34,18 @@ export type StatutoryStatements = {
   equityRows: PdfTableRow[];
   noteLines: string[];
   surplusText: string;
+  /** Section headings in statement order. The 12-point pin is not stored here. */
+  displayLabels: string[];
 };
 
-const NOTE_SPECS = [
-  { articleId: "reg-98-2-2", heading: "重要な会計方針" },
-  { articleId: "reg-98-2-3", heading: "会計方針の変更" },
-  { articleId: "reg-98-2-4", heading: "表示方法の変更" },
-  { articleId: "reg-98-2-6", heading: "誤謬の訂正" },
-  { articleId: "reg-98-2-9", heading: "株主資本等変動計算書に関する注記" },
-  { articleId: "reg-98-2-18-2", heading: "収益認識に関する注記" },
-  { articleId: "reg-98-2-19", heading: "その他の注記" },
+export const STATUTORY_NOTE_SPECS = [
+  { articleId: "reg-100", heading: "継続企業の前提に関する注記" },
+  { articleId: "reg-101", heading: "重要な会計方針に係る事項に関する注記" },
+  { articleId: "reg-102-3", heading: "表示方法の変更に関する注記" },
+  { articleId: "reg-107", heading: "税効果会計に関する注記" },
+  { articleId: "reg-112", heading: "関連当事者との取引に関する注記" },
+  { articleId: "reg-113", heading: "一株当たり情報に関する注記" },
+  { articleId: "reg-114", heading: "重要な後発事象に関する注記" },
 ] as const;
 
 export function legalReserveAdditionYen(input: {
@@ -71,6 +74,12 @@ export function legalReserveAdditionYen(input: {
     incomplete: false,
     errors: [],
   };
+}
+
+
+/** Ordinance note headings in statement order (skeleton completeness). */
+export function statutoryNoteHeadings(): string[] {
+  return STATUTORY_NOTE_SPECS.map((spec) => spec.heading);
 }
 
 export function buildStatutoryStatements(fiscalYear: string): StatutoryStatements {
@@ -134,11 +143,8 @@ export function buildStatutoryStatements(fiscalYear: string): StatutoryStatement
   amounts.total_liabilities_and_net_assets =
     amounts.total_liabilities + amounts.total_net_assets;
 
-  const texts = {
-    valuation_and_translation: "該当なし",
-    share_warrants: "該当なし",
-  };
-  const notes = buildNotes(fiscalYear, amounts.retained_dividend, errors);
+  const texts: Record<string, string> = {};
+  const notes = buildNotes(fiscalYear, errors);
   const noteLines = notes.map((note) => `[${note.articleId}] ${note.heading}\n${note.body}`);
   const surplusText = [
     `利益準備金 ${amounts.legal_reserve_addition}`,
@@ -148,41 +154,42 @@ export function buildStatutoryStatements(fiscalYear: string): StatutoryStatement
   const bsRows = amountRows([
     ["流動資産", amounts.current_assets],
     ["固定資産", amounts.noncurrent_assets],
-    ["資産合計", amounts.total_assets],
+    ["繰延資産", 0],
     ["流動負債", amounts.current_liabilities],
     ["固定負債", amounts.noncurrent_liabilities],
-    ["負債合計", amounts.total_liabilities],
     ["資本金", amounts.capital],
     ["資本剰余金", amounts.capital_surplus],
     ["利益剰余金", amounts.retained_earnings],
-    ["純資産合計", amounts.total_net_assets],
-    ["負債及び純資産合計", amounts.total_liabilities_and_net_assets],
+    ["自己株式", 0],
+    ["評価・換算差額等", 0],
+    ["新株予約権", 0],
   ]);
   const plRows = amountRows([
     ["売上高", amounts.revenue],
     ["売上原価", amounts.cogs],
-    ["売上総利益", amounts.gross_profit],
+    ["売上総利益金額", amounts.gross_profit],
     ["販売費及び一般管理費", amounts.sga],
-    ["営業利益", amounts.operating_profit],
+    ["営業利益金額", amounts.operating_profit],
     ["営業外収益", amounts.non_operating_income],
     ["営業外費用", amounts.non_operating_expense],
-    ["経常利益", amounts.ordinary_profit],
+    ["経常利益金額", amounts.ordinary_profit],
     ["特別利益", amounts.extraordinary_gain],
     ["特別損失", amounts.extraordinary_loss],
-    ["税引前当期純利益", amounts.pretax_profit],
+    ["税引前当期純利益金額", amounts.pretax_profit],
     ["法人税等", amounts.income_tax],
-    ["当期純利益", amounts.net_profit],
+    ["当期純利益金額", amounts.net_profit],
   ]);
-  const equityRows: PdfTableRow[] = [
-    ...amountRows([
-      ["利益剰余金期首", amounts.retained_opening],
-      ["当期純利益", amounts.retained_net_income],
-      ["剰余金の配当", amounts.retained_dividend],
-      ["利益剰余金期末", amounts.retained_closing],
-      ["資本金の増加", amounts.capital_contribution],
-    ]),
-    { label: "評価・換算差額等", amount: texts.valuation_and_translation },
-    { label: "新株予約権", amount: texts.share_warrants },
+  const equityRows = amountRows([
+    ["当期首残高", amounts.retained_opening],
+    ["剰余金の配当", amounts.retained_dividend],
+    ["当期純利益金額", amounts.retained_net_income],
+    ["当期末残高", amounts.retained_closing],
+  ]);
+  const displayLabels = [
+    ...bsRows.map((row) => row.label),
+    ...plRows.map((row) => row.label),
+    ...equityRows.map((row) => row.label),
+    ...notes.map((note) => note.heading),
   ];
 
   const text = [
@@ -211,6 +218,7 @@ export function buildStatutoryStatements(fiscalYear: string): StatutoryStatement
     equityRows,
     noteLines,
     surplusText,
+    displayLabels,
   };
 }
 
@@ -327,7 +335,7 @@ function ledgerDepreciation(): string | null {
   }
 }
 
-function buildNotes(fiscalYear: string, dividendYen: number, errors: string[]): StatutoryNote[] {
+function buildNotes(fiscalYear: string, errors: string[]): StatutoryNote[] {
   const declaration = readYearEndDeclaration(fiscalYear);
   const declared = declaration.ok ? declaration.value.statutory_notes : undefined;
   if (!declared) errors.push("statutory notes declaration missing");
@@ -337,7 +345,6 @@ function buildNotes(fiscalYear: string, dividendYen: number, errors: string[]): 
   if (!declared?.asset_valuation) errors.push("statutory note missing: asset_valuation");
   if (!declared?.provisions) errors.push("statutory note missing: provisions");
   if (!declared?.revenue_and_expense) errors.push("statutory note missing: revenue_and_expense");
-  if (!declared?.revenue_recognition) errors.push("statutory note missing: revenue_recognition");
 
   const policy = [
     declared?.asset_valuation ?? "",
@@ -348,32 +355,34 @@ function buildNotes(fiscalYear: string, dividendYen: number, errors: string[]): 
     .filter((line) => line.length > 0)
     .join("\n");
 
+  const goingConcern = noteWhenDeclared(declared?.going_concern);
+  const presentation = noteWhenDeclared(declared?.presentation_change);
+  const taxEffect = noteWhenDeclared(declared?.tax_effect);
+  const relatedParty = noteWhenDeclared(declared?.related_party);
+  const perShare = noteWhenDeclared(declared?.per_share);
+  const subsequent = noteWhenDeclared(
+    declaration.ok ? declaration.value.subsequent_events : undefined,
+  );
+  if (goingConcern.missing) errors.push("statutory note missing: going_concern");
+  if (presentation.missing) errors.push("statutory note missing: presentation_change");
+  if (taxEffect.missing) errors.push("statutory note missing: tax_effect");
+  if (relatedParty.missing) errors.push("statutory note missing: related_party");
+  if (perShare.missing) errors.push("statutory note missing: per_share");
+  if (subsequent.missing) errors.push("statutory note missing: subsequent_events");
+
   const bodies = [
+    goingConcern.body,
     policy,
-    declaredText(declared?.policy_change, "policy_change", errors),
-    declaredText(declared?.presentation_change, "presentation_change", errors),
-    declaredText(declared?.error_correction, "error_correction", errors),
-    `剰余金の配当は${dividendYen}円である。評価・換算差額等は該当なし。新株予約権は該当なし。`,
-    declared?.revenue_recognition ?? "",
-    declaredText(declared?.other, "other", errors),
+    presentation.body,
+    taxEffect.body,
+    relatedParty.body,
+    perShare.body,
+    subsequent.body,
   ];
 
-  return NOTE_SPECS.map((spec, index) => ({
+  return STATUTORY_NOTE_SPECS.map((spec, index) => ({
     articleId: spec.articleId,
     heading: spec.heading,
     body: bodies[index] ?? "",
   }));
-}
-
-function declaredText(
-  value: { status: "none" } | { status: "disclosed"; text: string } | undefined,
-  label: string,
-  errors: string[],
-): string {
-  if (!value) {
-    errors.push(`statutory note missing: ${label}`);
-    return "";
-  }
-  if (value.status === "none") return "該当なし";
-  return value.text;
 }

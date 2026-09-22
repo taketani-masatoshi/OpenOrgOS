@@ -89,6 +89,8 @@ export const journalSourceAccountsSchema = z.object({
   owner_capital: z.string().regex(/^\d{4}$/).optional(),
   owner_drawings: z.string().regex(/^\d{4}$/).optional(),
   owner_advances: z.string().regex(/^\d{4}$/).optional(),
+  /** Year's income on the blue-return balance sheet. Not 元入金. */
+  owner_income: z.string().regex(/^\d{4}$/).optional(),
   consumption_tax_payable: z.string().regex(/^\d{4}$/).optional(),
   consumption_tax_receivable: z.string().regex(/^\d{4}$/).optional(),
   lodging_tax_payable: z.string().regex(/^\d{4}$/).optional(),

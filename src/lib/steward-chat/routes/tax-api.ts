@@ -29,6 +29,8 @@ import {
 import { buildTaxCalendarPortfolio } from "../../finance/tax-calendar-portfolio.js";
 import { summarizeTaxFilingGaps, tryLoadTaxFilingGaps } from "../../finance/tax-filing-gaps.js";
 import { runConsumptionTaxCheck } from "../../finance/consumption-tax.js";
+import { buildTaxLinesReadModel } from "../../product/tax-lines-read-model.js";
+import { officialFilingProductStatus } from "../../finance/filing/official-receipt.js";
 import { computePayrollMonth } from "../../finance/payroll-jp.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
@@ -37,7 +39,7 @@ function json(res: ServerResponse, status: number, body: unknown): void {
 }
 
 /**
- * GET  /chat/v1/tax/readiness | /handoff | /payroll-yea | /calendar | /gaps | /consumption
+ * GET  /chat/v1/tax/readiness | /lines-read | /filing-score | /handoff | /payroll-yea | /calendar | /gaps | /consumption
  * POST /chat/v1/tax/xml-draft | /handoff | /bonus-draft | /yea/ready | /yea/compute | /payroll-calc
  */
 export async function handleTaxApi(
@@ -48,6 +50,19 @@ export async function handleTaxApi(
   user: WireConsoleUser,
 ): Promise<boolean> {
   if (!pathname.startsWith("/chat/v1/tax/")) return false;
+
+
+  if (pathname === "/chat/v1/tax/lines-read" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    json(res, 200, { ok: true, ...buildTaxLinesReadModel() });
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/filing-score" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    json(res, 200, { ok: true, ...officialFilingProductStatus() });
+    return true;
+  }
 
   if (pathname === "/chat/v1/tax/readiness" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;

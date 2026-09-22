@@ -3018,3 +3018,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+
+  finance-filing-product-gate.test.ts:
+    taxonomy: unit
+    tags: [finance, tax, filing-gate]
+  sole-prop-monthly-cashbook.test.ts:
+    taxonomy: unit
+    tags: [finance, sole-prop, cashbook]

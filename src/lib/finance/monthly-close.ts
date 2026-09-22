@@ -302,6 +302,27 @@ function cashBalanceYen(asOf: string): number {
   );
 }
 
+function cashJournalNet(fromExclusive: string, toInclusive: string): number {
+  const code = resolveJournalSourceAccounts().bank_control;
+  let net = 0;
+  for (const entry of loadJournalEntries().entries) {
+    const record = entry as { voided_at?: string; status?: string; occurred_at: string; lines: Array<{ account_code: string; debit_yen: number; credit_yen: number }> };
+    if (record.voided_at || record.status === "void") continue;
+    const date = record.occurred_at.slice(0, 10);
+    if (date <= fromExclusive || date > toInclusive) continue;
+    for (const line of record.lines) {
+      if (line.account_code !== code) continue;
+      net += line.debit_yen - line.credit_yen;
+    }
+  }
+  return net;
+}
+
+export {
+  type CashbookExampleRow,
+  scoreCashbookExample,
+} from "./ledger/cashbook-display.js";
+
 export type MonthBankTieOut = {
   glDelta: number | null;
   bankNet: number | null;
@@ -534,6 +555,21 @@ export function evaluateMonthlyCloseGates(
       trial.balanced,
       "error",
       trial.balanced ? "balanced" : trial.issues.join("; ") || "unbalanced",
+    ),
+  );
+
+  const fromExclusive = tieOutFromExclusive(month);
+  const priorCash = cashBalanceYen(fromExclusive);
+  const endingCash = cashBalanceYen(asOf);
+  const movement = cashJournalNet(fromExclusive, asOf) + openingCashInWindow(fromExclusive, asOf);
+  const cashTied = endingCash === priorCash + movement;
+  items.push(
+    gate(
+      "cash-ending",
+      "期末現金が前月末と窓の増減に一致",
+      cashTied,
+      "error",
+      cashTied ? "ok" : `ending cash ${endingCash} != prior ${priorCash} + movement ${movement}`,
     ),
   );
 

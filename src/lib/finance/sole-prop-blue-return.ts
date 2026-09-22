@@ -38,8 +38,14 @@ const lineMapSchema = z.object({
         "computed_bs",
         "blue_deduction",
         "income_after",
+        "expense_total",
         "cogs",
+        "opening_inventory",
+        "ending_inventory",
+        "purchases",
+        "gross",
       ]),
+      role: z.string().min(1),
       account_name: z.string().optional(),
     }),
   ),
@@ -49,6 +55,7 @@ export type BlueReturnLine = {
   id: string;
   print: string;
   label: string;
+  role: string;
   section: "pl" | "bs";
   amount_yen: number | null;
 };
@@ -72,6 +79,9 @@ export type SolePropBlueReturnDraft = {
   bs_income_before_blue_deduction_yen: number | null;
   income_yen: number | null;
   cogs_yen: number | null;
+  capital_opening_yen: number | null;
+  capital_closing_yen: number | null;
+  capital_transfer_yen: number;
   deduction_gate: BlueDeductionGate;
 };
 
@@ -118,6 +128,9 @@ function blocked(blockers: string[]): SolePropBlueReturnDraft {
     bs_income_before_blue_deduction_yen: null,
     income_yen: null,
     cogs_yen: null,
+    capital_opening_yen: null,
+    capital_closing_yen: null,
+    capital_transfer_yen: 0,
     deduction_gate: { books_ready: false, eligible_yen: 0, applied_yen: 0 },
   };
 }
@@ -247,7 +260,8 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     if (account.type === "revenue") openPl += row.balance_yen;
     if (account.type === "expense") openPl -= row.balance_yen;
   }
-  let transferred = 0;
+  let transferredIncome = 0;
+  let capitalTransfer = 0;
   const yearEntries: Array<{ lines: Array<{ debit_yen: number; credit_yen: number }> }> = [];
   for (const entry of loadJournalEntries().entries) {
     const date = entry.occurred_at.slice(0, 10);
@@ -255,15 +269,24 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     yearEntries.push(entry);
     if (!(entry.source?.kind === "closing" && entry.source.adjustment_id === "pl-transfer")) continue;
     for (const line of entry.lines) {
-      if (line.account_code !== sources.owner_capital) continue;
-      transferred += line.credit_yen - line.debit_yen;
+      const net = line.credit_yen - line.debit_yen;
+      if (line.account_code === sources.owner_income) transferredIncome += net;
+      if (line.account_code === sources.owner_capital) capitalTransfer += net;
     }
   }
-  const bookIncome = transferred + openPl;
+  const capitalClosing = balanceOf(sources.owner_capital, trial) ?? 0;
+  const capitalOpening = capitalClosing - capitalTransfer;
+  const bookIncome = transferredIncome + openPl;
   const bsIncome = bookIncome - (cogs ?? 0);
+  const capitalFields = {
+    capital_opening_yen: capitalOpening,
+    capital_closing_yen: capitalClosing,
+    capital_transfer_yen: capitalTransfer,
+  };
   if (plIncome !== bsIncome) {
     return {
       ...blocked(["profit and loss income does not match the balance-sheet income"]),
+      ...capitalFields,
       inventory: inventory.status === "invalid" ? "undeclared" : inventory.status,
       income_before_blue_deduction_yen: plIncome,
       bs_income_before_blue_deduction_yen: bsIncome,
@@ -274,6 +297,7 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
   if (inventory.status === "undeclared") {
     return {
       ...blocked(["inventory is undeclared"]),
+      ...capitalFields,
       inventory: "undeclared",
       cogs_yen: null,
       income_before_blue_deduction_yen: plIncome,
@@ -299,9 +323,18 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
   const taken = gate.applied_yen;
   if (taken > 0 && taken > plIncome) return blocked(["blue deduction exceeds business income"]);
 
+  const openingInventory =
+    inventory.status === "counted" ? inventory.beginningYen : inventory.status === "none" ? 0 : null;
+  const endingInventory =
+    inventory.status === "counted" ? inventory.endingYen : inventory.status === "none" ? 0 : null;
+
   const amountFor = (source: string, accountName?: string): number | null => {
     if (source === "revenue") return sales;
     if (source === "account_name") return mappedExpense.get(accountName ?? "") ?? 0;
+    if (source === "opening_inventory") return openingInventory;
+    if (source === "ending_inventory") return endingInventory;
+    if (source === "purchases") return purchases;
+    if (source === "expense_total") return expenseTotal;
     if (source === "cogs") return cogs;
     if (source === "computed_pl") return plIncome;
     if (source === "computed_bs") return bsIncome;
@@ -309,7 +342,7 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     if (source === "income_after") return plIncome - taken;
     if (source === "owner_drawings") return balanceOf(sources.owner_drawings, trial);
     if (source === "owner_advances") return balanceOf(sources.owner_advances, trial);
-    if (source === "owner_capital") return openingCapitalYen(sources.owner_capital, trial, transferred);
+    if (source === "owner_capital") return capitalClosing;
     return null;
   };
 
@@ -317,6 +350,7 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     id: line.id,
     print: line.print,
     label: line.label,
+    role: line.role,
     section: line.section,
     amount_yen: amountFor(line.source, line.account_name),
   }));
@@ -334,6 +368,7 @@ export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnD
     bs_income_before_blue_deduction_yen: bsIncome,
     income_yen: plIncome - taken,
     cogs_yen: cogs,
+    ...capitalFields,
     deduction_gate: gate,
   };
 }
@@ -344,15 +379,4 @@ function balanceOf(
 ): number | null {
   if (!code) return null;
   return trial.rows.find((row) => row.account_code === code)?.balance_yen ?? 0;
-}
-
-/** 元入金 on the general-use form is opening capital, not the post-close balance. */
-function openingCapitalYen(
-  code: string | undefined,
-  trial: ReturnType<typeof buildTrialBalance>,
-  transferredNet: number,
-): number | null {
-  const closing = balanceOf(code, trial);
-  if (closing == null) return null;
-  return closing - transferredNet;
 }

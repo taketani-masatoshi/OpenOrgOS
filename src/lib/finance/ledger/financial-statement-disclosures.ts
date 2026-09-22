@@ -6,6 +6,17 @@ import {
 import { readYearEndDeclaration } from "../year-end-file.js";
 import { equityChangeAmounts } from "./balance-sheet.js";
 
+/**
+ * A missing fact is not 「該当なし」. Only an explicit none status is.
+ */
+export function noteWhenDeclared(
+  value: { status: "none" } | { status: "disclosed"; text: string } | undefined,
+): { body: string; missing: boolean } {
+  if (!value) return { body: "", missing: true };
+  if (value.status === "none") return { body: "該当なし", missing: false };
+  return { body: value.text, missing: false };
+}
+
 const MISSING_SURPLUS = "surplus disposal declaration missing";
 const MISSING_DIVIDEND_JOURNAL = "surplus disposal dividend: no dividend journals posted";
 
@@ -28,10 +39,15 @@ export function buildEquityMovementParagraph(input?: {
   fiscalYear?: string;
 }): string {
   const change = equityChangeAmounts(input);
-  if (change.dividend_yen === 0 && change.capital_yen === 0) {
+  if (change.dividend_yen !== 0 || change.capital_yen !== 0) {
+    return `配当 ${change.dividend_yen} 円、資本取引 ${change.capital_yen} 円`;
+  }
+  if (!input?.fiscalYear) return "配当・資本取引: 宣言がない";
+  const declaration = readYearEndDeclaration(input.fiscalYear);
+  if (declaration.ok && declaration.value.surplus_disposal?.status === "none") {
     return "配当・資本取引: 該当なし";
   }
-  return `配当 ${change.dividend_yen} 円、資本取引 ${change.capital_yen} 円`;
+  return "配当・資本取引: 宣言がない";
 }
 
 export function buildSubsequentEventsParagraph(fiscalYear: string): {

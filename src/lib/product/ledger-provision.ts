@@ -152,6 +152,7 @@ export function provisionLedgerTenant(input: {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   accountantParentId?: string;
+  /** JP entity form; defaults to `kk`. Use `sole_proprietorship` for lane F. */
   entityForm?: string;
 }): { tenant_id: string; path: string; ceo_operator_id: string } {
   const tenantId = input.tenantId.trim().toLowerCase();

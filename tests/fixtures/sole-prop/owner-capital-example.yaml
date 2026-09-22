@@ -1,0 +1,10 @@
+# 国税庁「青色申告者のための貸借対照表作成の手引き」（令和7年分）
+# 元入金・所得・事業主借／貸の記載例。本文は転記しない。円のみ。
+# source: https://www.nta.go.jp/taxes/shiraberu/shinkoku/tebiki/2025/pdf/046.pdf
+source: nta-bs-handguide-r7-owner-capital
+lines:
+  - { account_name: 元入金, opening_yen: 8762460, closing_yen: 8762460 }
+  - { account_name: 青色申告特別控除前の所得金額, opening_yen: 0, closing_yen: 3983920 }
+  - { account_name: 事業主借, opening_yen: 0, closing_yen: 281450 }
+  - { account_name: 事業主貸, opening_yen: 0, closing_yen: 2936000 }
+next_opening_capital_yen: 10091830

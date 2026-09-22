@@ -1,0 +1,23 @@
+# 手引きの元入金・所得・事業主借／貸を、個人事業の帳簿（科目コード＋期中仕訳）として載せたもの。
+# 円は公表の記載例のみ。所得は 3020 へ載せ、元入金へ折り込まない。
+# source: nta-bs-handguide-r7-owner-capital
+accounts:
+  "3010": 元入金
+  "3020": 青色申告特別控除前の所得金額
+  "2210": 事業主借
+  "1310": 事業主貸
+owner_capital_code: "3010"
+owner_income_code: "3020"
+owner_advances_code: "2210"
+owner_drawings_code: "1310"
+opening_capital_yen: 8762460
+movements:
+  - account_code: "3020"
+    debit_yen: 0
+    credit_yen: 3983920
+  - account_code: "2210"
+    debit_yen: 0
+    credit_yen: 281450
+  - account_code: "1310"
+    debit_yen: 2936000
+    credit_yen: 0

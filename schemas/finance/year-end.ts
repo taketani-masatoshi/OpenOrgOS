@@ -32,6 +32,11 @@ export const statutoryNotesSchema = z.object({
   error_correction: declaredOrNoneSchema,
   revenue_recognition: z.string().min(1),
   other: declaredOrNoneSchema,
+  /** Absent is not 「該当なし」. Only status none may say so. */
+  going_concern: declaredOrNoneSchema.optional(),
+  tax_effect: declaredOrNoneSchema.optional(),
+  related_party: declaredOrNoneSchema.optional(),
+  per_share: declaredOrNoneSchema.optional(),
 });
 
 export const yearEndDeclarationSchema = z.object({

@@ -7,7 +7,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
 import { getDataDir } from "../utils.js";
-import { calculateSolePropIncomeTaxAmounts } from "./income-tax-policy.js";
+import { calculateSolePropIncomeTaxAmounts, basicDeductionYenReiwa7 } from "./income-tax-policy.js";
 import { evaluateSolePropIncomeAdjustment } from "./sole-prop-income-adjustment.js";
 
 const amountSchema = z.union([
@@ -25,6 +25,12 @@ const fileSchema = z.object({
   prepayment: amountSchema,
 });
 
+export type SolePropIncomeTaxLine = {
+  id: "income" | "deduction" | "taxable_income" | "tax" | "basic_deduction";
+  label: string;
+  amount_yen: number | null;
+};
+
 export type SolePropIncomeTaxReturnDraft = {
   fiscal_year: string;
   ready: boolean;
@@ -34,6 +40,8 @@ export type SolePropIncomeTaxReturnDraft = {
   blockers: string[];
   estimated_tax_yen: number | null;
   business_income_yen: number | null;
+  basic_deduction_yen: number | null;
+  lines: SolePropIncomeTaxLine[];
   taxable_before_thousand_floor_yen: number | null;
   taxable_yen: number | null;
   income_tax_before_floor_yen: number | null;
@@ -48,6 +56,7 @@ const DISCLAIMER =
 
 const AMOUNT_NULLS = {
   business_income_yen: null,
+  basic_deduction_yen: null,
   taxable_before_thousand_floor_yen: null,
   taxable_yen: null,
   income_tax_before_floor_yen: null,
@@ -70,6 +79,7 @@ function emptyDraft(input: {
     disclaimer: DISCLAIMER,
     blockers: input.blockers.length > 0 ? input.blockers : ["cannot compute"],
     estimated_tax_yen: input.estimatedTaxYen,
+    lines: [],
     ...AMOUNT_NULLS,
   };
 }
@@ -114,10 +124,14 @@ export function buildSolePropIncomeTaxReturnDraft(
     });
   }
 
+  const otherIncome = declaredAmount(parsed.data.other_income);
+  const declaredDeductions = declaredAmount(parsed.data.deductions);
+  const totalIncome = worksheet.adjusted_business_income_yen + otherIncome;
+  const basicDeduction = basicDeductionYenReiwa7(totalIncome);
   const amounts = calculateSolePropIncomeTaxAmounts({
     businessIncomeAfterBlueYen: worksheet.adjusted_business_income_yen,
-    otherIncomeYen: declaredAmount(parsed.data.other_income),
-    deductionsYen: declaredAmount(parsed.data.deductions),
+    otherIncomeYen: otherIncome,
+    deductionsYen: declaredDeductions + basicDeduction,
     creditsYen: declaredAmount(parsed.data.credits),
     withholdingYen: declaredAmount(parsed.data.withholding),
     prepaymentYen: declaredAmount(parsed.data.prepayment),
@@ -130,6 +144,14 @@ export function buildSolePropIncomeTaxReturnDraft(
     });
   }
 
+  const lines: SolePropIncomeTaxLine[] = [
+    { id: "income", label: "所得金額", amount_yen: totalIncome },
+    { id: "basic_deduction", label: "基礎控除", amount_yen: basicDeduction },
+    { id: "deduction", label: "所得控除", amount_yen: amounts.income_deductions_yen },
+    { id: "taxable_income", label: "課税される所得金額", amount_yen: amounts.taxable_yen },
+    { id: "tax", label: "所得税額", amount_yen: amounts.income_tax_yen },
+  ];
+
   return {
     fiscal_year: fiscalYear,
     ready: true,
@@ -139,6 +161,8 @@ export function buildSolePropIncomeTaxReturnDraft(
     blockers: [],
     estimated_tax_yen: parsed.data.estimated_tax_yen ?? null,
     business_income_yen: worksheet.adjusted_business_income_yen,
+    basic_deduction_yen: basicDeduction,
+    lines,
     taxable_before_thousand_floor_yen: amounts.taxable_before_thousand_floor_yen,
     taxable_yen: amounts.taxable_yen,
     income_tax_before_floor_yen: amounts.income_tax_before_floor_yen,

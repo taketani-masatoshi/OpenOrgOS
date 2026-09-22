@@ -28,17 +28,20 @@ import type { PdfTableRow } from "../../pdf.js";
 export const COMPANIES_ACT_LINE_MAP = [
   { id: "current_assets", label: "流動資産", source: "bs_class" },
   { id: "noncurrent_assets", label: "固定資産", source: "bs_class" },
+  { id: "deferred_assets", label: "繰延資産", source: "bs_class" },
   { id: "current_liabilities", label: "流動負債", source: "bs_class" },
   { id: "noncurrent_liabilities", label: "固定負債", source: "bs_class" },
   { id: "capital", label: "資本金", source: "equity_class" },
   { id: "capital_surplus", label: "資本剰余金", source: "equity_class" },
   { id: "retained", label: "利益剰余金", source: "equity_class" },
+  { id: "treasury_stock", label: "自己株式", source: "equity_class" },
   { id: "revenue", label: "売上高", source: "statement_section" },
   { id: "cogs", label: "売上原価", source: "statement_section" },
   { id: "sga", label: "販売費及び一般管理費", source: "statement_section" },
   { id: "non_operating_income", label: "営業外収益", source: "statement_section" },
   { id: "non_operating_expense", label: "営業外費用", source: "statement_section" },
-  { id: "extraordinary", label: "特別損益", source: "statement_section" },
+  { id: "extraordinary_gain", label: "特別利益", source: "statement_section" },
+  { id: "extraordinary_loss", label: "特別損失", source: "statement_section" },
   { id: "income_tax", label: "法人税等", source: "statement_section" },
   { id: "surplus_dividend", label: "剰余金の配当", source: "surplus_disposal" },
   { id: "accounting_policy", label: "会計方針", source: "disclosures" },
@@ -74,7 +77,8 @@ const PL_SECTION: Partial<Record<CompaniesActLineId, StatementSection>> = {
   sga: "sga",
   non_operating_income: "non_operating_income",
   non_operating_expense: "non_operating_expense",
-  extraordinary: "extraordinary",
+  extraordinary_gain: "extraordinary_gain",
+  extraordinary_loss: "extraordinary",
   income_tax: "income_tax",
 };
 
@@ -147,11 +151,13 @@ function statementAmounts(
   const amounts = new Map<CompaniesActLineId, number>();
   amounts.set("current_assets", sumBsClass(asOf, coa, "asset", "current"));
   amounts.set("noncurrent_assets", sumBsClass(asOf, coa, "asset", "noncurrent"));
+  amounts.set("deferred_assets", 0);
   amounts.set("current_liabilities", sumBsClass(asOf, coa, "liability", "current"));
   amounts.set("noncurrent_liabilities", sumBsClass(asOf, coa, "liability", "noncurrent"));
   amounts.set("capital", sumEquityClass(asOf, coa, "capital"));
   amounts.set("capital_surplus", sumEquityClass(asOf, coa, "capital_surplus"));
   amounts.set("retained", sumEquityClass(asOf, coa, "retained"));
+  amounts.set("treasury_stock", 0);
   for (const [id, section] of Object.entries(PL_SECTION) as Array<
     [CompaniesActLineId, StatementSection]
   >) {

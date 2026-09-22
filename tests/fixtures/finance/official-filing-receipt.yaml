@@ -1,0 +1,6 @@
+# Tracked decoy. ADR 0052 scores only the gitignored receipt path.
+official_receipt_numbers:
+  corporate_etax: "FIXTURE-NOT-AN-OFFICIAL-RECEIPT"
+  corporate_eltax: "FIXTURE-NOT-AN-OFFICIAL-RECEIPT"
+  sole_etax: "FIXTURE-NOT-AN-OFFICIAL-RECEIPT"
+  sole_eltax: "FIXTURE-NOT-AN-OFFICIAL-RECEIPT"

@@ -1,6 +1,10 @@
 /**
  * Published quick-calculation table for individual income tax and the reconstruction surtax.
- * Rates live only here. Basic deduction is not applied. This is not an e-Tax payload.
+ * Rates live only here. This is not an e-Tax payload.
+ *
+ * 令和8年分の基礎控除は国税庁 No.1199（令和8年4月1日現在）と
+ * 令和8年分の基礎控除額の表。令和8年12月1日施行で、通常の令和8年分に適用する。
+ * https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm
  */
 export const JP_INCOME_TAX_POLICY = {
   id: "jp-income-tax-advisor-2026",
@@ -22,6 +26,48 @@ export const BLUE_RETURN_DEDUCTION_CAP_YEN = {
   standard: 550_000,
   electronic: 650_000,
 } as const;
+
+/** 令和7年分。国税庁 No.1199 の令和7年分の列。合計所得金額の上限とその段の控除額。 */
+export const REIWA7_BASIC_DEDUCTION_BANDS = [
+  { max_income_yen: 1_320_000, deduction_yen: 950_000 },
+  { max_income_yen: 3_360_000, deduction_yen: 880_000 },
+  { max_income_yen: 4_890_000, deduction_yen: 680_000 },
+  { max_income_yen: 6_550_000, deduction_yen: 630_000 },
+  { max_income_yen: 23_500_000, deduction_yen: 580_000 },
+  { max_income_yen: 24_000_000, deduction_yen: 480_000 },
+  { max_income_yen: 24_500_000, deduction_yen: 320_000 },
+  { max_income_yen: 25_000_000, deduction_yen: 160_000 },
+  { max_income_yen: null, deduction_yen: 0 },
+] as const;
+
+export function basicDeductionYenReiwa7(totalIncomeYen: number): number {
+  for (const band of REIWA7_BASIC_DEDUCTION_BANDS) {
+    if (band.max_income_yen == null || totalIncomeYen <= band.max_income_yen) {
+      return band.deduction_yen;
+    }
+  }
+  return 0;
+}
+
+/** 令和8年分・令和9年分。合計所得金額の上限とその段の控除額。 */
+export const REIWA8_BASIC_DEDUCTION_BANDS = [
+  { max_income_yen: 4_890_000, deduction_yen: 1_040_000 },
+  { max_income_yen: 6_550_000, deduction_yen: 670_000 },
+  { max_income_yen: 23_500_000, deduction_yen: 620_000 },
+  { max_income_yen: 24_000_000, deduction_yen: 480_000 },
+  { max_income_yen: 24_500_000, deduction_yen: 320_000 },
+  { max_income_yen: 25_000_000, deduction_yen: 160_000 },
+  { max_income_yen: null, deduction_yen: 0 },
+] as const;
+
+export function basicDeductionYenReiwa8(totalIncomeYen: number): number {
+  for (const band of REIWA8_BASIC_DEDUCTION_BANDS) {
+    if (band.max_income_yen == null || totalIncomeYen <= band.max_income_yen) {
+      return band.deduction_yen;
+    }
+  }
+  return 0;
+}
 
 export type IncomeTaxAmountInput = {
   businessIncomeAfterBlueYen: number;

@@ -219,7 +219,16 @@ export function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }
   }
 
   const netToEquity = revenueTotal - expenseTotal;
-  const equityAccount = accounts.owner_capital ?? accounts.retained_earnings;
+  const equityAccount = isSoleProprietorship()
+    ? accounts.owner_income
+    : accounts.retained_earnings;
+  if (!equityAccount) {
+    throw new Error(
+      isSoleProprietorship()
+        ? "sole-prop income account is missing"
+        : "retained earnings account is missing",
+    );
+  }
   if (netToEquity > 0) {
     lines.push({
       account_code: equityAccount,

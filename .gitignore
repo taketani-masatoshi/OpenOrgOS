@@ -16,7 +16,9 @@ tests/.fixture-restore.lock/
 .tmp-*
 # Locally fetched SiVa validation service (upstream clone + 240MB jars)
 services/siva/
-# L2 mail credentials written by the setup wizard at the repo root
+# L2 mail credentials written by the setup wizard at the repo root.
+# Official e-Tax / eLTAX receipt (ADR 0052): records/finance/official-filing-receipt.yaml
+# A tracked fixture must not score. Only this gitignored path counts.
 /records/
 # External finance account credentials and OAuth/Webhook secrets.
 tenants/*/data/external-finance/accounts.private.json

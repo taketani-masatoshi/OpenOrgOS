@@ -136,6 +136,12 @@ const SOLE_PROP_ACCOUNTS: Array<Record<string, unknown>> = [
     normal_balance: "credit",
   },
   {
+    code: "3020",
+    name: "青色申告特別控除前の所得金額",
+    type: "equity",
+    normal_balance: "credit",
+  },
+  {
     code: "5410",
     name: "租税公課",
     type: "expense",
@@ -270,6 +276,7 @@ export function ensureLedgerDemoChartOfAccounts(): ChartOfAccounts {
       owner_capital: raw.journal_source_accounts.owner_capital ?? "3010",
       owner_drawings: raw.journal_source_accounts.owner_drawings ?? "1310",
       owner_advances: raw.journal_source_accounts.owner_advances ?? "2210",
+      owner_income: raw.journal_source_accounts.owner_income ?? "3020",
       retained_earnings: "3200",
     };
   }

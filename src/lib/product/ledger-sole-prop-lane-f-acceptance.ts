@@ -10,6 +10,27 @@ import { evaluateAnnualCloseGates, postAnnualPlTransfer } from "../finance/annua
 import { appendJournalEntry, loadJournalEntries } from "../finance/expense-claim-journal.js";
 import { assessBlueReturnDeduction, buildSolePropBlueReturn } from "../finance/sole-prop-blue-return.js";
 import { buildSolePropIncomeTaxReturnDraft } from "../finance/sole-prop-income-tax-return.js";
+import {
+  scoreBlueReturnLines,
+  scoreIncomeTaxReturn,
+  scoreMonthlyClose,
+  scoreOwnerCapital,
+  type BasicDeductionBand,
+  type BlueReturnLinePin,
+  type IncomeTaxYenPin,
+} from "../finance/sole-prop-core-score.js";
+import {
+  computeSolePropLocalTax,
+  projectOfficialSolePropLocalTaxLines,
+  resolvePerCapita,
+  scoreSolePropLocalTax,
+  type SolePropLocalRates,
+  type SolePropLocalTaxLine,
+} from "../finance/sole-prop-local-tax.js";
+import {
+  evaluateSolePropMonthlyClose,
+  monthRevenueExcludingOwnerCapital,
+} from "../finance/sole-prop-monthly-close.js";
 import { buildTrialBalance } from "../finance/ledger/trial-balance.js";
 import { loadChartOfAccounts } from "../data.js";
 import { getDataDir } from "../utils.js";
@@ -39,7 +60,21 @@ const SOURCE_FILES = [
   "src/lib/finance/sole-prop-income-adjustment.ts",
   "src/lib/finance/sole-prop-income-tax-return.ts",
   "src/lib/finance/income-tax-policy.ts",
+  "src/lib/finance/sole-prop-monthly-close.ts",
+  "src/lib/finance/sole-prop-local-tax.ts",
+  "src/lib/finance/sole-prop-core-score.ts",
 ];
+
+export type SolePropAcceptancePins = {
+  blue: BlueReturnLinePin;
+  incomeLineIds: string[];
+  basicDeductionBands: BasicDeductionBand[];
+  /** Official No.1199 (etc.) printed yen. Empty pin cannot score income tax. */
+  incomeTaxOfficialYen: IncomeTaxYenPin[];
+  localRates: SolePropLocalRates;
+  /** Official calculation-example / form rows + printed yen. Empty pin → local-tax 0. */
+  localOfficialLines: SolePropLocalTaxLine[];
+};
 
 function check(id: string, weight: number, pass: boolean, detail: string): SolePropLaneFCheck {
   return { id, weight, pass, detail };
@@ -88,7 +123,9 @@ function writeReturnYaml(): void {
   );
 }
 
-export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceResult {
+export function runIsolatedSolePropLaneFAcceptance(
+  pins: SolePropAcceptancePins,
+): SolePropLaneFAcceptanceResult {
   const originalWorkspace = process.env.ORGOS_WORKSPACE;
   const originalSkip = process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK;
   const originalLog = console.log;
@@ -199,18 +236,26 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
         12,
         tbRow("事業主貸")?.balance_yen === 500 &&
           tbRow("事業主借")?.balance_yen === 800 &&
-          tbRow("元入金") != null &&
+          (tbRow("元入金")?.balance_yen ?? 0) === 0 &&
           !tb.rows.some((row) => row.account_name === "資本金"),
         tb.rows.map((row) => `${row.account_name}:${row.balance_yen}`).join(","),
       ),
     );
     const gates = evaluateAnnualCloseGates(FY);
+    const capitalScore = scoreOwnerCapital({
+      openingYen: 0,
+      closingYen: tbRow("元入金")?.balance_yen ?? 0,
+      incomeYen: 6_000,
+      capitalTransferYen: transferName === "元入金" ? 6_000 : 0,
+      incomeIsSeparateLine: transferName !== "元入金" && transferName.length > 0,
+    });
     checks.push(
       check(
-        "pl-to-motokane",
-        10,
-        transferName === "元入金" && !gates.errors.some((issue) => issue.includes("tax-adjustment")),
-        `transfer=${transferName} gates=${gates.errors.filter((issue) => issue.includes("tax-adjustment")).join(";")}`,
+        "owner-capital-equal",
+        18,
+        capitalScore === 18 &&
+          !gates.errors.some((issue) => issue.includes("tax-adjustment")),
+        `transfer=${transferName} score=${capitalScore}`,
       ),
     );
 
@@ -237,7 +282,7 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
       : "";
     const kkPass = kkName === "繰越利益剰余金";
     setTenantId("sole-prop-lane-f");
-    const motokane = checks.find((row) => row.id === "pl-to-motokane");
+    const motokane = checks.find((row) => row.id === "owner-capital-equal");
     if (motokane) {
       motokane.pass = motokane.pass && kkPass;
       motokane.detail = `${motokane.detail} kk=${kkName}`;
@@ -269,15 +314,22 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
       return FORBIDDEN_SOURCE.every((token) => !text.includes(token));
     });
     const line = (id: string) => draft.lines.find((row) => row.id === id);
+    const blueScore = scoreBlueReturnLines(
+      draft.lines.map((row) => ({ print: row.print, role: row.role })),
+      pins.blue,
+    );
     checks.push(
       check(
-        "blue-line-map",
-        12,
+        "blue-return-lines",
+        22,
         sourceClean &&
-          draft.lines.length > 3 &&
+          blueScore === 22 &&
           line("sales_1")?.print === "①" &&
-          line("expense_7")?.label === "租税公課" &&
-          line("expense_24")?.label === "雑費" &&
+          line("expense_8")?.label === "租税公課" &&
+          line("expense_30")?.label === "雑費" &&
+          line("expense_31")?.print === "㉛" &&
+          line("expense_31")?.label === "経費計" &&
+          line("inventory_open_2")?.role === "opening_inventory" &&
           Boolean(line("income_after_blue")) &&
           line("bs_drawings")?.label === "事業主貸" &&
           line("bs_advances")?.label === "事業主借" &&
@@ -287,7 +339,7 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
           !draftJson.includes("AnnexDraft") &&
           !draftJson.includes("evaluateTaxAdjustment") &&
           !("sales" in draft && "expenses" in draft && "income" in draft),
-        draft.blockers.join(";") || draft.headline,
+        draft.blockers.join(";") || `${draft.headline} score=${blueScore}`,
       ),
     );
 
@@ -307,7 +359,12 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
         restored.status === "ready" &&
           restored.income_before_blue_deduction_yen === 6_000 &&
           restored.bs_income_before_blue_deduction_yen === 6_000 &&
+          restored.capital_opening_yen === restored.capital_closing_yen &&
+          restored.capital_transfer_yen === 0 &&
           restored.lines.find((row) => row.id === "bs_capital")?.amount_yen === 0 &&
+          restored.lines.find((row) => row.id === "inventory_open_2")?.amount_yen === 0 &&
+          counted.lines.find((row) => row.id === "inventory_open_2")?.amount_yen === 100 &&
+          counted.lines.find((row) => row.id === "inventory_open_2")?.amount_yen !== counted.cogs_yen &&
           counted.lines.find((row) => row.id === "bs_capital")?.amount_yen === 0 &&
           restored.cogs_yen == null &&
           counted.cogs_yen === 60 &&
@@ -395,17 +452,18 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
       check(
         "progressive-floors",
         10,
-        tax.taxable_before_thousand_floor_yen === 4_450_500 &&
-          tax.taxable_yen === 4_450_000 &&
-          tax.income_tax_before_floor_yen === 462_500 &&
-          tax.income_tax_yen === 462_500 &&
-          tax.reconstruction_yen === 9_712 &&
-          tax.remaining_yen === 472_212 &&
-          tax.payable_yen === 472_200 &&
+          tax.taxable_before_thousand_floor_yen === 3_770_500 &&
+          tax.taxable_yen === 3_770_000 &&
+          tax.income_tax_before_floor_yen === 326_500 &&
+          tax.income_tax_yen === 326_500 &&
+          tax.reconstruction_yen === 6_856 &&
+          tax.remaining_yen === 333_356 &&
+          tax.payable_yen === 333_300 &&
+          tax.basic_deduction_yen === 680_000 &&
           evidencedBlue.lines.find((row) => row.id === "blue_deduction")?.amount_yen === 650_000 &&
           evidencedBlue.income_yen === 4_350_500 &&
-          withEvidence.taxable_yen === 4_350_000 &&
-          withEvidence.income_tax_yen === 442_500,
+          withEvidence.taxable_yen === 3_670_000 &&
+          withEvidence.income_tax_yen === 306_500,
         `base=${tax.taxable_yen}/${tax.income_tax_yen}/${tax.reconstruction_yen}/${tax.payable_yen} evidence=${withEvidence.taxable_yen}/${withEvidence.income_tax_yen}`,
       ),
     );
@@ -424,6 +482,80 @@ export function runIsolatedSolePropLaneFAcceptance(): SolePropLaneFAcceptanceRes
           closed.submission === "not-for-etax" &&
           !closedJson.includes("RHO0010"),
         closed.blockers.join(";"),
+      ),
+    );
+
+    const incomeScore = scoreIncomeTaxReturn({
+      lines: tax.lines,
+      requiredLineIds: pins.incomeLineIds,
+      pinnedYen: pins.incomeTaxOfficialYen,
+    });
+    checks.push(
+      check(
+        "income-tax-return",
+        20,
+        incomeScore === 20 && tax.lines.some((row) => row.id === "basic_deduction"),
+        `score=${incomeScore} basic=${tax.basic_deduction_yen}`,
+      ),
+    );
+
+    const capitalMissing = resolvePerCapita({
+      basis: "capital_and_headcount",
+      flatYen:
+        pins.localRates.inhabitant.per_capita.prefecture_yen +
+        pins.localRates.inhabitant.per_capita.municipality_yen,
+      capitalYen: null,
+      headcount: null,
+    });
+    const mechanism = computeSolePropLocalTax({
+      inhabitantTaxableYen: 1_000_000,
+      enterpriseIncomeYen: 4_000_000,
+      enterpriseKind: "type1",
+      capitalYen: null,
+      headcount: null,
+      rates: pins.localRates,
+    });
+    const projected = projectOfficialSolePropLocalTaxLines();
+    const localScore = scoreSolePropLocalTax(projected, pins.localOfficialLines, {
+      missingCapitalHeadcountCompletedAsZero:
+        capitalMissing.complete && capitalMissing.yen === 0,
+    });
+    checks.push(
+      check(
+        "local-tax",
+        12,
+        localScore === 12 &&
+          !mechanism.missing_capital_headcount_completed_as_zero &&
+          capitalMissing.yen === null,
+        `score=${localScore} lines=${projected.length} pin=${pins.localOfficialLines.length}`,
+      ),
+    );
+
+    writeFileSync(join(getDataDir(), "finance", "cash-balance.yaml"), "currency: JPY\n");
+    const monthGate = evaluateSolePropMonthlyClose("2026-01");
+    const monthRevenue = monthRevenueExcludingOwnerCapital({
+      lines: [
+        { account_code: "4100", credit_yen: 10_000, debit_yen: 0 },
+        { account_code: codeNamed("元入金"), credit_yen: 6_000, debit_yen: 0 },
+      ],
+      accounts: loadChartOfAccounts().accounts.map((row) => ({
+        code: row.code,
+        name: row.name,
+        type: row.type,
+      })),
+      ownerCapitalCode: codeNamed("元入金"),
+    });
+    const monthScore = scoreMonthlyClose({
+      canLock: monthGate.can_lock,
+      bankGateFailed: monthGate.bank_gate_failed,
+      ownerCapitalInRevenue: monthRevenue.owner_capital_in_revenue,
+    });
+    checks.push(
+      check(
+        "monthly-close",
+        12,
+        monthScore === 12 && monthRevenue.revenue_yen === 10_000,
+        `score=${monthScore} bank=${monthGate.bank_gate_failed} lock=${monthGate.can_lock} revenue=${monthRevenue.revenue_yen} errors=${monthGate.errors.join(";")}`,
       ),
     );
   } catch (error) {

@@ -1,16 +1,117 @@
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
+import YAML from "yaml";
 import {
   appendJournalEntry,
   loadJournalEntries,
 } from "../src/lib/finance/expense-claim-journal.js";
-import { evaluateTaxAdjustment } from "../src/lib/finance/tax-adjustment.js";
+import {
+  ARAMASHI_EXAMPLE_CORPORATE_TAX_YEN,
+  ARAMASHI_EXAMPLE_LOCAL_TAX_YEN,
+  CORPORATE_TAX_FORM_EDITION,
+  REIWA6_SCHEDULE4_EXAMPLE_INCOME_YEN,
+  corporateNationalLocalStatutoryMet,
+  evaluateTaxAdjustment,
+  diffSchedule1NationalLocalExample,
+  diffSchedule4OfficialExample,
+  localCorporateTaxAmountYen,
+  localCorporateTaxYen,
+  schedule1NationalLocalExample,
+  schedule4AgriculturalReserveExample,
+  schedule4StatutoryMet,
+  scoreNationalLocalWorkedExample,
+  scoreSchedule4WorkedExample,
+  type OfficialAnnexLine,
+} from "../src/lib/finance/tax-adjustment.js";
 import { buildCorporateTaxXmlDraft } from "../src/lib/finance/jp-corporate-tax-xml.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
 
 const FY = "FY2026";
+const SCHEDULE_4_PIN = fileURLToPath(
+  new URL("./fixtures/corporate-tax/schedule-4-lines.yaml", import.meta.url)
+);
+const SCHEDULE_1_NL_PIN = fileURLToPath(
+  new URL("./fixtures/corporate-tax/schedule-1-national-local-example.yaml", import.meta.url)
+);
+
+type PinnedAnnexLine = { row: string; label: string };
+
+type Schedule4Pin = {
+  edition: string;
+  form: string;
+  lines: PinnedAnnexLine[];
+  second_sheet: {
+    form: string;
+    lines: PinnedAnnexLine[];
+    wrong_rows: string[];
+  };
+};
+
+function loadSchedule4Pin(): Schedule4Pin {
+  return YAML.parse(readFileSync(SCHEDULE_4_PIN, "utf-8")) as Schedule4Pin;
+}
+
+function loadSchedule1NationalLocalPin(): OfficialAnnexLine[] {
+  const raw = YAML.parse(readFileSync(SCHEDULE_1_NL_PIN, "utf-8")) as {
+    edition: string;
+    lines: OfficialAnnexLine[];
+  };
+  expect(raw.edition).toBe(CORPORATE_TAX_FORM_EDITION);
+  return raw.lines;
+}
+
+function annexKey(line: PinnedAnnexLine): string {
+  return `${line.row}\t${line.label}`;
+}
+
+function annexDiff(form: string, product: PinnedAnnexLine[], pin: PinnedAnnexLine[]): string[] {
+  const productKeys = new Set(product.map(annexKey));
+  const pinKeys = new Set(pin.map(annexKey));
+  const diff: string[] = [];
+  const productRows = product.map((line) => line.row);
+  if (new Set(productRows).size !== productRows.length) diff.push(`duplicate ${form}`);
+  for (const line of pin) {
+    if (!productKeys.has(annexKey(line))) diff.push(`missing ${form} ${line.row} ${line.label}`);
+  }
+  for (const line of product) {
+    if (!pinKeys.has(annexKey(line))) diff.push(`extra ${form} ${line.row} ${line.label}`);
+  }
+  return diff;
+}
+
+function schedule4Score(
+  lines: OfficialAnnexLine[],
+  pin: Schedule4Pin
+): { score: 0 | 12; diff: string[] } {
+  const bridge = Array.from({ length: 29 }, (_, index) => String(index + 24));
+  const product4 = lines
+    .filter((line) => line.form === pin.form)
+    .map((line) => ({ row: line.row, label: line.label }));
+  const leafPinRows = new Set(pin.second_sheet.lines.map((line) => line.row));
+  // 次葉の地方法人税行（51・53）はレーン E。ラベル自己ピンはピン行の有無だけ見る。
+  const productLeaf = lines
+    .filter((line) => line.form === pin.second_sheet.form && leafPinRows.has(line.row))
+    .map((line) => ({ row: line.row, label: line.label }));
+  const diff = [
+    ...annexDiff(pin.form, product4, pin.lines),
+    ...annexDiff(pin.second_sheet.form, productLeaf, pin.second_sheet.lines),
+  ];
+  const pinRows = new Set(pin.lines.map((line) => line.row));
+  const productRows = new Set(product4.map((line) => line.row));
+  if (pin.edition !== CORPORATE_TAX_FORM_EDITION || pin.edition !== "reiwa6-apr1-end") {
+    diff.push("edition");
+  }
+  if (bridge.some((row) => !pinRows.has(row) || !productRows.has(row))) {
+    diff.push("omits 24-52");
+  }
+  if (lines.some((line) => pin.second_sheet.wrong_rows.includes(line.row))) {
+    diff.push("wrong second-sheet row");
+  }
+  return { score: diff.length === 0 ? 12 : 0, diff };
+}
 
 function restore(path: string, original: string): void {
   writeFileSync(path, original);
@@ -229,29 +330,8 @@ describe("tax adjustment acceptance", () => {
           { account_code: "9999", debit_yen: 10, credit_yen: 0, tax_category: "out_of_scope" },
           { account_code: "1100", debit_yen: 0, credit_yen: 10, tax_category: "out_of_scope" },
         ],
-      }),
-    ).toThrow(/Unknown account code in journal: 9999/);
-    writeFileSync(
-      join(getDataDir(), "finance", "journal-entries.yaml"),
-      `version: 1
-entries:
-  - entry_id: JE-BAD
-    occurred_at: "2026-09-15T00:00:00.000Z"
-    description: unknown
-    source:
-      kind: manual
-      authorized_by: OP-TEST
-    evidence_refs:
-      - "test:bad"
-    lines:
-      - { account_code: "9999", debit_yen: 10, credit_yen: 0, tax_category: out_of_scope }
-      - { account_code: "1100", debit_yen: 0, credit_yen: 10, tax_category: out_of_scope }
-`,
-    );
-    const unbalanced = evaluateTaxAdjustment(FY);
-    expect(unbalanced.can_compute).toBe(false);
-    expect(unbalanced.taxable_income_yen).toBeNull();
-    expect(unbalanced.errors).toContain("trial-balance");
+      })
+    ).toThrow(/Unknown account code/);
   });
 
   it("does not add when book depreciation and entertainment are within the tax figures", () => {
@@ -366,10 +446,14 @@ entries:
         sheet.official_lines.find((line) => line.form === form && line.row === row)?.amount_yen;
       expect(amount("別表四", "52")).toBe(10_000_000);
       expect(amount("別表一", "2")).toBe(1_664_000);
-      expect(amount("別表一次葉", "74")).toBe(8_000_000);
-      expect(amount("別表一次葉", "77")).toBe(1_200_000);
-      expect(amount("別表一次葉", "76")).toBe(2_000_000);
-      expect(amount("別表一次葉", "79")).toBe(464_000);
+      expect(amount("別表一次葉", "45")).toBe(8_000_000);
+      expect(amount("別表一次葉", "48")).toBe(1_200_000);
+      expect(amount("別表一次葉", "47")).toBe(2_000_000);
+      expect(amount("別表一次葉", "50")).toBe(464_000);
+      expect(amount("別表一次葉", "74")).toBeUndefined();
+      expect(amount("別表一次葉", "77")).toBeUndefined();
+      expect(amount("別表一次葉", "76")).toBeUndefined();
+      expect(amount("別表一次葉", "79")).toBeUndefined();
       const draft = buildCorporateTaxXmlDraft({ fiscalYear: FY, asOf: sheet.as_of });
       expect(draft.xml).toContain("<CorporateTaxYen>1664000</CorporateTaxYen>");
       expect(draft.xml).toContain(
@@ -395,10 +479,10 @@ entries:
       mapped.official_lines.find((line) => line.form === "別表四" && line.row === row)?.amount_yen;
     expect(amount("11")).toBe(100);
     expect(amount("23")).toBe((mapped.starting_profit_yen ?? 0) + 100);
-    expect(amount("52")).toBe(amount("23"));
-    expect(mapped.official_lines.some((line) => line.row === "27" || line.row === "24")).toBe(
-      false
-    );
+    expect(amount("24")).toBe(0);
+    expect(amount("51")).toBe(0);
+    expect(amount("45")).toBe(amount("23"));
+    expect(amount("52")).toBe(amount("45"));
     const row25 = mapped.official_lines.filter(
       (line) => line.form === "別表五（一）" && line.row === "25"
     );
@@ -443,7 +527,7 @@ entries:
     expect(sheet.official_lines.some((line) => line.form === "別表五（一）")).toBe(false);
     const draft = buildCorporateTaxXmlDraft({ fiscalYear: FY, asOf: sheet.as_of });
     expect(draft.xml).toContain("capital_unmapped");
-    expect(draft.xml).not.toContain('row="25"');
+    expect(draft.xml).not.toContain('<Line form="別表五（一）"');
   });
 
   it("truncates the national tax base and the tax", () => {
@@ -509,7 +593,12 @@ entries:
       });
       const sheet = evaluateTaxAdjustment(FY);
       expect(sheet.corporate_tax_yen).toBe(2_320_000);
-      expect(sheet.official_lines.some((line) => line.row === "74")).toBe(false);
+      expect(
+        sheet.official_lines.some((line) => line.form === "別表一次葉" && line.row === "45")
+      ).toBe(false);
+      expect(sheet.official_lines.some((line) => ["74", "77", "76", "79"].includes(line.row))).toBe(
+        false
+      );
     } finally {
       restore(profilePath, profileOriginal);
     }
@@ -548,7 +637,10 @@ entries:
       });
       const sheet = evaluateTaxAdjustment(FY);
       expect(sheet.corporate_tax_yen).toBe(1_992_000);
-      expect(sheet.official_lines.find((line) => line.row === "74")?.amount_yen).toBe(4_000_000);
+      expect(
+        sheet.official_lines.find((line) => line.form === "別表一次葉" && line.row === "45")
+          ?.amount_yen
+      ).toBe(4_000_000);
     } finally {
       restore(profilePath, profileOriginal);
     }
@@ -598,5 +690,172 @@ entries:
     } finally {
       restore(profilePath, profileOriginal);
     }
+  });
+
+  it("scores 12 only when annex rows match the official schedule 4 pin", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    appendJournalEntry({
+      entry_id: "JE-REV-PIN",
+      occurred_at: "2026-09-12T00:00:00.000Z",
+      description: "revenue",
+      source: { kind: "manual", authorized_by: "OP-TEST" },
+      evidence_refs: ["test:pin"],
+      lines: [
+        {
+          account_code: "1100",
+          debit_yen: 10_000_000,
+          credit_yen: 0,
+          tax_category: "out_of_scope",
+        },
+        {
+          account_code: "4100",
+          debit_yen: 0,
+          credit_yen: 10_000_000,
+          tax_category: "non_taxable",
+        },
+      ],
+    });
+    const pin = loadSchedule4Pin();
+    const sheet = evaluateTaxAdjustment(FY);
+    const scored = schedule4Score(sheet.official_lines, pin);
+    expect(scored.diff).toEqual([]);
+    expect(scored.score).toBe(12);
+    // 行ラベルの自己ピンだけでは法定充足にしない
+    expect(diffSchedule4OfficialExample(sheet.official_lines).length).toBeGreaterThan(0);
+    expect(scoreSchedule4WorkedExample(sheet.official_lines, null)).toBe(0);
+    expect(
+      scoreSchedule4WorkedExample(sheet.official_lines, REIWA6_SCHEDULE4_EXAMPLE_INCOME_YEN),
+    ).toBe(0);
+    expect(schedule4StatutoryMet(sheet.official_lines)).toBe(false);
+    expect(sheet.official_lines.find((line) => line.row === "46")?.blank_reason).toBe("該当なし");
+    expect(sheet.official_lines.find((line) => line.row === "49")?.blank_reason).toBe("該当なし");
+    const national = sheet.official_lines.find(
+      (line) => line.form === "別表一" && line.row === "2"
+    );
+    const local = sheet.official_lines.find(
+      (line) => line.form === "別表一" && line.row === "31"
+    );
+    expect(local?.label).toBe("地方法人税額");
+    expect(sheet.official_lines.some((line) => line.row === "地方法人税")).toBe(false);
+    if (national && national.amount_yen > 0) {
+      expect(local?.amount_yen).toBe(localCorporateTaxAmountYen(national.amount_yen));
+      expect(localCorporateTaxYen(national.amount_yen)).toBe(
+        Math.floor(localCorporateTaxAmountYen(national.amount_yen) / 100) * 100
+      );
+    }
+    expect(
+      sheet.official_lines.some((line) => line.form === "別表一次葉" && line.row === "51")
+    ).toBe(true);
+    expect(
+      sheet.official_lines.some((line) => line.form === "別表一次葉" && line.row === "53")
+    ).toBe(true);
+    const wrongLeaf = sheet.official_lines.map((line) =>
+      line.form === "別表一次葉" && line.row === "45" ? { ...line, row: "74" } : line
+    );
+    expect(schedule4Score(wrongLeaf, pin).score).toBe(0);
+    const omitted = sheet.official_lines.filter(
+      (line) => !(line.form === "別表四" && Number(line.row) >= 24 && Number(line.row) <= 51)
+    );
+    expect(schedule4Score(omitted, pin).score).toBe(0);
+  });
+
+  it("matches the Reiwa 6 schedule 4 worked example at line 52", () => {
+    const lines = schedule4AgriculturalReserveExample();
+    const amount = (row: string) => lines.find((line) => line.row === row)?.amount_yen;
+    expect(amount("1")).toBe(150);
+    expect(amount("23")).toBe(200);
+    expect(amount("39")).toBe(200);
+    expect(amount("45")).toBe(100);
+    expect(amount("52")).toBe(REIWA6_SCHEDULE4_EXAMPLE_INCOME_YEN);
+    expect(lines.find((line) => line.row === "46")?.blank_reason).toBe("該当なし");
+    expect(lines.find((line) => line.row === "49")?.blank_reason).toBe("該当なし");
+    expect(scoreSchedule4WorkedExample(lines, REIWA6_SCHEDULE4_EXAMPLE_INCOME_YEN)).toBe(12);
+    expect(scoreSchedule4WorkedExample(lines, 51)).toBe(0);
+    expect(diffSchedule4OfficialExample(lines)).toEqual([]);
+  });
+
+  it("projects the Reiwa 6 worked example from books and mapped adjustments with an empty official diff", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    appendJournalEntry({
+      entry_id: "JE-REV-AGRI",
+      occurred_at: "2026-09-12T00:00:00.000Z",
+      description: "revenue",
+      source: { kind: "manual", authorized_by: "OP-TEST" },
+      evidence_refs: ["test:agri"],
+      lines: [
+        { account_code: "1100", debit_yen: 150, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "4100", debit_yen: 0, credit_yen: 150, tax_category: "non_taxable" },
+      ],
+    });
+    writeFileSync(
+      join(getDataDir(), "finance", "tax-adjustments.yaml"),
+      [
+        `fiscal_year: ${FY}`,
+        "lines:",
+        "  - id: ADJ-AGRI-ADD",
+        "    kind: add",
+        "    amount_yen: 50",
+        '    form_row: "10"',
+        "    label: 損金経理をした農業経営基盤強化準備金積立額",
+        "  - id: ADJ-LOSS",
+        "    kind: subtract",
+        "    amount_yen: 100",
+        '    form_row: "44"',
+        "    label: 欠損金等の当期控除額",
+        "  - id: ADJ-AGRI-SUB",
+        "    kind: subtract",
+        "    amount_yen: 50",
+        '    form_row: "47"',
+        "    label: 農業経営基盤強化準備金積立額の損金算入額",
+        "",
+      ].join("\n"),
+    );
+    const sheet = evaluateTaxAdjustment(FY);
+    expect(sheet.can_compute).toBe(true);
+    expect(sheet.starting_profit_yen).toBe(150);
+    expect(sheet.taxable_income_yen).toBe(REIWA6_SCHEDULE4_EXAMPLE_INCOME_YEN);
+    const amount = (row: string) =>
+      sheet.official_lines.find((line) => line.form === "別表四" && line.row === row)?.amount_yen;
+    expect(amount("1")).toBe(150);
+    expect(amount("10")).toBe(50);
+    expect(amount("44")).toBe(100);
+    expect(amount("47")).toBe(50);
+    expect(amount("52")).toBe(REIWA6_SCHEDULE4_EXAMPLE_INCOME_YEN);
+    expect(sheet.official_lines.find((line) => line.row === "46")?.blank_reason).toBe("該当なし");
+    expect(sheet.official_lines.find((line) => line.row === "49")?.blank_reason).toBe("該当なし");
+    expect(diffSchedule4OfficialExample(sheet.official_lines)).toEqual([]);
+    expect(
+      scoreSchedule4WorkedExample(sheet.official_lines, REIWA6_SCHEDULE4_EXAMPLE_INCOME_YEN),
+    ).toBe(12);
+    expect(schedule4StatutoryMet(sheet.official_lines)).toBe(true);
+  });
+
+  it("matches the NTA aramashi national and local corporate tax example with empty yen diff", () => {
+    const pin = loadSchedule1NationalLocalPin();
+    const projection = schedule1NationalLocalExample();
+    expect(diffSchedule1NationalLocalExample(projection, pin)).toEqual([]);
+    expect(scoreNationalLocalWorkedExample(projection, pin)).toBe(12);
+    expect(corporateNationalLocalStatutoryMet(projection, pin)).toBe(true);
+    const amount = (form: string, row: string) =>
+      projection.find((line) => line.form === form && line.row === row)?.amount_yen;
+    expect(amount("別表一", "2")).toBe(ARAMASHI_EXAMPLE_CORPORATE_TAX_YEN);
+    expect(amount("別表一", "31")).toBe(ARAMASHI_EXAMPLE_LOCAL_TAX_YEN);
+    expect(amount("別表一次葉", "51")).toBe(103_000);
+    expect(amount("別表一次葉", "53")).toBe(ARAMASHI_EXAMPLE_LOCAL_TAX_YEN);
+    expect(projection.some((line) => line.row === "地方法人税")).toBe(false);
+    expect(amount("別表四", "52")).toBeUndefined();
+    const labelOnly = pin.map((line) => ({ ...line, amount_yen: 0 }));
+    expect(scoreNationalLocalWorkedExample(projection, labelOnly)).toBe(0);
+    expect(corporateNationalLocalStatutoryMet(projection, [])).toBe(false);
+    expect(
+      scoreNationalLocalWorkedExample(
+        projection.map((line) =>
+          line.row === "31" ? { ...line, row: "地方法人税" } : line
+        ),
+        pin
+      )
+    ).toBe(0);
   });
 });

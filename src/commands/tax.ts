@@ -38,6 +38,75 @@ import {
   tryLoadTaxFilingGaps,
 } from "../lib/finance/tax-filing-gaps.js";
 import { currentDate } from "../lib/utils.js";
+import {
+  OFFICIAL_FILING_POINTS,
+  formatOfficialFilingProductStatusMarkdown,
+  officialFilingProductStatus,
+  recordOfficialFilingReceipt,
+  type OfficialFilingItem,
+} from "../lib/finance/filing/official-receipt.js";
+import { getInstallRoot } from "../lib/orgos-paths.js";
+
+const OFFICIAL_FILING_ITEMS = Object.keys(OFFICIAL_FILING_POINTS) as OfficialFilingItem[];
+
+/** Read-only gate scores. Does not open a socket or invent receipts. */
+export function runTaxFilingScore(opts?: { json?: boolean }): void {
+  const status = officialFilingProductStatus();
+  if (opts?.json) {
+    console.log(JSON.stringify(status, null, 2));
+    return;
+  }
+  console.log(formatOfficialFilingProductStatusMarkdown(status));
+}
+
+export function runTaxRecordOfficialReceipt(opts: {
+  item: string;
+  number: string;
+  endpoint: string;
+  confirmHumanSubmission?: boolean;
+  json?: boolean;
+}): void {
+  if (!opts.confirmHumanSubmission) {
+    const message =
+      "refuse: pass --i-recorded-from-official-site after a real NTA/LTA submission (human only)";
+    if (opts.json) {
+      console.log(JSON.stringify({ recorded: false, reason: "confirm_required", message }));
+      return;
+    }
+    console.error(message);
+    process.exitCode = 1;
+    return;
+  }
+  if (!OFFICIAL_FILING_ITEMS.includes(opts.item as OfficialFilingItem)) {
+    const message = `refuse: --item must be one of ${OFFICIAL_FILING_ITEMS.join(", ")}`;
+    if (opts.json) {
+      console.log(JSON.stringify({ recorded: false, reason: "item_invalid", message }));
+      return;
+    }
+    console.error(message);
+    process.exitCode = 1;
+    return;
+  }
+  const logs: string[] = [];
+  const result = recordOfficialFilingReceipt(
+    {
+      caller: { kind: "human", authenticated: true },
+      item: opts.item as OfficialFilingItem,
+      officialReceiptNumber: opts.number,
+      endpoint: opts.endpoint,
+    },
+    getInstallRoot(),
+    (line) => logs.push(line),
+  );
+  if (opts.json) {
+    console.log(JSON.stringify({ ...result, logs }, null, 2));
+  } else if (result.recorded) {
+    console.log(`recorded ${result.item} (digits not printed)`);
+  } else {
+    console.error(`refuse: ${result.reason}`);
+    process.exitCode = 1;
+  }
+}
 
 export function runTaxCalendar(opts?: { today?: string; json?: boolean }): void {
   const today = opts?.today ?? currentDate();

@@ -15,6 +15,13 @@ import {
   evaluateMonthlyCloseGates,
   monthBankTieOut,
 } from "../src/lib/finance/monthly-close.js";
+import {
+  diffCashbookWorkedExample,
+  projectCashbookFromBooks,
+  scoreCashbookExample,
+  type CashbookBooksInput,
+  type CashbookExampleRow,
+} from "../src/lib/finance/ledger/cashbook-display.js";
 import { buildConsumptionTaxSummary } from "../src/lib/finance/consumption-tax.js";
 import { isMonthLocked, loadPeriodLocks, lockMonth, periodLockIntegrityIssues, resetPeriodLocksForTests, unlockMonth } from "../src/lib/finance/period-lock.js";
 import { buildMonthCloseChecklist } from "../src/lib/product/ledger-month-close-checklist.js";
@@ -27,6 +34,52 @@ import {
 
 const MONTH = "2026-09";
 const OPERATOR = "OP-TEST";
+const CASHBOOK_EXAMPLE_PATH = join(
+  import.meta.dirname,
+  "fixtures/monthly-close/cashbook-example.yaml",
+);
+const CASHBOOK_BOOKS_PATH = join(
+  import.meta.dirname,
+  "fixtures/monthly-close/cashbook-handguide-books.yaml",
+);
+const CASHBOOK_SOURCE = join(
+  import.meta.dirname,
+  "../src/lib/finance/ledger/cashbook-display.js",
+).replace(/\.js$/, ".ts");
+const MONTHLY_CLOSE_SOURCE = join(
+  import.meta.dirname,
+  "../src/lib/finance/monthly-close.js",
+).replace(/\.js$/, ".ts");
+
+function loadCashbookExample(): {
+  rows: CashbookExampleRow[];
+  year_end_cash_yen: number;
+} {
+  const parsed = parseYaml(readFileSync(CASHBOOK_EXAMPLE_PATH, "utf8")) as {
+    rows?: CashbookExampleRow[];
+    year_end_cash_yen?: number;
+  };
+  if (!parsed.rows?.length || typeof parsed.year_end_cash_yen !== "number") {
+    throw new Error("cashbook-example.yaml must list rows and year_end_cash_yen");
+  }
+  return { rows: parsed.rows, year_end_cash_yen: parsed.year_end_cash_yen };
+}
+
+function loadCashbookBooks(): CashbookBooksInput & { cash_account_code: string } {
+  const parsed = parseYaml(readFileSync(CASHBOOK_BOOKS_PATH, "utf8")) as {
+    cash_account_code?: string;
+    opening?: CashbookBooksInput["opening"];
+    movements?: CashbookBooksInput["movements"];
+  };
+  if (!parsed.cash_account_code || !parsed.opening || !parsed.movements) {
+    throw new Error("cashbook-handguide-books.yaml must list cash account, opening, movements");
+  }
+  return {
+    cash_account_code: parsed.cash_account_code,
+    opening: parsed.opening,
+    movements: parsed.movements,
+  };
+}
 
 function bankPath(): string {
   return join(getDataDir(), "finance", "bank-statements.yaml");
@@ -86,6 +139,22 @@ function writeTiedBank(months: string[], extra = ""): void {
 
 function lockPrior(): void {
   lockMonth({ month: "2026-08", lockedBy: OPERATOR, reason: "prior month" });
+}
+
+function plantJournal(entry: {
+  entry_id: string;
+  occurred_at: string;
+  description: string;
+  lines: Array<Record<string, unknown>>;
+}): void {
+  const path = join(getDataDir(), "finance", "journal-entries.yaml");
+  const file = loadJournalEntries();
+  file.entries.push({
+    ...entry,
+    source: { kind: "manual", authorized_by: OPERATOR },
+    evidence_refs: [`test:${entry.entry_id}`],
+  } as (typeof file.entries)[number]);
+  writeFileSync(path, stringifyYaml(file));
 }
 
 function manualEntry(input: {
@@ -181,13 +250,22 @@ describe("monthly close acceptance", () => {
 
   it("does not lock when the trial balance does not balance", () => {
     useFinanceFixtureTenant();
-    manualEntry({
-      entryId: "JE-UNKNOWN-ACCOUNT",
-      occurredAt: "2026-09-15T00:00:00.000Z",
-      lines: [
-        { account_code: "9999", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
-        { account_code: "1100", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" },
-      ],
+    const lines = [
+      { account_code: "9999", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" as const },
+      { account_code: "1100", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" as const },
+    ];
+    expect(() =>
+      manualEntry({
+        entryId: "JE-UNKNOWN-ACCOUNT",
+        occurredAt: "2026-09-15T00:00:00.000Z",
+        lines,
+      }),
+    ).toThrow(/Unknown account code/);
+    plantJournal({
+      entry_id: "JE-UNKNOWN-ACCOUNT",
+      occurred_at: "2026-09-15T00:00:00.000Z",
+      description: "JE-UNKNOWN-ACCOUNT",
+      lines,
     });
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(false);
@@ -277,16 +355,26 @@ entries:
 
   it("does not lock when a control account has an unassigned balance", () => {
     useFinanceFixtureTenant();
-    manualEntry({
-      entryId: "JE-UNASSIGNED-AR",
-      occurredAt: "2026-09-11T00:00:00.000Z",
-      lines: [
-        { account_code: "1150", debit_yen: 500, credit_yen: 0, tax_category: "out_of_scope" },
-        { account_code: "4100", debit_yen: 0, credit_yen: 500, tax_category: "non_taxable" },
-      ],
+    const lines = [
+      { account_code: "1150", debit_yen: 500, credit_yen: 0, tax_category: "out_of_scope" as const },
+      { account_code: "4100", debit_yen: 0, credit_yen: 500, tax_category: "non_taxable" as const },
+    ];
+    expect(() =>
+      manualEntry({
+        entryId: "JE-UNASSIGNED-AR",
+        occurredAt: "2026-09-11T00:00:00.000Z",
+        lines,
+      }),
+    ).toThrow(/counterparty_id required/);
+    plantJournal({
+      entry_id: "JE-UNASSIGNED-AR",
+      occurred_at: "2026-09-11T00:00:00.000Z",
+      description: "JE-UNASSIGNED-AR",
+      lines,
     });
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(false);
+    expect(closed.ok).toBe(false);
     expect(closed.evaluation.errors.some((error) => error.startsWith("subsidiary"))).toBe(true);
   });
 
@@ -410,13 +498,24 @@ entries:
     amount: 1000
     status: matched
 `);
-    appendJournalEntry({
+    expect(() =>
+      appendJournalEntry({
+        entry_id: "JE-NO-TAX",
+        occurred_at: "2026-09-12T00:00:00.000Z",
+        description: "missing category",
+        claim_id: "ECL-20260912-001",
+        event: "expense_claim_posted",
+        evidence_refs: ["test:no-tax"],
+        lines: [
+          { account_code: "1100", debit_yen: 50, credit_yen: 0 },
+          { account_code: "4100", debit_yen: 0, credit_yen: 50 },
+        ],
+      }),
+    ).toThrow(/tax_category required/);
+    plantJournal({
       entry_id: "JE-NO-TAX",
       occurred_at: "2026-09-12T00:00:00.000Z",
       description: "missing category",
-      claim_id: "ECL-20260912-001",
-      event: "expense_claim_posted",
-      evidence_refs: ["test:no-tax"],
       lines: [
         { account_code: "1100", debit_yen: 50, credit_yen: 0 },
         { account_code: "4100", debit_yen: 0, credit_yen: 50 },
@@ -681,5 +780,46 @@ entries:
     const october = evaluateMonthlyCloseGates("2026-10");
     expect(october.errors.some((error) => error.startsWith("prior-evidence"))).toBe(true);
     expect(october.can_lock).toBe(false);
+  });
+
+  it("scores the handguide January cashbook from company books with an empty official diff", () => {
+    const pin = loadCashbookExample();
+    const books = loadCashbookBooks();
+    const display = projectCashbookFromBooks({
+      opening: books.opening,
+      movements: books.movements,
+    });
+    expect(diffCashbookWorkedExample(display, pin.rows)).toEqual([]);
+    expect(scoreCashbookExample(display, pin.rows)).toBe(1);
+    expect(display.rows.at(-1)?.balance_yen).toBe(83_800);
+    expect(pin.year_end_cash_yen).toBe(372_772);
+    expect(pin.rows.some((row) => row.balance_yen === 540_000)).toBe(false);
+    expect(pin.rows.some((row) => row.summary === "元入金")).toBe(false);
+    expect(JSON.stringify(books)).toContain("cash_account_code");
+    expect(JSON.stringify(display)).not.toContain("cash_account_code");
+  });
+
+  it("does not treat pin echo or a broken running balance as the books path", () => {
+    const pin = loadCashbookExample();
+    expect(scoreCashbookExample(pin.rows, pin.rows)).toBe(1);
+    const shifted = {
+      headers: ["月", "日", "摘要", "入金", "出金", "現金残高"],
+      rows: pin.rows.map((row, index) =>
+        index === pin.rows.length - 1 ? { ...row, balance_yen: row.balance_yen + 1 } : row,
+      ),
+    };
+    expect(scoreCashbookExample(shifted, pin.rows)).toBe(0);
+    expect(diffCashbookWorkedExample(shifted, pin.rows)).toContain("row_6:balance");
+  });
+
+  it("does not load the cashbook pin or books fixture from product code", () => {
+    const cashbookSource = readFileSync(CASHBOOK_SOURCE, "utf8");
+    const monthlySource = readFileSync(MONTHLY_CLOSE_SOURCE, "utf8");
+    for (const source of [cashbookSource, monthlySource]) {
+      expect(source).not.toContain("tests/fixtures");
+      expect(source).not.toContain("cashbook-example.yaml");
+      expect(source).not.toContain("cashbook-handguide-books.yaml");
+    }
+    expect(cashbookSource).not.toMatch(/from ["']yaml["']/);
   });
 });
