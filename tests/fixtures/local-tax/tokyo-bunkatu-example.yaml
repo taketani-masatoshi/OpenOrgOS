@@ -1,0 +1,18 @@
+# 東京都主税局の公表計算例ピン。製品コードは読まない。
+# 法人税割・所得割: 分割基準のガイドブック（令和7年8月）
+#   https://www.tax.metro.tokyo.lg.jp/documents/d/tax/houjin_bunkatu
+# 欄番号: 第6号様式記載要領（差引法人税割額⑬・所得割計㉜）
+#   https://www.tax.metro.tokyo.lg.jp/documents/d/tax/06_6-3-b
+source: tokyo-bunkatu-guide-r7-2025-08
+case_id: tokyo-bunkatu-r7
+lines:
+  - tax: inhabitant_corporate_levy
+    jurisdiction: tokyo-23
+    status: complete
+    yen: 57900
+    form_line: "⑬"
+  - tax: enterprise_income
+    jurisdiction: pref:tokyo
+    status: complete
+    yen: 877200
+    form_line: "㉜"

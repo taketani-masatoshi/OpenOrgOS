@@ -1,0 +1,21 @@
+# 国税庁「法人税のあらましと申告の手引」設例の印刷円
+# https://www.nta.go.jp/publication/pamph/hojin/aramashi2025/pdf/01-05.pdf
+# 行番号: 令六・四・一 別表一 / 別表一次葉
+# https://www.nta.go.jp/taxes/tetsuzuki/shinsei/annai/hojin/shinkoku/itiran2024/pdf/01-01-a.pdf
+# https://www.nta.go.jp/taxes/tetsuzuki/shinsei/annai/hojin/shinkoku/itiran2024/pdf/01-01-j.pdf
+# https://www.nta.go.jp/taxes/tetsuzuki/shinsei/annai/hojin/shinkoku/itiran2024/pdf/r01-01.pdf
+# 税率: No.5759（中小法人・年800万円以下15%）
+# https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5759.htm
+# 地方法人税 10.3%: 地方法人税法第10条。行51は別表一「28」の千円未満切捨て。
+# 別表四行52の所得50は本ピンに含めない。
+edition: reiwa6-apr1-end
+source: https://www.nta.go.jp/publication/pamph/hojin/aramashi2025/pdf/01-05.pdf
+lines:
+  - { form: 別表一, row: "1", label: 所得金額又は欠損金額, amount_yen: 688750 }
+  - { form: 別表一, row: "2", label: 所得の金額に対する法人税額, amount_yen: 103200 }
+  - { form: 別表一, row: "28", label: 所得の金額に対する法人税額, amount_yen: 103200 }
+  - { form: 別表一, row: "31", label: 地方法人税額, amount_yen: 10609 }
+  - { form: 別表一次葉, row: "45", label: "(1)のうち中小法人等の年800万円相当額以下の金額", amount_yen: 688000 }
+  - { form: 別表一次葉, row: "48", label: "(45)の15％又は19％相当額", amount_yen: 103200 }
+  - { form: 別表一次葉, row: "51", label: 所得の金額に対する法人税額, amount_yen: 103000 }
+  - { form: 別表一次葉, row: "53", label: "(51)の10.3％相当額", amount_yen: 10609 }
