@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -10,6 +11,10 @@ import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 
 const REL = "finance/period-locks.yaml";
+
+function evidenceFingerprint(evidence: PeriodLockEntry["evidence"]): string {
+  return createHash("sha256").update(JSON.stringify(evidence ?? null)).digest("hex");
+}
 
 function path(): string {
   return join(getDataDir(), REL);
@@ -84,13 +89,17 @@ export function lockMonth(input: {
 }): PeriodLockEntry {
   const file = loadPeriodLocks();
   const latest = latestLockForMonth(input.month, file);
-  if (latest?.status === "locked") return latest;
+  if (latest?.status === "locked") {
+    throw new Error(`Accounting period ${input.month} is already locked`);
+  }
+  const relock = latest?.status === "unlocked" ? latest : undefined;
   const entry = periodLockEntrySchema.parse({
     month: input.month,
     status: "locked",
     at: input.lockedAt ?? new Date().toISOString(),
     by: input.lockedBy,
-    reason: input.reason,
+    reason: relock?.reason ?? input.reason,
+    prior_evidence_sha256: relock?.prior_evidence_sha256,
     evidence: input.evidence,
   });
   file.locks.push(entry);
@@ -109,12 +118,14 @@ export function unlockMonth(input: {
     throw new Error("Period unlock requires a reason");
   }
   const file = loadPeriodLocks();
+  const latest = latestLockForMonth(input.month, file);
   const entry = periodLockEntrySchema.parse({
     month: input.month,
     status: "unlocked",
     at: input.unlockedAt ?? new Date().toISOString(),
     by: input.unlockedBy,
     reason: input.reason,
+    prior_evidence_sha256: evidenceFingerprint(latest?.evidence),
   });
   file.locks.push(entry);
   savePeriodLocks(file);
@@ -143,6 +154,19 @@ export function periodLockIntegrityIssues(): string[] {
       issues.push(`period lock ${lock.month}: non-monotonic at (${prev} → ${lock.at})`);
     }
     lastAtByMonth.set(lock.month, lock.at);
+  }
+  const pendingUnlock = new Map<string, string | undefined>();
+  for (const lock of file.locks) {
+    if (lock.status === "unlocked") {
+      pendingUnlock.set(lock.month, lock.prior_evidence_sha256);
+      continue;
+    }
+    const expected = pendingUnlock.get(lock.month);
+    if (!pendingUnlock.has(lock.month)) continue;
+    if (!expected || lock.prior_evidence_sha256 !== expected) {
+      issues.push(`period lock ${lock.month}: relock missing prior evidence hash`);
+    }
+    pendingUnlock.delete(lock.month);
   }
   return issues;
 }

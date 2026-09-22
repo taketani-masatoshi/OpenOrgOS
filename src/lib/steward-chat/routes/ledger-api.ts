@@ -208,7 +208,7 @@ export async function handleLedgerApi(
           month,
           lockedBy: actor.operator_id,
           reason: typeof body.reason === "string" ? body.reason : undefined,
-          evidence: buildMonthlyCloseEvidence(evaluation),
+          evidence: buildMonthlyCloseEvidence(evaluation, actor.operator_id),
         });
         appendChatAudit({
           action: "ledger_period_lock",
