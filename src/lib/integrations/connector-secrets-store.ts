@@ -48,6 +48,9 @@ export function hydrateConnectorEnvFromStore(): void {
 
 export function resetConnectorSecretsHydrationForTest(): void {
   hydrated = false;
+  for (const key of CONNECTOR_ENV_KEYS) {
+    delete process.env[key];
+  }
 }
 
 export function saveConnectorSecrets(input: ConnectorSecretsInput): Record<string, string> {
