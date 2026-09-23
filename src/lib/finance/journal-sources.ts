@@ -12,7 +12,7 @@ import {
   shouldSkipInvoiceJournal,
 } from "./ledger/invoice-mpl-dedupe.js";
 
-const SKIP_EXPENSE_CATEGORIES = new Set(["depreciation", "loan_payment", "capex"]);
+const SKIP_EXPENSE_CATEGORIES = new Set(["depreciation", "loan_payment", "capex", "payroll"]);
 const CASH_PL_TYPES = new Set(["revenue", "expense"]);
 
 function categoryEntrySlug(category: string): string {

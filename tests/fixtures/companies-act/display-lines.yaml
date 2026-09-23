@@ -1,42 +1,40 @@
-# Development pin for Companies Act display headings + fixture yen.
-# Labels: e-Gov 会社計算規則. Must stay aligned with
-# src/lib/finance/ledger/companies-act-ordinance-pin.ts (acceptance checks).
-# example_yen: acceptance books only (capital 300000 / revenue 100000 / sga 40000 /
-# tax 10000 / dividend 20000). Not an official published worked example.
-#
-lines:
-  - { article: 第七十四条, label: 流動資産, example_yen: 330000 }
-  - { article: 第七十四条, label: 固定資産, example_yen: 0 }
-  - { article: 第七十四条, label: 繰延資産, example_yen: 0 }
-  - { article: 第七十五条, label: 流動負債, example_yen: 0 }
-  - { article: 第七十五条, label: 固定負債, example_yen: 0 }
-  - { article: 第七十六条, label: 資本金, example_yen: 300000 }
-  - { article: 第七十六条, label: 資本剰余金, example_yen: 0 }
-  - { article: 第七十六条, label: 利益剰余金, example_yen: 30000 }
-  - { article: 第七十六条, label: 自己株式, example_yen: 0 }
-  - { article: 第七十六条, label: 評価・換算差額等, example_yen: 0 }
-  - { article: 第七十六条, label: 新株予約権, example_yen: 0 }
-  - { article: 第八十八条, label: 売上高, example_yen: 100000 }
-  - { article: 第八十八条, label: 売上原価, example_yen: 0 }
-  - { article: 第八十九条, label: 売上総利益金額, example_yen: 100000 }
-  - { article: 第八十八条, label: 販売費及び一般管理費, example_yen: 40000 }
-  - { article: 第九十条, label: 営業利益金額, example_yen: 60000 }
-  - { article: 第八十八条, label: 営業外収益, example_yen: 0 }
-  - { article: 第八十八条, label: 営業外費用, example_yen: 0 }
-  - { article: 第九十一条, label: 経常利益金額, example_yen: 60000 }
-  - { article: 第八十八条, label: 特別利益, example_yen: 0 }
-  - { article: 第八十八条, label: 特別損失, example_yen: 0 }
-  - { article: 第九十二条, label: 税引前当期純利益金額, example_yen: 60000 }
-  - { article: 第九十三条, label: 法人税等, example_yen: 10000 }
-  - { article: 第九十四条, label: 当期純利益金額, example_yen: 50000 }
-  - { article: 第九十六条, label: 当期首残高, example_yen: 0 }
-  - { article: 第百五条, label: 剰余金の配当, example_yen: 20000 }
-  - { article: 第九十四条, label: 当期純利益金額, example_yen: 50000 }
-  - { article: 第九十六条, label: 当期末残高, example_yen: 30000 }
-  - { article: 第百条, label: 継続企業の前提に関する注記 }
-  - { article: 第百一条, label: 重要な会計方針に係る事項に関する注記 }
-  - { article: 第百二条の三, label: 表示方法の変更に関する注記 }
-  - { article: 第百七条, label: 税効果会計に関する注記 }
-  - { article: 第百十二条, label: 関連当事者との取引に関する注記 }
-  - { article: 第百十三条, label: 一株当たり情報に関する注記 }
-  - { article: 第百十四条, label: 重要な後発事象に関する注記 }
+# Development fixture yen for Companies Act acceptance empty-diff.
+# Labels/articles: src/lib/finance/ledger/companies-act-ordinance-pin.ts (SSOT).
+# amounts[i] aligns with COMPANIES_ACT_ORDINANCE_LABEL_PIN[i]; null = note (no yen).
+# Books scenario: capital 300000 / revenue 100000 / sga 40000 / tax 10000 / dividend 20000.
+amounts:
+  - 330000 # 流動資産
+  - 0 # 固定資産
+  - 0 # 繰延資産
+  - 0 # 流動負債
+  - 0 # 固定負債
+  - 300000 # 資本金
+  - 0 # 資本剰余金
+  - 30000 # 利益剰余金
+  - 0 # 自己株式
+  - 0 # 評価・換算差額等
+  - 0 # 新株予約権
+  - 100000 # 売上高
+  - 0 # 売上原価
+  - 100000 # 売上総利益金額
+  - 40000 # 販売費及び一般管理費
+  - 60000 # 営業利益金額
+  - 0 # 営業外収益
+  - 0 # 営業外費用
+  - 60000 # 経常利益金額
+  - 0 # 特別利益
+  - 0 # 特別損失
+  - 60000 # 税引前当期純利益金額
+  - 10000 # 法人税等
+  - 50000 # 当期純利益金額
+  - 0 # 当期首残高
+  - 20000 # 剰余金の配当
+  - 50000 # 当期純利益金額
+  - 30000 # 当期末残高
+  - null # 継続企業の前提に関する注記
+  - null # 重要な会計方針に係る事項に関する注記
+  - null # 表示方法の変更に関する注記
+  - null # 税効果会計に関する注記
+  - null # 関連当事者との取引に関する注記
+  - null # 一株当たり情報に関する注記
+  - null # 重要な後発事象に関する注記

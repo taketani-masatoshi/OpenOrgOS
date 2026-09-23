@@ -7,11 +7,6 @@ import {
   computeCorporateLocalTax,
   computeCorporateLocalTaxFromAdjustment,
   diffCorporateLocalTaxLines,
-  projectTokyoBunkatuOfficialLocalTaxLines,
-  scoreCorporateLocalTax,
-  tokyoBunkatuEnterpriseIncomeExample,
-  tokyoBunkatuInhabitantLevyExample,
-  tokyoWardRelocationEqualTax,
   type CorporateLocalTaxFacts,
   type CorporateLocalTaxRates,
   type IncomeBracketRate,
@@ -20,6 +15,13 @@ import {
   type PerCapitaBand,
   type RateFraction,
 } from "../src/lib/finance/corporate-local-tax.js";
+import {
+  projectTokyoBunkatuOfficialLocalTaxLines,
+  scoreCorporateLocalTax,
+  tokyoBunkatuEnterpriseIncomeExample,
+  tokyoBunkatuInhabitantLevyExample,
+  tokyoWardRelocationEqualTax,
+} from "../src/lib/finance/corporate-local-tax-pin.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
 

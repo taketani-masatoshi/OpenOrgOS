@@ -285,11 +285,35 @@ entries:
     amount: 500
     status: unmatched
 `);
+    const before = loadJournalEntries().entries.map((entry) => entry.entry_id).sort();
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(false);
+    expect(closed.posted_entry_ids).toEqual([]);
+    expect(loadJournalEntries().entries.map((entry) => entry.entry_id).sort()).toEqual(before);
     expect(closed.evaluation.errors.some((error) => error.startsWith("bank-unmatched"))).toBe(
       true,
     );
+  });
+
+  it("does not post close journals when the prior month is unlocked", () => {
+    useFinanceFixtureTenant();
+    writeBank(`
+entries:
+  - id: BS-OK
+    date: "2026-09-03"
+    direction: inflow
+    amount: 500
+    status: matched
+`);
+    const before = loadJournalEntries().entries.map((entry) => entry.entry_id).sort();
+    const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(closed.locked).toBe(false);
+    expect(closed.posted_entry_ids).toEqual([]);
+    expect(loadJournalEntries().entries.map((entry) => entry.entry_id).sort()).toEqual(before);
+    expect(
+      closed.evaluation.errors.some((error) => error.startsWith("prior-month-locked")),
+    ).toBe(true);
+    expect(closed.evaluation.errors.some((error) => error.includes("unlocked"))).toBe(true);
   });
 
   it("does not lock when cash is on the books and the bank file is missing", () => {

@@ -32,18 +32,21 @@ import { clearTenantId, runWithTenantId } from "../src/lib/tenant.js";
 import { getDataDir, writeYamlFile } from "../src/lib/utils.js";
 
 const pinFileSchema = z.object({
-  lines: z.array(
-    z.object({
-      article: z.string(),
-      label: z.string().min(1),
-      example_yen: z.number().int().optional(),
-    }),
-  ),
+  amounts: z.array(z.number().int().nullable()),
 });
 
 function loadPin(): CompaniesActPinLine[] {
   const path = fileURLToPath(new URL("./fixtures/companies-act/display-lines.yaml", import.meta.url));
-  return pinFileSchema.parse(parseYaml(readFileSync(path, "utf8"))).lines;
+  const amounts = pinFileSchema.parse(parseYaml(readFileSync(path, "utf8"))).amounts;
+  if (amounts.length !== COMPANIES_ACT_ORDINANCE_LABEL_PIN.length) {
+    throw new Error(
+      `fixture amounts length ${amounts.length} != ordinance pin ${COMPANIES_ACT_ORDINANCE_LABEL_PIN.length}`,
+    );
+  }
+  return COMPANIES_ACT_ORDINANCE_LABEL_PIN.map((line, index) => {
+    const yen = amounts[index];
+    return yen == null ? { ...line } : { ...line, example_yen: yen };
+  });
 }
 
 const FISCAL_YEAR = "FY2026";
@@ -138,14 +141,13 @@ function declarationYaml(goingConcern: boolean): string {
 }
 
 describe("companies act score acceptance", () => {
-  it("keeps fixture labels aligned with the product ordinance pin", () => {
+  it("loads fixture yen onto the product ordinance pin in order", () => {
     const pin = loadPin();
-    expect(pin.map((line) => ({ article: line.article, label: line.label }))).toEqual(
-      COMPANIES_ACT_ORDINANCE_LABEL_PIN.map((line) => ({
-        article: line.article,
-        label: line.label,
-      })),
+    expect(pin.map((line) => line.label)).toEqual(
+      COMPANIES_ACT_ORDINANCE_LABEL_PIN.map((line) => line.label),
     );
+    expect(pin.find((line) => line.label === "売上総利益金額")?.example_yen).toBe(100_000);
+    expect(pin.find((line) => line.label === "継続企業の前提に関する注記")?.example_yen).toBeUndefined();
   });
 
   it("keeps the ordinance labels and scores 12 on the development fixture pin", () => {

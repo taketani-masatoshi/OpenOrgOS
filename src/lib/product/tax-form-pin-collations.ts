@@ -20,7 +20,7 @@ import {
 import {
   projectTokyoBunkatuOfficialLocalTaxLines,
   scoreCorporateLocalTax,
-} from "../finance/corporate-local-tax.js";
+} from "../finance/corporate-local-tax-pin.js";
 import {
   projectOfficialSolePropLocalTaxLines,
   scoreSolePropLocalTax,

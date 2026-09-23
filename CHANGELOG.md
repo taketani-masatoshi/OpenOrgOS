@@ -8,7 +8,14 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 
-- **会社計算規則の開発採点** — 条例見出し＋開発 fixture 円の空差分で 12。公式印刷円は運用／法定側。条例ラベルを `companies-act-ordinance-pin.ts` に分離。
+- **月次締め原子性（P0）** — preflight（締め仕訳前）でゲート失敗時は仕訳ゼロ。postflight 失敗時は当該試行の新規仕訳のみ `-ABORT` 逆仕訳。状態は `monthly-close.YYYY-MM.state.yaml`。給与カテゴリは月次PL→買掛に載せない。前月未ロック・bs_class 不足のメッセージを明示。非JP間接税は skip（JP申告成功扱いにしない）。
+- **経費精算 integrity 分割** — `expense-claim-integrity.ts`（migrate · validate）。本体は起票〜精算のライフサイクルに集中。
+- **法人税調整モジュール分割** — `corporate-tax-annex.ts`（共有型・行）· `schedule4-pin.ts` · `schedule1-pin.ts` · `tax-adjustment.ts`（評価本体）。公開 API は `tax-adjustment.js` から再エクスポート。
+- **法人地方税ピン分割** — `corporate-local-tax-pin.ts`（都分割・均等割記載例）と計算本体を分離。
+- **月次締め銀行突合分割** — `monthly-close-bank.ts`。
+- **個人消費税スコア分割** — `sole-prop-consumption-score.ts`。
+- **会社計算規則ピン** — 条例見出しは製品 `companies-act-ordinance-pin.ts` 正本。fixture は金額配列のみ。
+- **会社計算規則の開発採点** — 条例見出し＋開発 fixture 円の空差分で 12。公式印刷円は運用／法定側。
 - **tax-filing-spec** — Policy B / 厳格ラダーの履歴節を削除し、開発完了軸に一本化。
 
 ### Notes

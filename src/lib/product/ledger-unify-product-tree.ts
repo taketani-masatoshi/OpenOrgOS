@@ -19,7 +19,16 @@ const REQUIRED_RELATIVE = [
   "src/lib/product/ledger-provision.ts",
   "src/lib/finance/ledger/companies-act-score.ts",
   "src/lib/finance/ledger/companies-act-ordinance-pin.ts",
+  "src/lib/finance/corporate-tax-annex.ts",
+  "src/lib/finance/schedule4-pin.ts",
+  "src/lib/finance/schedule1-pin.ts",
   "src/lib/finance/corporate-local-tax.ts",
+  "src/lib/finance/corporate-local-tax-pin.ts",
+  "src/lib/finance/monthly-close-bank.ts",
+  "src/lib/finance/monthly-close-transaction.ts",
+  "src/lib/finance/sole-prop-consumption-tax.ts",
+  "src/lib/finance/sole-prop-consumption-score.ts",
+  "src/lib/finance/expense-claim-integrity.ts",
 ] as const;
 
 export type LedgerUnifyProductTreeStatus = {
