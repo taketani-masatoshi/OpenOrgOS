@@ -2300,6 +2300,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-fix-f4-reminder-hours.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-mail-poller.test.ts:
     axis: platform
     kind: unit

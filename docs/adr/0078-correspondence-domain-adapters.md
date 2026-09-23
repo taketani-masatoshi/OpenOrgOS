@@ -20,7 +20,7 @@ Correspondence (send-gate, CEO inline answers, style-lint, mail handoff, receive
 
 - No `correspondence → scheduling-coordination` imports (architecture R1 empty).
 - No dynamic imports for this boundary (R2 empty for scheduling / correspondence→scheduling).
-- Reminder due stamping still receives +7d from case-status in this stage; F4 will compute due from `scheduling_reminder_after_hours` inside the adapter.
+- Reminder due is computed from `scheduling_reminder_after_hours` in the scheduling adapter (`onFollowUpDue`); generic +7d from case-status is ignored for scheduling.
 
 ## Related
 

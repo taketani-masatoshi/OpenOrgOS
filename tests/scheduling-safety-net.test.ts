@@ -1,6 +1,6 @@
 /**
  * Safety-net characterization for the ceiling refactor.
- * Locks draft text, send path (incl. current +7d reminder), CEO answers,
+ * Locks draft text, send path (config-hours reminder), CEO answers,
  * mutations, partial failure, approve/lint/handoff — before structural changes.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -132,7 +132,7 @@ describe("scheduling safety-net characterization", () => {
   });
 
   describe("send path", () => {
-    it("approve+send stamps sent_at, awaiting_responses, authority, and +7d reminder_due_at", async () => {
+    it("approve+send stamps sent_at, awaiting_responses, authority, and config-hours reminder_due_at", async () => {
       const initial = upsertSchedulingCase({
         ...schedulingCase("SCH-2026-952", 2),
         status: "proposing",
@@ -152,8 +152,11 @@ describe("scheduling safety-net characterization", () => {
       expect(updated.status).toBe("awaiting_responses");
       expect(updated.correspondence.every((r) => Boolean(r.sent_at))).toBe(true);
       expect(updated.proposal_send_authority?.operator_id).toBe("ceo-test");
-      // Current behavior (F4 will change): generic +7 calendar days from today.
-      expect(updated.reminder_due_at).toBe(addDaysIso(currentDate(), 7));
+      expect(updated.reminder_due_at).toMatch(/T/);
+      const dueMs = new Date(updated.reminder_due_at!).getTime();
+      const baseMs = new Date(updated.updated_at).getTime();
+      // Default scheduling_reminder_after_hours = 72
+      expect(Math.abs(dueMs - (baseMs + 72 * 3600_000))).toBeLessThan(5_000);
     });
   });
 

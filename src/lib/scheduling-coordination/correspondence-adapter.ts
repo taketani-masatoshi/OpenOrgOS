@@ -61,12 +61,16 @@ export function createSchedulingCorrespondenceAdapter(): CorrespondenceDomainAda
       if (!notesMentionSchedulingCase(draft.notes)) return;
       handleSchedulingCorrespondenceSent(draft);
     },
-    onFollowUpDue(caseId, dueDateIso) {
+    onFollowUpDue(caseId, _ignoredDueDateIso) {
       const sch = findSchedulingCase(caseId);
       if (!sch) return;
+      const hours =
+        resolveMailConfig().receive.scheduling_reminder_after_hours ?? 72;
+      const baseMs = Date.parse(sch.updated_at) || Date.now();
+      const dueAt = new Date(baseMs + hours * 60 * 60 * 1000).toISOString();
       updateSchedulingCase(sch.id, sch.revision, (current) => ({
         ...current,
-        reminder_due_at: dueDateIso,
+        reminder_due_at: dueAt,
       }));
     },
     async onCeoAnswer(question: CeoInlineQuestion): Promise<boolean> {
