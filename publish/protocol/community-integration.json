@@ -14,5 +14,8 @@
   "e2e_green": true,
   "community_integration_at": "2026-07-09T23:25:50.635Z",
   "tenant_mail_connect_api": false,
-  "tenant_mail_connect_ui": false
+  "tenant_mail_connect_ui": false,
+  "connector_slack": true,
+  "connector_asana": true,
+  "connector_gdrive": true
 }

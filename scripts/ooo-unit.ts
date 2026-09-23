@@ -68,6 +68,18 @@ function main(): void {
   mkdirSync(dirname(REPORT_PATH), { recursive: true });
   rmSync(REPORT_PATH, { force: true });
 
+  const disposable =
+    process.env.ORGOS_TEST_DISPOSABLE_ROOT?.trim() ||
+    process.env.ORGOS_OOO_EVIDENCE_ROOT?.trim();
+  if (!disposable) {
+    console.error(
+      "ORGOS_TEST_DISPOSABLE_ROOT（または ORGOS_OOO_EVIDENCE_ROOT）を disposable worktree に設定してください。\n" +
+        "例: git worktree add ../Core-doctrine-declaration-ooo-evidence HEAD\n" +
+        "    ORGOS_TEST_DISPOSABLE_ROOT=$PWD/../Core-doctrine-declaration-ooo-evidence npm run ooo:unit",
+    );
+    process.exit(2);
+  }
+
   const cited = citedTestFiles();
   const missing = cited.filter((p) => !existsSync(join(ROOT_DIR, p)));
   const runnable = cited.filter((p) => existsSync(join(ROOT_DIR, p)));
@@ -79,6 +91,10 @@ function main(): void {
       cwd: ROOT_DIR,
       encoding: "utf-8",
       maxBuffer: 128 * 1024 * 1024,
+      env: {
+        ...process.env,
+        ORGOS_TEST_DISPOSABLE_ROOT: disposable,
+      },
     },
   );
 

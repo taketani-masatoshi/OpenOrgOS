@@ -143,6 +143,10 @@ export function computeIntegrationsStatus(tenantId: string): IntegrationsStatusR
       next_actions.push("mail-config を records に置き、dry_run 以外へ");
       continue;
     }
+    if (item.id === "smtp_credentials") {
+      next_actions.push("export ORGOS_SMTP_USER / ORGOS_SMTP_PASSWORD（チャット・tip に書かない）");
+      continue;
+    }
     if (item.id.startsWith("connector_")) {
       next_actions.push(`${item.detail}`);
     }

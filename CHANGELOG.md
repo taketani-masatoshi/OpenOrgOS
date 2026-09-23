@@ -10,7 +10,11 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 - **Steward readiness の SoT パス欠落** — `docs/reports/{dashboard,executive-notes,agent-summaries}` が gitignore 丸ごとで常に欠けるため、`executive_steward` の data 軸が 0 固定だった。骨格 README だけ追跡し、capability / pulse を揃えた。
 - **OOO 採点の誤読** — 緑証拠 JSON が無いとき「実装欠落」に見える文言だった。証拠未記録バナーと「仕様+実装平均」を出し、実装点とテスト証拠を分離する。
-- **integrations status の残債可視化** — Slack/Asana/Drive/Gmail コネクタと `next_actions` を出す（任意コネクタは採点外）。
+- **integrations status の残債可視化** — Slack/Asana/Drive/Gmail コネクタと `next_actions` を出す（任意コネクタは採点外）。SMTP 資格情報が無いときは env 設定を案内する。
+
+### Changed
+
+- **Community connector 出荷フラグ** — `connector_slack` / `connector_asana` / `connector_gdrive` を `publish/protocol/community-integration.json` で true（接続 UI 開放）。`tenant_mail_connect_*` は ADR 0004 どおり false のまま。
 
 ### Added
 
