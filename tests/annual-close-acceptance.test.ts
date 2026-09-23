@@ -19,7 +19,7 @@ import { closeAccountingMonth, monthCashGlDelta } from "../src/lib/finance/month
 import { isMonthLocked, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { openingBalancesSchema } from "../schemas/finance/opening-balances.js";
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import {
   applyFixtureStatementRoles,
   resetFixtureJournalEntries,
@@ -301,7 +301,9 @@ describe("annual close acceptance", () => {
       unlockedBy: OPERATOR,
       reason: "inject imbalance",
     });
-    appendJournalEntry({
+    // Bypass post guards: unknown account must sit on the books to invalidate evidence.
+    const planted = loadJournalEntries();
+    planted.entries.push({
       entry_id: "JE-BAD-TB",
       occurred_at: `${finalMonth}-15T00:00:00.000Z`,
       description: "unknown account",
@@ -321,7 +323,8 @@ describe("annual close acceptance", () => {
           tax_category: "out_of_scope",
         },
       ],
-    });
+    } as (typeof planted.entries)[number]);
+    writeFileSync(join(getDataDir(), "finance", "journal-entries.yaml"), stringifyYaml(planted));
     lockMonth({
       month: finalMonth,
       lockedBy: OPERATOR,

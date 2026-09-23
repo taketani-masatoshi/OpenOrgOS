@@ -26,6 +26,8 @@ const REQUIRED_RELATIVE = [
   "src/lib/finance/corporate-local-tax-pin.ts",
   "src/lib/finance/monthly-close-bank.ts",
   "src/lib/finance/monthly-close-transaction.ts",
+  "src/lib/finance/monthly-close-posts.ts",
+  "src/lib/finance/monthly-close-gates.ts",
   "src/lib/finance/sole-prop-consumption-tax.ts",
   "src/lib/finance/sole-prop-consumption-score.ts",
   "src/lib/finance/expense-claim-integrity.ts",
