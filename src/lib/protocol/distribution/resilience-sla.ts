@@ -1,13 +1,14 @@
-import type { EventEnvelope } from "../../../../schemas/protocol/org-event.js";
 import type { ResilienceSlaEvaluation, ResilienceSlaTier } from "../../../../schemas/protocol/resilience-sla.js";
 import { findTransactionByEventId } from "../core/transactions.js";
-import { listWirePending } from "./wire-queue.js";
-import { isEventDelivered } from "./wire-delivered.js";
-import { listWitnessPending } from "../distribution/witness-queue.js";
-import { loadWitnessPoolConfig, isWitnessEnabled } from "../distribution/witness-pool.js";
-import { verifyCachedReceiptsForEvent } from "../distribution/witness-client.js";
-
-import { hasSuccessfulEmailWireFallback, hasSuccessfulEmailWireIngest } from "./delivery-ledger.js";
+import { listWirePending } from "../transport/wire-queue.js";
+import { isEventDelivered } from "../transport/wire-delivered.js";
+import { listWitnessPending } from "./witness-queue.js";
+import { loadWitnessPoolConfig, isWitnessEnabled } from "./witness-pool.js";
+import { verifyCachedReceiptsForEvent } from "./witness-client.js";
+import {
+  hasSuccessfulEmailWireFallback,
+  hasSuccessfulEmailWireIngest,
+} from "../transport/delivery-ledger.js";
 
 const TIER_REQUIREMENTS: Record<
   ResilienceSlaTier,

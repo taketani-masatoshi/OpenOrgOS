@@ -13,7 +13,7 @@ import { loadAuthorizedApprovers } from "../../lib/jurisdiction/wire-governance/
 import {
   transmitApprovedNotice,
   type NoticeTransmitResult,
-} from "../../lib/protocol/transport/notice-transmit.js";
+} from "../../lib/protocol/distribution/notice-transmit.js";
 
 /** CLI presentation for an approved notice transmission (not used by lib transport). */
 function formatNoticeTransmitConsole(

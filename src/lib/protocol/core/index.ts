@@ -16,3 +16,4 @@ export * from "./redact-secrets.js";
 export * from "./wire-counterparty.js";
 export * from "./outbox-permissions.js";
 export * from "./outbox-provenance.js";
+export * from "./envelope-lookup.js";

@@ -25,7 +25,7 @@ export async function runProtocolWitnessCacheMissing(
   opts: ProtocolWitnessCacheMissingOptions
 ): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const { cacheMissingWitnessReceipts } = await import("../../lib/protocol/transport/transaction-orphans.js");
+  const { cacheMissingWitnessReceipts } = await import("../../lib/protocol/distribution/transaction-orphans.js");
   const result = await cacheMissingWitnessReceipts({
     peerId: opts.peer,
     since: opts.since,

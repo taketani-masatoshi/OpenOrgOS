@@ -1,7 +1,7 @@
 /** Relay worker and SLA command handlers. */
 import { applyProtocolTenant } from "./shared.js";
 import { listTransactions } from "../../lib/protocol/core/transactions.js";
-import { evaluateTransactionSla } from "../../lib/protocol/transport/resilience-sla.js";
+import { evaluateTransactionSla } from "../../lib/protocol/distribution/resilience-sla.js";
 import { join } from "node:path";
 
 

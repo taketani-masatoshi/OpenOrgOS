@@ -12,7 +12,7 @@ import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 import {
   evaluateTransactionOrphans,
   pruneOrphanTransactions,
-} from "../src/lib/protocol/transport/transaction-orphans.js";
+} from "../src/lib/protocol/distribution/transaction-orphans.js";
 import { loadTransactionsRegistry } from "../src/lib/protocol/core/transactions.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import * as witnessClient from "../src/lib/protocol/distribution/witness-client.js";

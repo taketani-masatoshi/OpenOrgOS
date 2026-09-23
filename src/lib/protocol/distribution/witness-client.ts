@@ -1,5 +1,3 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
 import type { EventEnvelope } from "../../../../schemas/protocol/org-event.js";
 import type { WitnessAttestationSide } from "../../../../schemas/protocol/witness-attestation.js";
 import type { WitnessReceipt } from "../../../../schemas/protocol/witness-receipt.js";
@@ -19,29 +17,16 @@ import {
 } from "./witness-attestation-build.js";
 import { evaluateWitnessQuorum, checkWitnessPoolHealth } from "./witness-quorum.js";
 import { verifyWitnessReceiptSignature } from "../../hub/signing.js";
-import { parseEventEnvelope } from "../core/envelope.js";
-import { getProtocolInboxDir, getProtocolOutboxDir } from "../core/paths.js";
 import {
   emitWitnessAttestationRegistered,
   emitWitnessReceiptIssued,
 } from "./witness-envelope-emit.js";
+import {
+  findEnvelopeFile,
+  findEnvelopeFileForWitness,
+} from "../core/envelope-lookup.js";
 
-export function findEnvelopeFileForWitness(eventId: string): EventEnvelope | undefined {
-  for (const dir of [getProtocolOutboxDir(), getProtocolInboxDir()]) {
-    const direct = join(dir, `${eventId}.json`);
-    if (existsSync(direct)) {
-      return parseEventEnvelope(JSON.parse(readFileSync(direct, "utf-8")));
-    }
-    if (existsSync(dir)) {
-      for (const file of readdirSync(dir)) {
-        if (!file.endsWith(".json") || file.endsWith(".steward-provenance.json")) continue;
-        const env = parseEventEnvelope(JSON.parse(readFileSync(join(dir, file), "utf-8")));
-        if (env.event_id === eventId) return env;
-      }
-    }
-  }
-  return undefined;
-}
+export { findEnvelopeFile, findEnvelopeFileForWitness };
 
 export { buildWitnessAttestationFromEnvelope, cacheWitnessReceipt, loadCachedWitnessReceipt } from "./witness-attestation-build.js";
 

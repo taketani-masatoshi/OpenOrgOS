@@ -6,7 +6,7 @@ import {
   rejectInterOrgNotice,
 } from "../wire/notice-workflow.js";
 import { withGovGatewayDeliver } from "../wire/gov-gateway/transport-bind.js";
-import { transmitApprovedNotice } from "../protocol/transport/notice-transmit.js";
+import { transmitApprovedNotice } from "../protocol/distribution/notice-transmit.js";
 import {
   deliverProtocolEnvelopeWithRelay,
   flushWirePending,

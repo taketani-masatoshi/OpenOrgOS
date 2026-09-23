@@ -1,8 +1,12 @@
 import type { TransactionRecord } from "../../../../schemas/protocol/transaction-record.js";
-import { findEnvelopeFileForWitness, fetchReceiptsFromPool, verifyCachedReceiptsForEvent } from "../distribution/witness-client.js";
-import { isWitnessEnabled, loadWitnessPoolConfig } from "../distribution/witness-pool.js";
-import { listWitnessPending } from "../distribution/witness-queue.js";
-import { listWirePending } from "./wire-queue.js";
+import {
+  findEnvelopeFileForWitness,
+  fetchReceiptsFromPool,
+  verifyCachedReceiptsForEvent,
+} from "./witness-client.js";
+import { isWitnessEnabled, loadWitnessPoolConfig } from "./witness-pool.js";
+import { listWitnessPending } from "./witness-queue.js";
+import { listWirePending } from "../transport/wire-queue.js";
 import { listTransactions, removeTransactionsById } from "../core/transactions.js";
 
 export type TransactionOrphanReason =

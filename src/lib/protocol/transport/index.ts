@@ -6,6 +6,7 @@ export * from "./relay.js";
 export * from "./codec.js";
 export * from "./openorg-dns.js";
 export * from "./gov-gateway-port.js";
+export * from "./email-wire-port.js";
 export {
   deliverProtocolEnvelope,
   deliverProtocolEnvelopeWithRelay,
@@ -17,7 +18,7 @@ export * from "./delivery-ledger.js";
 export * from "./dev-server-tls.js";
 export * from "./inbox-export.js";
 export * from "./legacy-webhook-sunset.js";
-export * from "./notice-transmit.js";
+export * from "../distribution/notice-transmit.js";
 export * from "./peer-discovery.js";
 export * from "./peer-mesh.js";
 export * from "./peer-protocol-policy.js";
@@ -30,9 +31,9 @@ export * from "./protocol-http-client.js";
 export * from "./protocol-tls.js";
 export * from "./relay-sla-alert.js";
 export * from "./relay-state.js";
-export * from "./resilience-sla.js";
+export * from "../distribution/resilience-sla.js";
 export * from "./tls-pki.js";
-export * from "./transaction-orphans.js";
+export * from "../distribution/transaction-orphans.js";
 export * from "./wire-dead-letter-audit.js";
 export * from "./wire-delivered.js";
 export * from "./wire-pending-lifecycle.js";

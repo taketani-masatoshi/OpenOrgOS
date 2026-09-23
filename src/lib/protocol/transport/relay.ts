@@ -66,5 +66,3 @@ export async function pullOrgCRelayInboxIfConfigured(): Promise<number> {
   }
   return total;
 }
-
-export { listWireRelayPending } from "../distribution/wire-relay-store.js";

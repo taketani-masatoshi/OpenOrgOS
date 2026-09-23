@@ -11,7 +11,7 @@ import { listWirePending } from "../transport/wire-queue.js";
 import { listWitnessPending } from "./witness-queue.js";
 import { loadPeersRegistry } from "../transport/peers.js";
 import { reconcileWitnessWithPeer, reconcileCrossHub, reconcileWitnessWithPeerAndPersist } from "./witness-reconcile.js";
-import { evaluateTransactionSla } from "../transport/resilience-sla.js";
+import { evaluateTransactionSla } from "./resilience-sla.js";
 import { evaluateRelaySlaAlerts } from "../transport/relay-sla-alert.js";
 import { listTransactions } from "../core/transactions.js";
 import { loadContractById } from "./contract-witness-pool.js";

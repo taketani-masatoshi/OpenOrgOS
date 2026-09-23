@@ -26,3 +26,6 @@ export * from "./witness-queue.js";
 export * from "./witness-quorum.js";
 export * from "./witness-reconcile.js";
 export * from "./witness-trust.js";
+export * from "./notice-transmit.js";
+export * from "./resilience-sla.js";
+export * from "./transaction-orphans.js";

@@ -9,7 +9,7 @@ import {
   fetchWitnessTrustBundle,
   verifiedHubsFromBundle,
 } from "./witness-trust.js";
-import { defaultSlaTierForContract } from "../transport/resilience-sla.js";
+import { defaultSlaTierForContract } from "./resilience-sla.js";
 import { writeWitnessPoolConfig } from "./witness-pool-persist.js";
 
 export function loadContractById(contractId: string) {

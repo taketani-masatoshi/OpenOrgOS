@@ -1,13 +1,14 @@
 import type { EventEnvelope } from "../../../../schemas/protocol/org-event.js";
 import { serializeEventEnvelope } from "../core/envelope.js";
 import { envelopeDigest } from "../core/canonical.js";
+import type { PeerProfile } from "../../../../schemas/protocol/peers.js";
 import { findPeer, resolvePeerInboundEndpoints } from "./peers.js";
 import type { OpenOrgDnsResolver, TrustWireUrlLookup } from "./openorg-dns.js";
 import { enqueueWirePending, archiveWirePending, listWirePending } from "./wire-queue.js";
 import { markWireDelivered, isWireDelivered } from "./wire-delivered.js";
 import { recordDeliveryAttempt } from "./delivery-ledger.js";
-import { deliverEnvelopeViaEmailWire } from "../adapters/email-wire-deliver.js";
-import { findEnvelopeFileForWitness } from "../distribution/witness-client.js";
+import { findEnvelopeFile } from "../core/envelope-lookup.js";
+import type { EmailWireDeliverFn } from "./email-wire-port.js";
 import {
   computeNextRetryAt,
   isWirePendingDeadLetter,
@@ -37,6 +38,7 @@ import type { DeliverEnvelopeResult } from "./types.js";
 import { resolvePeerInboundEndpointsWithDns } from "./dns.js";
 
 export type { GovGatewayDeliverFn } from "./gov-gateway-port.js";
+export type { EmailWireDeliverFn } from "./email-wire-port.js";
 export type { OpenOrgDnsResolver, TrustWireUrlLookup } from "./openorg-dns.js";
 export type { DeliverEnvelopeResult } from "./types.js";
 export { resolvePeerInboundEndpointsWithDns } from "./dns.js";
@@ -47,13 +49,13 @@ export {
 export {
   flushWireRelayInbox,
   pullOrgCRelayInboxIfConfigured,
-  listWireRelayPending,
 } from "./relay.js";
 
 export interface DeliverProtocolEnvelopeOptions {
   dnsResolver?: OpenOrgDnsResolver;
   trustLookup?: TrustWireUrlLookup;
   deliverGovGateway?: GovGatewayDeliverFn;
+  deliverEmailWire?: EmailWireDeliverFn;
 }
 
 function isRelayEnqueueUrl(url: string): boolean {
@@ -185,7 +187,12 @@ export async function deliverProtocolEnvelope(
       result = await deliverViaGovGatewayEndpoint(envelope, peerId, ep, opts?.deliverGovGateway);
       channel = "openorgos_p2p";
     } else if (isEmailWireEndpoint(ep)) {
-      const emailResult = await deliverEnvelopeViaEmailWire(envelope, peer, ep.url);
+      const emailResult = await deliverViaEmailWireEndpoint(
+        envelope,
+        peer,
+        ep.url,
+        opts?.deliverEmailWire
+      );
       result = { ok: emailResult.ok, reason: emailResult.reason };
       channel = "email_wire";
       recordDeliveryAttempt({
@@ -283,6 +290,21 @@ async function deliverViaGovGatewayEndpoint(
   };
 }
 
+async function deliverViaEmailWireEndpoint(
+  envelope: EventEnvelope,
+  peer: PeerProfile,
+  endpointUrl: string,
+  deliverEmailWire?: EmailWireDeliverFn
+): Promise<{ ok: boolean; reason: string; smtpMessageId?: string }> {
+  if (!deliverEmailWire) {
+    return {
+      ok: false,
+      reason: "email_wire deliverer not provided (pass deliverEmailWire in deliver options)",
+    };
+  }
+  return deliverEmailWire(envelope, peer, endpointUrl);
+}
+
 export async function deliverViaRelayStore(
   envelope: EventEnvelope,
   peerId: string,
@@ -347,7 +369,7 @@ export async function flushWirePending(
     }
     if (!isWirePendingReadyForRetry(entry)) continue;
 
-    const envelope = findEnvelopeFileForWitness(entry.event_id);
+    const envelope = findEnvelopeFile(entry.event_id);
     if (!envelope) continue;
 
     const result = await deliverProtocolEnvelopeWithRelay(envelope, entry.peer_id, opts);

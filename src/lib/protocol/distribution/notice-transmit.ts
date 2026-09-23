@@ -1,19 +1,19 @@
 import type { ApproveInterOrgNoticeResult } from "../../wire/notice-workflow.js";
-import type { DeliverEnvelopeResult } from "./types.js";
+import type { DeliverEnvelopeResult } from "../transport/types.js";
 import {
   deliverProtocolEnvelopeWithRelay,
   type DeliverProtocolEnvelopeOptions,
-} from "./transport.js";
-import { maybeBindWitnessPoolFromContract } from "../distribution/contract-witness-pool.js";
+} from "../transport/transport.js";
+import { maybeBindWitnessPoolFromContract } from "./contract-witness-pool.js";
 import {
   evaluateWitnessWireGovernancePolicy,
   formatWitnessWireGovernancePolicySummary,
-} from "../distribution/witness-policy.js";
+} from "./witness-policy.js";
 import {
   formatWitnessFanOutSummary,
   maybeRegisterWitnessAfterWire,
-} from "../distribution/witness-hook.js";
-import type { WitnessPoolBindResult } from "../distribution/contract-witness-pool.js";
+} from "./witness-hook.js";
+import type { WitnessPoolBindResult } from "./contract-witness-pool.js";
 
 export interface NoticeTransmitResult {
   poolBind: WitnessPoolBindResult | null;

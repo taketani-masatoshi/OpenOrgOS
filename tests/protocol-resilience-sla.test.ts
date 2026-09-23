@@ -5,7 +5,7 @@ import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
 import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
-import { evaluateTransactionSla } from "../src/lib/protocol/transport/resilience-sla.js";
+import { evaluateTransactionSla } from "../src/lib/protocol/distribution/resilience-sla.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 
 function cleanup(): void {

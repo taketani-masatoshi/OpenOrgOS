@@ -152,7 +152,7 @@ export async function runProtocolTransactionPruneOrphans(
   opts: ProtocolTransactionPruneOrphansOptions
 ): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const { pruneOrphanTransactions } = await import("../../lib/protocol/transport/transaction-orphans.js");
+  const { pruneOrphanTransactions } = await import("../../lib/protocol/distribution/transaction-orphans.js");
   const result = await pruneOrphanTransactions({
     peerId: opts.peer,
     since: opts.since,
