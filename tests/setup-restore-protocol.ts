@@ -41,7 +41,11 @@ const PRESERVE_PROTOCOL_SUBDIRS = [
 const PRESERVE_TENANT_RUNTIME_PATHS: Partial<
   Record<(typeof OPERATIONAL_PROTOCOL_TENANTS)[number], readonly string[]>
 > = {
-  mal: ["records/executive/mail-config.yaml"],
+  mal: [
+    "records/executive/mail-config.yaml",
+    // gitignored pilot state — orgos-readiness formUnification checks this path
+    "data/org/audit-bridge-state.yaml",
+  ],
 };
 
 /** Committed tenant paths restored before each test (deduped — mal protocol included via OPERATIONAL). */

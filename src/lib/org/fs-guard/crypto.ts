@@ -6,7 +6,7 @@ import {
   sign,
   verify,
 } from "node:crypto";
-import { canonicalJson } from "../../protocol/canonical.js";
+import { canonicalJson } from "../../protocol/core/canonical.js";
 
 export interface Ed25519KeyPair {
   publicKey: string;

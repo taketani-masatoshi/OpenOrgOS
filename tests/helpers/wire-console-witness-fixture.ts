@@ -4,7 +4,7 @@ import { witnessPoolConfigSchema } from "../../schemas/protocol/witness-pool.js"
 import { configureHubRuntime } from "../../src/lib/hub/runtime.js";
 import { startHubServer } from "../../src/lib/hub-server.js";
 import { exportHubPublicKeyBase64 } from "../../src/lib/hub/signing.js";
-import { getWitnessPoolYamlPath } from "../../src/lib/protocol/paths.js";
+import { getWitnessPoolYamlPath } from "../../src/lib/protocol/core/paths.js";
 import { ROOT_DIR, setTenantId } from "../../src/lib/tenant.js";
 import { writeYamlFile } from "../../src/lib/utils.js";
 import { WIRE_CONSOLE_TEST_TENANT } from "./wire-console-test-fixture.js";

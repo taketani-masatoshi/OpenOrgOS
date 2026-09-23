@@ -8,12 +8,12 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/signing.js";
-import { deliverEnvelopeViaMesh } from "../src/lib/protocol/peer-mesh.js";
-import { getMeshRoutesYamlPath, getProtocolInboxDir } from "../src/lib/protocol/paths.js";
-import { mirrorInboundEnvelope } from "../src/lib/protocol/transport.js";
-import { parseEventEnvelope } from "../src/lib/protocol/envelope.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/core/signing.js";
+import { deliverEnvelopeViaMesh } from "../src/lib/protocol/transport/peer-mesh.js";
+import { getMeshRoutesYamlPath, getProtocolInboxDir } from "../src/lib/protocol/core/paths.js";
+import { mirrorInboundEnvelope } from "../src/lib/protocol/transport/transport.js";
+import { parseEventEnvelope } from "../src/lib/protocol/core/envelope.js";
 import { eventEnvelopeSchema } from "../schemas/protocol/org-event.js";
 
 async function main(): Promise<void> {

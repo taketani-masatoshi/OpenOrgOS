@@ -1,10 +1,15 @@
-import { resolveOpenOrgWireUrl, isDnsStyleNodeId, type OpenOrgDnsResolver } from "../../wire-gateway/openorg-dns.js";
-import { findPeer, resolvePeerInboundEndpoints } from "../peers.js";
+import {
+  resolveOpenOrgWireUrl,
+  isDnsStyleNodeId,
+  type OpenOrgDnsResolver,
+  type TrustWireUrlLookup,
+} from "./openorg-dns.js";
+import { findPeer, resolvePeerInboundEndpoints } from "./peers.js";
 
 /** Augment peer endpoints with OpenOrg DNS resolution when peer has DNS-style node_id. */
 export async function resolvePeerInboundEndpointsWithDns(
   peer: NonNullable<ReturnType<typeof findPeer>>,
-  opts?: { dnsResolver?: OpenOrgDnsResolver }
+  opts?: { dnsResolver?: OpenOrgDnsResolver; trustLookup?: TrustWireUrlLookup }
 ): Promise<ReturnType<typeof resolvePeerInboundEndpoints>> {
   const endpoints = resolvePeerInboundEndpoints(peer);
   if (endpoints.length > 0) return endpoints;
@@ -14,7 +19,10 @@ export async function resolvePeerInboundEndpointsWithDns(
     peer.org_uri?.replace(/^steward:\/\/tenant\//, "");
   if (!nodeId || !isDnsStyleNodeId(nodeId)) return endpoints;
 
-  const resolved = await resolveOpenOrgWireUrl(nodeId, { resolver: opts?.dnsResolver });
+  const resolved = await resolveOpenOrgWireUrl(nodeId, {
+    resolver: opts?.dnsResolver,
+    trustLookup: opts?.trustLookup,
+  });
   if (!resolved.wire_url) return endpoints;
 
   return [

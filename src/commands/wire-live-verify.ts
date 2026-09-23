@@ -1,7 +1,7 @@
 import {
   formatWireLiveVerifyReport,
   runWireLiveVerify,
-} from "../lib/protocol/wire-live-verify.js";
+} from "../lib/protocol/readiness/wire-live-verify.js";
 
 export interface WireLiveVerifyCommandOptions {
   tenant?: string;

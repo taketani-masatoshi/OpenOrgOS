@@ -5,7 +5,7 @@ import {
   isWirePendingReadyForRetry,
   isWirePendingDeadLetter,
   WIRE_PENDING_MAX_ATTEMPTS,
-} from "../src/lib/protocol/wire-pending-retry.js";
+} from "../src/lib/protocol/transport/wire-pending-retry.js";
 
 describe("wire-pending retry", () => {
   it("exponential backoff grows and caps", () => {

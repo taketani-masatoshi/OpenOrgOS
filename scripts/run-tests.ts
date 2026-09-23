@@ -4,7 +4,7 @@ import {
   clearTestSuiteStatus,
   writeTestSuiteFailed,
   writeTestSuitePassed,
-} from "../src/lib/protocol/test-suite-status.js";
+} from "../src/lib/protocol/readiness/test-suite-status.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
 import { assertDisposableTestWorkspace } from "../tests/helpers/test-workspace-guard.js";
 

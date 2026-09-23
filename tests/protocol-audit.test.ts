@@ -3,16 +3,16 @@ import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import {
   appendProtocolAuditRecord,
   loadProtocolAuditChain,
   verifyProtocolAuditChain,
-} from "../src/lib/protocol/audit-chain.js";
-import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
-import { envelopeDigest } from "../src/lib/protocol/canonical.js";
-import { getProtocolAuditChainPath } from "../src/lib/protocol/paths.js";
+} from "../src/lib/protocol/core/audit-chain.js";
+import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/core/identity.js";
+import { envelopeDigest } from "../src/lib/protocol/core/canonical.js";
+import { getProtocolAuditChainPath } from "../src/lib/protocol/core/paths.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {

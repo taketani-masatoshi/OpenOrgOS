@@ -2,7 +2,7 @@
  * Proposal 3 / Wire relay setup — wraps tls init + deploy env + daemon smoke hint.
  */
 export async function runWireSetup(opts?: { force?: boolean; json?: boolean }): Promise<void> {
-  const { runProtocolTlsInitProposal3 } = await import("./protocol.js");
+  const { runProtocolTlsInitProposal3 } = await import("./protocol/tls.js");
   runProtocolTlsInitProposal3({ force: opts?.force, json: opts?.json });
   if (opts?.json) return;
   console.log("\n--- Wire (Proposal 3) ---");

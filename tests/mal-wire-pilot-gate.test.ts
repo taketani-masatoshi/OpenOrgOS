@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { runProdWireGate } from "../src/lib/protocol/prod-wire-gate.js";
+import { runProdWireGate } from "../src/lib/protocol/readiness/prod-wire-gate.js";
 import { getMailConfigPath } from "../src/lib/correspondence/paths.js";
 import { getInstallRoot } from "../src/lib/orgos-paths.js";
 import { setTenantId } from "../src/lib/tenant.js";

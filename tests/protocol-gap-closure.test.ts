@@ -1,17 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import { setTenantId } from "../src/lib/tenant.js";
-import { listDiscoverablePeers } from "../src/lib/protocol/peer-discovery.js";
+import { listDiscoverablePeers } from "../src/lib/protocol/transport/peer-discovery.js";
 import {
   rotateProtocolSigningKey,
   exportProtocolPublicKeyBase64,
-} from "../src/lib/protocol/signing.js";
-import { validateTrustedHubsRegistry } from "../src/lib/protocol/trusted-hubs.js";
-import {
-  runProtocolPeerDiscover,
-  runProtocolSigningRotate,
-  runProtocolTrustedHubsValidate,
-} from "../src/commands/protocol.js";
+} from "../src/lib/protocol/core/signing.js";
+import { validateTrustedHubsRegistry } from "../src/lib/protocol/distribution/trusted-hubs.js";
+import { runProtocolPeerDiscover } from "../src/commands/protocol/peer.js";
+import { runProtocolSigningRotate } from "../src/commands/protocol/identity.js";
+import { runProtocolTrustedHubsValidate } from "../src/commands/protocol/witness.js";
 
 describe("protocol gap closure", () => {
   beforeEach(() => {

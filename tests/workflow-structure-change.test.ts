@@ -20,7 +20,7 @@ import {
 } from "../src/lib/org/approval/index.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 
 function cleanupWorkflowRuntime(): void {
   for (const p of [

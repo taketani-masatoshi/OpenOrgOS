@@ -341,6 +341,7 @@ Skill id / CLI が指定された
 | `jp_consumption_refund_show` | cli | `tax` | `jp-consumption-refund-show` | jp_consumption_refund |
 | `jp_consumption_tax_return` | cli | `tax` | `jp-consumption-tax-return` | jp_tax_consumption |
 | `jp_corporate_tax_return` | cli | `tax` | `jp-corporate-tax-return` | jp_tax_corporate |
+| `jp_individual_income_tax` | cli | `tax` | `tax-individual` | jp_tax_individual |
 | `jp_inspection_list` | cli | `compliance` | `jp-inspection-list` | jp_inspection |
 | `jp_inspection_types` | cli | `compliance` | `jp-inspection-types` | jp_inspection |
 | `jp_invoice_registration` | cli | `tax` | `jp-invoice-registration` | jp_invoice_qualified |

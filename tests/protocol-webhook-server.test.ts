@@ -3,13 +3,13 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   proposeInterOrgNotice,
   approveInterOrgNotice,
 } from "../src/lib/wire/index.js";
 import { startWebhookServer } from "../src/lib/webhook-server.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/core/signing.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {

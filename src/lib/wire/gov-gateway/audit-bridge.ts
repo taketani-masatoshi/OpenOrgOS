@@ -1,5 +1,5 @@
 import { appendJsonl } from "../../jsonl-store.js";
-import { getGovGatewayAuditPath } from "../../protocol/paths.js";
+import { getGovGatewayAuditPath } from "../../protocol/core/paths.js";
 import type { DeliveryReceipt } from "./types.js";
 import type { GovGatewayProfileId } from "../../../../schemas/protocol/gov-gateway-adapter.js";
 import type { govGatewayAuditBridgeSchema } from "../../../../schemas/protocol/gov-gateway-adapter.js";

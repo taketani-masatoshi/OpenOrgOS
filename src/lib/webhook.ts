@@ -2,13 +2,13 @@ import { webhookRegistrySchema, type WebhookRegistry } from "../../schemas/webho
 import { WEBHOOK_REGISTRY_PATH } from "./steward-paths.js";
 import { loadRegistryFile } from "./utils.js";
 import { pushQueueEvent } from "./queue-db.js";
-import { buildWebhookBodies, parseInboundWebhookBody } from "./protocol/webhook-bridge.js";
-import { recordProtocolTransaction } from "./protocol/record-transaction.js";
+import { buildWebhookBodies, parseInboundWebhookBody } from "./protocol/adapters/webhook-bridge.js";
+import { recordProtocolTransaction } from "./protocol/core/record-transaction.js";
 import { transactionTypeSchema } from "../../schemas/protocol/transaction-record.js";
-import { findPeerByOrgRef, verifyInboundProtocolEnvelope } from "./protocol/inbound-verify.js";
+import { findPeerByOrgRef, verifyInboundProtocolEnvelope } from "./protocol/core/inbound-verify.js";
 import { operatorAttestationSchema } from "../../schemas/protocol/operator-attestation.js";
-import { mirrorInboundEnvelope } from "./protocol/transport.js";
-import { findTransactionByEventId } from "./protocol/transactions.js";
+import { mirrorInboundEnvelope } from "./protocol/transport/transport.js";
+import { findTransactionByEventId } from "./protocol/core/transactions.js";
 import type { EventEnvelope } from "../../schemas/protocol/org-event.js";
 
 export { WEBHOOK_REGISTRY_PATH };
@@ -174,7 +174,7 @@ export function ingestWebhook(data: IngestWebhookPayload): {
           writeOutbox: false,
         });
         transactionId = result.transaction.transaction_id;
-        void import("./protocol/witness-hook.js").then(({ maybeRegisterWitnessAfterWire }) =>
+        void import("./protocol/distribution/witness-hook.js").then(({ maybeRegisterWitnessAfterWire }) =>
           maybeRegisterWitnessAfterWire(parsed.envelope!, "received")
         );
       } catch (err) {

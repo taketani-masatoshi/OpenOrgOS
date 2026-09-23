@@ -27,9 +27,9 @@ import { envelopeToWireMessage, wireMessageToEnvelope } from "./codec.js";
 import { exportWireFederationGossipCatalog, validateWireFederationGossipPost } from "./federation-gossip.js";
 import { applyIncomingWireFederationGossip, listWireFederationCatalogWithGossip } from "./federation-gossip-store.js";
 import { join } from "node:path";
-import { getProtocolDataDir } from "../protocol/paths.js";
+import { getProtocolDataDir } from "../protocol/core/paths.js";
 import { handleReceiptClaimApi } from "../receipt-qr.js";
-import { verifyMtlsClient } from "../protocol/protocol-tls.js";
+import { verifyMtlsClient } from "../protocol/transport/protocol-tls.js";
 
 export interface WireGatewayServerOptions {
   config: WireGatewayConfig;

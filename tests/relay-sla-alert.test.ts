@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateRelaySlaAlerts, RELAY_SLA_THRESHOLDS } from "../src/lib/protocol/relay-sla-alert.js";
+import { evaluateRelaySlaAlerts, RELAY_SLA_THRESHOLDS } from "../src/lib/protocol/transport/relay-sla-alert.js";
 import type { RelayState } from "../schemas/protocol/relay-state.js";
 
 describe("relay SLA alert (W4-4)", () => {

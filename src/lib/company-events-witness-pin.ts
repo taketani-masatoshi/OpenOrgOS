@@ -7,9 +7,9 @@ import {
 import { getCompanyEventChainTail, loadCompanyEventChain } from "./company-events-chain.js";
 import { getDataDir, readYamlFile, writeYamlFile } from "./utils.js";
 import { runWithEventsWriteGuard } from "./company-events-write-guard.js";
-import { appendProtocolAuditRecord } from "./protocol/audit-chain.js";
-import { maybeSignEnvelope } from "./protocol/signing.js";
-import { ourOrgRef } from "./protocol/identity.js";
+import { appendProtocolAuditRecord } from "./protocol/core/audit-chain.js";
+import { maybeSignEnvelope } from "./protocol/core/signing.js";
+import { ourOrgRef } from "./protocol/core/identity.js";
 import { randomUUID } from "node:crypto";
 import type { EventEnvelope } from "../../schemas/protocol/org-event.js";
 import { getClock } from "./runtime-context.js";

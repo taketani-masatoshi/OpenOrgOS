@@ -8,11 +8,11 @@ import {
   claimConnectorBind,
   createConnectorBind,
   verifyConnectorBind,
-} from "../src/lib/protocol/community-connector-bind.js";
+} from "../src/lib/protocol/adapters/community-connector-bind.js";
 import {
   handleConnectorBindCreate,
   handleConnectorTokenPush,
-} from "../src/lib/protocol/community-connectors-api.js";
+} from "../src/lib/protocol/adapters/community-connectors-api.js";
 import {
   connectorTokenPath,
   deleteConnectorToken,

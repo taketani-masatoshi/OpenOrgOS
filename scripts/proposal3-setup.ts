@@ -2,7 +2,7 @@
 /**
  * Proposal 3 setup — PKI init + print daemon install hints.
  */
-import { runProtocolTlsInitProposal3 } from "../src/commands/protocol.js";
+import { runProtocolTlsInitProposal3 } from "../src/commands/protocol/tls.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
 import { join } from "node:path";
 

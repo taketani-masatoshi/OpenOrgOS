@@ -3,7 +3,7 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   proposeInterOrgNotice,
   proposeInterOrgAck,
@@ -11,7 +11,7 @@ import {
   rejectInterOrgNotice,
   listPendingNotices,
 } from "../src/lib/wire/index.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 
 function cleanup(): void {
   for (const p of [

@@ -11,8 +11,8 @@ import { CONNECTOR_PROVIDERS } from "../../../schemas/connectors.js";
 import {
   loadCommunityIntegration,
   type CommunityIntegrationStatus,
-} from "../protocol/eco-production-evidence.js";
-import { communityConnectionsUrl } from "../protocol/community-gmail-bind.js";
+} from "../protocol/readiness/eco-production-evidence.js";
+import { communityConnectionsUrl } from "../protocol/adapters/community-gmail-bind.js";
 import { buildConnectorSecretsSnapshot, type ConnectorSecretsSnapshot } from "./connector-secrets-store.js";
 import { readConnectorStatus, type ConnectorStatus } from "./connector-store.js";
 

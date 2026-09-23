@@ -57,4 +57,4 @@ mal Wire pilot（Phase 2–3）を進める一方、以下 2 系統のメール�
 - [community-tenant-mail.md](../org-os/community-tenant-mail.md)
 - [gmail-ship-gate-checklist.md](../org-os/gmail-ship-gate-checklist.md)
 - [deploy/mal-pilot/README.md](../../deploy/mal-pilot/README.md)
-- 実装: `src/lib/protocol/prod-wire-gate.ts` · `publish/protocol/community-integration.json`
+- 実装: `src/lib/protocol/readiness/prod-wire-gate.ts` · `publish/protocol/community-integration.json`

@@ -7,12 +7,12 @@ import {
   certifyWitnessHub,
   addCertificateToBundle,
   publishWitnessTrustBundle,
-} from "../src/lib/protocol/witness-trust.js";
+} from "../src/lib/protocol/distribution/witness-trust.js";
 import { generateHubKeyPair } from "../src/lib/hub/signing.js";
-import { startProtocolApiServer } from "../src/lib/protocol/protocol-api-server.js";
-import { buildProtocolApiServerConfig } from "../src/lib/protocol/protocol-api-config.js";
-import { maybeBindWitnessPoolFromContract } from "../src/lib/protocol/contract-witness-pool.js";
-import { getWitnessPoolYamlPath } from "../src/lib/protocol/paths.js";
+import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
+import { maybeBindWitnessPoolFromContract } from "../src/lib/protocol/distribution/contract-witness-pool.js";
+import { getWitnessPoolYamlPath } from "../src/lib/protocol/core/paths.js";
 import { readYamlFile } from "../src/lib/utils.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 

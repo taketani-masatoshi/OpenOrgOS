@@ -13,7 +13,7 @@ import {
   sendApprovedCorrespondence,
   CorrespondenceApprovalGateError,
 } from "../src/lib/correspondence/send-gate.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 
 
 function seedContact(email = "partner@example.com"): void {

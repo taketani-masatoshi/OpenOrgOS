@@ -12,8 +12,8 @@ export class HttpGovGatewayTransport implements GovGatewayTransport {
       const parsed = new URL(url);
       let res: Response;
       if (parsed.protocol === "https:") {
-        const { loadProtocolApiClientConfig } = await import("../../protocol/protocol-api-config.js");
-        const { protocolFetch } = await import("../../protocol/protocol-tls.js");
+        const { loadProtocolApiClientConfig } = await import("../../protocol/transport/protocol-api-config.js");
+        const { protocolFetch } = await import("../../protocol/transport/protocol-tls.js");
         const client = loadProtocolApiClientConfig();
         res = await protocolFetch(url, {
           method: "POST",

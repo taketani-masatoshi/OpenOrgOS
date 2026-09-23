@@ -21,8 +21,8 @@ import {
   probeCommunityMailEnv,
   readCommunityIntegrationFlags,
   setCommunityIntegrationFlag,
-} from "../../protocol/community-integration-flags.js";
-import { getCommunityUrl } from "../../protocol/community-gmail-bind.js";
+} from "../../protocol/adapters/community-integration-flags.js";
+import { getCommunityUrl } from "../../protocol/adapters/community-gmail-bind.js";
 import { buildHubStatusReport } from "../../hub/status.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {

@@ -38,12 +38,12 @@ import {
 import {
   buildConnectorConnectUrl,
   createConnectorBind,
-} from "../../protocol/community-connector-bind.js";
+} from "../../protocol/adapters/community-connector-bind.js";
 import {
   buildCommunityMailConnectUrl,
   getCommunityUrl,
   resolveCommunityGmailBindForCli,
-} from "../../protocol/community-gmail-bind.js";
+} from "../../protocol/adapters/community-gmail-bind.js";
 import { sendConsoleSlackMessage } from "../../integrations/slack-connector.js";
 import { pushAsanaTarget } from "../../integrations/asana-adapter.js";
 import { exportToGoogleDrive, listDriveExports } from "../../integrations/gdrive-export.js";

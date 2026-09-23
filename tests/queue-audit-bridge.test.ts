@@ -5,8 +5,8 @@ import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
 import { pushQueueEvent } from "../src/lib/queue-db.js";
 import { listAuditEvents } from "../src/lib/audit-log.js";
-import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { loadProtocolAuditChain } from "../src/lib/protocol/core/audit-chain.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { getOrgAuditBridgeConfigPath } from "../src/lib/org/paths.js";
 import { clearOrgAuditBridgeStateForTests } from "../src/lib/org/audit-bridge-state.js";
 

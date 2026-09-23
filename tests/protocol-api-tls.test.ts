@@ -3,9 +3,9 @@ import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
-import { startProtocolApiServer } from "../src/lib/protocol/protocol-api-server.js";
-import { buildProtocolApiServerConfig } from "../src/lib/protocol/protocol-api-config.js";
-import { protocolFetch } from "../src/lib/protocol/protocol-tls.js";
+import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
+import { protocolFetch } from "../src/lib/protocol/transport/protocol-tls.js";
 
 function runOpenSsl(args: string[]): void {
   execFileSync("openssl", args, { stdio: "pipe" });

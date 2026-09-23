@@ -11,8 +11,8 @@ import {
   saveCompanyEvents,
   voidCompanyEvent,
 } from "../src/lib/company-events.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { markWireDelivered } from "../src/lib/protocol/wire-delivered.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { markWireDelivered } from "../src/lib/protocol/transport/wire-delivered.js";
 import {
   assertCanVoidCompanyEvent,
   getCompanyEventWireStatus,

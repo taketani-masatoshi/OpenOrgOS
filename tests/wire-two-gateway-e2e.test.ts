@@ -5,15 +5,15 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config.js";
-import { appendProtocolAuditRecord, writeOutboxEnvelope } from "../src/lib/protocol/audit-chain.js";
-import { getProtocolInboxDir, getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { runWithProtocolWriteGuard } from "../src/lib/protocol/protocol-write-guard.js";
+import { appendProtocolAuditRecord, writeOutboxEnvelope } from "../src/lib/protocol/core/audit-chain.js";
+import { getProtocolInboxDir, getProtocolOutboxDir } from "../src/lib/protocol/core/paths.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { runWithProtocolWriteGuard } from "../src/lib/protocol/core/protocol-write-guard.js";
 import {
   ensureProtocolSigningKey,
   exportProtocolPublicKeyBase64,
   signEventEnvelope,
-} from "../src/lib/protocol/signing.js";
+} from "../src/lib/protocol/core/signing.js";
 import { setTenantId, getTenantsDir } from "../src/lib/tenant.js";
 import { createOutboundPoller } from "../src/lib/wire-gateway/outbound-poller.js";
 import { WireInternalClient } from "../src/lib/wire-gateway/internal-client.js";
@@ -25,7 +25,7 @@ import {
 } from "../src/lib/wire-gateway/discover.js";
 import type { OpenOrgDnsResolver } from "../src/lib/wire-gateway/openorg-dns.js";
 import { startWireGatewayServer } from "../src/lib/wire-gateway/server.js";
-import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
+import { deliverProtocolEnvelope } from "../src/lib/protocol/transport/transport.js";
 
 const TENANT_A = "wire-e2e-a";
 const TENANT_B = "wire-e2e-b";

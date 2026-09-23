@@ -9,23 +9,19 @@ import {
 } from "../../commands/wire-gateway.js";
 import { runWireLiveVerifyCommand } from "../../commands/wire-live-verify.js";
 import {
-  runProtocolPeerDiscover,
-  runProtocolPeerRegister,
-  runProtocolPeersMigrateLegacy,
-} from "../../commands/protocol/peer.js";
-import {
-  runProtocolDeliver,
-  runProtocolDeliverFlushPending,
-  runProtocolDeliverPull,
-  runProtocolDeliverStatus,
-} from "../../commands/protocol/delivery.js";
-import {
-  runProtocolWitnessFlushPending,
-  runProtocolWitnessPoolInitTrusted,
-  runProtocolWitnessPoolStatus,
-  runProtocolWitnessRegister,
-  runProtocolWitnessVerify,
-} from "../../commands/protocol/witness.js";
+  defineDeliverEnvelopeCommand,
+  defineDeliverFlushPendingCommand,
+  defineDeliverPullCommand,
+  defineDeliverStatusCommand,
+  definePeerDiscoverCommand,
+  definePeerMigrateLegacyCommand,
+  definePeerRegisterCommand,
+  defineWitnessFlushPendingCommand,
+  defineWitnessPoolInitTrustedCommand,
+  defineWitnessPoolStatusCommand,
+  defineWitnessRegisterCommand,
+  defineWitnessVerifyCommand,
+} from "./protocol/shared-command-defs.js";
 
 function child(parent: Command, name: string): Command | undefined {
   return parent.commands.find((candidate) => candidate.name() === name);
@@ -124,118 +120,23 @@ export function registerCanonicalWireCommands(program: Command): void {
     );
 
   const peer = getOrCreate(wire, "peer", "External organization peer registry");
-  peer
-    .command("register")
-    .description("Register a Wire peer")
-    .requiredOption("--name <text>", "Display name")
-    .requiredOption("--jurisdiction <code>", "Jurisdiction")
-    .option("--stakeholder <id>", "STK-* link")
-    .option("--peer-id <id>", "Override PEER-* id")
-    .option("--org-uri <uri>", "steward://tenant/...")
-    .option("--public-key <b64>", "Base64 SPKI public key")
-    .option("--identity-file <path>", "Identity JSON")
-    .option("--webhook-url <url>", "Deprecated legacy Wire endpoint (not orgos webhook)")
-    .option("--tenant <id>", "Tenant id")
-    .action((opts) =>
-      runProtocolPeerRegister({
-        name: opts.name,
-        jurisdiction: opts.jurisdiction,
-        stakeholder: opts.stakeholder,
-        peerId: opts.peerId,
-        orgUri: opts.orgUri,
-        publicKey: opts.publicKey,
-        identityFile: opts.identityFile,
-        webhookUrl: opts.webhookUrl,
-        tenant: opts.tenant,
-      })
-    );
-  peer
-    .command("discover")
-    .description("List registered and discoverable peers")
-    .option("--jurisdiction <code>", "Jurisdiction")
-    .option("--tenant <id>", "Tenant id")
-    .option("--suggest", "Print registration suggestions")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolPeerDiscover(opts));
-  peer
-    .command("migrate-legacy")
-    .description(
-      "Migrate legacy_webhook before 2026-10-01 (Wire transport; not orgos webhook)"
-    )
-    .option("--tenant <id>", "Tenant id")
-    .option("--apply", "Write peers.yaml (default: dry-run)")
-    .option("--to-wire-url <url>", "Replace legacy endpoint with wire_v1 URL")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolPeersMigrateLegacy(opts));
+  definePeerRegisterCommand(peer);
+  definePeerDiscoverCommand(peer);
+  definePeerMigrateLegacyCommand(peer);
 
   const delivery = getOrCreate(wire, "delivery", "Wire envelope delivery and retry state");
-  delivery
-    .command("send")
-    .description("Send an envelope to a peer")
-    .requiredOption("--peer <id>", "PEER-*")
-    .requiredOption("--file <path>", "Envelope JSON")
-    .option("--tenant <id>", "Tenant id")
-    .action((opts) => runProtocolDeliver(opts));
-  delivery
-    .command("status")
-    .description("Show delivery attempts")
-    .requiredOption("--event-id <uuid>", "Event id")
-    .option("--peer <id>", "Peer id")
-    .option("--json", "JSON output")
-    .action((opts) =>
-      runProtocolDeliverStatus({ eventId: opts.eventId, peerId: opts.peer, json: opts.json })
-    );
-  delivery
-    .command("flush-pending")
-    .description("Retry queued Wire deliveries")
-    .option("--tenant <id>", "Tenant id")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolDeliverFlushPending(opts));
-  delivery
-    .command("pull")
-    .description("Pull an envelope from a peer outbox")
-    .requiredOption("--peer <id>", "PEER-*")
-    .requiredOption("--event-id <uuid>", "Event id")
-    .option("--tenant <id>", "Tenant id")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolDeliverPull(opts));
+  defineDeliverEnvelopeCommand(delivery, "send", "Send an envelope to a peer");
+  defineDeliverStatusCommand(delivery);
+  defineDeliverFlushPendingCommand(delivery);
+  defineDeliverPullCommand(delivery);
 
   const witness = getOrCreate(wire, "witness", "Distributed Wire witness attestations");
-  witness
-    .command("register")
-    .description("Register an event attestation")
-    .requiredOption("--event-id <uuid>", "Event id")
-    .requiredOption("--side <side>", "sent | received")
-    .option("--tenant <id>", "Tenant id")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolWitnessRegister(opts));
-  witness
-    .command("verify")
-    .description("Verify witness receipts and quorum")
-    .requiredOption("--event-id <uuid>", "Event id")
-    .option("--tenant <id>", "Tenant id")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolWitnessVerify(opts));
-  witness
-    .command("flush-pending")
-    .description("Retry pending witness attestations")
-    .option("--tenant <id>", "Tenant id")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolWitnessFlushPending(opts));
+  defineWitnessRegisterCommand(witness);
+  defineWitnessVerifyCommand(witness);
+  defineWitnessFlushPendingCommand(witness);
   const pool = witness.command("pool").description("Witness pool lifecycle");
-  pool
-    .command("status")
-    .description("Check configured witness hubs")
-    .option("--tenant <id>", "Tenant id")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolWitnessPoolStatus(opts));
-  pool
-    .command("init-trusted")
-    .description("Initialize pool from trusted hubs")
-    .option("--jurisdiction <code>", "Jurisdiction")
-    .option("--tenant <id>", "Tenant id")
-    .option("--json", "JSON output")
-    .action((opts) => runProtocolWitnessPoolInitTrusted(opts));
+  defineWitnessPoolStatusCommand(pool);
+  defineWitnessPoolInitTrustedCommand(pool);
 
   wire
     .command("score")

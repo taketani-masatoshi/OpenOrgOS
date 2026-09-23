@@ -9,8 +9,8 @@ import { join } from "node:path";
 import { setTenantId, getTenantDir, ROOT_DIR } from "../src/lib/tenant.js";
 import { readYamlFile, writeYamlFile } from "../src/lib/utils.js";
 import { contractSchema } from "../schemas/contract.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { configureHubRuntime } from "../src/lib/hub/runtime.js";
 import { startHubServer } from "../src/lib/hub-server.js";
 import { exportHubPublicKeyBase64 } from "../src/lib/hub/signing.js";
@@ -20,11 +20,11 @@ import {
   addCertificateToBundle,
   publishWitnessTrustBundle,
   verifyWitnessTrustBundle,
-} from "../src/lib/protocol/witness-trust.js";
-import { startProtocolApiServer } from "../src/lib/protocol/protocol-api-server.js";
-import { initWitnessPoolFromTrustBundle } from "../src/lib/protocol/contract-witness-pool.js";
-import { runRelayCycle } from "../src/lib/protocol/relay-worker.js";
-import { getWitnessTrustBundlePath } from "../src/lib/protocol/paths.js";
+} from "../src/lib/protocol/distribution/witness-trust.js";
+import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { initWitnessPoolFromTrustBundle } from "../src/lib/protocol/distribution/contract-witness-pool.js";
+import { runRelayCycle } from "../src/lib/protocol/distribution/relay-worker.js";
+import { getWitnessTrustBundlePath } from "../src/lib/protocol/core/paths.js";
 
 const TRUST_TENANT = "ee-demo";
 const ORG_A = "mal";

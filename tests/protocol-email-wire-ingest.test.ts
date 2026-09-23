@@ -3,14 +3,14 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { buildWireMimeMessage } from "../src/lib/protocol/email-wire-deliver.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/core/signing.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { buildWireMimeMessage } from "../src/lib/protocol/adapters/email-wire-deliver.js";
 import {
   parseWireEml,
   scanMailReceivedForWire,
   ingestWireFromEmail,
-} from "../src/lib/protocol/email-wire-ingest.js";
+} from "../src/lib/protocol/adapters/email-wire-ingest.js";
 import { getMailReceivedDir } from "../src/lib/correspondence/paths.js";
 import {
   proposeInterOrgNotice,

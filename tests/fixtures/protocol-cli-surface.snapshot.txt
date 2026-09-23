@@ -1,0 +1,104 @@
+protocol
+protocol api-serve [--host,--mtls-allowed-org,--mtls-required,--port,--tenant,--tls-ca,--tls-cert,--tls-key]
+protocol approvers [--json,--tenant]
+protocol audit
+protocol audit verify [--chain,--envelope-dir,--json,--require-envelopes,--since,--tenant,--with-envelopes]
+protocol community
+protocol community check-sla [--json]
+protocol community export [--json]
+protocol community governance
+protocol community governance decide [--approve,--authority-id,--decided-by,--json,--note,--reject,--request-id]
+protocol community governance submit [--hub-id,--json,--jurisdiction,--operator-id,--org-name,--requested-by]
+protocol community integration
+protocol community integration list [--json]
+protocol community integration set [--flag,--json,--value]
+protocol community operators [--json,--jurisdiction]
+protocol community operators-validate [--json]
+protocol community readiness [--json]
+protocol community revoke [--json,--operator-id,--reason]
+protocol delegation
+protocol delegation export [--basis-ref,--grantee-agent,--json,--scope,--tenant]
+protocol delegation validate [--file]
+protocol deliver [--file,--peer,--tenant]
+protocol deliver status [--event-id,--json,--peer]
+protocol deliver-flush-pending [--json,--tenant]
+protocol deliver-pull [--event-id,--json,--peer,--tenant]
+protocol gov-gateway
+protocol gov-gateway decode [--file,--json,--tenant]
+protocol gov-gateway encode [--event-id,--json,--profile,--tenant]
+protocol gov-gateway health [--json,--live,--profile,--tenant]
+protocol gov-gateway sandbox
+protocol gov-gateway sandbox init [--force,--json,--tenant]
+protocol gov-gateway validate [--json,--tenant]
+protocol identity
+protocol identity export [--json,--peer,--stakeholder,--tenant]
+protocol identity validate [--file]
+protocol mail
+protocol mail wire-scan [--dry-run,--json,--since-days,--tenant]
+protocol mesh
+protocol mesh deliver [--file,--json,--peer,--tenant]
+protocol notice
+protocol notice approve [--approver,--co-approver,--id,--json,--operator,--tenant]
+protocol notice draft [--company-event,--contract,--correlation-event,--json,--message,--operator,--peer,--tenant,--type]
+protocol notice list [--json,--status,--tenant]
+protocol notice propose [--amount,--broker-instruction,--company-event,--contract,--correlation-event,--currency,--invoice,--json,--message,--operator,--peer,--stakeholder,--tenant,--type]
+protocol notice reject [--approver,--id,--json,--reason,--tenant]
+protocol notice show [--json,--tenant]
+protocol outbox
+protocol outbox apply-permissions [--dry-run,--group,--json,--tenant,--user]
+protocol outbox check-permissions [--json,--tenant]
+protocol peer
+protocol peer discover [--json,--jurisdiction,--suggest,--tenant]
+protocol peer register [--identity-file,--jurisdiction,--name,--org-uri,--peer-id,--public-key,--stakeholder,--tenant,--webhook-url]
+protocol peers
+protocol peers migrate-legacy [--apply,--json,--tenant,--to-wire-url]
+protocol relay
+protocol relay once [--json,--no-reconcile,--tenant]
+protocol relay run [--interval-sec,--max-cycles,--no-reconcile,--tenant]
+protocol relay status [--json,--tenant]
+protocol signing
+protocol signing export-public [--json,--tenant]
+protocol signing rotate [--json,--tenant]
+protocol sla [--event-id,--json,--tenant,--tier]
+protocol tls
+protocol tls init-proposal3 [--client,--force,--json,--org-c]
+protocol tls rotate [--cert-path,--json,--key-path,--tenant]
+protocol tls verify [--json,--tenant,--url]
+protocol transaction
+protocol transaction list [--json,--peer,--since,--tenant]
+protocol transaction prune-orphans [--apply,--fetch,--json,--peer,--since,--tenant]
+protocol transaction record [--amount,--broker-instruction,--contract,--currency,--invoice,--json,--notes,--peer,--stakeholder,--tenant,--type]
+protocol transaction show [--json,--tenant]
+protocol trust-registry
+protocol trust-registry decide [--approve,--decided-by,--json,--note,--reject,--request-id]
+protocol trust-registry list [--json]
+protocol trust-registry pending [--json]
+protocol trust-registry pin-local [--bypass-governance,--dry-run,--force,--json,--node-id,--tenant]
+protocol trust-registry resolve [--id,--json]
+protocol trust-registry submit [--json,--public-id,--requested-by,--tenant,--wire-email,--wire-url]
+protocol trust-registry sync-keys [--dry-run,--force,--json,--node-id,--wire-url]
+protocol trust-registry validate [--json]
+protocol trusted-hubs [--json,--jurisdiction,--tenant]
+protocol trusted-hubs-sync-keys [--dry-run,--force,--hub-url,--json,--jurisdiction]
+protocol trusted-hubs-validate [--json,--tenant]
+protocol validate [--json,--standalone,--tenant]
+protocol verify
+protocol verify audit-chain [--chain,--envelope-dir,--json,--require-envelopes,--since,--tenant]
+protocol verify delegation [--file,--json]
+protocol witness
+protocol witness cache-missing [--json,--peer,--since,--tenant]
+protocol witness flush-pending [--json,--tenant]
+protocol witness pool
+protocol witness pool init-from-contract [--contract,--json,--tenant]
+protocol witness pool init-from-trust [--bundle-url,--json,--tenant]
+protocol witness pool init-trusted [--json,--jurisdiction,--tenant]
+protocol witness pool status [--json,--tenant]
+protocol witness reconcile [--cross-hub,--event-id,--json,--peer,--since,--tenant]
+protocol witness register [--event-id,--json,--side,--tenant]
+protocol witness trust
+protocol witness trust certify [--expires-at,--hub-id,--hub-public-key,--hub-url,--json,--tenant]
+protocol witness trust init-authority [--authority-id,--json,--jurisdiction,--org-name,--org-uri,--tenant]
+protocol witness trust publish [--json,--tenant]
+protocol witness trust revoke [--cert-id,--hub-id,--json,--operator-id,--reason,--tenant]
+protocol witness trust verify [--bundle-file,--bundle-url,--json,--tenant]
+protocol witness verify [--event-id,--json,--tenant]

@@ -7,7 +7,7 @@ import {
   type RegulationBindingsManifest,
 } from "../../../schemas/org/regulation-bindings.js";
 import { createCompanyEvent } from "../company-events.js";
-import { canonicalJson } from "../protocol/canonical.js";
+import { canonicalJson } from "../protocol/core/canonical.js";
 import {
   getTenantDir,
   getTenantId,

@@ -9,7 +9,7 @@ import {
   createCommunityGmailBind,
   getCommunityUrl,
   verifyCommunityGmailBind,
-} from "../src/lib/protocol/community-gmail-bind.js";
+} from "../src/lib/protocol/adapters/community-gmail-bind.js";
 
 describe("mail setup gmail --community-link helpers", () => {
   beforeEach(() => {

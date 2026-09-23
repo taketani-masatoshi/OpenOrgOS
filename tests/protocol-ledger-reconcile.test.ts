@@ -2,15 +2,15 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getDataDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
-import { startProtocolApiServer } from "../src/lib/protocol/protocol-api-server.js";
-import { buildProtocolApiServerConfig } from "../src/lib/protocol/protocol-api-config.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
+import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
 import {
   comparePeerLedgers,
   reconcileRemotePeerLedger,
-} from "../src/lib/protocol/witness-reconcile.js";
+} from "../src/lib/protocol/distribution/witness-reconcile.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 
 function cleanup(): void {

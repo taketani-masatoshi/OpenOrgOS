@@ -3,8 +3,8 @@ import { existsSync, rmSync, mkdirSync, writeFileSync, unlinkSync } from "node:f
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import { auditLogPath } from "../src/lib/audit-log.js";
 
 function cleanupProtocolData(): void {

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { assertLegacyWebhookDeliveryAllowed } from "../src/lib/protocol/legacy-webhook-sunset.js";
-import { validateLegacyWebhookSunset } from "../src/lib/protocol/legacy-webhook-sunset.js";
+import { assertLegacyWebhookDeliveryAllowed } from "../src/lib/protocol/transport/legacy-webhook-sunset.js";
+import { validateLegacyWebhookSunset } from "../src/lib/protocol/transport/legacy-webhook-sunset.js";
 
 describe("legacy webhook sunset", () => {
   afterEach(() => {

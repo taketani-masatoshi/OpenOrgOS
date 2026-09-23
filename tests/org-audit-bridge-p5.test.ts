@@ -17,7 +17,7 @@ import {
   recordAuditBridgeFailure,
 } from "../src/lib/org/audit-bridge-errors.js";
 import { ORG_AUDIT_BRIDGE_STATE_MAX_IDS } from "../schemas/org/audit-bridge-state.js";
-import { validateProtocolState } from "../src/lib/protocol/validate.js";
+import { validateProtocolState } from "../src/lib/protocol/core/validate.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "org"), join(getDataDir(), "protocol")]) {

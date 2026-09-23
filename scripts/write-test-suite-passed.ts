@@ -1,3 +1,3 @@
-import { writeTestSuitePassed } from "../src/lib/protocol/test-suite-status.js";
+import { writeTestSuitePassed } from "../src/lib/protocol/readiness/test-suite-status.js";
 
 writeTestSuitePassed("npm test");

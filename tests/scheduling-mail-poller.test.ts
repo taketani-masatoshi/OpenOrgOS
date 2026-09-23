@@ -14,7 +14,7 @@ vi.mock("../src/lib/correspondence/mail-receive-sync.js", () => ({
   syncMailReceive: vi.fn(async () => ({ fetched: 0, saved: 0, skipped: 0 })),
 }));
 
-vi.mock("../src/lib/protocol/email-wire-ingest.js", () => ({
+vi.mock("../src/lib/protocol/adapters/email-wire-ingest.js", () => ({
   scanMailReceivedForWire: vi.fn(async () => ({ scanned: 0, ingested: 0 })),
 }));
 

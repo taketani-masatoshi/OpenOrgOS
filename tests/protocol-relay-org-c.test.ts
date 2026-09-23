@@ -4,21 +4,21 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/signing.js";
-import { startProtocolApiServer } from "../src/lib/protocol/protocol-api-server.js";
-import { buildProtocolApiServerConfig } from "../src/lib/protocol/protocol-api-config.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/core/signing.js";
+import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
 import {
   deliverViaRelayStore,
   flushWireRelayInbox,
-} from "../src/lib/protocol/transport.js";
+} from "../src/lib/protocol/transport/transport.js";
 import { eventEnvelopeSchema } from "../schemas/protocol/org-event.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
-import { getProtocolRelayStoreDir } from "../src/lib/protocol/paths.js";
+import { getProtocolRelayStoreDir } from "../src/lib/protocol/core/paths.js";
 import {
   ensureProposal3Pki,
   writePartyProtocolClientConfig,
-} from "../src/lib/protocol/tls-pki.js";
+} from "../src/lib/protocol/transport/tls-pki.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {

@@ -4,8 +4,8 @@
  */
 import { readFileSync } from "node:fs";
 import { setTenantId } from "../src/lib/tenant.js";
-import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
-import { getWitnessTrustAuthorityKeyPath } from "../src/lib/protocol/paths.js";
+import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
+import { getWitnessTrustAuthorityKeyPath } from "../src/lib/protocol/core/paths.js";
 import {
   initWitnessTrustAuthority,
   certifyWitnessHub,
@@ -14,15 +14,15 @@ import {
   verifyWitnessTrustBundle,
   loadWitnessTrustAuthority,
   loadWitnessTrustBundle,
-} from "../src/lib/protocol/witness-trust.js";
-import { loadWitnessPoolConfig } from "../src/lib/protocol/witness-pool.js";
-import { checkWitnessPoolHealth } from "../src/lib/protocol/witness-client.js";
+} from "../src/lib/protocol/distribution/witness-trust.js";
+import { loadWitnessPoolConfig } from "../src/lib/protocol/distribution/witness-pool.js";
+import { checkWitnessPoolHealth } from "../src/lib/protocol/distribution/witness-client.js";
 import {
   organizationCertificateSpkiSha256,
   saveOrganizationCertificateAttestation,
   signOrganizationCertificateAttestation,
   verifyOrganizationCertificateAttestation,
-} from "../src/lib/protocol/org-cert-witness.js";
+} from "../src/lib/protocol/distribution/org-cert-witness.js";
 import YAML from "yaml";
 
 const TENANT = process.env.ORGOS_TENANT ?? "mal";

@@ -14,7 +14,7 @@ import { loadOrgApprovalRegistry, saveOrgApprovalRegistry } from "../src/lib/org
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { getDataDir } from "../src/lib/utils.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 
 function cleanup(): void {
   const pending = join(getDataDir(), "org", "pending-approvals.yaml");

@@ -18,10 +18,10 @@ import {
   isPkPrefixedOpenOrgDid,
 } from "../../../schemas/protocol/openorg-did.js";
 import { readYamlFile, resolveTenantPath } from "../utils.js";
-import { getProtocolDataDir } from "../protocol/paths.js";
+import { getProtocolDataDir } from "../protocol/core/paths.js";
 import { assertWireHashMatchesEnvelope } from "./codec.js";
 import { buildWireNodeIdentityFields } from "./did.js";
-import { loadWireTrustRegistry } from "../protocol/wire-trust-registry.js";
+import { loadWireTrustRegistry } from "../protocol/distribution/wire-trust-registry.js";
 
 export function getWireGatewayYamlPath(): string {
   return join(getProtocolDataDir(), "wire-gateway.yaml");

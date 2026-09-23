@@ -1,3 +1,3 @@
-import { clearTestSuiteStatus } from "../src/lib/protocol/test-suite-status.js";
+import { clearTestSuiteStatus } from "../src/lib/protocol/readiness/test-suite-status.js";
 
 clearTestSuiteStatus();

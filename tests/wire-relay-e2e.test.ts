@@ -4,17 +4,17 @@ import { join } from "node:path";
 import { createServer, type Server } from "node:http";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import {
   deliverProtocolEnvelopeWithRelay,
-} from "../src/lib/protocol/transport.js";
-import { runRelayCycle, loadRelayState } from "../src/lib/protocol/relay-worker.js";
-import { evaluateRelaySlaAlerts } from "../src/lib/protocol/relay-sla-alert.js";
-import { listWirePending } from "../src/lib/protocol/wire-queue.js";
+} from "../src/lib/protocol/transport/transport.js";
+import { runRelayCycle, loadRelayState } from "../src/lib/protocol/distribution/relay-worker.js";
+import { evaluateRelaySlaAlerts } from "../src/lib/protocol/transport/relay-sla-alert.js";
+import { listWirePending } from "../src/lib/protocol/transport/wire-queue.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
-import { getProtocolRelayStoreDir } from "../src/lib/protocol/paths.js";
+import { getProtocolRelayStoreDir } from "../src/lib/protocol/core/paths.js";
 import YAML from "yaml";
 
 function cleanup(): void {

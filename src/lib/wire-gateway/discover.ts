@@ -1,9 +1,9 @@
 import { getTenantId } from "../tenant.js";
-import { loadPeersRegistry, registerPeer, nextPeerId } from "../protocol/peers.js";
-import { loadWireTrustRegistry } from "../protocol/wire-trust-registry.js";
+import { loadPeersRegistry, registerPeer, nextPeerId } from "../protocol/transport/peers.js";
+import { loadWireTrustRegistry } from "../protocol/distribution/wire-trust-registry.js";
 import type { WireTrustRegistryNode } from "../../../schemas/protocol/wire-trust-registry.js";
 import type { PeerProfile } from "../../../schemas/protocol/peers.js";
-import { syncWireTrustRegistryPublicKeys } from "../protocol/wire-trust-registry-sync.js";
+import { syncWireTrustRegistryPublicKeys } from "../protocol/distribution/wire-trust-registry-sync.js";
 import {
   resolveOpenOrgWireUrl,
   isDnsStyleNodeId,

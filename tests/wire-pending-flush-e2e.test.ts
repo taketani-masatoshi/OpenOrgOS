@@ -4,23 +4,23 @@ import { join } from "node:path";
 import { createServer } from "node:http";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import {
   enqueueWirePending,
   listWirePending,
   saveWirePending,
-} from "../src/lib/protocol/wire-queue.js";
+} from "../src/lib/protocol/transport/wire-queue.js";
 import {
   deliverProtocolEnvelopeWithRelay,
   flushWirePending,
-} from "../src/lib/protocol/transport.js";
-import { getWireDeadLetterAuditPath } from "../src/lib/protocol/wire-dead-letter-audit.js";
-import { computeNextRetryAt, WIRE_PENDING_MAX_ATTEMPTS } from "../src/lib/protocol/wire-pending-retry.js";
+} from "../src/lib/protocol/transport/transport.js";
+import { getWireDeadLetterAuditPath } from "../src/lib/protocol/transport/wire-dead-letter-audit.js";
+import { computeNextRetryAt, WIRE_PENDING_MAX_ATTEMPTS } from "../src/lib/protocol/transport/wire-pending-retry.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
-import { isWireDelivered } from "../src/lib/protocol/wire-delivered.js";
-import { listDeliveryAttempts } from "../src/lib/protocol/delivery-ledger.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
+import { isWireDelivered } from "../src/lib/protocol/transport/wire-delivered.js";
+import { listDeliveryAttempts } from "../src/lib/protocol/transport/delivery-ledger.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {

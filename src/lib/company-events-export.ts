@@ -8,7 +8,7 @@ import {
   getTrustedAttestationPublicKeys,
   loadCompanyEventsSigningMeta,
 } from "./company-events-signing.js";
-import { canonicalJson } from "./protocol/canonical.js";
+import { canonicalJson } from "./protocol/core/canonical.js";
 import { loadCompanyEventsWitnessPin } from "./company-events-witness-pin.js";
 import { getDataDir, toLogicalPath } from "./utils.js";
 

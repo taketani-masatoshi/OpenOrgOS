@@ -46,7 +46,7 @@ No hidden randomness. No hidden side effects.
 | Routing queue | `docs/.../queue/events.jsonl` · status via `appendQueueStatusEvent` |
 | Wire delivery | `data/protocol/delivery-attempts.jsonl` (SSOT) · yaml snapshot derived |
 | Wire / witness pending | active YAML + `*-pending-lifecycle.jsonl` archive |
-| Dead letter audit | `src/lib/protocol/wire-dead-letter-audit.ts` |
+| Dead letter audit | `src/lib/protocol/transport/wire-dead-letter-audit.ts` |
 
 Clock / ID injection: `src/lib/runtime-context.ts` · Repository pilot: `DeliveryAttemptRepository` in delivery-ledger.
 
@@ -68,7 +68,7 @@ Never edit a stored event. Append a compensating event:
 | Duplicate wire send | DELETE pending row | Append `wire.cancelled` / dead-letter audit entry |
 | Company event typo | Rewrite `EVT-*.md` history | New EVT entry + link `supersedes: EVT-...` in frontmatter |
 
-**OrgOS paths:** `src/lib/protocol/delivery-ledger.ts` · `wire-dead-letter-audit.ts` · `docs/company/events/`
+**OrgOS paths:** `src/lib/protocol/transport/delivery-ledger.ts` · `wire-dead-letter-audit.ts` · `docs/company/events/`
 
 ---
 

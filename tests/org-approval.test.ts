@@ -11,8 +11,8 @@ import {
   listOrgApprovals,
   isSelfApprovalBannedSubject,
 } from "../src/lib/org/approval/index.js";
-import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { loadProtocolAuditChain } from "../src/lib/protocol/core/audit-chain.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 
 function cleanup(): void {
   for (const p of [

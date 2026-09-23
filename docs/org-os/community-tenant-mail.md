@@ -98,5 +98,5 @@ Gmail OAuth を使わないテナントは、SMTP / IMAP の資格情報を **en
 ## 関連
 
 - [google-oauth-setup.md](../../OS_Community/docs/google-oauth-setup.md)（Community OAuth redirect）
-- `src/lib/protocol/community-tenant-mail-api.ts`
-- `src/lib/protocol/community-gmail-bind.ts`
+- `src/lib/protocol/adapters/community-tenant-mail-api.ts`
+- `src/lib/protocol/adapters/community-gmail-bind.ts`

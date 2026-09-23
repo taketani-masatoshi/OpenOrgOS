@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
-import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
-import { maybeSignEnvelope } from "../src/lib/protocol/signing.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/core/identity.js";
+import { maybeSignEnvelope } from "../src/lib/protocol/core/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import {
   envelopeToWireMessage,
   wireMessageToEnvelope,
@@ -14,7 +14,7 @@ import {
   validateWireGatewayConfig,
   buildWireNodeWellKnown,
 } from "../src/lib/wire-gateway/validate.js";
-import { envelopeDigest } from "../src/lib/protocol/canonical.js";
+import { envelopeDigest } from "../src/lib/protocol/core/canonical.js";
 import { wireMessageSchema } from "../schemas/protocol/wire-message.js";
 import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config.js";
 import { wireExportPolicySchema } from "../schemas/protocol/wire-export-policy.js";

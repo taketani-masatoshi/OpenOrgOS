@@ -7,13 +7,13 @@
 import type { MaturityReport } from "./maturity.js";
 import { listP0Items } from "./p0-status.js";
 import { computeModuleAxisStats } from "./extensibility-contract.js";
-import { computeOrgOsReadiness } from "./protocol/orgos-readiness.js";
-import { computeOrgOsStrictReadiness } from "./protocol/orgos-readiness-strict.js";
+import { computeOrgOsReadiness } from "./protocol/readiness/orgos-readiness.js";
+import { computeOrgOsStrictReadiness } from "./protocol/readiness/orgos-readiness-strict.js";
 import {
   computeOpenOrgOsCoreReadiness,
   computeOpenOrgOsCoreStrictReadiness,
   type OpenOrgOsCoreReadiness,
-} from "./protocol/openorgos-core-readiness.js";
+} from "./protocol/readiness/openorgos-core-readiness.js";
 
 /** framework-assessment §9 実測（REF-4b/d 完了 · 2026-06-25） */
 export const PRODUCT_FRAMEWORK_SCORE = 100;

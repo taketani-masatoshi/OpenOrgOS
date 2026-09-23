@@ -5,12 +5,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config.js";
-import { envelopeDigest } from "../src/lib/protocol/canonical.js";
-import { protocolFetch } from "../src/lib/protocol/protocol-tls.js";
+import { envelopeDigest } from "../src/lib/protocol/core/canonical.js";
+import { protocolFetch } from "../src/lib/protocol/transport/protocol-tls.js";
 import {
   generateProtocolKeyPair,
   signEventEnvelope,
-} from "../src/lib/protocol/signing.js";
+} from "../src/lib/protocol/core/signing.js";
 import type { WireInternalClient } from "../src/lib/wire-gateway/internal-client.js";
 import { createOutboundPoller } from "../src/lib/wire-gateway/outbound-poller.js";
 import { startWireGatewayServer } from "../src/lib/wire-gateway/server.js";

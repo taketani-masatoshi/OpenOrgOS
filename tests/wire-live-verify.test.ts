@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { redactEnvRecord, redactSecrets } from "../src/lib/protocol/redact-secrets.js";
+import { redactEnvRecord, redactSecrets } from "../src/lib/protocol/core/redact-secrets.js";
 import {
   isWireLiveVerifyEnabled,
   runWireLiveVerify,
-} from "../src/lib/protocol/wire-live-verify.js";
+} from "../src/lib/protocol/readiness/wire-live-verify.js";
 import { resolveWireOutboundConfig } from "../src/lib/correspondence/mail-config.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { mkdirSync, writeFileSync, rmSync } from "node:fs";

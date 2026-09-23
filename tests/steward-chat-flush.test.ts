@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import {
   seedDemoWireDeliveryEnvelope,
 } from "./helpers/demo-witness-fixture.js";
-import { saveWirePending, enqueueWirePending } from "../src/lib/protocol/wire-queue.js";
+import { saveWirePending, enqueueWirePending } from "../src/lib/protocol/transport/wire-queue.js";
 
 describe("steward chat wire flush API", () => {
   let handle: StewardChatServerHandle | undefined;

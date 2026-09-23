@@ -13,23 +13,23 @@ import { getDataDir, getDocsDir } from "../src/lib/utils.js";
 import {
   ensureProtocolSigningKey,
   exportProtocolPublicKeyBase64,
-} from "../src/lib/protocol/signing.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+} from "../src/lib/protocol/core/signing.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   approveInterOrgNotice,
   proposeInterOrgNotice,
 } from "../src/lib/wire/index.js";
-import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
+import { deliverProtocolEnvelope } from "../src/lib/protocol/transport/transport.js";
 import {
   getEmailWireEventConfirmation,
   listUnconfirmedEmailWireEvents,
-} from "../src/lib/protocol/delivery-ledger.js";
-import { scanMailReceivedForWire } from "../src/lib/protocol/email-wire-ingest.js";
+} from "../src/lib/protocol/transport/delivery-ledger.js";
+import { scanMailReceivedForWire } from "../src/lib/protocol/adapters/email-wire-ingest.js";
 import {
   getMailReceivedDir,
   getWireSentDir,
 } from "../src/lib/correspondence/paths.js";
-import { evaluateEmailWireReadiness } from "../src/lib/protocol/prod-wire-gate.js";
+import { evaluateEmailWireReadiness } from "../src/lib/protocol/readiness/prod-wire-gate.js";
 
 const TEST_TENANT = `test-email-wire-${process.pid}-${randomUUID().slice(0, 8)}`;
 

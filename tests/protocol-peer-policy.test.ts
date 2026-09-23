@@ -5,7 +5,7 @@ import { setTenantId, getDataDir } from "../src/lib/utils.js";
 import {
   assertTransactionPayloadAllowedForPeer,
   resolvePeerProtocolPolicy,
-} from "../src/lib/protocol/peer-protocol-policy.js";
+} from "../src/lib/protocol/transport/peer-protocol-policy.js";
 
 function cleanup(): void {
   const p = join(getDataDir(), "contracts");

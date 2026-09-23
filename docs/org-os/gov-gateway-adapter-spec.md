@@ -51,7 +51,7 @@ interface GovGatewayAdapter {
 
 ### 3.2 OpenOrgOS MIME
 
-`application/vnd.openorgos.envelope+json` = [`canonicalJson(envelope)`](../../src/lib/protocol/canonical.ts)（署名フィールド含む JSON · キー sorted）
+`application/vnd.openorgos.envelope+json` = [`canonicalJson(envelope)`](../../src/lib/protocol/core/canonical.ts)（署名フィールド含む JSON · キー sorted）
 
 ---
 

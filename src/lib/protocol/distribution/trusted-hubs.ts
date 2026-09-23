@@ -1,0 +1,105 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import {
+  trustedHubsRegistrySchema,
+  type TrustedHubsRegistry,
+  type TrustedHubsJurisdiction,
+} from "../../../../schemas/protocol/trusted-hubs.js";
+import type { WitnessHubEntry } from "../../../../schemas/protocol/witness-pool.js";
+import { STEWARD_PLATFORM_DIR } from "../../steward-paths.js";
+import { loadTenantConfig } from "../../tenant.js";
+import { readYamlFile } from "../../utils.js";
+
+const TRUSTED_HUBS_PATH = join(STEWARD_PLATFORM_DIR, "protocol", "trusted-hubs.yaml");
+
+export function loadTrustedHubsRegistry(): TrustedHubsRegistry {
+  if (!existsSync(TRUSTED_HUBS_PATH)) {
+    return trustedHubsRegistrySchema.parse({ version: "1", jurisdictions: [] });
+  }
+  return readYamlFile(TRUSTED_HUBS_PATH, trustedHubsRegistrySchema);
+}
+
+export function findTrustedHubsForJurisdiction(
+  jurisdiction: string,
+  registry?: TrustedHubsRegistry
+): TrustedHubsJurisdiction | undefined {
+  const reg = registry ?? loadTrustedHubsRegistry();
+  return reg.jurisdictions.find((j) => j.jurisdiction === jurisdiction);
+}
+
+export function listTrustedHubEntries(jurisdiction?: string): WitnessHubEntry[] {
+  const j = jurisdiction ?? loadTenantConfig().jurisdiction ?? "JP";
+  const entry = findTrustedHubsForJurisdiction(j);
+  return entry?.hubs ?? [];
+}
+
+export function getTrustedHubsRegistryPath(): string {
+  return TRUSTED_HUBS_PATH;
+}
+
+export interface TrustedHubValidationIssue {
+  code: string;
+  message: string;
+}
+
+export function validateTrustedHubsRegistry(): {
+  ok: boolean;
+  issues: TrustedHubValidationIssue[];
+  warnings: TrustedHubValidationIssue[];
+} {
+  const issues: TrustedHubValidationIssue[] = [];
+  const warnings: TrustedHubValidationIssue[] = [];
+
+  try {
+    const reg = loadTrustedHubsRegistry();
+    const strict = process.env.ORGOS_STRICT_TRUST === "1";
+    const jurisdictionFilter = process.env.ORGOS_STRICT_TRUST_JURISDICTIONS?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const seenJurisdictions = new Set<string>();
+    for (const entry of reg.jurisdictions) {
+      if (jurisdictionFilter?.length && !jurisdictionFilter.includes(entry.jurisdiction)) {
+        continue;
+      }
+      if (seenJurisdictions.has(entry.jurisdiction)) {
+        issues.push({
+          code: "trusted-hub-duplicate-jurisdiction",
+          message: `Duplicate jurisdiction entry: ${entry.jurisdiction}`,
+        });
+      }
+      seenJurisdictions.add(entry.jurisdiction);
+
+      const seenHubIds = new Set<string>();
+      for (const hub of entry.hubs) {
+        if (seenHubIds.has(hub.hub_id)) {
+          issues.push({
+            code: "trusted-hub-duplicate-id",
+            message: `${entry.jurisdiction}: duplicate hub_id ${hub.hub_id}`,
+          });
+        }
+        seenHubIds.add(hub.hub_id);
+        if (!hub.hub_url) {
+          issues.push({
+            code: "trusted-hub-missing-url",
+            message: `${entry.jurisdiction}/${hub.hub_id}: hub_url missing`,
+          });
+        }
+        if (!hub.hub_public_key?.trim()) {
+          const item = {
+            code: "trusted-hub-missing-key",
+            message: `${entry.jurisdiction}/${hub.hub_id}: hub_public_key empty (pin before production)`,
+          };
+          if (strict) issues.push(item);
+          else warnings.push(item);
+        }
+      }
+    }
+  } catch (e) {
+    issues.push({
+      code: "trusted-hubs-invalid",
+      message: e instanceof Error ? e.message : String(e),
+    });
+  }
+
+  return { ok: issues.length === 0, issues, warnings };
+}

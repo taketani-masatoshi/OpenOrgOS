@@ -7,7 +7,7 @@ import {
   decideGovernanceRequest,
   loadTrustedOperatorsRegistry,
   saveTrustedOperatorsRegistry,
-} from "../src/lib/protocol/trusted-operators.js";
+} from "../src/lib/protocol/distribution/trusted-operators.js";
 
 function cleanupTestOperator(): void {
   const reg = loadTrustedOperatorsRegistry();

@@ -4,17 +4,17 @@
  */
 import { randomUUID } from "node:crypto";
 import { setTenantId } from "../src/lib/tenant.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/core/signing.js";
 import { deriveOpenOrgDidFromPublicKey } from "../schemas/protocol/openorg-did.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import { proposeInterOrgNotice, approveInterOrgNotice } from "../src/lib/wire/index.js";
-import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
+import { deliverProtocolEnvelope } from "../src/lib/protocol/transport/transport.js";
 import {
   getEmailWireEventConfirmation,
   listUnconfirmedEmailWireEvents,
-} from "../src/lib/protocol/delivery-ledger.js";
+} from "../src/lib/protocol/transport/delivery-ledger.js";
 import { syncMailReceive } from "../src/lib/correspondence/mail-receive-sync.js";
-import { scanMailReceivedForWire } from "../src/lib/protocol/email-wire-ingest.js";
+import { scanMailReceivedForWire } from "../src/lib/protocol/adapters/email-wire-ingest.js";
 import { loadMailConfig } from "../src/lib/correspondence/mail-config.js";
 
 const TENANT = process.env.ORGOS_TENANT ?? "mal";

@@ -1,7 +1,10 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { Command } from "commander";
 import { describe, expect, it } from "vitest";
 import { registerPlatformCommands } from "../src/cli/registrars/platform.js";
 import { registerOrchestrationCommands } from "../src/cli/registrars/orchestration.js";
+import { ROOT_DIR } from "../src/lib/tenant.js";
 
 function command(parent: Command, name: string): Command {
   const found = parent.commands.find((candidate) => candidate.name() === name);
@@ -15,6 +18,20 @@ function buildProgram(): Command {
   registerPlatformCommands(program);
   registerOrchestrationCommands(program);
   return program;
+}
+
+function snapshotCommandTree(cmd: Command, prefix = ""): string[] {
+  const name = prefix ? `${prefix} ${cmd.name()}` : cmd.name();
+  const opts = cmd.options
+    .map((option) => option.long || option.short)
+    .filter((value): value is string => Boolean(value))
+    .sort();
+  const children = [...cmd.commands].sort((a, b) => a.name().localeCompare(b.name()));
+  const lines = [`${name}${opts.length ? ` [${opts.join(",")}]` : ""}`];
+  for (const child of children) {
+    lines.push(...snapshotCommandTree(child, name));
+  }
+  return lines;
 }
 
 describe("Wire CLI surface contract", () => {
@@ -57,5 +74,15 @@ describe("Wire CLI surface contract", () => {
     expect(migrate.description()).toContain("2026-10-01");
     expect(migrate.description()).toMatch(/not orgos webhook/i);
     expect(migrate.options.map((option) => option.long)).toContain("--to-wire-url");
+  });
+
+  it("keeps orgos protocol command names and options stable", () => {
+    const protocol = command(buildProgram(), "protocol");
+    const actual = snapshotCommandTree(protocol).join("\n") + "\n";
+    const expected = readFileSync(
+      join(ROOT_DIR, "tests/fixtures/protocol-cli-surface.snapshot.txt"),
+      "utf-8"
+    );
+    expect(actual).toBe(expected);
   });
 });

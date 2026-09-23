@@ -3,19 +3,19 @@ import { existsSync, rmSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   generateProtocolKeyPair,
   signEventEnvelope,
   ensureProtocolSigningKey,
   exportProtocolPublicKeyBase64,
-} from "../src/lib/protocol/signing.js";
-import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
+} from "../src/lib/protocol/core/signing.js";
+import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/core/identity.js";
 import { envelopeToWireMessage } from "../src/lib/wire-gateway/codec.js";
 import { startWireInternalApiServer } from "../src/lib/wire-gateway/internal-api-server.js";
 import { startWireGatewayServer } from "../src/lib/wire-gateway/server.js";
 import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config.js";
-import { getProtocolInboxDir } from "../src/lib/protocol/paths.js";
+import { getProtocolInboxDir } from "../src/lib/protocol/core/paths.js";
 import { allocateEphemeralPort } from "./helpers/ephemeral-port.js";
 
 const BEARER = "wire-test-token";

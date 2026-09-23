@@ -1,6 +1,6 @@
 import type { EventEnvelope } from "../../../../schemas/protocol/org-event.js";
 import { eventEnvelopeSchema } from "../../../../schemas/protocol/org-event.js";
-import { canonicalJson } from "../../protocol/canonical.js";
+import { canonicalJson } from "../../protocol/core/canonical.js";
 import { OPENORGOS_ENVELOPE_MIME } from "./types.js";
 
 export { OPENORGOS_ENVELOPE_MIME };

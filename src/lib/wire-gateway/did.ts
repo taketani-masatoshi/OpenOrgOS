@@ -6,8 +6,8 @@ import {
   resolveWireNodeDid,
   type OpenOrgDid,
 } from "../../../schemas/protocol/openorg-did.js";
-import { exportProtocolPublicKeyBase64 } from "../protocol/signing.js";
-import { resolveOrganizationCertificateSpkiSha256 } from "../protocol/org-cert-witness.js";
+import { exportProtocolPublicKeyBase64 } from "../protocol/core/signing.js";
+import { resolveOrganizationCertificateSpkiSha256 } from "../protocol/distribution/org-cert-witness.js";
 import { loadTenantConfig } from "../tenant.js";
 import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-config.js";
 

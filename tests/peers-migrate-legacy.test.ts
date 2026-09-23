@@ -3,9 +3,9 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { registerPeer, loadPeersRegistry } from "../src/lib/protocol/peers.js";
-import { migrateLegacyWebhookPeers } from "../src/lib/protocol/peers-migrate-legacy.js";
-import { validateProtocolState } from "../src/lib/protocol/validate.js";
+import { registerPeer, loadPeersRegistry } from "../src/lib/protocol/transport/peers.js";
+import { migrateLegacyWebhookPeers } from "../src/lib/protocol/transport/peers-migrate-legacy.js";
+import { validateProtocolState } from "../src/lib/protocol/core/validate.js";
 
 function cleanup(): void {
   const protocolDir = join(getDataDir(), "protocol");

@@ -36,24 +36,24 @@ import {
   type SignedReceiptQrPayload,
   type StoredReceipt,
 } from "../../schemas/receipt-qr.js";
-import { canonicalJson } from "./protocol/canonical.js";
-import { ourOrgRef } from "./protocol/identity.js";
+import { canonicalJson } from "./protocol/core/canonical.js";
+import { ourOrgRef } from "./protocol/core/identity.js";
 import {
   ensureProtocolSigningKey,
   exportProtocolPublicKeyBase64,
   maybeSignEnvelope,
-} from "./protocol/signing.js";
+} from "./protocol/core/signing.js";
 import type { EventEnvelope } from "../../schemas/protocol/org-event.js";
 import { eventEnvelopeSchema } from "../../schemas/protocol/org-event.js";
 import { getTenantDir, loadTenantConfig } from "./tenant.js";
 import { currentDate, getDataDir, readYamlFile } from "./utils.js";
 import { getClock } from "./runtime-context.js";
 import { loadCompany, loadTaxProfile } from "./data.js";
-import { findPeer } from "./protocol/peers.js";
+import { findPeer } from "./protocol/transport/peers.js";
 import {
   findPeerByOrgRef,
   verifyInboundProtocolEnvelope,
-} from "./protocol/inbound-verify.js";
+} from "./protocol/core/inbound-verify.js";
 import {
   approveInterOrgNotice,
   bridgeProposeReceiptClaimed,

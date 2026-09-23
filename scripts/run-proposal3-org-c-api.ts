@@ -2,8 +2,8 @@
 /**
  * Proposal 3 — Org C Protocol API daemon (HTTPS + mTLS on relay/inbox/outbox).
  */
-import { runProtocolApiServe } from "../src/commands/protocol.js";
-import { loadOrgCServerTlsMetadata } from "../src/lib/protocol/tls-pki.js";
+import { runProtocolApiServe } from "../src/commands/protocol/api.js";
+import { loadOrgCServerTlsMetadata } from "../src/lib/protocol/transport/tls-pki.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
 const orgC = process.env.ORGOS_ORG_C_TENANT ?? process.argv[2] ?? "aiac";

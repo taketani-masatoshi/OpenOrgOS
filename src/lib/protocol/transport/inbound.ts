@@ -1,14 +1,16 @@
 import type { EventEnvelope } from "../../../../schemas/protocol/org-event.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getProtocolInboxDir } from "../paths.js";
+import { serializeEventEnvelope } from "../core/envelope.js";
+import { getProtocolInboxDir } from "../core/paths.js";
 import type { DeliverEnvelopeResult } from "./types.js";
 
+/** Persist an inbound envelope using canonical serialization (digest-stable). */
 export function mirrorInboundEnvelope(envelope: EventEnvelope): string {
   const dir = getProtocolInboxDir();
   mkdirSync(dir, { recursive: true });
   const path = join(dir, `${envelope.event_id}.json`);
-  writeFileSync(path, JSON.stringify(envelope, null, 2), "utf-8");
+  writeFileSync(path, serializeEventEnvelope(envelope), "utf-8");
   return path;
 }
 

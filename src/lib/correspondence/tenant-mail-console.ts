@@ -10,8 +10,8 @@ import { writeYamlFile } from "../utils.js";
 import { getMailConfigPath } from "./paths.js";
 import { loadMailConfig, resolveMailConfig } from "./mail-config.js";
 import { getGmailOAuthTokenPath, isGmailTokenExpired, loadGmailOAuthToken } from "./gmail-oauth.js";
-import { loadCommunityIntegration } from "../protocol/eco-production-evidence.js";
-import { communityConnectionsUrl } from "../protocol/community-gmail-bind.js";
+import { loadCommunityIntegration } from "../protocol/readiness/eco-production-evidence.js";
+import { communityConnectionsUrl } from "../protocol/adapters/community-gmail-bind.js";
 
 export interface TenantMailPlatformReadiness {
   ready: boolean;

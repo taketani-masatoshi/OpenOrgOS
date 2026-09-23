@@ -11,7 +11,7 @@ import {
 import { getTenantId } from "./tenant.js";
 import { getDocsReportsDir, writeCanonicalFile } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
-import { auditEventTypeForQueueEvent } from "./protocol/map-internal.js";
+import { auditEventTypeForQueueEvent } from "./protocol/adapters/map-internal.js";
 import { appendJsonl } from "./jsonl-store.js";
 import { getClock, getIdGenerator } from "./runtime-context.js";
 

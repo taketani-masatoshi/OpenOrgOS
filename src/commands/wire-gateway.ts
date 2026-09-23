@@ -10,14 +10,14 @@ import {
   startWireGatewayServer,
   startWireInternalApiServer,
 } from "../lib/wire-gateway/index.js";
-import { ensureDevServerTls } from "../lib/protocol/dev-server-tls.js";
+import { ensureDevServerTls } from "../lib/protocol/transport/dev-server-tls.js";
 import { getDeployDir } from "../lib/orgos-paths.js";
 import { writeYamlFile } from "../lib/utils.js";
 import { requireCliConfigWrite } from "../lib/console-auth/cli-operator.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../lib/protocol/signing.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../lib/protocol/core/signing.js";
 import { resolveWireGatewayDid } from "../lib/wire-gateway/did.js";
 import { resolveWireNodeDid } from "../../schemas/protocol/openorg-did.js";
-import { loadWireTrustRegistry } from "../lib/protocol/wire-trust-registry.js";
+import { loadWireTrustRegistry } from "../lib/protocol/distribution/wire-trust-registry.js";
 import {
   listWireGatewayDiscoverEntries,
   listWireGatewayFederationCatalog,
@@ -35,7 +35,7 @@ import { syncWireFederationGossipFromRegistry } from "../lib/wire-gateway/federa
 import {
   evaluateWireImplementationChecklist,
   runStrictWireImplementationScore,
-} from "../lib/protocol/wire-implementation-score.js";
+} from "../lib/protocol/readiness/wire-implementation-score.js";
 import type { WireGatewayConfig } from "../../schemas/protocol/wire-gateway-config.js";
 import { wireGatewayConfigSchema } from "../../schemas/protocol/wire-gateway-config.js";
 

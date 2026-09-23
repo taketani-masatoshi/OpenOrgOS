@@ -9,18 +9,18 @@ import {
   ensureProposal3Pki,
   writeOrgCServerTlsMetadata,
   writePartyProtocolClientConfig,
-} from "../src/lib/protocol/tls-pki.js";
-import { buildProtocolApiServerConfig } from "../src/lib/protocol/protocol-api-config.js";
-import { startProtocolApiServer } from "../src/lib/protocol/protocol-api-server.js";
-import { getWitnessTrustBundlePath } from "../src/lib/protocol/paths.js";
-import { protocolFetch } from "../src/lib/protocol/protocol-tls.js";
-import { runProtocolRelayOnce } from "../src/commands/protocol.js";
+} from "../src/lib/protocol/transport/tls-pki.js";
+import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
+import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { getWitnessTrustBundlePath } from "../src/lib/protocol/core/paths.js";
+import { protocolFetch } from "../src/lib/protocol/transport/protocol-tls.js";
+import { runProtocolRelayOnce } from "../src/commands/protocol/relay.js";
 import {
   initWitnessTrustAuthority,
   certifyWitnessHub,
   addCertificateToBundle,
   publishWitnessTrustBundle,
-} from "../src/lib/protocol/witness-trust.js";
+} from "../src/lib/protocol/distribution/witness-trust.js";
 import { existsSync } from "node:fs";
 
 const ORG_C = process.env.ORGOS_ORG_C_TENANT ?? "aiac";
@@ -91,7 +91,7 @@ async function main(): Promise<void> {
     }
 
     setTenantId(PARTIES[0]!);
-    const { runProtocolTlsVerify } = await import("../src/commands/protocol.js");
+    const { runProtocolTlsVerify } = await import("../src/commands/protocol/tls.js");
     await runProtocolTlsVerify({ url: bundleUrl });
     console.log("✓ tls verify");
 

@@ -7,8 +7,8 @@ import {
   enqueueWitnessPending,
   archiveWitnessPending,
   listWitnessPending,
-} from "../src/lib/protocol/witness-queue.js";
-import { getWitnessPendingLifecyclePath } from "../src/lib/protocol/witness-pending-lifecycle.js";
+} from "../src/lib/protocol/distribution/witness-queue.js";
+import { getWitnessPendingLifecyclePath } from "../src/lib/protocol/distribution/witness-pending-lifecycle.js";
 
 function cleanup(): void {
   const protocolDir = join(getDataDir(), "protocol");
@@ -55,7 +55,7 @@ describe("witness pending lifecycle archive", () => {
       side: "received",
       envelope_digest: "d".repeat(64),
     });
-    const { removeWitnessPending } = await import("../src/lib/protocol/witness-queue.js");
+    const { removeWitnessPending } = await import("../src/lib/protocol/distribution/witness-queue.js");
     removeWitnessPending("HUB-002", "00000000-0000-4000-8000-000000000003", "received");
     expect(listWitnessPending()).toHaveLength(0);
     const record = JSON.parse(

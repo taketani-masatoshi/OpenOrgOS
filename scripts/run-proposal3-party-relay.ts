@@ -3,7 +3,7 @@
  * Proposal 3 — party relay daemon (Mac mini / southwood · mal).
  * Runs protocol relay run — pulls Org C inbox + pushes outbox on interval.
  */
-import { runProtocolRelayRun } from "../src/commands/protocol.js";
+import { runProtocolRelayRun } from "../src/commands/protocol/relay.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
 const tenantId = process.argv[2] ?? process.env.ORGOS_TENANT;

@@ -5,18 +5,19 @@ import {
   proposeInterOrgWire,
   rejectInterOrgNotice,
 } from "../wire/notice-workflow.js";
-import { transmitApprovedNotice } from "../protocol/notice-transmit.js";
+import { withGovGatewayDeliver } from "../wire/gov-gateway/transport-bind.js";
+import { transmitApprovedNotice } from "../protocol/transport/notice-transmit.js";
 import {
   deliverProtocolEnvelopeWithRelay,
   flushWirePending,
-} from "../protocol/transport.js";
+} from "../protocol/transport/transport.js";
 import {
   findEnvelopeFileForWitness,
   flushWitnessPending,
   registerWitnessAttestationFanOut,
   verifyCachedReceiptsForEvent,
   fetchReceiptsFromPool,
-} from "../protocol/witness-client.js";
+} from "../protocol/distribution/witness-client.js";
 import type { WireConsoleUser } from "./auth/session.js";
 import { withWireConsoleTenantAsync } from "./tenant-context.js";
 
@@ -74,7 +75,7 @@ export async function approveTenantNotice(
       operatorId: user.operator_id,
       settlementAssertion: opts?.settlementAssertion,
     });
-    const transmit = await transmitApprovedNotice(result);
+    const transmit = await transmitApprovedNotice(result, withGovGatewayDeliver());
     return {
       notice: result.notice,
       transmission: {
@@ -124,14 +125,14 @@ export async function deliverTenantEnvelope(
     if (!envelope) {
       throw new Error(`Envelope not found for event_id ${eventId}`);
     }
-    const delivery = await deliverProtocolEnvelopeWithRelay(envelope, peerId);
+    const delivery = await deliverProtocolEnvelopeWithRelay(envelope, peerId, withGovGatewayDeliver());
     return { delivery };
   });
 }
 
 export async function flushTenantWirePending(tenantId: string) {
   return withWireConsoleTenantAsync(tenantId, async () => {
-    const flushed = await flushWirePending();
+    const flushed = await flushWirePending(withGovGatewayDeliver());
     return { flushed };
   });
 }

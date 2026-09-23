@@ -13,7 +13,7 @@ import {
   startDemoWitnessHubs,
   type DemoWitnessHubs,
 } from "./helpers/demo-witness-fixture.js";
-import { enqueueWitnessPending, saveWitnessPending } from "../src/lib/protocol/witness-queue.js";
+import { enqueueWitnessPending, saveWitnessPending } from "../src/lib/protocol/distribution/witness-queue.js";
 
 describe("mcp steward tools", () => {
   let witnessHubs: DemoWitnessHubs | undefined;

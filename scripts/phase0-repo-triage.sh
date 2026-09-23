@@ -27,7 +27,7 @@ def classify(path):
         return "B"
     if p.startswith("src/cli/registrars/executive"):
         return "B"
-    if p.startswith("src/cli/registrars/orchestration") or p.startswith("src/lib/protocol/validate.ts"):
+    if p.startswith("src/cli/registrars/orchestration") or p.startswith("src/lib/protocol/core/validate.ts"):
         return "A"
     if any(x in p for x in ["wire-hub", "witness-hub", "wire-gateway", "hub-federation", "registered-orgs", "wire-trust", "mal-wire", "relay-sla", "gov-gateway-live", "wire-gateway-requirements", "wire-hub-stack", "peers.yaml.example"]):
         return "A"

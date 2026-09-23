@@ -10,8 +10,8 @@ import { existsSync } from "node:fs";
 import { currentDate, formatCurrency, getDocsDir } from "../utils.js";
 import { getTenantMailMessages } from "../wire-console/human-mail.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
-import { listWirePending } from "../protocol/wire-queue.js";
-import { findPeer, resolvePeerInboundEndpoints } from "../protocol/peers.js";
+import { listWirePending } from "../protocol/transport/wire-queue.js";
+import { findPeer, resolvePeerInboundEndpoints } from "../protocol/transport/peers.js";
 import { isEmailWireEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
 import {
   countHighPriorityTriage,

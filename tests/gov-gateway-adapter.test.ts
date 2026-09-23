@@ -3,11 +3,11 @@ import { existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } from "node
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir, ROOT_DIR } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   ensureProtocolSigningKey,
   maybeSignEnvelope,
-} from "../src/lib/protocol/signing.js";
+} from "../src/lib/protocol/core/signing.js";
 import { eventEnvelopeSchema } from "../schemas/protocol/org-event.js";
 import {
   resolveAdapter,
@@ -21,10 +21,11 @@ import {
   decodeGovGatewayInbound,
   buildGovGatewayInboundWireBody,
 } from "../src/lib/wire/gov-gateway/index.js";
-import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
-import { isWireDelivered } from "../src/lib/protocol/wire-delivered.js";
-import { parseInboundWebhookBody } from "../src/lib/protocol/webhook-bridge.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+import { withGovGatewayDeliver } from "../src/lib/wire/gov-gateway/transport-bind.js";
+import { deliverProtocolEnvelope } from "../src/lib/protocol/transport/transport.js";
+import { isWireDelivered } from "../src/lib/protocol/transport/wire-delivered.js";
+import { parseInboundWebhookBody } from "../src/lib/protocol/adapters/webhook-bridge.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 
 function cleanup(): void {
@@ -201,7 +202,7 @@ monthly_cost: 50000
       operatorAttestation: attestation,
     });
 
-    const delivery = await deliverProtocolEnvelope(envelope, "PEER-060");
+    const delivery = await deliverProtocolEnvelope(envelope, "PEER-060", withGovGatewayDeliver());
     expect(delivery.delivered).toBe(true);
     expect(mock.requests.length).toBe(1);
     expect(isWireDelivered("PEER-060", envelope.event_id)).toBe(true);

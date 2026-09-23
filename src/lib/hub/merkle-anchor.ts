@@ -2,7 +2,7 @@ import { createHash, createPrivateKey, createPublicKey, sign, verify } from "nod
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { WitnessReceipt } from "../../../schemas/protocol/witness-receipt.js";
-import { canonicalJson } from "../protocol/canonical.js";
+import { canonicalJson } from "../protocol/core/canonical.js";
 import { loadHubReceipts } from "./receipt.js";
 import { getHubDataDir, getHubId } from "./paths.js";
 import { ensureHubSigningKey } from "./signing.js";

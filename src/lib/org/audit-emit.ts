@@ -4,10 +4,10 @@ import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
 import type { OrgAuditAttestationKind } from "../../../schemas/org/audit-attestation.js";
 import type { OperatorAttestation } from "../../../schemas/org/operator-attestation.js";
 import { orgAuditAttestationPayloadSchema } from "../../../schemas/org/audit-attestation.js";
-import { appendProtocolAuditRecord } from "../protocol/audit-chain.js";
-import { ourOrgRef } from "../protocol/identity.js";
-import { validateEnvelopeAgainstRegistry } from "../protocol/registry.js";
-import { maybeSignEnvelope } from "../protocol/signing.js";
+import { appendProtocolAuditRecord } from "../protocol/core/audit-chain.js";
+import { ourOrgRef } from "../protocol/core/identity.js";
+import { validateEnvelopeAgainstRegistry } from "../protocol/distribution/registry.js";
+import { maybeSignEnvelope } from "../protocol/core/signing.js";
 
 export function emitOrgAuditAttested(opts: {
   approval: OrgApprovalRequest;

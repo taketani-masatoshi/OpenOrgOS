@@ -7,27 +7,27 @@ import { join } from "node:path";
 import { setTenantId, getTenantDir } from "../../src/lib/tenant.js";
 import { readYamlFile, writeYamlFile } from "../../src/lib/utils.js";
 import { contractSchema } from "../../schemas/contract.js";
-import { registerPeer } from "../../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../../src/lib/protocol/signing.js";
+import { registerPeer } from "../../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../../src/lib/protocol/core/signing.js";
 import {
   initWitnessTrustAuthority,
   certifyWitnessHub,
   addCertificateToBundle,
   publishWitnessTrustBundle,
   verifyWitnessTrustBundle,
-} from "../../src/lib/protocol/witness-trust.js";
-import { startProtocolApiServer } from "../../src/lib/protocol/protocol-api-server.js";
-import { buildProtocolApiServerConfig } from "../../src/lib/protocol/protocol-api-config.js";
-import { protocolFetch } from "../../src/lib/protocol/protocol-tls.js";
-import { initWitnessPoolFromTrustBundle } from "../../src/lib/protocol/contract-witness-pool.js";
-import { getWitnessTrustBundlePath } from "../../src/lib/protocol/paths.js";
+} from "../../src/lib/protocol/distribution/witness-trust.js";
+import { startProtocolApiServer } from "../../src/lib/protocol/transport/protocol-api-server.js";
+import { buildProtocolApiServerConfig } from "../../src/lib/protocol/transport/protocol-api-config.js";
+import { protocolFetch } from "../../src/lib/protocol/transport/protocol-tls.js";
+import { initWitnessPoolFromTrustBundle } from "../../src/lib/protocol/distribution/contract-witness-pool.js";
+import { getWitnessTrustBundlePath } from "../../src/lib/protocol/core/paths.js";
 import {
   ensureProposal3Pki,
   writeOrgCServerTlsMetadata,
   writePartyProtocolClientConfig,
   writeProposal3DeployEnv,
   type Proposal3PkiMaterial,
-} from "../../src/lib/protocol/tls-pki.js";
+} from "../../src/lib/protocol/transport/tls-pki.js";
 
 export const ORG_C_API_PORT = Number(process.env.DEMO_ORG_C_API_PORT ?? 9486);
 export const WTA_AUTHORITY_ID = "WTA-AIAC-001";

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { computeCommunityReadiness } from "../src/lib/protocol/community-readiness.js";
+import { computeCommunityReadiness } from "../src/lib/protocol/readiness/community-readiness.js";
 import { computeOrgOsScore } from "../src/lib/os-score.js";
-import { resolveEcoStrictCap, ECO_STRICT_CAP_STEWARD_PUBLISH, ECO_READINESS_CAP_COMMUNITY } from "../src/lib/protocol/eco-production-evidence.js";
-import { exportCommunityProtocolBundle } from "../src/lib/protocol/community-export.js";
+import { resolveEcoStrictCap, ECO_STRICT_CAP_STEWARD_PUBLISH, ECO_READINESS_CAP_COMMUNITY } from "../src/lib/protocol/readiness/eco-production-evidence.js";
+import { exportCommunityProtocolBundle } from "../src/lib/protocol/adapters/community-export.js";
 
 describe("community readiness", () => {
   it("scores steward-side C4 features above baseline 45", () => {

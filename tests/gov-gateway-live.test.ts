@@ -3,9 +3,9 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 import {
   deliverEnvelopeViaGovGateway,
@@ -103,7 +103,7 @@ monthly_cost: 50000
       operatorAttestation: attestation,
     });
 
-    const { loadPeersRegistry } = await import("../src/lib/protocol/peers.js");
+    const { loadPeersRegistry } = await import("../src/lib/protocol/transport/peers.js");
     const endpoint = loadPeersRegistry().peers[0]!.inbound_endpoints![0]!;
 
     const result = await deliverEnvelopeViaGovGateway({

@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
-import { validateProtocolState } from "../src/lib/protocol/validate.js";
+import { validateProtocolState } from "../src/lib/protocol/core/validate.js";
 
 const ROOT = join(import.meta.dirname, "..");
 const LIST_PATH = join(ROOT, "steward/platform/protocol/ci-validate-tenants.yaml");

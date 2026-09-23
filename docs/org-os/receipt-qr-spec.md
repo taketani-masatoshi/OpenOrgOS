@@ -15,7 +15,7 @@ signature = Ed25519.sign(digest_hex_bytes, protocol_private_key)
 issuer_public_key = SPKI DER (base64)
 ```
 
-- canonical JSON: `src/lib/protocol/canonical.ts`（キーソート）
+- canonical JSON: `src/lib/protocol/core/canonical.ts`（キーソート）
 - 鍵: Wire プロトコル鍵（`ensureProtocolSigningKey`）
 
 ## リンク形式

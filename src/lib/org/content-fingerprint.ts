@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import YAML from "yaml";
-import { canonicalJson } from "../protocol/canonical.js";
+import { canonicalJson } from "../protocol/core/canonical.js";
 
 export function sha256Hex(data: string | Buffer): string {
   return createHash("sha256").update(data).digest("hex");
