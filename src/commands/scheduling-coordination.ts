@@ -17,10 +17,8 @@ import {
   formatSchedulingCaseSummary,
   type SchedulingDraftKind,
 } from "../lib/scheduling-coordination/draft-text.js";
-import {
-  linkMailToCase,
-  processAllScheduleMails,
-} from "../lib/scheduling-coordination/process-mail.js";
+import { processAllScheduleMails } from "../lib/scheduling-coordination/process-mail.js";
+import { linkMailToCase } from "../lib/scheduling-coordination/mail-intake.js";
 import { runScheduleCoordinationAutoProcess } from "../lib/scheduling-coordination/auto-process.js";
 import { runSchedulingReminderPoll } from "../lib/scheduling-coordination/reminder-poller.js";
 import { findSchedulingCase, listSchedulingCases } from "../lib/scheduling-coordination/store.js";
@@ -38,7 +36,6 @@ import {
 } from "../lib/scheduling-coordination/case-mutations.js";
 
 export type { SchedulingParticipantInput } from "../lib/scheduling-coordination/case-mutations.js";
-export { assertSchedulingCaseConfirmable };
 
 function requireSchedulingCase(id: string): SchedulingCase {
   const caseRow = findSchedulingCase(id);

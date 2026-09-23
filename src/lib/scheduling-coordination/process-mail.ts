@@ -4,7 +4,7 @@ import { simpleParser } from "mailparser";
 import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triage.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
-import { findTriageEntry } from "../correspondence/mail-triage-queue.js";
+import { findTriageEntry, listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import { getMailReceivedDir } from "../correspondence/paths.js";
 import { applyNextAction } from "./next-action.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
@@ -20,12 +20,8 @@ import {
   createSafeScheduleIntake,
   linkMailToCase,
 } from "./mail-intake.js";
-import { applyScheduleReplyToCase } from "./mail-reply.js";
 import type { ProcessScheduleMailResult } from "./mail-reply.js";
-
-export type { ProcessScheduleMailResult } from "./mail-reply.js";
-export { findCaseForMailEntry } from "./mail-match.js";
-export { linkMailToCase } from "./mail-intake.js";
+import { applyScheduleReplyToCase } from "./mail-reply.js";
 
 async function readMailBody(entry: MailTriageEntry): Promise<string> {
   const filename = entry.eml_ref.split("/").pop();
@@ -157,7 +153,6 @@ export async function processAllScheduleMails(opts?: {
     return results;
   }
 
-  const { listTriageEntries } = await import("../correspondence/mail-triage-queue.js");
   const entries = listTriageEntries({ limit: 200 }).filter(
     (e) =>
       e.routing === "secretary" &&

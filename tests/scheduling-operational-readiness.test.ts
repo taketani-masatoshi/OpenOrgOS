@@ -20,7 +20,7 @@ import {
 } from "../src/lib/org/operators.js";
 import { readOperatorKeyFromFile } from "../src/lib/console-auth/cli-operator.js";
 import { approveAndSendSchedulingProposals } from "../src/lib/scheduling-coordination/approve-send-proposals.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/correspondence-drafts.js";
 import { upsertSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
 import {
   cleanupSchedulingTenant,

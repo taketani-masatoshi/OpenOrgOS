@@ -14,10 +14,8 @@ import { upsertTriageEntry } from "../src/lib/correspondence/mail-triage-queue.j
 import { getTenantsDir, setTenantId } from "../src/lib/tenant.js";
 import { seedSchedulingTenant } from "./helpers/scheduling-fixture.js";
 import { getDataDir, writeYamlFile } from "../src/lib/utils.js";
-import {
-  ensureSchedulingCorrespondenceDrafts,
-  handleSchedulingCorrespondenceSent,
-} from "../src/lib/scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/correspondence-drafts.js";
+import { handleSchedulingCorrespondenceSent } from "../src/lib/scheduling-coordination/correspondence-sent.js";
 import { processScheduleMailEntry } from "../src/lib/scheduling-coordination/process-mail.js";
 import {
   findSchedulingCase,

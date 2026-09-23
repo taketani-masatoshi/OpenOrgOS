@@ -4,7 +4,8 @@ import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triag
 import type { SchedulingProposedSlot } from "../../../schemas/executive/scheduling-cases.js";
 import { findTriageEntry, upsertTriageEntry } from "../correspondence/mail-triage-queue.js";
 import { getMailReceivedDir } from "../correspondence/paths.js";
-import { processScheduleMailEntry, type ProcessScheduleMailResult } from "./process-mail.js";
+import { processScheduleMailEntry } from "./process-mail.js";
+import type { ProcessScheduleMailResult } from "./mail-reply.js";
 import { findSchedulingCase } from "./store.js";
 
 function formatSlotAcceptLine(slot: SchedulingProposedSlot): string {

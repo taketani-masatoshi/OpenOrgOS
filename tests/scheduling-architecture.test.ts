@@ -116,14 +116,9 @@ const ALLOW_R2_DYNAMIC_IMPORTS = [
   "src/lib/correspondence/ceo-inline-question.ts",
   "src/lib/correspondence/send-gate.ts",
   "src/lib/scheduling-coordination/delegated-send.ts",
-  "src/lib/scheduling-coordination/process-mail.ts",
 ].sort();
 
-const ALLOW_R3_REEXPORT_FACADES = [
-  "src/lib/scheduling-coordination/draft-text.ts",
-  "src/lib/scheduling-coordination/lifecycle.ts",
-  "src/lib/scheduling-coordination/process-mail.ts",
-].sort();
+const ALLOW_R3_REEXPORT_FACADES = [].sort();
 
 const ALLOW_R4_CORE_IO = [
   "src/lib/scheduling-coordination/chat-parse.ts:../secretary/",
@@ -188,22 +183,13 @@ describe("scheduling architecture ratchet", () => {
     expectExactAllowlist(hits, ALLOW_R2_DYNAMIC_IMPORTS, "R2");
   });
 
-  it("R3: no re-export-only facades in scheduling-coordination (allowlisted until remove-facades)", () => {
+  it("R3: no re-export-only facades in scheduling-coordination", () => {
     const hits: string[] = [];
     for (const file of walkTsFiles(SCHEDULING_DIR)) {
       const source = readFileSync(file, "utf-8");
       const pathRel = rel(file);
       if (isReexportOnlyModule(source)) {
         hits.push(pathRel);
-        continue;
-      }
-      // Known partial facades that re-export siblings
-      if (
-        pathRel.endsWith("lifecycle.ts") ||
-        pathRel.endsWith("process-mail.ts") ||
-        pathRel.endsWith("draft-text.ts")
-      ) {
-        if (hasReexportStatements(source).length > 0) hits.push(pathRel);
       }
     }
     expectExactAllowlist(hits, ALLOW_R3_REEXPORT_FACADES, "R3");

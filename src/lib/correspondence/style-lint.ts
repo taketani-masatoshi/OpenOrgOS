@@ -9,7 +9,7 @@ import {
 import {
   schedulingCaseHasCostLine,
   schedulingCaseLooksLikeMeal,
-} from "../scheduling-coordination/draft-text.js";
+} from "../scheduling-coordination/meal-cost.js";
 import { findSchedulingCase } from "../scheduling-coordination/store.js";
 
 export type StyleLintSeverity = "error" | "warning";

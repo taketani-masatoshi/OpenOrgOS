@@ -10,7 +10,7 @@ import {
 } from "../src/lib/scheduling-coordination/venue-gate.js";
 import { applyNextAction } from "../src/lib/scheduling-coordination/next-action.js";
 import { SCHEDULE_VENUE_PENDING } from "../src/lib/scheduling-coordination/ceo-gates.js";
-import { findCaseForMailEntry } from "../src/lib/scheduling-coordination/process-mail.js";
+import { findCaseForMailEntry } from "../src/lib/scheduling-coordination/mail-match.js";
 import { schedulingCaseSchema } from "../schemas/executive/scheduling-cases.js";
 import { upsertSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
 import { lintCorrespondenceBody } from "../src/lib/correspondence/style-lint.js";
@@ -40,21 +40,21 @@ import {
 } from "../src/lib/scheduling-coordination/venue-gate.js";
 import { writeYamlFile as writeYaml } from "../src/lib/utils.js";
 import { getVenueReservationsPath } from "../src/lib/venue-booking/paths.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/correspondence-drafts.js";
 import { advanceSchedulingWorkflow } from "../src/lib/scheduling-coordination/workflow.js";
 import { findSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
 import {
   confirmVenueReservation,
   reserveVenue,
 } from "../src/lib/venue-booking/reserve.js";
-import { handleSchedulingCorrespondenceSent } from "../src/lib/scheduling-coordination/lifecycle.js";
+import { handleSchedulingCorrespondenceSent } from "../src/lib/scheduling-coordination/correspondence-sent.js";
 import {
   hasUnsentSchedulingDraft,
   schedulingCaseNeedsTodayAttention,
 } from "../src/lib/scheduling-coordination/today-attention.js";
 import { buildSchedulingTodayItem } from "../src/lib/scheduling-coordination/today-summary.js";
 import { assertCorrespondenceStyleLint } from "../src/lib/correspondence/style-lint.js";
-import { schedulingCaseLooksLikeMeal } from "../src/lib/scheduling-coordination/draft-text.js";
+import { schedulingCaseLooksLikeMeal } from "../src/lib/scheduling-coordination/meal-cost.js";
 import { buildSchedulingCeoChoices } from "../src/lib/scheduling-coordination/ceo-choice.js";
 import {
   hasNamedVenue,

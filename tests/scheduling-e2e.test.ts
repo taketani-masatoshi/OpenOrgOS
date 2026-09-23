@@ -16,7 +16,7 @@ import {
   loadSchedulingCorrespondencePreview,
 } from "../src/lib/steward-chat/wire-approve.js";
 import { findPendingApprovalForCase } from "../src/lib/scheduling-coordination/ceo-confirm.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/correspondence-drafts.js";
 import { runSchedulingReminderPoll } from "../src/lib/scheduling-coordination/reminder-poller.js";
 import { buildSchedulingTodayItem } from "../src/lib/scheduling-coordination/today-summary.js";
 import { processScheduleMailEntry } from "../src/lib/scheduling-coordination/process-mail.js";

@@ -6,7 +6,7 @@ import {
   seedSchedulingTenant,
 } from "./helpers/scheduling-fixture.js";
 import { proposeExecutiveSlots } from "../src/lib/scheduling-coordination/slots.js";
-import { schedulingCaseLooksLikeMeal } from "../src/lib/scheduling-coordination/draft-text.js";
+import { schedulingCaseLooksLikeMeal } from "../src/lib/scheduling-coordination/meal-cost.js";
 import {
   formatVenueSuggestionLines,
   suggestVenuesForParties,

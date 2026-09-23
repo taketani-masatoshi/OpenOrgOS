@@ -142,7 +142,7 @@ export async function sendApprovedCorrespondence(opts: {
         sentBy: opts.operatorId,
       });
       const { handleSchedulingCorrespondenceSent } = await import(
-        "../scheduling-coordination/lifecycle.js"
+        "../scheduling-coordination/correspondence-sent.js"
       );
       handleSchedulingCorrespondenceSent(draft);
     }
@@ -180,7 +180,7 @@ export async function sendApprovedCorrespondence(opts: {
   });
   if (draft.notes?.includes("scheduling-case:")) {
     const { handleSchedulingCorrespondenceSent } = await import(
-      "../scheduling-coordination/lifecycle.js"
+      "../scheduling-coordination/correspondence-sent.js"
     );
     handleSchedulingCorrespondenceSent(draft);
   }

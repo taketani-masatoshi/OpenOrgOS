@@ -9,7 +9,7 @@ import type { VenueCatalogEntry } from "../../../schemas/venue-booking.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { resolveTenantPath } from "../utils.js";
 import { loadVenueCatalog } from "./store.js";
-import { schedulingCaseLooksLikeMeal } from "../scheduling-coordination/draft-text.js";
+import { schedulingCaseLooksLikeMeal } from "../scheduling-coordination/meal-cost.js";
 
 export const PARTY_LOCATIONS_REL = "data/operations/party-locations.yaml";
 

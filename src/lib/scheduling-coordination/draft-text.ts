@@ -14,13 +14,6 @@ import {
 import { nextActionLabel } from "./next-action.js";
 import { extractSchedulingCostLine } from "./meal-cost.js";
 
-export {
-  assertMealCostForOutboundDraft,
-  SchedulingMealCostRequiredError,
-  schedulingCaseHasCostLine,
-  schedulingCaseLooksLikeMeal,
-} from "./meal-cost.js";
-
 function formatSlotLines(caseRow: SchedulingCase, localizedJa = false): string {
   if (!caseRow.proposed_slots.length) return "（候補未設定）";
   return caseRow.proposed_slots

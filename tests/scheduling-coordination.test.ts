@@ -24,18 +24,18 @@ import {
 } from "../src/lib/scheduling-coordination/chat-intent.js";
 import {
   processScheduleMailEntry,
-  linkMailToCase,
 } from "../src/lib/scheduling-coordination/process-mail.js";
+import { linkMailToCase } from "../src/lib/scheduling-coordination/mail-intake.js";
 import { upsertTriageEntry } from "../src/lib/correspondence/mail-triage-queue.js";
 import { saveMailInterpretation } from "../src/lib/correspondence/mail-interpretation.js";
 import { mailInterpretationResultSchema } from "../schemas/correspondence/mail-interpretation.js";
 import { buildTodayContext } from "../src/lib/steward-chat/today-context.js";
 import {
-  assertSchedulingCaseConfirmable,
   runSchedulingNew,
   runSchedulingPropose,
   runSchedulingRespond,
 } from "../src/commands/scheduling-coordination.js";
+import { assertSchedulingCaseConfirmable } from "../src/lib/scheduling-coordination/case-mutations.js";
 
 const tenantId = "test-scheduling-coordination";
 
