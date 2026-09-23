@@ -1,7 +1,7 @@
 import { runValidateReport } from "../../commands/validate.js";
 import { findTriageEntry } from "../correspondence/mail-triage-queue.js";
 import { findSchedulingCase } from "./store.js";
-import type { SchedulingLifecycleStage } from "./lifecycle.js";
+import type { SchedulingLifecycleStage } from "./lifecycle-events.js";
 
 export interface RehearsalAssertionCheck {
   id: string;

@@ -6,47 +6,38 @@ import type {
   SchedulingCase,
   SchedulingParticipant,
 } from "../../../schemas/executive/scheduling-cases.js";
-import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
+import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
+import { dismissPendingSchedulingQuestions } from "../correspondence/ceo-inline-question.js";
 import { findTriageEntry, upsertTriageEntry } from "../correspondence/mail-triage-queue.js";
 import { getMailReceivedDir } from "../correspondence/paths.js";
 import { writeInboundHandoffDraft } from "../correspondence/mail-handoff.js";
-import {
-  askCeoInline,
-  dismissPendingSchedulingQuestions,
-  loadCeoInlineQueue,
-} from "../correspondence/ceo-inline-question.js";
 import { applyNextAction } from "./next-action.js";
-import { isOwnMailAddress, resolveSenderByEmail } from "../secretary/contact-registry.js";
 import { extractEmailAddress } from "./reply-parse.js";
 import { interpretScheduleReply } from "./reply-interpret.js";
 import { proposeExecutiveSlots } from "./slots.js";
+import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import {
   findSchedulingCase,
-  listSchedulingCases,
-  loadSchedulingCases,
-  nextSchedulingCaseId,
   nextSlotId,
   updateSchedulingCase,
-  upsertSchedulingCase,
 } from "./store.js";
-import { recordSchedulingLifecycleEvent } from "./lifecycle.js";
-import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
+import {
+  findCaseForMailEntry,
+  hasAmbiguousCaseMatch,
+  isScheduleIntent,
+  matchingCaseIds,
+} from "./mail-match.js";
+import {
+  askUnlinkedScheduleChoice,
+  createSafeScheduleIntake,
+  linkMailToCase,
+} from "./mail-intake.js";
 
-export interface ProcessScheduleMailResult {
-  mail_id: string;
-  case_id?: string;
-  action: "linked" | "updated" | "skipped" | "unlinked";
-  reason?: string;
-}
+import type { ProcessScheduleMailResult } from "./process-mail-types.js";
 
-function normalizeSubject(subject: string): string {
-  return subject
-    .replace(/^(re:\s*)+/i, "")
-    .replace(/^【日程調整】/, "")
-    .replace(/^【日程確定】/, "")
-    .trim()
-    .toLowerCase();
-}
+export type { ProcessScheduleMailResult } from "./process-mail-types.js";
+export { findCaseForMailEntry } from "./mail-match.js";
+export { linkMailToCase } from "./mail-intake.js";
 
 async function readMailBody(entry: MailTriageEntry): Promise<string> {
   const filename = entry.eml_ref.split("/").pop();
@@ -59,95 +50,6 @@ async function readMailBody(entry: MailTriageEntry): Promise<string> {
   } catch {
     return entry.subject;
   }
-}
-
-/** Every message id that ties this mail to a thread we already know about. */
-function entryThreadIds(entry: MailTriageEntry): string[] {
-  return [
-    entry.id,
-    entry.source_message_id,
-    entry.in_reply_to,
-    ...(entry.mail_thread_ids ?? []),
-    ...(entry.references ?? []),
-  ].filter(Boolean) as string[];
-}
-
-/** A copy of mail we sent ourselves — its subject is one we generated. */
-function isOwnOutboundCopy(entry: MailTriageEntry): boolean {
-  const sender = (entry.sender_email ?? extractEmailAddress(entry.from) ?? "").trim();
-  if (!sender) return false;
-  try {
-    return isOwnMailAddress(sender) || resolveSenderByEmail(sender).match?.scope === "self";
-  } catch {
-    return false;
-  }
-}
-
-export function findCaseForMailEntry(entry: MailTriageEntry): SchedulingCase | undefined {
-  if (entry.scheduling_case_id) {
-    return findSchedulingCase(entry.scheduling_case_id);
-  }
-
-  const cases = listSchedulingCases({ activeOnly: true });
-  const threadIds = entryThreadIds(entry);
-  const matches = cases.filter((caseRow) =>
-    caseRow.mail_thread_ids.some((id) => threadIds.includes(id))
-  );
-  if (matches.length === 1) return matches[0];
-  if (matches.length > 1) return undefined;
-
-  // Subject matching is only safe for our own outbound copies: an inbound
-  // subject can be forwarded or reused, but we wrote this one.
-  if (isOwnOutboundCopy(entry)) {
-    const subject = normalizeSubject(entry.subject);
-    const bySubject = cases.filter((caseRow) => normalizeSubject(caseRow.title) === subject);
-    if (bySubject.length === 1) return bySubject[0];
-  }
-
-  return undefined;
-}
-
-function hasAmbiguousCaseMatch(entry: MailTriageEntry): boolean {
-  if (entry.scheduling_case_id) return false;
-  const ids = new Set(
-    [entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(Boolean) as string[]
-  );
-  return (
-    listSchedulingCases({ activeOnly: true }).filter((c) =>
-      c.mail_thread_ids.some((id) => ids.has(id))
-    ).length > 1
-  );
-}
-
-function matchingCaseIds(entry: MailTriageEntry): string[] {
-  const ids = new Set(
-    [entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(Boolean) as string[]
-  );
-  return listSchedulingCases({ activeOnly: true })
-    .filter((row) => row.mail_thread_ids.some((id) => ids.has(id)))
-    .map((row) => row.id);
-}
-
-function askUnlinkedScheduleChoice(entry: MailTriageEntry, caseIds: string[]): void {
-  const existing = loadUnlinkedQuestion(entry.id);
-  if (existing) return;
-  askCeoInline({
-    mailId: `schedule-intake:${entry.id}`,
-    subject: `日程メールの紐付け確認 — ${entry.subject}`,
-    contextL1: "既存案件との紐付けが一意に決まりません。1件選択してください。",
-    fields: [{
-      id: "schedule_intake_choice",
-      label: "紐付け先",
-      type: "choice",
-      choices: [...caseIds, "新規起票", "保留"],
-    }],
-  });
-}
-
-function loadUnlinkedQuestion(mailId: string) {
-  return loadCeoInlineQueue().questions.find(
-    (question) => question.mail_id === `schedule-intake:${mailId}` && question.status === "pending"
-  );
 }
 
 function addMinutes(start: string, minutes: number): string {
@@ -170,67 +72,6 @@ function findParticipantByEmail(
 ): SchedulingParticipant | undefined {
   const lower = email.toLowerCase();
   return caseRow.participants.find((p) => p.email?.toLowerCase() === lower);
-}
-
-function isScheduleIntent(entry: MailTriageEntry): boolean {
-  const interp = findMailInterpretation(entry.id);
-  if (interp?.intent === "schedule") return true;
-  const text = `${entry.subject} ${entry.rule_hits.join(" ")}`.toLowerCase();
-  return /日程|スケジュール|schedule|候補|調整/.test(text);
-}
-
-function senderDisplayName(from: string): string {
-  return from.replace(/<[^>]+>/g, "").replace(/^["']|["']$/g, "").trim() || "ご担当者";
-}
-
-function createSafeScheduleIntake(entry: MailTriageEntry): SchedulingCase | undefined {
-  const email = entry.sender_email ?? extractEmailAddress(entry.from);
-  if (!entry.sender_known || !email || !entry.subject.trim()) return undefined;
-  const now = new Date().toISOString();
-  const file = loadSchedulingCases();
-  const caseRow = upsertSchedulingCase(
-    applyNextAction({
-      id: nextSchedulingCaseId(file.cases),
-      title: normalizeSubject(entry.subject) || "日程調整",
-      status: "needs_review",
-      created_at: now,
-      updated_at: now,
-      participants: [{
-        id: "PART-001",
-        name: senderDisplayName(entry.from),
-        email,
-        contact_ref: entry.sender_contact_ref,
-        role: "external",
-        response: "pending",
-      }],
-      proposed_slots: [],
-      duration_minutes: 60,
-      mail_thread_ids: [
-        ...new Set([entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(Boolean)),
-      ] as string[],
-      processed_mail_ids: [],
-      exception_reason: "schedule_intake_confirmation_required",
-      next_action: "none",
-    })
-  );
-  upsertTriageEntry({
-    ...entry,
-    scheduling_case_id: caseRow.id,
-    mail_thread_ids: caseRow.mail_thread_ids,
-  });
-  recordSchedulingLifecycleEvent(caseRow.id, "created", "mail-intake");
-  askCeoInline({
-    mailId: `schedule-intake-case:${caseRow.id}:${entry.id}`,
-    subject: `日程調整の起票確認 — ${caseRow.title}`,
-    contextL1: `${senderDisplayName(entry.from)}からの日程メールを安全保留で起票しました。`,
-    fields: [{
-      id: "schedule_intake_choice",
-      label: "この案件として調整を開始しますか？",
-      type: "choice",
-      choices: ["続行", "中止"],
-    }],
-  });
-  return findSchedulingCase(caseRow.id) ?? caseRow;
 }
 
 export async function applyScheduleIntakeAnswer(
@@ -268,33 +109,6 @@ export async function applyScheduleIntakeAnswer(
   }
   if (choice === "新規起票") return createSafeScheduleIntake(entry);
   return undefined;
-}
-
-export function linkMailToCase(caseId: string, mailId: string): SchedulingCase {
-  const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Scheduling case ${caseId} not found`);
-
-  const entry = findTriageEntry(mailId);
-  if (!entry) throw new Error(`Mail triage entry ${mailId} not found`);
-
-  const threadIds = new Set(caseRow.mail_thread_ids);
-  threadIds.add(mailId);
-  if (entry.source_message_id) threadIds.add(entry.source_message_id);
-
-  const desired = applyNextAction({
-    ...caseRow,
-    mail_thread_ids: [...threadIds],
-    updated_at: new Date().toISOString(),
-  });
-  const result = updateSchedulingCase(caseRow.id, caseRow.revision, () => desired);
-
-  upsertTriageEntry({
-    ...entry,
-    scheduling_case_id: caseId,
-    mail_thread_ids: [...new Set([...(entry.mail_thread_ids ?? []), ...result.mail_thread_ids])],
-  });
-
-  return result;
 }
 
 export async function processScheduleMailEntry(
@@ -461,8 +275,8 @@ export async function processScheduleMailEntry(
     dismissPendingSchedulingQuestions(caseRow.id);
     const refreshed = findSchedulingCase(caseRow.id);
     if (refreshed?.next_action === "send_proposal") {
-      const { ensureSchedulingCorrespondenceDrafts, maybeAutoSendAuthorizedProposals } =
-        await import("./lifecycle.js");
+      const { ensureSchedulingCorrespondenceDrafts } = await import("./correspondence-drafts.js");
+      const { maybeAutoSendAuthorizedProposals } = await import("./delegated-send.js");
       ensureSchedulingCorrespondenceDrafts(refreshed.id, "proposal");
       caseRow = (await maybeAutoSendAuthorizedProposals(refreshed.id)) ?? refreshed;
     }

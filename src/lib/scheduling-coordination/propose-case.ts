@@ -3,12 +3,11 @@ import { currentDate } from "../utils.js";
 import { applyNextAction } from "./next-action.js";
 import { proposeExecutiveSlots, type SlotTimePreference } from "./slots.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
-import { schedulingCaseLooksLikeMeal } from "./draft-text.js";
-import { ensureSchedulingCorrespondenceDrafts } from "./lifecycle.js";
+import { schedulingCaseLooksLikeMeal } from "./meal-cost.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 
 /**
- * Generate calendar slots onto a scheduling case and refresh next_action.
- * Used by CLI `propose` and post-clarify auto path.
+ * Generate calendar slots onto a scheduling case after venue clarify is sent.
  */
 export function proposeSlotsOntoSchedulingCase(
   caseId: string,

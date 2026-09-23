@@ -15,8 +15,8 @@ import {
   buildSchedulingCeoChoices,
   resolveSchedulingCeoChoice,
 } from "./ceo-choice.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 import {
-  ensureSchedulingCorrespondenceDrafts,
   recordSchedulingLifecycleEvent,
   sendSchedulingConfirmationsAuthorizedByCeo,
 } from "./lifecycle.js";

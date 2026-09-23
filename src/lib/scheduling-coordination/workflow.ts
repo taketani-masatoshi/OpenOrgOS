@@ -1,7 +1,7 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { resolveMailConfig } from "../correspondence/mail-config.js";
 import { ensureSchedulingCeoConfirmQuestion } from "./ceo-confirm.js";
-import { ensureSchedulingCorrespondenceDrafts } from "./lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 import { applyNextAction } from "./next-action.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 
