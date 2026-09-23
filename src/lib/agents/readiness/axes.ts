@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import type { AgentId } from "../../../../schemas/classification.js";
 import type { AgentReadinessAxis } from "../../../../schemas/agent-capability.js";
 import { agentDefinitionPath, getAgentCapability } from "../../agent-capability.js";
@@ -32,7 +32,9 @@ function skillRegistry() {
 }
 
 function agentDefinitionExists(agentId: AgentId): boolean {
-  return existsSync(agentDefinitionPath(agentId));
+  const path = agentDefinitionPath(agentId);
+  if (isAbsolute(path)) return existsSync(path);
+  return existsSync(join(getInstallRoot(), path));
 }
 
 function frameworkWorkspacePathExists(rel: string): boolean {
