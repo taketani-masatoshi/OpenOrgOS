@@ -10,6 +10,7 @@ import { resolveNextAction } from "./judgment-context.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { SchedulingCaseNotFoundError } from "./errors.js";
+import { parseSchedulingDraftNotes } from "./draft-tag.js";
 
 function allExternalSent(caseRow: SchedulingCase, kind: SchedulingDraftKind): boolean {
   const targetIds = externalTargets(caseRow, kind).map((participant) => participant.id);
@@ -30,12 +31,10 @@ function allExternalSent(caseRow: SchedulingCase, kind: SchedulingDraftKind): bo
 export function handleSchedulingCorrespondenceSent(
   draft: CorrespondenceDraft
 ): SchedulingCase | undefined {
-  const notes = draft.notes ?? "";
-  const caseId = notes.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
-  const kind = notes.match(/\bkind:(clarify|proposal|reminder|confirm)\b/)?.[1] as
-    | SchedulingDraftKind
-    | undefined;
-  const participantId = notes.match(/\bparticipant:(PART-\d{3})\b/)?.[1];
+  const parsed = parseSchedulingDraftNotes(draft.notes);
+  const caseId = parsed.caseId;
+  const kind = parsed.kind as SchedulingDraftKind | undefined;
+  const participantId = parsed.participantId;
   if (!caseId || !kind || !participantId) return undefined;
   let current = findSchedulingCase(caseId);
   if (!current) return undefined;

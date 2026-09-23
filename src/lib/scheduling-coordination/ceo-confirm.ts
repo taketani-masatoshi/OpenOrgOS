@@ -19,6 +19,7 @@ import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import { sendSchedulingConfirmationsAuthorizedByCeo } from "./delegated-send.js";
 import { SchedulingCaseNotFoundError } from "./errors.js";
+import { formatSchedulingCaseTag } from "./draft-tag.js";
 
 export const SCHEDULING_MAIL_PREFIX = "scheduling:";
 
@@ -199,7 +200,7 @@ export async function applySchedulingCeoAnswer(
 }
 
 export function findPendingApprovalForCase(caseId: string): string | undefined {
-  const prefix = `scheduling-case:${caseId}`;
+  const prefix = formatSchedulingCaseTag(caseId);
   const drafts = listCorrespondenceDrafts({ status: "pending_approval", channel: "email" });
   const match = drafts.find((d) => d.notes?.includes(prefix) && d.approval_id);
   return match?.approval_id;

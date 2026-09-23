@@ -20,6 +20,7 @@ import { persistSchedulingNextAction } from "./persist-next-action.js";
 import { resolveSchedulingRecipients } from "./recipients.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { SchedulingCaseNotFoundError } from "./errors.js";
+import { formatSchedulingCaseTag } from "./draft-tag.js";
 
 function contactRefId(contactRef: string): { extId?: string; stakeholderId?: string } {
   const extId = contactRef.match(/\bEXT-\d+\b/i)?.[0]?.toUpperCase();
@@ -161,7 +162,7 @@ export function ensureSchedulingCorrespondenceDrafts(
       createdBy,
       notes: [
         [
-          `scheduling-case:${current.id}`,
+          formatSchedulingCaseTag(current.id),
           `kind:${kind}`,
           `participant:${target.id}`,
           `revision:${current.proposal_revision}`,
