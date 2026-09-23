@@ -26,7 +26,14 @@ export function runIntegrationsStatus(opts: { json?: boolean }): void {
   }
   console.log("");
   for (const item of report.items) {
-    console.log(`  ${item.ok ? "✓" : "○"} ${item.id}: ${item.detail}`);
+    const mark = item.ok ? "✓" : item.required === false ? "·" : "○";
+    console.log(`  ${mark} ${item.id}: ${item.detail}`);
+  }
+  if (report.next_actions.length > 0) {
+    console.log("\n次の残債:");
+    for (const step of report.next_actions) {
+      console.log(`  · ${step}`);
+    }
   }
 }
 

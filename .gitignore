@@ -34,6 +34,14 @@ scratch/*
 !scratch/00-README.md
 tenants/*/scratch/tenant-backup-last.txt
 tenants/*/docs/reports/*
+# Steward / Agent readiness SoT skeletons (generated MD stays ignored)
+!tenants/*/docs/reports/00-このフォルダについて.md
+!tenants/*/docs/reports/dashboard/
+!tenants/*/docs/reports/dashboard/00-README.md
+!tenants/*/docs/reports/executive-notes/
+!tenants/*/docs/reports/executive-notes/00-README.md
+!tenants/*/docs/reports/agent-summaries/
+!tenants/*/docs/reports/agent-summaries/00-README.md
 tenants/*/docs/io/inbox/**
 !tenants/*/docs/io/inbox/00-このフォルダについて.md
 !tenants/*/docs/io/inbox/**/00-このフォルダについて.md

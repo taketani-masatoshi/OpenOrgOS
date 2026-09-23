@@ -6,6 +6,12 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Steward readiness の SoT パス欠落** — `docs/reports/{dashboard,executive-notes,agent-summaries}` が gitignore 丸ごとで常に欠けるため、`executive_steward` の data 軸が 0 固定だった。骨格 README だけ追跡し、capability / pulse を揃えた。
+- **OOO 採点の誤読** — 緑証拠 JSON が無いとき「実装欠落」に見える文言だった。証拠未記録バナーと「仕様+実装平均」を出し、実装点とテスト証拠を分離する。
+- **integrations status の残債可視化** — Slack/Asana/Drive/Gmail コネクタと `next_actions` を出す（任意コネクタは採点外）。
+
 ### Added
 
 - **インバウンド FAQ → 回答提案 → 送付一歩前** — `data/sales/inbound/faq.yaml` 照合。`sales inquiry-reply-propose` / `inquiry-reply-draft` / `inquiry-sla-gate`。L2 本文・連絡先は `body_ref` / `reply_to_contact_ref` のみ（チャット転記禁止）。送信は人間承認後。

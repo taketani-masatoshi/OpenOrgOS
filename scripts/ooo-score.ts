@@ -373,17 +373,31 @@ function greenUnitFiles(): Set<string> {
   }
 }
 
+function evidenceRecordPresent(): { unit: boolean; e2e: boolean } {
+  return {
+    unit: existsSync(UNIT_RESULT_PATH),
+    e2e: existsSync(E2E_RESULT_PATH),
+  };
+}
+
 /** A test file only counts when it exists AND passed in the recorded run. */
 function unitScore(
   paths: string[],
   green: Set<string>,
+  evidenceRecorded: boolean,
 ): { points: number; grade: "厚" | "薄" | "無"; notes: string[] } {
   const notes: string[] = [];
   const missing = paths.filter((p) => !existsSync(join(ROOT_DIR, p)));
   if (missing.length) notes.push(`unit 不在: ${missing.join(", ")}`);
   const present = paths.filter((p) => !missing.includes(p));
   const red = present.filter((p) => !green.has(p));
-  if (red.length) notes.push(`unit が緑の記録に無い: ${red.join(", ")}`);
+  if (red.length) {
+    notes.push(
+      evidenceRecorded
+        ? `unit が赤または未実行: ${red.join(", ")}`
+        : `unit 証拠未記録（npm run ooo:unit）: ${red.join(", ")}`,
+    );
+  }
 
   const proven = present.length - red.length;
   if (proven >= 2) return { points: 10, grade: "厚", notes };
@@ -394,6 +408,7 @@ function unitScore(
 function httpScore(
   http: HttpEvidence | null | undefined,
   green: Set<string>,
+  evidenceRecorded: boolean,
 ): { points: number; note?: string } {
   if (!http) return { points: 0 };
   const files = http.tests.filter((p) => existsSync(join(ROOT_DIR, p)));
@@ -404,7 +419,12 @@ function httpScore(
   }
   const proven = hits.filter((p) => green.has(p));
   if (proven.length === 0) {
-    return { points: 0, note: `http テストが緑の記録に無い: ${hits.join(", ")}` };
+    return {
+      points: 0,
+      note: evidenceRecorded
+        ? `http テストが赤または未実行: ${hits.join(", ")}`
+        : `http 証拠未記録（npm run ooo:unit）: ${hits.join(", ")}`,
+    };
   }
   return { points: 8 };
 }
@@ -415,6 +435,7 @@ function scoreItem(
   green: Set<string>,
   unitGreen: Set<string>,
   catalog: RouteRef[],
+  evidence: { unit: boolean; e2e: boolean },
 ): ScoredItem {
   const notes: string[] = [];
   const spec = specScore(item.spec, item.impl, catalog);
@@ -422,10 +443,10 @@ function scoreItem(
   const impl = implScore(item.impl, item.http, catalog);
   notes.push(...impl.notes);
 
-  const unit = unitScore(item.unit ?? [], unitGreen);
+  const unit = unitScore(item.unit ?? [], unitGreen, evidence.unit);
   notes.push(...unit.notes);
 
-  const http = httpScore(item.http, unitGreen);
+  const http = httpScore(item.http, unitGreen, evidence.unit);
   if (http.note) notes.push(http.note);
   if (!item.http) notes.push("BFF を HTTP で叩くテストが無い");
 
@@ -442,7 +463,11 @@ function scoreItem(
     } else if (names.some((n) => registered.has(n))) {
       e2ePoints = 3;
       e2eState = "登録のみ";
-      notes.push("E2E は config に載っているが緑の記録が無い");
+      notes.push(
+        evidence.e2e
+          ? "E2E は登録済みだが直近ランが緑ではない"
+          : "E2E 証拠未記録（npm run ooo:e2e）— config 登録のみ",
+      );
     } else {
       e2ePoints = 1;
       e2eState = "未登録";
@@ -477,7 +502,8 @@ export function scoreAll(): ScoredItem[] {
   const green = greenE2eSpecs();
   const unitGreen = greenUnitFiles();
   const catalog = routeCatalog();
-  return raw.items.map((item) => scoreItem(item, registered, green, unitGreen, catalog));
+  const evidence = evidenceRecordPresent();
+  return raw.items.map((item) => scoreItem(item, registered, green, unitGreen, catalog, evidence));
 }
 
 function main(): void {
@@ -485,6 +511,17 @@ function main(): void {
   const json = args.includes("--json");
   const idArg = args[args.indexOf("--id") + 1];
   const gateArg = args.includes("--gate") ? Number(args[args.indexOf("--gate") + 1]) : undefined;
+
+  const evidence = evidenceRecordPresent();
+  if (!json && (!evidence.unit || !evidence.e2e)) {
+    const missing = [
+      !evidence.unit ? "tests/.ooo-unit-green.json（npm run ooo:unit）" : null,
+      !evidence.e2e ? "tests/.ooo-e2e-green.json（npm run ooo:e2e）" : null,
+    ].filter(Boolean);
+    console.log(
+      `証拠未記録: ${missing.join(" · ")} — 仕様/実装点は採点されるが、テスト点は証拠が無いと 0 に見える（実装欠落ではない）。\n`,
+    );
+  }
 
   let rows = scoreAll();
   if (args.includes("--id") && idArg) rows = rows.filter((r) => r.id === idArg);
@@ -502,7 +539,11 @@ function main(): void {
     const avg = rows.reduce((s, r) => s + r.total, 0) / (rows.length || 1);
     const gate = gateArg ?? 99;
     const ok = rows.filter((r) => r.total >= gate).length;
-    console.log(`\n${rows.length} 件 · 平均 ${avg.toFixed(1)} · ${gate}点以上 ${ok} 件`);
+    const implAvg = rows.reduce((s, r) => s + r.spec + r.impl, 0) / (rows.length || 1);
+    console.log(
+      `\n${rows.length} 件 · 平均 ${avg.toFixed(1)} · 仕様+実装平均 ${implAvg.toFixed(1)} · ${gate}点以上 ${ok} 件` +
+        ` · 証拠 unit=${evidence.unit ? "有" : "無"} e2e=${evidence.e2e ? "有" : "無"}`,
+    );
   }
 
   if (gateArg !== undefined) {

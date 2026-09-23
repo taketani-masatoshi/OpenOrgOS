@@ -22,6 +22,8 @@ describe("integrations status", () => {
     const report = computeIntegrationsStatus("demo");
     expect(report.setup_completed).toBe(false);
     expect(report.items.some((i) => i.id === "integrations_file")).toBe(true);
+    expect(report.next_actions.length).toBeGreaterThan(0);
+    expect(report.items.some((i) => i.id.startsWith("connector_"))).toBe(true);
   });
 
   it("reports setup complete when stamp present", () => {
@@ -32,5 +34,6 @@ describe("integrations status", () => {
     });
     const report = computeIntegrationsStatus("demo");
     expect(report.setup_completed).toBe(true);
+    expect(report.items.find((i) => i.id === "integrations_file")?.ok).toBe(true);
   });
 });
