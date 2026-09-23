@@ -124,7 +124,6 @@ const ALLOW_R4_CORE_IO = [
   "src/lib/scheduling-coordination/chat-parse.ts:../secretary/",
   "src/lib/scheduling-coordination/reply-parse.ts:new Date()",
   "src/lib/scheduling-coordination/slots.ts:./store",
-  "src/lib/scheduling-coordination/venue-gate.ts:../venue-booking/",
 ].sort();
 
 const ALLOW_R5_MISSING_REGISTER = [

@@ -6,7 +6,7 @@ import { findOrgApproval } from "../org/approval/index.js";
 import { externalTargets } from "./correspondence-drafts.js";
 import { proposeSlotsOntoSchedulingCase } from "./propose-case.js";
 import { type SchedulingDraftKind } from "./draft-text.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 
@@ -66,7 +66,7 @@ export function handleSchedulingCorrespondenceSent(
   if (kind === "proposal") {
     if (current.status !== "awaiting_responses") {
       current = updateSchedulingCase(current.id, current.revision, (row) =>
-        applyNextAction({
+        resolveNextAction({
           ...row,
           status: "awaiting_responses",
           reminder_due_at: undefined,
@@ -113,7 +113,7 @@ export function handleSchedulingCorrespondenceSent(
   }
   if (!current.reminder_targets.includes(participantId)) return current;
   return updateSchedulingCase(current.id, current.revision, (row) =>
-    applyNextAction({
+    resolveNextAction({
       ...row,
       status: "awaiting_responses",
       reminder_targets: row.reminder_targets.filter((id) => id !== participantId),

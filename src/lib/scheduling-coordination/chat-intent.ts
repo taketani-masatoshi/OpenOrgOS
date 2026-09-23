@@ -1,5 +1,5 @@
 import type { SchedulingCase, SchedulingParticipant } from "../../../schemas/executive/scheduling-cases.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import {
   loadSchedulingCases,
@@ -66,7 +66,7 @@ function createCaseFromDraft(draft: SchedulingChatDraft): SchedulingCase {
     response: "pending",
   }));
 
-  const caseRow = applyNextAction({
+  const caseRow = resolveNextAction({
     id: nextSchedulingCaseId(file.cases),
     title: draft.title!,
     status: "open",

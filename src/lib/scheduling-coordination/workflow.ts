@@ -1,8 +1,9 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { resolveMailConfig } from "../correspondence/mail-config.js";
+import { mutateSchedulingCase } from "./case-command.js";
 import { ensureSchedulingCeoConfirmQuestion } from "./ceo-confirm.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 
 function reminderDelayMs(): number {
@@ -43,13 +44,10 @@ export function refreshSchedulingReminder(
   ) {
     return current;
   }
-  return updateSchedulingCase(current.id, current.revision, (row) =>
-    applyNextAction({
-      ...row,
-      reminder_due_at: dueAt,
-      reminder_targets: targets,
-      updated_at: now.toISOString(),
-    })
+  return mutateSchedulingCase(
+    caseId,
+    { type: "reminderRefresh", dueAt, targets },
+    { now, notFoundMessage: "scheduling" }
   );
 }
 
@@ -67,21 +65,10 @@ export function markSchedulingReminderDrafted(
       r.participant_id === participantId
   );
   if (duplicate) return current;
-  return updateSchedulingCase(current.id, current.revision, (row) =>
-    applyNextAction({
-      ...row,
-      reminder_history: [
-        ...row.reminder_history,
-        {
-          proposal_revision: row.proposal_revision,
-          participant_id: participantId,
-          drafted_at: now.toISOString(),
-          draft_id: draftId,
-        },
-      ],
-      reminder_targets: row.reminder_targets.filter((id) => id !== participantId),
-      updated_at: now.toISOString(),
-    })
+  return mutateSchedulingCase(
+    caseId,
+    { type: "reminderDrafted", participantId, draftId },
+    { now, notFoundMessage: "scheduling" }
   );
 }
 
@@ -93,7 +80,7 @@ export function markSchedulingReminderDrafted(
 export function advanceSchedulingWorkflow(caseId: string, now = new Date()): SchedulingCase {
   const current = refreshSchedulingReminder(caseId, now);
   if (!current) throw new Error(`Scheduling case ${caseId} not found`);
-  const next = applyNextAction(current);
+  const next = resolveNextAction(current);
   const persisted =
     next.status === current.status &&
     next.next_action === current.next_action &&

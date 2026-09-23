@@ -1,5 +1,5 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { updateSchedulingCase } from "./store.js";
 
 /**
@@ -8,7 +8,7 @@ import { updateSchedulingCase } from "./store.js";
  * Kept out of next-action.ts so judgment stays pure.
  */
 export function persistSchedulingNextAction(caseRow: SchedulingCase): SchedulingCase {
-  const desired = applyNextAction(caseRow);
+  const desired = resolveNextAction(caseRow);
   if (
     desired.status === caseRow.status &&
     desired.next_action === caseRow.next_action &&

@@ -6,8 +6,8 @@ import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases
 import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
 import { findTriageEntry, listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import { getMailReceivedDir } from "../correspondence/paths.js";
-import { applyNextAction } from "./next-action.js";
-import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { mutateSchedulingCase } from "./case-command.js";
+import { findSchedulingCase } from "./store.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import {
   findCaseForMailEntry,
@@ -48,13 +48,9 @@ export async function applyScheduleIntakeAnswer(
     const caseRow = findSchedulingCase(caseMatch[1]!);
     if (!caseRow) return undefined;
     const cancel = choice === "中止" || choice.toLowerCase() === "cancel";
-    const updated = updateSchedulingCase(caseRow.id, caseRow.revision, (row) =>
-      applyNextAction({
-        ...row,
-        status: cancel ? "cancelled" : "open",
-        exception_reason: undefined,
-        updated_at: new Date().toISOString(),
-      })
+    const updated = mutateSchedulingCase(
+      caseRow.id,
+      cancel ? { type: "intakeCancel" } : { type: "intakeContinue" }
     );
     if (cancel) recordSchedulingLifecycleEvent(updated.id, "cancelled", question.answered_by);
     return findSchedulingCase(updated.id) ?? updated;

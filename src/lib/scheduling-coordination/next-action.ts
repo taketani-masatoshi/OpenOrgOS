@@ -16,6 +16,7 @@ import {
   SCHEDULE_VENUE_CLARIFY,
   SCHEDULE_VENUE_RESERVATION_PENDING,
 } from "./ceo-gates.js";
+import type { SchedulingJudgmentContext } from "./judgment-context.js";
 import { caseNeedsVenueResolution, caseNeedsVenueReservationForConfirm } from "./venue-gate.js";
 import {
   clarifySentForRevision,
@@ -24,7 +25,10 @@ import {
 } from "./venue-clarify.js";
 import { findUnanimousAcceptedSlot } from "./slots.js";
 
-export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction {
+export function computeNextAction(
+  caseRow: SchedulingCase,
+  ctx: SchedulingJudgmentContext = {}
+): SchedulingNextAction {
   if (
     caseRow.status === "closed" ||
     caseRow.status === "cancelled" ||
@@ -42,14 +46,14 @@ export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction
   }
 
   if (caseRow.status === "confirmed") {
-    if (caseNeedsVenueReservationForConfirm(caseRow)) {
+    if (caseNeedsVenueReservationForConfirm(caseRow, ctx.venueReservation)) {
       return "none";
     }
     return caseRow.calendar_sync === "synced" ? "send_confirmation" : "write_calendar";
   }
 
   if (caseRow.status === "notifying") {
-    if (caseNeedsVenueReservationForConfirm(caseRow)) {
+    if (caseNeedsVenueReservationForConfirm(caseRow, ctx.venueReservation)) {
       return "none";
     }
     const externalIds = caseRow.participants
@@ -144,9 +148,12 @@ export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction
   return "propose_slots";
 }
 
-export function applyNextAction(caseInput: SchedulingCaseInput): SchedulingCase {
+export function applyNextAction(
+  caseInput: SchedulingCaseInput,
+  ctx: SchedulingJudgmentContext = {}
+): SchedulingCase {
   const caseRow = schedulingCaseSchema.parse(caseInput);
-  const next_action = computeNextAction(caseRow);
+  const next_action = computeNextAction(caseRow, ctx);
   let status = caseRow.status;
   let exception_reason = caseRow.exception_reason;
 
@@ -172,11 +179,11 @@ export function applyNextAction(caseInput: SchedulingCaseInput): SchedulingCase 
     exception_reason = undefined;
   }
 
-  if (caseNeedsVenueReservationForConfirm(caseRow)) {
+  if (caseNeedsVenueReservationForConfirm(caseRow, ctx.venueReservation)) {
     exception_reason = SCHEDULE_VENUE_RESERVATION_PENDING;
   } else if (
     exception_reason === SCHEDULE_VENUE_RESERVATION_PENDING &&
-    !caseNeedsVenueReservationForConfirm(caseRow)
+    !caseNeedsVenueReservationForConfirm(caseRow, ctx.venueReservation)
   ) {
     exception_reason = undefined;
   }

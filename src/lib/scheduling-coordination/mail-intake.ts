@@ -6,7 +6,7 @@ import {
 } from "../correspondence/ceo-inline-question.js";
 import { findTriageEntry, upsertTriageEntry } from "../correspondence/mail-triage-queue.js";
 import { extractEmailAddress } from "./reply-parse.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { normalizeScheduleMailSubject } from "./mail-match.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import {
@@ -49,7 +49,7 @@ export function createSafeScheduleIntake(entry: MailTriageEntry): SchedulingCase
   const now = new Date().toISOString();
   const file = loadSchedulingCases();
   const caseRow = upsertSchedulingCase(
-    applyNextAction({
+    resolveNextAction({
       id: nextSchedulingCaseId(file.cases),
       title: normalizeScheduleMailSubject(entry.subject) || "日程調整",
       status: "needs_review",
@@ -104,7 +104,7 @@ export function linkMailToCase(caseId: string, mailId: string): SchedulingCase {
   threadIds.add(mailId);
   if (entry.source_message_id) threadIds.add(entry.source_message_id);
 
-  const desired = applyNextAction({
+  const desired = resolveNextAction({
     ...caseRow,
     mail_thread_ids: [...threadIds],
     updated_at: new Date().toISOString(),

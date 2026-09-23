@@ -2332,6 +2332,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-transitions.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-unit.test.ts:
     axis: platform
     kind: unit

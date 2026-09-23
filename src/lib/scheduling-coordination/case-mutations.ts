@@ -3,9 +3,9 @@ import type {
   SchedulingParticipant,
 } from "../../../schemas/executive/scheduling-cases.js";
 import { currentDate } from "../utils.js";
+import { mutateSchedulingCase } from "./case-command.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
-import { applyNextAction } from "./next-action.js";
 import { proposeExecutiveSlots } from "./slots.js";
 import {
   findSchedulingCase,
@@ -13,8 +13,8 @@ import {
   loadSchedulingCases,
   nextParticipantId,
   nextSchedulingCaseId,
-  updateSchedulingCase,
 } from "./store.js";
+import { applySchedulingTransition } from "./transitions.js";
 import { advanceSchedulingWorkflow } from "./workflow.js";
 
 export interface SchedulingParticipantInput {
@@ -60,25 +60,26 @@ export function openSchedulingCase(opts: {
   meetingFormat?: "online" | "in_person" | "unspecified";
   location?: string;
   actor?: string;
+  now?: Date;
 }): SchedulingCase {
   const file = loadSchedulingCases();
-  const now = new Date().toISOString();
-  const caseRow = applyNextAction({
-    id: nextSchedulingCaseId(file.cases),
-    title: opts.title,
-    status: "open",
-    created_at: now,
-    updated_at: now,
-    participants: buildSchedulingParticipants(opts.participants),
-    proposed_slots: [],
-    duration_minutes: opts.durationMinutes ?? 60,
-    search_from: opts.searchFrom,
-    search_to: opts.searchTo,
-    meeting_format: opts.meetingFormat,
-    location: opts.location,
-    mail_thread_ids: [],
-    next_action: "propose_slots",
-  });
+  const now = opts.now ?? new Date();
+  // open transition ignores the prior row
+  const caseRow = applySchedulingTransition(
+    undefined as unknown as SchedulingCase,
+    {
+      type: "open",
+      id: nextSchedulingCaseId(file.cases),
+      title: opts.title,
+      participants: buildSchedulingParticipants(opts.participants),
+      durationMinutes: opts.durationMinutes ?? 60,
+      searchFrom: opts.searchFrom,
+      searchTo: opts.searchTo,
+      meetingFormat: opts.meetingFormat,
+      location: opts.location,
+    },
+    now
+  );
   insertSchedulingCase(caseRow);
   recordSchedulingLifecycleEvent(caseRow.id, "created", opts.actor ?? "cli");
   return caseRow;
@@ -89,6 +90,7 @@ export function proposeSchedulingCaseSlots(opts: {
   from?: string;
   to?: string;
   count?: number;
+  now?: Date;
 }): SchedulingCase {
   const caseRow = findSchedulingCase(opts.id);
   if (!caseRow) throw new Error(`Case ${opts.id} not found`);
@@ -101,19 +103,16 @@ export function proposeSchedulingCaseSlots(opts: {
     existingSlots: caseRow.proposed_slots,
   });
 
-  let updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      proposed_slots: slots,
-      status: slots.length ? "proposing" : caseRow.status,
-      updated_at: new Date().toISOString(),
-    })
+  let updated = mutateSchedulingCase(
+    opts.id,
+    { type: "propose", slots },
+    { now: opts.now }
   );
   if (updated.next_action === "send_proposal") {
     updated = ensureSchedulingCorrespondenceDrafts(updated.id, "proposal");
   }
   if (updated.next_action === "ceo_confirm") {
-    updated = advanceSchedulingWorkflow(updated.id);
+    updated = advanceSchedulingWorkflow(updated.id, opts.now);
   }
   return updated;
 }
@@ -126,37 +125,23 @@ export function recordSchedulingParticipantResponse(opts: {
   slotId?: string;
   mailId?: string;
   note?: string;
+  now?: Date;
 }): SchedulingCase {
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) throw new Error(`Case ${opts.id} not found`);
-
-  const participants = caseRow.participants.map((participant) => {
-    const matchEmail = opts.email && participant.email?.toLowerCase() === opts.email.toLowerCase();
-    const matchId = opts.participantId && participant.id === opts.participantId;
-    if (!matchEmail && !matchId) return participant;
-    return {
-      ...participant,
+  let updated = mutateSchedulingCase(
+    opts.id,
+    {
+      type: "respond",
+      email: opts.email,
+      participantId: opts.participantId,
       response: opts.response,
-      accepted_slot_id: opts.slotId ?? participant.accepted_slot_id,
-      response_note: opts.note ?? participant.response_note,
-      responded_at: new Date().toISOString(),
-      responded_mail_id: opts.mailId ?? participant.responded_mail_id,
-    };
-  });
-
-  let status = caseRow.status;
-  if (status === "open" || status === "proposing") status = "awaiting_responses";
-
-  let updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      participants,
-      status,
-      updated_at: new Date().toISOString(),
-    })
+      slotId: opts.slotId,
+      mailId: opts.mailId,
+      note: opts.note,
+    },
+    { now: opts.now }
   );
   if (updated.next_action === "ceo_confirm") {
-    updated = advanceSchedulingWorkflow(updated.id);
+    updated = advanceSchedulingWorkflow(updated.id, opts.now);
   }
   return updated;
 }
@@ -173,74 +158,29 @@ export function assertSchedulingCaseConfirmable(caseRow: SchedulingCase, slotId:
   }
 }
 
-export function markSchedulingCaseSlotConfirmed(id: string, slotId: string): SchedulingCase {
-  const caseRow = findSchedulingCase(id);
-  if (!caseRow) throw new Error(`Case ${id} not found`);
-  return updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      status: "confirmed",
-      pending_slot_id: slotId,
-      updated_at: new Date().toISOString(),
-    })
-  );
+export function markSchedulingCaseSlotConfirmed(
+  id: string,
+  slotId: string,
+  now?: Date
+): SchedulingCase {
+  return mutateSchedulingCase(id, { type: "confirmSlot", slotId }, { now });
 }
 
-export function closeSchedulingCase(id: string): SchedulingCase {
-  const caseRow = findSchedulingCase(id);
-  if (!caseRow) throw new Error(`Case ${id} not found`);
-  return updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      status: "closed",
-      next_action: "none",
-      updated_at: new Date().toISOString(),
-    })
-  );
+export function closeSchedulingCase(id: string, now?: Date): SchedulingCase {
+  return mutateSchedulingCase(id, { type: "close" }, { now });
 }
 
-export function cancelSchedulingCase(id: string, reason?: string): SchedulingCase {
-  const caseRow = findSchedulingCase(id);
-  if (!caseRow) throw new Error(`Case ${id} not found`);
-  updateSchedulingCase(caseRow.id, caseRow.revision, () => ({
-    ...caseRow,
-    status: "cancelled",
-    next_action: "none",
-    exception_reason: reason,
-    updated_at: new Date().toISOString(),
-  }));
-  return recordSchedulingLifecycleEvent(caseRow.id, "cancelled", "cli");
+export function cancelSchedulingCase(
+  id: string,
+  reason?: string,
+  now?: Date
+): SchedulingCase {
+  mutateSchedulingCase(id, { type: "cancel", reason }, { now });
+  return recordSchedulingLifecycleEvent(id, "cancelled", "cli");
 }
 
-export function rescheduleSchedulingCase(id: string): SchedulingCase {
-  const caseRow = findSchedulingCase(id);
-  if (!caseRow) throw new Error(`Case ${id} not found`);
-  const participants = caseRow.participants.map((participant) => ({
-    ...participant,
-    response: "pending" as const,
-    accepted_slot_id: undefined,
-    response_note: undefined,
-    responded_at: undefined,
-    responded_mail_id: undefined,
-  }));
-  const updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      status: "proposing",
-      participants,
-      proposed_slots: [],
-      proposal_revision: caseRow.proposal_revision + 1,
-      pending_slot_id: undefined,
-      calendar_sync: "not_requested",
-      calendar_sync_error: undefined,
-      calendar_synced_at: undefined,
-      reminder_due_at: undefined,
-      reminder_targets: [],
-      ceo_question_id: undefined,
-      exception_reason: undefined,
-      updated_at: new Date().toISOString(),
-    })
-  );
+export function rescheduleSchedulingCase(id: string, now?: Date): SchedulingCase {
+  const updated = mutateSchedulingCase(id, { type: "reschedule" }, { now });
   recordSchedulingLifecycleEvent(updated.id, "rescheduled", "cli");
   const persisted = findSchedulingCase(updated.id);
   if (!persisted) throw new Error(`Case ${id} not found`);

@@ -1,6 +1,6 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { currentDate } from "../utils.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { proposeExecutiveSlots, type SlotTimePreference } from "./slots.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { schedulingCaseLooksLikeMeal } from "./meal-cost.js";
@@ -44,7 +44,7 @@ export function proposeSlotsOntoSchedulingCase(
   });
 
   let updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
+    resolveNextAction({
       ...caseRow,
       proposed_slots: slots,
       correspondence: refreshDrafts

@@ -8,7 +8,7 @@ import {
   pushEventToGoogleCalendar,
 } from "../google-calendar-push.js";
 import { getExecutiveDir, writeYamlFile } from "../utils.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 
 function nextCalendarEventId(events: CalendarEvent[]): string {
@@ -60,7 +60,7 @@ export function ensureCalendarEventForCase(
   }
 
   const updated = updateSchedulingCase(latest.id, latest.revision, (current) =>
-    applyNextAction({
+    resolveNextAction({
       ...current,
       status: "confirmed",
       pending_slot_id: slotId,
@@ -113,7 +113,7 @@ export async function syncSchedulingCaseCalendar(
     const config = loadGoogleCalendarConfig();
     if (!config) {
       return updateSchedulingCase(syncing.id, syncing.revision, (current) =>
-        applyNextAction({
+        resolveNextAction({
           ...current,
           calendar_sync: "synced",
           calendar_sync_error: undefined,
@@ -140,7 +140,7 @@ export async function syncSchedulingCaseCalendar(
     );
     saveCalendar(events);
     return updateSchedulingCase(syncing.id, syncing.revision, (current) =>
-      applyNextAction({
+      resolveNextAction({
         ...current,
         calendar_sync: "synced",
         calendar_sync_error: undefined,
@@ -151,7 +151,7 @@ export async function syncSchedulingCaseCalendar(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     updateSchedulingCase(syncing.id, syncing.revision, (current) =>
-      applyNextAction({
+      resolveNextAction({
         ...current,
         status: "confirmed",
         calendar_sync: "failed",

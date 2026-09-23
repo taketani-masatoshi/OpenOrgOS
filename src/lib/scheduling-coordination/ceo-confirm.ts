@@ -9,7 +9,7 @@ import { listCorrespondenceDrafts } from "../correspondence/draft.js";
 import { findUnanimousAcceptedSlot } from "./slots.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { syncSchedulingCaseCalendar } from "./calendar-write.js";
-import { applyNextAction } from "./next-action.js";
+import { mutateSchedulingCase } from "./case-command.js";
 import { findOperatorByApproverName, findOperatorById } from "../org/operators.js";
 import {
   buildSchedulingCeoChoices,
@@ -182,55 +182,18 @@ export async function applySchedulingCeoAnswer(
 
   switch (choice.kind) {
     case "manual_coordination":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) =>
-        applyNextAction({
-          ...current,
-          status: "needs_review",
-          next_action: "none",
-          ceo_question_id: undefined,
-          exception_reason: "schedule_manual_coordination",
-          updated_at: new Date().toISOString(),
-        })
-      );
+      return mutateSchedulingCase(caseId, { type: "ceoManual" });
     case "cancel":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) =>
-        applyNextAction({
-          ...current,
-          status: "cancelled",
-          next_action: "none",
-          proposed_slots: [],
-          pending_slot_id: undefined,
-          ceo_question_id: undefined,
-          exception_reason: undefined,
-          updated_at: new Date().toISOString(),
-        })
-      );
+      return mutateSchedulingCase(caseId, { type: "ceoCancel" });
     case "repropose":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) =>
-        applyNextAction({
-          ...current,
-          status: "proposing",
-          proposed_slots: [],
-          pending_slot_id: undefined,
-          ceo_question_id: undefined,
-          exception_reason: undefined,
-          updated_at: new Date().toISOString(),
-        })
-      );
+      return mutateSchedulingCase(caseId, { type: "ceoRepropose" });
     case "confirm_slot":
       return confirmSchedulingCaseFromCeo(caseId, choice.slotId, {
         pushCalendar: true,
         ceoAuthorize: authorize,
       });
     case "invalid":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) => ({
-        ...current,
-        status: "needs_review",
-        next_action: "none",
-        ceo_question_id: undefined,
-        exception_reason: "schedule_invalid_ceo_choice",
-        updated_at: new Date().toISOString(),
-      }));
+      return mutateSchedulingCase(caseId, { type: "ceoInvalid" });
   }
 }
 
