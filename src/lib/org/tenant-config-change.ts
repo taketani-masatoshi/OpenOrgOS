@@ -38,6 +38,7 @@ import {
 import { activateTenantModule } from "../agent-workspace.js";
 import { initTenantControlsFile } from "../control-framework.js";
 import { syncActiveContext } from "../context-manifest.js";
+import { fileRegulationWorkflowWorkOrder } from "../regulation-module-workflow.js";
 import {
   isRosterAgentActive,
   loadTenantAgentRoster,
@@ -431,6 +432,39 @@ function setModuleEnabledFlag(moduleId: string, enabled: boolean): void {
   writeYamlFile(modulesFilePath(), modulesFileSchema.parse(file));
 }
 
+/**
+ * When full activateTenantModule fails, still file the regulation WO so the
+ * classify → draft gate is not skipped (policy §4).
+ */
+function flagOnlyEnableWithRegulationWo(
+  moduleId: string,
+  activateErr: unknown,
+  warnings: string[]
+): void {
+  setModuleEnabledFlag(moduleId, true);
+  warnings.push(
+    `activate fallback to flag-only: ${activateErr instanceof Error ? activateErr.message : String(activateErr)}`
+  );
+  try {
+    const wo = fileRegulationWorkflowWorkOrder(moduleId);
+    if (wo.deduped) {
+      warnings.push(
+        `regulation WO reused pending ${wo.workOrderId} (flag-only activate)`
+      );
+    } else if (wo.workOrderId) {
+      warnings.push(
+        `regulation WO filed ${wo.workOrderId} after flag-only activate (LLM draft only)`
+      );
+    } else {
+      warnings.push("regulation WO not filed after flag-only activate");
+    }
+  } catch (woErr) {
+    warnings.push(
+      `regulation WO failed after flag-only activate: ${woErr instanceof Error ? woErr.message : String(woErr)}`
+    );
+  }
+}
+
 function trySyncRoster(): string | undefined {
   try {
     const current = loadTenantAgentRoster();
@@ -498,10 +532,7 @@ export function applyTenantConfigChange(changeId: string): ApplyTenantConfigChan
         activateTenantModule(change.target_id);
       } catch (err) {
         try {
-          setModuleEnabledFlag(change.target_id, true);
-          warnings.push(
-            `activate fallback to flag-only: ${err instanceof Error ? err.message : String(err)}`
-          );
+          flagOnlyEnableWithRegulationWo(change.target_id, err, warnings);
         } catch (err2) {
           throw err2 instanceof Error ? err2 : err;
         }
@@ -511,10 +542,7 @@ export function applyTenantConfigChange(changeId: string): ApplyTenantConfigChan
         activateTenantModule(change.target_id);
       } catch (err) {
         try {
-          setModuleEnabledFlag(change.target_id, true);
-          warnings.push(
-            `activate fallback to flag-only: ${err instanceof Error ? err.message : String(err)}`
-          );
+          flagOnlyEnableWithRegulationWo(change.target_id, err, warnings);
         } catch (err2) {
           throw err2 instanceof Error ? err2 : err;
         }

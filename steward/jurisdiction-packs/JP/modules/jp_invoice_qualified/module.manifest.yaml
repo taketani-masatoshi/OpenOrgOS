@@ -2,6 +2,8 @@ id: jp_invoice_qualified
 required_seeds: []
 activation_seeds:
   - invoice-registration.yaml.example
+optional_regulations:
+  - REG-030
 required_regulations:
   - REG-033
 notes: skeleton — インボイス（適格請求書）登録 · T 番号整合

@@ -6,6 +6,7 @@ activation_seeds:
 optional_regulations:
   - REG-034
   - REG-010
+  - REG-030
 required_regulations:
   - REG-035
 notes: payroll calc engine — rates in seed YAML · L2 person detail gitignored
