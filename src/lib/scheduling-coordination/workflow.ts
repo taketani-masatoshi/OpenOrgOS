@@ -95,11 +95,13 @@ export function advanceSchedulingWorkflow(caseId: string, now = new Date()): Sch
   if (!current) throw new Error(`Scheduling case ${caseId} not found`);
   const next = applyNextAction(current);
   const persisted =
-    next.status === current.status && next.next_action === current.next_action
+    next.status === current.status &&
+    next.next_action === current.next_action &&
+    next.exception_reason === current.exception_reason
       ? current
       : updateSchedulingCase(current.id, current.revision, () => ({
           ...next,
-          updated_at: new Date().toISOString(),
+          updated_at: now.toISOString(),
         }));
 
   if (persisted.next_action === "send_clarify") {

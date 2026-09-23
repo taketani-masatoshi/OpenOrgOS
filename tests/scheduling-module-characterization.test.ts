@@ -10,6 +10,7 @@ import {
   extractSchedulingChatTitle,
   isSchedulingChatIntent,
 } from "../src/lib/scheduling-coordination/chat-parse.js";
+import { SCHEDULE_VENUE_PENDING } from "../src/lib/scheduling-coordination/ceo-gates.js";
 import { applyScheduleReplyToCase } from "../src/lib/scheduling-coordination/mail-reply.js";
 import { persistSchedulingNextAction } from "../src/lib/scheduling-coordination/persist-next-action.js";
 import { processScheduleMailEntry } from "../src/lib/scheduling-coordination/process-mail.js";
@@ -17,6 +18,7 @@ import {
   findSchedulingCase,
   upsertSchedulingCase,
 } from "../src/lib/scheduling-coordination/store.js";
+import { advanceSchedulingWorkflow } from "../src/lib/scheduling-coordination/workflow.js";
 import {
   cleanupSchedulingTenant,
   schedulingCase,
@@ -196,6 +198,45 @@ describe("scheduling module characterization", () => {
       expect(extractSchedulingChatParticipantCount(message)).toBe(3);
       expect(extractSchedulingChatDuration(message)).toBe(60);
       expect(extractSchedulingChatMeetingFormat(message)).toBe("online");
+    });
+  });
+
+  describe("advanceSchedulingWorkflow", () => {
+    it("persists updated_at from the injected now when status or next_action changes", () => {
+      const now = new Date("2026-08-15T12:00:00.000Z");
+      upsertSchedulingCase({
+        ...schedulingCase("SCH-2026-910", 2),
+        status: "open",
+        next_action: "none",
+        updated_at: "2026-08-01T00:00:00.000Z",
+      });
+
+      const updated = advanceSchedulingWorkflow("SCH-2026-910", now);
+      expect(updated.status).toBe("proposing");
+      expect(updated.next_action).toBe("send_proposal");
+      expect(updated.updated_at).toBe(now.toISOString());
+    });
+
+    it("persists when only exception_reason changes (venue pending cleared)", () => {
+      const now = new Date("2026-08-16T09:00:00.000Z");
+      const initial = upsertSchedulingCase({
+        ...schedulingCase("SCH-2026-911", 2),
+        status: "awaiting_responses",
+        next_action: "none",
+        meeting_format: "online",
+        exception_reason: SCHEDULE_VENUE_PENDING,
+        // Keep reminder not due so refreshSchedulingReminder does not change next_action.
+        updated_at: now.toISOString(),
+        reminder_due_at: "2099-01-01T00:00:00.000Z",
+        reminder_targets: [],
+      });
+
+      const updated = advanceSchedulingWorkflow(initial.id, now);
+      expect(updated.status).toBe("awaiting_responses");
+      expect(updated.next_action).toBe("none");
+      expect(updated.exception_reason).toBeUndefined();
+      expect(updated.revision).toBeGreaterThan(initial.revision);
+      expect(updated.updated_at).toBe(now.toISOString());
     });
   });
 });
