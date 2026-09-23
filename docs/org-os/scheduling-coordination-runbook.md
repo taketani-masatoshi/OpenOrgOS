@@ -86,7 +86,7 @@ orgos executive scheduling rehearsal --full --tenant <id>
 
 ```bash
 orgos doctor --tenant <id> --repair          # mail · operator ERROR 0
-npm run test:scheduling                      # scheduling 回帰 63 tests
+npm run test:scheduling                      # scheduling 回帰（characterization 含む）
 npm test                                     # 全 Vitest green
 orgos executive scheduling rehearsal --full --tenant <id>
 orgos validate --tenant <id>
@@ -99,3 +99,52 @@ orgos validate --tenant <id>
 - IMAP 本番 sync → `auto-process`
 - Google Calendar / Meet OAuth 本番
 - Steward Chat CEO 回答（session BFF）
+
+---
+
+## 8. 付録 — モジュール地図
+
+**Path:** `src/lib/scheduling-coordination/`  
+**CLI:** `src/commands/scheduling-coordination.ts`
+
+### 依存方向（上→下は呼ばない）
+
+```
+入口 (CLI / chat-intent / process-mail / auto-process / reminder-poller)
+  → 案件更新 (case-mutations / mail-reply / propose-case / ceo-confirm)
+    → 状態機械 (next-action 純粋 · persist-next-action · workflow)
+      → 永続 (store)
+  → 副作用 (correspondence-drafts / delegated-send / calendar-write)
+```
+
+判定（`next-action`）は I/O しない。永続ヘルパと副作用は入口・案件更新側が呼ぶ。  
+`lifecycle.ts` / `process-mail.ts` は外部互換の再公開ファサード。新規呼び出しは分割モジュールを直接 import する。
+
+### 役割
+
+| モジュール | 役割 |
+|------------|------|
+| `next-action` | status / next_action / exception_reason の純粋判定 |
+| `persist-next-action` | 上記3フィールドに変化があるときだけ store 更新 |
+| `workflow` | リマインド更新 → next-action 永続 → clarify 下書き / CEO 質問 |
+| `store` | `scheduling-cases.yaml` の read / revision 付き write |
+| `case-mutations` | new / cancel / reschedule / respond 等の CLI 向け更新 |
+| `chat-parse` / `chat-intent` / `chat-draft-store` | Steward Chat の抽出・起票・下書き |
+| `mail-match` / `mail-intake` / `mail-reply` | 照合 · 安全受付 · 返信反映（対案含む） |
+| `process-mail` | メール入口オーケストレーション（ファサード再公開あり） |
+| `correspondence-drafts` / `draft-text` / `delegated-send` | 下書き生成 · 文面 · 委任送信 |
+| `ceo-confirm` / `ceo-choice` / `ceo-gates` | CEO ゲートと選択肢 |
+| `calendar-write` | ローカル予定 → 任意 Google（失敗後再試行可） |
+| `propose-case` / `slots` / `venue-*` | 候補生成 · 会場ゲート |
+| `rehearsal*` / `operational-readiness` | リハーサルと doctor 連携 |
+
+### 状態保存の差（統合しない）
+
+| 関数 | 保存の比較 | 副作用 |
+|------|------------|--------|
+| `persistSchedulingNextAction` | status · next_action · exception_reason | なし |
+| `advanceSchedulingWorkflow` | 同上（`updated_at` は注入 `now`） | その後 clarify / CEO 質問 |
+
+### 既知の非対称（変更しない）
+
+CLI の `proposeSchedulingCaseSlots` と lib の `proposeSlotsOntoSchedulingCase` は、CEO 受付検査と会食時間帯の扱いに差がある。重複ではなく既存仕様差。統合は別課題。
