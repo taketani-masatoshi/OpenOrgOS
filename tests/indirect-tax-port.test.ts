@@ -125,13 +125,14 @@ describe("indirect tax jurisdiction port", () => {
     expect(() => assessInvoiceRegistration()).toThrow(JP_TAX_PROFILE_REQUIRED);
   });
 
-  it("does not apply the Japanese declining-balance table outside Japan", () => {
+  it("refuses declining-balance estimates until fiscal opening is verified", () => {
     useFinanceFixtureTenant();
-    const japan = computeDecliningBalanceMonthly(rateAsset(), 1_000_000);
+    expect(() => computeDecliningBalanceMonthly(rateAsset(), 1_000_000)).toThrow(
+      "requires verified"
+    );
     setTenantId("us-demo");
-    const unitedStates = computeDecliningBalanceMonthly(rateAsset(), 1_000_000);
-    expect(japan).toBe(3583);
-    expect(unitedStates).toBe(1773);
-    expect(unitedStates).not.toBe(japan);
+    expect(() => computeDecliningBalanceMonthly(rateAsset(), 1_000_000)).toThrow(
+      "requires verified"
+    );
   });
 });

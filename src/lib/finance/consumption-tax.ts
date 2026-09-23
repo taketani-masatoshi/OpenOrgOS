@@ -99,6 +99,19 @@ function aggregateFromJournal(
       if (line.purchase_use === "non_taxable_only") continue;
       // Transitional and common-use credits require period-wide eligibility evidence.
       // Do not infer eligibility from an obsolete 80/50 label or a monthly ratio.
+      if (line.purchase_use === "common") {
+        throw new Error(
+          `Common-use purchase tax allocation is not implemented: ${entry.entry_id}/${line.account_code}`
+        );
+      }
+      if (
+        line.invoice_status === "nonqualified_80" ||
+        line.invoice_status === "nonqualified_50"
+      ) {
+        throw new Error(
+          `Transitional invoice deduction rates are not auto-applied: ${entry.entry_id}/${line.account_code}`
+        );
+      }
       if (
         line.purchase_use !== "taxable_only" ||
         line.invoice_status !== "qualified" ||

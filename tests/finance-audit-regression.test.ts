@@ -223,7 +223,10 @@ describe("accounting audit regressions", () => {
     expect(result.withholdingYen).toBe(5720);
   });
 
-  it.each(["common", undefined])("C4: rejects incomplete purchase use %s", (use) => {
+  it.each([
+    ["common", "Common-use purchase tax allocation is not implemented"],
+    [undefined, "evidence incomplete"],
+  ] as const)("C4: rejects incomplete purchase use %s", (use, message) => {
     resetFixtureJournalEntries();
     post("JE-INCOMPLETE", [
       line("5900", 1000, 0, {
@@ -234,7 +237,7 @@ describe("accounting audit regressions", () => {
       }),
       line("1100", 0, 1000),
     ]);
-    expect(() => buildConsumptionTaxSummary({ period: "2026-09" })).toThrow("evidence incomplete");
+    expect(() => buildConsumptionTaxSummary({ period: "2026-09" })).toThrow(message);
   });
   it("C4: refuses legacy transitional labels without eligibility evidence", () => {
     resetFixtureJournalEntries();
@@ -247,7 +250,9 @@ describe("accounting audit regressions", () => {
       }),
       line("1100", 0, 1000),
     ]);
-    expect(() => buildConsumptionTaxSummary({ period: "2026-09" })).toThrow("evidence incomplete");
+    expect(() => buildConsumptionTaxSummary({ period: "2026-09" })).toThrow(
+      "Transitional invoice deduction rates"
+    );
   });
   it("C1: carries a reduced-rate return in the later month as negative tax", () => {
     resetFixtureJournalEntries();

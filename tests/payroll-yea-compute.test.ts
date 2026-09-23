@@ -114,6 +114,16 @@ describe("annual payroll evidence and posting", () => {
     writeFileSync(path, YAML.stringify(file));
     expect(() => computeYearEndAdjustment("FY2026")).toThrow("do not reconcile");
   });
+  it("refuses multi-employee annual certification from company payroll journals", () => {
+    const { path, file } = source();
+    file.employees.push({
+      employee_id: "EMP-OTHER",
+      coverage_months: months,
+      payments: file.employees[0]!.payments,
+    });
+    writeFileSync(path, YAML.stringify(file));
+    expect(() => computeYearEndAdjustment("FY2026")).toThrow("multiple employees");
+  });
   it("invalidates handoff when source changes", () => {
     const { path, file } = source();
     computeYearEndAdjustment("FY2026");

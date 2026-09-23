@@ -6,6 +6,7 @@ import { z } from "zod";
 import YAML from "yaml";
 import { getDataDir } from "../utils.js";
 import { loadJournalEntries } from "./expense-claim-journal.js";
+import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 
 const yen = z.number().int().nonnegative().safe();
@@ -41,6 +42,7 @@ export function payrollCalendarYear(fiscalYear: string): string {
 }
 
 export function readAnnualPayrollSource(fiscalYear: string) {
+  assertJapaneseFinanceEngine();
   const year = payrollCalendarYear(fiscalYear);
   const path = join(getDataDir(), "finance", "payroll-annual-source", `${year}.yaml`);
   if (!existsSync(path)) return null;
@@ -52,6 +54,13 @@ export function readAnnualPayrollSource(fiscalYear: string) {
   const seenEmployees = new Set<string>();
   const seenPayments = new Set<string>();
   const proof: unknown[] = [];
+  // One journal currently models one monthly company payroll run. Multi-employee
+  // annual certification needs per-employee journals; refuse batch conflation.
+  if (source.employees.length > 1) {
+    throw new Error(
+      "Annual payroll cannot certify multiple employees from company-level payroll journals"
+    );
+  }
   const employees = source.employees.map((employee) => {
     if (seenEmployees.has(employee.employee_id))
       throw new Error("Duplicate annual payroll employee");
@@ -117,6 +126,9 @@ export function readAnnualPayrollSource(fiscalYear: string) {
         )
       )
         throw new Error("Annual payroll payment does not reconcile to net pay and bank");
+      // Accrual without settlement, or settlement that pays more than one accrual, is out of scope.
+      if (settlement.lines.length !== 2)
+        throw new Error("Annual payroll refuses batch or multi-leg payment journals");
       seenPayments.add(settlement.entry_id);
       proof.push(entry, settlement);
       gross += payment.gross_yen;

@@ -18,6 +18,7 @@ import {
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { BLUE_RETURN_DEDUCTION_CAP_YEN } from "./income-tax-policy.js";
+import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
 import { isSoleProprietorship } from "./sole-prop-entity.js";
 
 const lineMapSchema = z.object({
@@ -199,6 +200,7 @@ export function deriveSolePropBooksFlags(input: {
 }
 
 export function buildSolePropBlueReturn(fiscalYear: string): SolePropBlueReturnDraft {
+  assertJapaneseFinanceEngine();
   if (!isSoleProprietorship()) return blocked(["sole proprietorship entity_form is required"]);
   const method = returnMethod();
   if (!method) return blocked(["青色か白色の選択がありません"]);

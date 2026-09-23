@@ -3,6 +3,7 @@ import { loadFixedAssets } from "../data.js";
 import { withFinanceMutation } from "./reconciliation-transaction.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
+import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 
 const MONTHS_PER_YEAR = 12;
@@ -40,6 +41,7 @@ export function computeDecliningBalanceMonthly(asset: FixedAsset, bookValue: num
 }
 
 export function computeAssetMonthlyDepreciation(asset: FixedAsset, period: string): number {
+  assertJapaneseFinanceEngine();
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) throw new Error("Invalid depreciation period");
   if (asset.disposed_month && period > asset.disposed_month) return 0;
   if (!Number.isFinite(asset.book_value) || asset.book_value < 0)
@@ -58,6 +60,7 @@ export function computeAssetMonthlyDepreciation(asset: FixedAsset, period: strin
 }
 
 export function buildDepreciationSchedule(period: string): DepreciationScheduleLine[] {
+  assertJapaneseFinanceEngine();
   const accounts = resolveJournalSourceAccounts();
   const file = loadFixedAssets();
   return file.assets.flatMap((asset): DepreciationScheduleLine[] => {

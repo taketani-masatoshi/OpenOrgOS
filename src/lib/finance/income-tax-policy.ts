@@ -2,6 +2,8 @@
  * Published quick-calculation table for individual income tax and the reconstruction surtax.
  * Rates live only here. Basic deduction is not applied. This is not an e-Tax payload.
  */
+import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
+
 export const JP_INCOME_TAX_POLICY = {
   id: "jp-income-tax-advisor-2026",
   taxable_income_unit_yen: 1_000,
@@ -75,6 +77,7 @@ function bracketTaxYen(taxableYen: number): number {
 export function calculateSolePropIncomeTaxAmounts(
   input: IncomeTaxAmountInput
 ): IncomeTaxAmountResult {
+  assertJapaneseFinanceEngine();
   const errors: string[] = [];
   if (input.otherIncomeYen == null) errors.push("other income missing");
   if (input.deductionsYen == null) errors.push("deductions missing");

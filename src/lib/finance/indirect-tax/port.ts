@@ -7,11 +7,15 @@ import { getResolvedJurisdiction } from "../../jurisdiction.js";
 import { loadChartOfAccounts } from "../../data.js";
 import { buildConsumptionTaxSummary, runConsumptionTaxCheck } from "../consumption-tax.js";
 import { loadJournalEntries } from "../expense-claim-journal.js";
+import {
+  assertJapaneseFinanceEngine,
+  JP_TAX_PROFILE_REQUIRED,
+} from "../jp-engine-guard.js";
 import { jpIndirectTaxEngineInstalled } from "./family.js";
 
 export const INDIRECT_TAX_ENGINE_UNINSTALLED = "indirect tax engine not installed";
 export const INDIRECT_TAX_NONE = "no indirect tax";
-export const JP_TAX_PROFILE_REQUIRED = "jp tax profile required";
+export { JP_TAX_PROFILE_REQUIRED };
 
 export type IndirectTaxEngineId = "jp" | "uninstalled";
 
@@ -31,10 +35,7 @@ export type IndirectTaxCloseResult = {
 };
 
 export function assertJpTaxProfile(): void {
-  const { code, pack } = getResolvedJurisdiction();
-  if (code !== "JP" || pack.tax_profile_schema !== "jp") {
-    throw new Error(JP_TAX_PROFILE_REQUIRED);
-  }
+  assertJapaneseFinanceEngine(JP_TAX_PROFILE_REQUIRED);
 }
 
 export function missingLineTaxCodes(month: string): string[] {
