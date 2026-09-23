@@ -62,11 +62,20 @@ export function companiesActDisplayScore(
   return COMPANIES_ACT_FULL_MARKS;
 }
 
+function asYenOrNull(value: number | string | null | undefined): number | null {
+  if (value == null) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+  const parsed = Number(trimmed.replace(/,/g, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function statutoryDisplayAmounts(
   statement: ReturnType<typeof buildStatutoryStatements>,
 ): Array<number | null> {
   const monetary = [...statement.bsRows, ...statement.plRows, ...statement.equityRows].map(
-    (row) => row.amount ?? null,
+    (row) => asYenOrNull(row.amount),
   );
   const notes = statement.notes.map(() => null);
   return [...monetary, ...notes];

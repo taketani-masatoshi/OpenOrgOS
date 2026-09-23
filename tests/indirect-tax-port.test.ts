@@ -94,6 +94,40 @@ describe("indirect tax jurisdiction port", () => {
     expect(result.detail).toContain("missing tax_category");
   });
 
+  it("lists missing purchase invoice_status ids without inventing qualified status", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    migrateJournal(
+      journalEntrySchema.parse({
+        entry_id: "JE-PURCHASE-NO-INV",
+        occurred_at: `${MONTH}-15T00:00:00.000Z`,
+        description: "purchase without invoice status",
+        source: { kind: "manual", authorized_by: "OP-TEST" },
+        evidence_refs: ["test:purchase"],
+        posted_at: `${MONTH}-15T00:00:00.000Z`,
+        posted_by: "OP-TEST",
+        lines: [
+          {
+            account_code: "5100",
+            debit_yen: 1100,
+            credit_yen: 0,
+            tax_category: "taxable_10",
+          },
+          {
+            account_code: "1100",
+            debit_yen: 0,
+            credit_yen: 1100,
+            tax_category: "out_of_scope",
+          },
+        ],
+      }),
+    );
+    const result = evaluateIndirectTaxClose(MONTH);
+    expect(result.pass).toBe(false);
+    expect(result.detail).toMatch(/仕入証跡不足/);
+    expect(result.detail).toContain("JE-PURCHASE-NO-INV:line0:5100");
+  });
+
   it("does not run the Japan engine for Hong Kong or the United States", () => {
     const engine = throwingEngine();
     setTenantId("hk-demo");

@@ -9,6 +9,7 @@ import { getInstallRoot } from "../orgos-paths.js";
 import { appendJournalEntry } from "./expense-claim-journal.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
+import { allocateCloseEntryId } from "./monthly-close-transaction.js";
 
 const MONTHS_PER_YEAR = 12;
 
@@ -216,7 +217,7 @@ export function postDepreciationJournalEntries(input: {
   const schedule = buildDepreciationSchedule(input.period);
   const posted: string[] = [];
   for (const line of schedule) {
-    const entryId = `JE-DEP-${line.asset_id}-${input.period}`;
+    const entryId = allocateCloseEntryId(`JE-DEP-${line.asset_id}-${input.period}`);
     appendJournalEntry({
       entry_id: entryId,
       occurred_at: `${lastDayOfMonth(input.period)}T00:00:00.000Z`,

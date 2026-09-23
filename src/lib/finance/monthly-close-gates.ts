@@ -22,7 +22,10 @@ import { buildMonthlyReconcileReport } from "./ledger/monthly-reconcile.js";
 import { subsidiaryLedgerIntegrityIssues } from "./ledger/subsidiary-ledger.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { isMonthLocked, latestLockForMonth } from "./period-lock.js";
-import { isClosePostAborted } from "./monthly-close-transaction.js";
+import {
+  buildCloseAbortIdSet,
+  isClosePostAbortedInSet,
+} from "./monthly-close-transaction.js";
 import {
   bankRowsForMonth,
   cashBalanceYen,
@@ -89,34 +92,57 @@ function monthlyPlRequired(month: string): boolean {
   return revenue > 0 || expense > 0;
 }
 
+type JournalRow = ReturnType<typeof loadJournalEntries>["entries"][number];
+
+function sourcePeriod(entry: JournalRow): string | undefined {
+  const source = entry.source;
+  if (!source) return undefined;
+  if ("period" in source && typeof source.period === "string") return source.period;
+  return undefined;
+}
+
+function activeCloseEntries(month: string): { entries: JournalRow[]; aborted: Set<string> } {
+  const entries = loadJournalEntries().entries;
+  const aborted = buildCloseAbortIdSet(entries);
+  return {
+    entries: entries.filter(
+      (entry) =>
+        !entry.reversal_of &&
+        !isClosePostAbortedInSet(entry.entry_id, aborted) &&
+        (sourcePeriod(entry) === month ||
+          entry.entry_id.startsWith(`JE-MPL-${month}-`) ||
+          entry.entry_id.startsWith(`JE-PAYROLL-${month}`)),
+    ),
+    aborted,
+  };
+}
+
 function monthlyPlPosted(month: string): boolean {
-  return loadJournalEntries().entries.some(
+  const { entries } = activeCloseEntries(month);
+  return entries.some(
     (entry) =>
-      !isClosePostAborted(entry.entry_id) &&
-      !entry.reversal_of &&
-      (entry.entry_id.startsWith(`JE-MPL-${month}-`) ||
-        (entry.source?.kind === "closing" &&
-          entry.source.period === month &&
-          entry.source.adjustment_id.startsWith("monthly-pl-"))),
+      entry.entry_id.startsWith(`JE-MPL-${month}-`) ||
+      (entry.source?.kind === "closing" &&
+        entry.source.period === month &&
+        entry.source.adjustment_id.startsWith("monthly-pl-")),
   );
 }
 
 function depreciationPosted(month: string): boolean {
-  return loadJournalEntries().entries.some(
-    (entry) =>
-      !isClosePostAborted(entry.entry_id) &&
-      !entry.reversal_of &&
-      entry.source?.kind === "depreciation" &&
-      entry.source.period === month,
+  const { entries } = activeCloseEntries(month);
+  return entries.some(
+    (entry) => entry.source?.kind === "depreciation" && entry.source.period === month,
   );
 }
 
 function payrollPosted(month: string): boolean {
-  return loadJournalEntries().entries.some(
+  const { entries } = activeCloseEntries(month);
+  return entries.some(
     (entry) =>
-      entry.entry_id === `JE-PAYROLL-${month}` &&
-      !isClosePostAborted(entry.entry_id) &&
-      !entry.reversal_of,
+      entry.source?.kind === "payroll" &&
+      entry.source.period === month &&
+      (entry.entry_id === `JE-PAYROLL-${month}` ||
+        entry.entry_id.startsWith(`JE-PAYROLL-${month}-R`)),
   );
 }
 
@@ -469,20 +495,37 @@ export function evaluateMonthlyCloseGates(
     ),
   );
 
-  // Always re-validate live finance data. Callers must not inject a report.
-  const validate = runValidateReport({ warnings: true });
-  const validateErrors = validate.issues
-    .filter((issue) => issue.severity === "error" && issue.path.includes("data/finance/"))
-    .map((issue) => `${issue.path}: ${issue.message}`);
-  items.push(
-    gate(
-      "validate",
-      "帳簿整合性チェック",
-      validateErrors.length === 0,
-      "error",
-      validateErrors.length === 0 ? "ok" : `${validateErrors.length} errors`,
-    ),
-  );
+  // Validate is expensive (full tenant schema). Preflight skips it; acceptance may
+  // defer it to a single post-year run via ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE=1.
+  let validateErrors: string[] = [];
+  const deferValidate = process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE === "1";
+  if (phase === "full" && !deferValidate) {
+    const validate = runValidateReport({ warnings: true });
+    validateErrors = validate.issues
+      .filter((issue) => issue.severity === "error" && issue.path.includes("data/finance/"))
+      .map((issue) => `${issue.path}: ${issue.message}`);
+    items.push(
+      gate(
+        "validate",
+        "帳簿整合性チェック",
+        validateErrors.length === 0,
+        "error",
+        validateErrors.length === 0 ? "ok" : `${validateErrors.length} errors`,
+      ),
+    );
+  } else {
+    items.push(
+      gate(
+        "validate",
+        "帳簿整合性チェック",
+        true,
+        "skip",
+        phase === "preflight"
+          ? "preflight defers validate until after close posts"
+          : "deferred by ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE",
+      ),
+    );
+  }
 
   const plan = loadMonthlyFinances().find((row) => row.month === month);
   const reconcile = buildMonthlyReconcileReport({ month });

@@ -54,14 +54,53 @@ export function closeAbortReversalId(entryId: string): string {
   return `${entryId}-ABORT`;
 }
 
+/** Build aborted-entry id set once per evaluation (avoid O(n²) journal reloads). */
+export function buildCloseAbortIdSet(
+  entries: ReturnType<typeof loadJournalEntries>["entries"] = loadJournalEntries().entries,
+): Set<string> {
+  const aborted = new Set<string>();
+  for (const entry of entries) {
+    if (entry.entry_id.endsWith("-ABORT")) {
+      const base = entry.entry_id.slice(0, -"-ABORT".length);
+      if (base) aborted.add(base);
+    }
+    if (
+      entry.reversal_of &&
+      entry.evidence_refs.includes(`close-abort:${entry.reversal_of}`)
+    ) {
+      aborted.add(entry.reversal_of);
+    }
+  }
+  return aborted;
+}
+
+export function isClosePostAbortedInSet(entryId: string, aborted: Set<string>): boolean {
+  return aborted.has(entryId);
+}
+
 /** True when a close attempt reversed this entry with a stable -ABORT journal. */
 export function isClosePostAborted(entryId: string): boolean {
-  return loadJournalEntries().entries.some(
-    (entry) =>
-      entry.entry_id === closeAbortReversalId(entryId) ||
-      (entry.reversal_of === entryId &&
-        entry.evidence_refs.includes(`close-abort:${entryId}`)),
-  );
+  return isClosePostAbortedInSet(entryId, buildCloseAbortIdSet());
+}
+
+/**
+ * After abort, fixed close ids collide with appendJournalEntry idempotency.
+ * Allocate base id on first try; `-R{n}` only when the base (or prior retry) was aborted.
+ */
+export function allocateCloseEntryId(baseId: string): string {
+  const entries = loadJournalEntries().entries;
+  const aborted = buildCloseAbortIdSet(entries);
+  const ids = new Set(entries.map((entry) => entry.entry_id));
+  const isActive = (id: string) => ids.has(id) && !aborted.has(id);
+  if (!ids.has(baseId)) return baseId;
+  if (isActive(baseId)) return baseId;
+  let n = 1;
+  while (n < 10_000) {
+    const candidate = `${baseId}-R${n}`;
+    if (!ids.has(candidate) || isActive(candidate)) return candidate;
+    n += 1;
+  }
+  throw new Error(`Unable to allocate close entry id for ${baseId}`);
 }
 
 /**
@@ -75,13 +114,14 @@ export function abortMonthlyClosePosts(input: {
 }): string[] {
   const abortIds: string[] = [];
   const occurredAt = input.occurredAt ?? new Date().toISOString();
+  let entries = loadJournalEntries().entries;
+  let aborted = buildCloseAbortIdSet(entries);
   for (const entryId of input.entryIds) {
-    if (isClosePostAborted(entryId)) {
+    if (isClosePostAbortedInSet(entryId, aborted)) {
       abortIds.push(closeAbortReversalId(entryId));
       continue;
     }
-    const exists = loadJournalEntries().entries.some((row) => row.entry_id === entryId);
-    if (!exists) continue;
+    if (!entries.some((row) => row.entry_id === entryId)) continue;
     const reversal = reverseJournalEntry({
       entryId,
       authorizedBy: input.operatorId,
@@ -94,6 +134,8 @@ export function abortMonthlyClosePosts(input: {
     };
     appendJournalEntry(withEvidence, { postedBy: input.operatorId });
     abortIds.push(closeAbortReversalId(entryId));
+    entries = loadJournalEntries().entries;
+    aborted = buildCloseAbortIdSet(entries);
   }
   return abortIds;
 }
@@ -111,6 +153,10 @@ export function beginMonthlyCloseTransaction(input: {
   const existing = loadMonthlyCloseTransaction(input.month);
   if (existing?.phase === "committed" && isMonthLocked(input.month)) {
     return existing;
+  }
+  // Crash window: lock taken but state file never flipped to committed.
+  if (existing?.phase === "posted" && isMonthLocked(input.month)) {
+    return markMonthlyCloseCommitted(existing);
   }
   const now = new Date().toISOString();
   if (existing?.phase === "posted" && existing.posted_entry_ids.length > 0) {

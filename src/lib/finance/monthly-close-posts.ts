@@ -10,6 +10,7 @@ import { lastDayOfMonth } from "./fiscal-year.js";
 import { postMonthlyPlJournalEntries, postPayrollJournalEntry } from "./journal-sources.js";
 import { computePayrollMonth } from "./payroll-jp.js";
 import { payrollGross } from "./monthly-close-gates.js";
+import { allocateCloseEntryId } from "./monthly-close-transaction.js";
 
 function postCloseAdjustments(month: string): string[] {
   const coa = loadChartOfAccounts();
@@ -18,7 +19,9 @@ function postCloseAdjustments(month: string): string[] {
   for (const adjustment of coa.monthly_close_adjustments ?? []) {
     const amount = resolveCloseAdjustmentAmountFromCoa(adjustment.amount_source, month);
     if (amount <= 0) continue;
-    const entryId = `JE-CLOSE-${month}-${adjustment.trigger}`.toUpperCase();
+    const entryId = allocateCloseEntryId(
+      `JE-CLOSE-${month}-${adjustment.trigger}`.toUpperCase(),
+    );
     appendJournalEntry({
       entry_id: entryId,
       occurred_at: `${asOf}T18:00:00.000Z`,

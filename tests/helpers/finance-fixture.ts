@@ -1,4 +1,4 @@
-import { writeFileSync, readFileSync, existsSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getTenantDir } from "../../src/lib/tenant.js";
 
@@ -15,6 +15,13 @@ export function resetFixtureJournalEntries(): void {
   const base = join(getTenantDir(), "data/finance");
   writeFileSync(join(base, "journal-entries.yaml"), "version: 1\nentries: []\n", "utf-8");
   writeFileSync(join(base, "period-locks.yaml"), "version: 1\nlocks: []\n", "utf-8");
+  // Clear monthly-close transaction state left by aborted/resumed closes.
+  if (!existsSync(base)) return;
+  for (const name of readdirSync(base)) {
+    if (/^monthly-close\.\d{4}-\d{2}\.state\.yaml$/.test(name)) {
+      unlinkSync(join(base, name));
+    }
+  }
 }
 
 const STATEMENT_ROLES: Record<string, readonly [string | null, string]> = {

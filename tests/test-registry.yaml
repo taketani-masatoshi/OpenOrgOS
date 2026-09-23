@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 628
-  static_test_cases: 2928
-  tiered_execution_total: 628
+  vitest_total: 630
+  static_test_cases: 2940
+  tiered_execution_total: 630
   catalog_total: 47
   catalog_cli_registered: 48
   catalog_gap: 0
@@ -1198,6 +1198,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  finance-export-baseline.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   finance-filing-product-gate.test.ts:
     axis: platform
     kind: unit
@@ -1729,6 +1733,10 @@ tests:
     axis: contract
     kind: contract
   monthly-close-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  monthly-close-transaction.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

@@ -36,6 +36,7 @@ const NOT_RUN: AccountingAcceptanceStep = { pass: false, detail: "not run" };
 export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
   const originalWorkspace = process.env.ORGOS_WORKSPACE;
   const originalSkipBackup = process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK;
+  const originalDeferValidate = process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE;
   const originalConsoleLog = console.log;
   const originalTenant = (() => {
     try {
@@ -56,6 +57,8 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
   try {
     process.env.ORGOS_WORKSPACE = workspace;
     process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = "1";
+    // One validate after all months (below) — per-month full validate is ~1min each.
+    process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE = "1";
     console.log = () => undefined;
     refreshOrgOsPaths();
     const tenantId = "accounting-acceptance";
@@ -149,6 +152,8 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
     else process.env.ORGOS_WORKSPACE = originalWorkspace;
     if (originalSkipBackup == null) delete process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK;
     else process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = originalSkipBackup;
+    if (originalDeferValidate == null) delete process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE;
+    else process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE = originalDeferValidate;
     console.log = originalConsoleLog;
     refreshOrgOsPaths();
     clearTenantId();

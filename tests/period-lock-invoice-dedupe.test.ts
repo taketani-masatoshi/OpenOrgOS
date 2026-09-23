@@ -158,6 +158,7 @@ describe("invoice vs JE-MPL dedupe", () => {
           debit_yen: 110000,
           credit_yen: 0,
           tax_category: "out_of_scope",
+          counterparty_id: "PROP-001",
         },
         {
           account_code: "4100",

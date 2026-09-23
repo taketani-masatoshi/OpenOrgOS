@@ -17,6 +17,7 @@ export type IndirectTaxEngineId = "jp" | "uninstalled";
 
 export type JpIndirectTaxEngine = {
   missingLineTaxCodes(month: string): string[];
+  missingPurchaseInvoiceEvidence?(month: string): string[];
   summarize(month: string): {
     issues?: Array<{ severity: string; message: string }>;
   };
@@ -55,9 +56,35 @@ export function missingLineTaxCodes(month: string): string[] {
   return missing;
 }
 
+/**
+ * Purchase input-credit lines need invoice_status. List missing evidence ids —
+ * do not invent qualified status. Scoped to claim/manual purchases (not monthly P/L accruals).
+ */
+export function missingPurchaseInvoiceEvidence(month: string): string[] {
+  const types = new Map(
+    loadChartOfAccounts().accounts.map((account) => [account.code, account.type]),
+  );
+  const missing: string[] = [];
+  for (const entry of loadJournalEntries().entries) {
+    if (!entry.occurred_at.startsWith(month)) continue;
+    if (entry.reversal_of) continue;
+    const kind = entry.source?.kind;
+    if (kind !== "expense_claim" && kind !== "manual") continue;
+    entry.lines.forEach((line, index) => {
+      const type = types.get(line.account_code);
+      if (type !== "expense") return;
+      if (line.tax_category !== "taxable_10" && line.tax_category !== "taxable_8") return;
+      if (line.invoice_status && line.invoice_status !== "unknown") return;
+      missing.push(`${entry.entry_id}:line${index}:${line.account_code}`);
+    });
+  }
+  return missing;
+}
+
 function defaultJpEngine(): JpIndirectTaxEngine {
   return {
     missingLineTaxCodes,
+    missingPurchaseInvoiceEvidence,
     summarize: (month) => {
       buildConsumptionTaxSummary({ period: month });
       return {};
@@ -78,6 +105,16 @@ function evaluateJpClose(month: string, engine: JpIndirectTaxEngine): IndirectTa
     return {
       pass: false,
       detail: `missing tax_category ${missing.join(", ")}`,
+      label: "消費税集計",
+      engine: "jp",
+    };
+  }
+  const missingPurchase =
+    engine.missingPurchaseInvoiceEvidence?.(month) ?? missingPurchaseInvoiceEvidence(month);
+  if (missingPurchase.length > 0) {
+    return {
+      pass: false,
+      detail: `仕入証跡不足（invoice_status）: ${missingPurchase.join(", ")}`,
       label: "消費税集計",
       engine: "jp",
     };
