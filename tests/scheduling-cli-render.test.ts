@@ -25,7 +25,7 @@ describe("scheduling CLI render (pure)", () => {
       "✓ SCH-2026-001 · 2 slots
         SLOT-001: 2026-08-20 10:00
         SLOT-002: 2026-08-21 10:00
-        next: —"
+        next: 候補日時を生成"
     `);
     expect(formatSchedulingRespondResult({ ...row, next_action: "ceo_confirm" })).toMatchInlineSnapshot(
       `"✓ SCH-2026-001 · next=CEO 確認"`
