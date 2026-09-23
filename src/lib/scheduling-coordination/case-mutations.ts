@@ -2,11 +2,10 @@ import type {
   SchedulingCase,
   SchedulingParticipant,
 } from "../../../schemas/executive/scheduling-cases.js";
-import { currentDate } from "../utils.js";
 import { mutateSchedulingCase } from "./case-command.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
-import { proposeExecutiveSlots } from "./slots.js";
+import { proposeSlotsOntoSchedulingCase } from "./propose-case.js";
 import {
   findSchedulingCase,
   insertSchedulingCase,
@@ -92,25 +91,11 @@ export function proposeSchedulingCaseSlots(opts: {
   count?: number;
   now?: Date;
 }): SchedulingCase {
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) throw new Error(`Case ${opts.id} not found`);
-
-  const slots = proposeExecutiveSlots({
-    from: opts.from ?? caseRow.search_from ?? currentDate(),
-    to: opts.to ?? caseRow.search_to,
-    count: opts.count ?? 3,
-    durationMinutes: caseRow.duration_minutes,
-    existingSlots: caseRow.proposed_slots,
+  let updated = proposeSlotsOntoSchedulingCase(opts.id, {
+    from: opts.from,
+    to: opts.to,
+    count: opts.count,
   });
-
-  let updated = mutateSchedulingCase(
-    opts.id,
-    { type: "propose", slots },
-    { now: opts.now }
-  );
-  if (updated.next_action === "send_proposal") {
-    updated = ensureSchedulingCorrespondenceDrafts(updated.id, "proposal");
-  }
   if (updated.next_action === "ceo_confirm") {
     updated = advanceSchedulingWorkflow(updated.id, opts.now);
   }

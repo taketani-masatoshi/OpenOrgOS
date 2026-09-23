@@ -2288,6 +2288,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-fix-f1-propose.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-mail-poller.test.ts:
     axis: platform
     kind: unit
