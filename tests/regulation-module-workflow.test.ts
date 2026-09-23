@@ -1,9 +1,12 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { setTenantId } from "../src/lib/tenant.js";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { setTenantId, getTenantDir } from "../src/lib/tenant.js";
 import {
   checkModuleRegulationContract,
   isRegulationRiskModuleId,
 } from "../src/lib/regulation-module-contract.js";
+import { scaffoldRegulationDraftFiles } from "../src/lib/regulation-draft-scaffold.js";
 import {
   formatRegulationModulePlan,
   planRegulationForModule,
@@ -24,9 +27,11 @@ describe("regulation-module-workflow", () => {
     expect(reuse.regulationIds).toEqual(expect.arrayContaining(["REG-027", "REG-030"]));
   });
 
-  it("classifies cosmetics-like module id as fork_family with qms_gxp scaffold", () => {
+  it("classifies jp_cosmetics_mah via regulation_family sibling (not regex-only)", () => {
     const plan = planRegulationForModule("jp_cosmetics_mah");
     expect(plan.familyId).toBe("qms_gxp");
+    expect(plan.actions.some((a) => a.kind === "reuse")).toBe(true);
+    expect(plan.actions.find((a) => a.kind === "reuse")!.regulationIds).toContain("REG-037");
     const fork = plan.actions.find((a) => a.kind === "fork_family")!;
     expect(fork.draftTemplate).toContain("qms-gxp/FORK-DRAFT.md");
     expect(plan.doNotMutateRegulationIds).toEqual(
@@ -83,11 +88,43 @@ describe("regulation-module-workflow", () => {
     expect(result.workOrderId).toBeUndefined();
   });
 
+  it("scaffolds draft files and points WO context at them", () => {
+    const plan = planRegulationForModule("jp_cosmetics_mah");
+    const draftRel = `docs/company/regulations/drafts/jp_cosmetics_mah-fork_family-草案.md`;
+    const draftAbs = join(getTenantDir(), ...draftRel.split("/"));
+    if (existsSync(draftAbs)) rmSync(draftAbs);
+
+    const scaffold = scaffoldRegulationDraftFiles(plan, { force: true });
+    expect(scaffold.created).toContain(draftRel);
+    expect(existsSync(draftAbs)).toBe(true);
+    const body = readFileSync(draftAbs, "utf-8");
+    expect(body).toContain("未施行");
+    expect(body).toContain("REG-025");
+    expect(body).toContain("qms_gxp");
+    expect(body).toContain("Reference scaffold");
+
+    const seiko = join(getTenantDir(), "docs/company/regulations/iryo-kiki-qms-kisoku.md");
+    const before = readFileSync(seiko, "utf-8");
+
+    const wo = fileRegulationWorkflowWorkOrder("jp_cosmetics_mah", {
+      dedupe: false,
+      scaffoldDrafts: true,
+    });
+    expect(wo.draftPaths).toContain(draftRel);
+    expect(wo.workOrderId).toBeTruthy();
+    expect(readFileSync(seiko, "utf-8")).toBe(before);
+  });
+
   it("dedupes pending regulation workflow work orders", () => {
-    const first = fileRegulationWorkflowWorkOrder("jp_tax_corporate", { dedupe: false });
+    const first = fileRegulationWorkflowWorkOrder("jp_tax_corporate", {
+      dedupe: false,
+      scaffoldDrafts: false,
+    });
     expect(first.workOrderId).toBeTruthy();
     expect(first.deduped).not.toBe(true);
-    const second = fileRegulationWorkflowWorkOrder("jp_tax_corporate");
+    const second = fileRegulationWorkflowWorkOrder("jp_tax_corporate", {
+      scaffoldDrafts: false,
+    });
     expect(second.deduped).toBe(true);
     expect(second.workOrderId).toBe(first.workOrderId);
     expect(second.skipped).toBe(true);
@@ -108,6 +145,10 @@ describe("regulation-module-contract", () => {
     expect(checkModuleRegulationContract("jp_medical_device")).toEqual([]);
   });
 
+  it("accepts jp_cosmetics_mah sibling family", () => {
+    expect(checkModuleRegulationContract("jp_cosmetics_mah")).toEqual([]);
+  });
+
   it("shares risk-module id detection with plan new-hints", () => {
     expect(isRegulationRiskModuleId("jp_tax_corporate")).toBe(true);
     expect(isRegulationRiskModuleId("jp_medical_device")).toBe(true);
@@ -115,7 +156,6 @@ describe("regulation-module-contract", () => {
   });
 
   it("flags cash-like module with no regulation declarations", () => {
-    // Synthetic: unknown catalog id with no manifest returns []
     expect(checkModuleRegulationContract("jp_not_a_real_module")).toEqual([]);
   });
 });

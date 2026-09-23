@@ -2,7 +2,7 @@
 
 **Family id:** `qms_gxp`  
 **Owner module:** `jp_medical_device`（REG-025 QMS · REG-026 GVP）  
-**Sibling 例:** 化粧品製造販売、医薬部外品 等（将来モジュール）
+**Sibling 例:** `jp_cosmetics_mah`（化粧品製造販売 · skeleton）、医薬部外品 等
 
 ---
 

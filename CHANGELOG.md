@@ -12,6 +12,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **モジュール有効化時の規程ワークフロー** — 分類（reuse/thicken/fork_family/new/none）→ Compliance Work Order → LLM 草案のみ → 人間承認。化粧品系は医療機器 QMS を上書きしない。`orgos modules regulation-plan` / `activate --skip-regulation-wo`。
 - **規程ワークフローのリファクタ** — `regulation_family` · WO pending 重複抑止 · thicken 判定強化 · qms_gxp FORK-DRAFT · `modules check` の規程契約。
 - **規程ワークフローの弱い点を閉じる** — リスク判定の一元化、税・給与等へ REG-030 optional、J-SOX に REG-027 必須、REG-025/026 雛形の厚化（恒久 thicken 解消）、flag-only activate でも規程 WO 起票、`regulation-plan --file-wo`。
+- **規程草案 scaffold + 化粧品 sibling** — WO 起票時に `docs/company/regulations/drafts/*-草案.md` を決定論生成（施行は触らない）。`jp_cosmetics_mah` skeleton（qms_gxp sibling）。Skill `regulation_module_draft`。
 - **JP 社内規程（会計・税務）雛形の増強** — 経理（REG-027）· 経費精算（REG-005）を起草スタイル準拠で拡充。モジュール連動の REG-031〜034（法人税務準備 · 消費税務 · 適格請求書 · 源泉・法定調書）をカタログ追加。提出・e-Tax は人間/税理士権限のまま。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
