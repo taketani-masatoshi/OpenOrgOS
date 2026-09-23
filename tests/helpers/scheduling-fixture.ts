@@ -11,6 +11,7 @@ import {
 } from "../../src/lib/correspondence/paths.js";
 import { upsertTriageEntry } from "../../src/lib/correspondence/mail-triage-queue.js";
 import { clearSecretaryDraftToneCacheForTests } from "../../src/lib/secretary/tenant-behavior.js";
+import { ensureSchedulingCorrespondenceHooks } from "../../src/lib/scheduling-coordination/bind-correspondence-hooks.js";
 
 export const SCHEDULING_FIXTURE_DIR = join(
   process.cwd(),
@@ -49,6 +50,7 @@ export function seedSchedulingContacts(options: { dataDir?: string; emails?: str
 }
 
 export function seedSchedulingTenant(tenantId: string): string {
+  ensureSchedulingCorrespondenceHooks();
   clearSecretaryDraftToneCacheForTests();
   const root = join(getTenantsDir(), tenantId);
   rmSync(root, { recursive: true, force: true });

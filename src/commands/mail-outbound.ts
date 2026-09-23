@@ -34,6 +34,7 @@ import {
 import { searchCorrespondenceKnowledge } from "../lib/correspondence/knowledge-search.js";
 import { buildFactsVerify } from "../lib/correspondence/facts-verify.js";
 import { composeCorrespondenceReply } from "../lib/correspondence/compose.js";
+import { ensureSchedulingCorrespondenceHooks } from "../lib/scheduling-coordination/bind-correspondence-hooks.js";
 
 export interface CorrespondenceDraftCliOptions {
   channel?: string;
@@ -168,6 +169,7 @@ export interface CorrespondenceSendCliOptions {
 }
 
 export async function runCorrespondenceSend(opts: CorrespondenceSendCliOptions): Promise<void> {
+  ensureSchedulingCorrespondenceHooks();
   if (!opts.dryRun) {
     requireCliCorrespondenceSend(CORRESPONDENCE_CLI.send);
   }

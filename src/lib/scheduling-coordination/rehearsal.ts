@@ -6,6 +6,7 @@ import {
 import { authenticateOperator } from "../console-auth/operator-rbac.js";
 import { answerCeoInline, loadCeoInlineQueue } from "../correspondence/ceo-inline-question.js";
 import { applyCeoInlineAnswerSideEffects } from "../correspondence/ceo-inline-answer.js";
+import { ensureSchedulingCorrespondenceHooks } from "./bind-correspondence-hooks.js";
 import { approveAndSendSchedulingProposals } from "./approve-send-proposals.js";
 import { injectAndProcessScheduleAcceptReply } from "./inject-schedule-reply-mail.js";
 import {
@@ -165,6 +166,7 @@ async function answerCeoForCase(caseId: string, operatorId: string): Promise<str
 export async function runSchedulingRehearsalCore(
   opts: SchedulingRehearsalOptions
 ): Promise<SchedulingRehearsalResult> {
+  ensureSchedulingCorrespondenceHooks();
   const operatorId = opts.operatorId ?? "OP-001";
   const steps: string[] = [];
   const processedMailIds: string[] = [];

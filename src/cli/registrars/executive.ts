@@ -14,6 +14,7 @@ import {
 } from "../../commands/executive.js";
 import { runStatus } from "../../commands/status.js";
 import { registerMailCommands, registerSecretaryCommands } from "./correspondence.js";
+import { ensureSchedulingCorrespondenceHooks } from "../../lib/scheduling-coordination/bind-correspondence-hooks.js";
 import {
   runSchedulingAutoProcess,
   runSchedulingCancel,
@@ -33,6 +34,7 @@ import {
 import { runSchedulingRehearsal } from "../../commands/scheduling-rehearsal.js";
 
 export function registerExecutiveCommands(program: Command): void {
+  ensureSchedulingCorrespondenceHooks();
   const executiveCmd = program
     .command("executive")
     .description("Secretary executive SoT — calendar · brief (data/executive/)");

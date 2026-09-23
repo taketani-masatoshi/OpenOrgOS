@@ -3,14 +3,13 @@
  */
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import type { SalesDeal, SalesInquiry } from "../../../schemas/sales.js";
-import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import {
   loadSalesInquiries,
   loadSalesPipeline,
   saveSalesInquiries,
   saveSalesPipeline,
 } from "../data.js";
-import { findSchedulingCase, updateSchedulingCase } from "../scheduling-coordination/store.js";
+import { getCorrespondenceHooks } from "./hooks.js";
 import { currentDate } from "../utils.js";
 import { appendAuditEvent } from "../audit-log.js";
 
@@ -60,9 +59,18 @@ export function loadCorrespondenceCaseRef(id: string): CorrespondenceCaseRef | u
     return dealToRef(deal);
   }
   if (id.startsWith("SCH-")) {
-    const sch = findSchedulingCase(id);
+    const sch = getCorrespondenceHooks().loadSchedulingCase?.(id);
     if (!sch) return undefined;
-    return schedulingToRef(sch);
+    return {
+      kind: "scheduling",
+      id: sch.id,
+      status: sch.status,
+      next_action: sch.next_action,
+      next_action_due: sch.reminder_due_at?.slice(0, 10),
+      mail_thread_ids: sch.mail_thread_ids,
+      gmail_thread_ids: [],
+      subject: sch.title,
+    };
   }
   return undefined;
 }
@@ -92,19 +100,6 @@ function dealToRef(deal: SalesDeal): CorrespondenceCaseRef {
     gmail_thread_ids: deal.gmail_thread_ids ?? [],
     company: deal.counterparty ?? deal.party?.company,
     subject: deal.title,
-  };
-}
-
-function schedulingToRef(sch: SchedulingCase): CorrespondenceCaseRef {
-  return {
-    kind: "scheduling",
-    id: sch.id,
-    status: sch.status,
-    next_action: sch.next_action,
-    next_action_due: sch.reminder_due_at?.slice(0, 10),
-    mail_thread_ids: sch.mail_thread_ids ?? [],
-    gmail_thread_ids: [],
-    subject: sch.title,
   };
 }
 
@@ -169,13 +164,10 @@ export function handleCorrespondenceCaseSent(
   }
 
   if (caseRef.kind === "scheduling") {
-    const sch = findSchedulingCase(caseRef.id);
-    if (sch) {
-      updateSchedulingCase(sch.id, sch.revision, (current) => ({
-        ...current,
-        reminder_due_at: due,
-      }));
-    }
+    getCorrespondenceHooks().onSchedulingCaseSent?.({
+      caseId: caseRef.id,
+      reminderDueAt: due,
+    });
     return loadCorrespondenceCaseRef(caseRef.id);
   }
 

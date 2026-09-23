@@ -16,6 +16,7 @@ import { assertCorrespondenceStyleLint } from "./style-lint.js";
 import { assertOutboundCorrespondenceDraft } from "./claims-assert.js";
 import { runCorrespondenceOutboundGates } from "./correspondence-gate-audit.js";
 import { handleCorrespondenceCaseSent } from "./case-status.js";
+import { getCorrespondenceHooks } from "./hooks.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
 import { currentDate } from "../utils.js";
 
@@ -138,10 +139,7 @@ export async function sendApprovedCorrespondence(opts: {
       draft = markCorrespondenceDraftSent(draft.draft_id, {
         sentBy: opts.operatorId,
       });
-      const { handleSchedulingCorrespondenceSent } = await import(
-        "../scheduling-coordination/lifecycle.js"
-      );
-      handleSchedulingCorrespondenceSent(draft);
+      getCorrespondenceHooks().onCorrespondenceSent?.(draft);
     }
     return { draft, sendResult };
   }
@@ -175,12 +173,7 @@ export async function sendApprovedCorrespondence(opts: {
     sentBy: opts.operatorId,
     companyEventId: event.id,
   });
-  if (draft.notes?.includes("scheduling-case:")) {
-    const { handleSchedulingCorrespondenceSent } = await import(
-      "../scheduling-coordination/lifecycle.js"
-    );
-    handleSchedulingCorrespondenceSent(draft);
-  }
+  getCorrespondenceHooks().onCorrespondenceSent?.(draft);
 
   handleCorrespondenceCaseSent(draft, { actor: opts.operatorId });
 

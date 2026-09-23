@@ -1,19 +1,7 @@
 import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
-import { applyScheduleIntakeAnswer } from "../scheduling-coordination/process-mail.js";
-import { applySchedulingCeoAnswer } from "../scheduling-coordination/ceo-confirm.js";
+import { getCorrespondenceHooks } from "./hooks.js";
 import { findSenderIdentification } from "./sender-identification-queue.js";
 import { confirmSenderFromCeo } from "./sender-identification.js";
-
-function isScheduleIntakeQuestion(question: CeoInlineQuestion): boolean {
-  return (
-    question.mail_id.startsWith("schedule-intake:") ||
-    question.mail_id.startsWith("schedule-intake-case:")
-  );
-}
-
-function isSchedulingCaseQuestion(question: CeoInlineQuestion): boolean {
-  return Boolean(question.scheduling_case_id) || question.mail_id.startsWith("scheduling:");
-}
 
 function isAffirmative(value?: string): boolean {
   return value === "yes" || value === "はい" || value === "true";
@@ -49,17 +37,12 @@ function applySenderIdentificationAnswer(question: CeoInlineQuestion): void {
   });
 }
 
-/** CEO 回答後の副作用 — 日程調整 · sender identification へ反映 */
+/** CEO 回答後の副作用 — scheduling（hooks）· sender identification */
 export async function applyCeoInlineAnswerSideEffects(question: CeoInlineQuestion): Promise<void> {
   if (question.status !== "answered" || !question.answers) return;
 
-  if (isScheduleIntakeQuestion(question)) {
-    await applyScheduleIntakeAnswer(question);
-    return;
-  }
-  if (isSchedulingCaseQuestion(question)) {
-    await applySchedulingCeoAnswer(question);
-    return;
-  }
+  const handled = await getCorrespondenceHooks().onCeoInlineAnswered?.(question);
+  if (handled) return;
+
   applySenderIdentificationAnswer(question);
 }

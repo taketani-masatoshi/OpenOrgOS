@@ -5,11 +5,7 @@ import {
   resolveCorrespondenceLocale,
   type CorrespondenceStyle,
 } from "./style-resolve.js";
-import {
-  schedulingCaseHasCostLine,
-  schedulingCaseLooksLikeMeal,
-} from "../scheduling-coordination/draft-text.js";
-import { findSchedulingCase } from "../scheduling-coordination/store.js";
+import { getCorrespondenceHooks } from "./hooks.js";
 
 export type StyleLintSeverity = "error" | "warning";
 
@@ -320,11 +316,11 @@ export function lintCorrespondenceDraft(
   const caseId = draft.notes?.match(/scheduling-case:(SCH-\d{4}-\d{3})/)?.[1];
   if (caseId) {
     try {
-      const sch = findSchedulingCase(caseId);
+      const sch = getCorrespondenceHooks().loadSchedulingCase?.(caseId);
       meetingFormat = meetingFormat ?? sch?.meeting_format;
       if (sch) {
-        isMeal = schedulingCaseLooksLikeMeal(sch);
-        hasCostLine = schedulingCaseHasCostLine(sch);
+        isMeal = sch.looks_like_meal;
+        hasCostLine = sch.has_cost_line;
       }
     } catch {
       /* optional when not in tenant fixture */

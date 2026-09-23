@@ -13,8 +13,7 @@ import { sendInboundSlackDigest } from "./slack-notify.js";
 import { findSenderIdentification } from "./sender-identification-queue.js";
 import { findMailInterpretation } from "./mail-interpretation.js";
 import { findCeoInlineQuestionByMailId } from "./ceo-inline-question.js";
-import { findSchedulingCase } from "../scheduling-coordination/store.js";
-import { nextActionLabel } from "../scheduling-coordination/next-action.js";
+import { getCorrespondenceHooks } from "./hooks.js";
 
 export async function notifyMailTriageHighPriority(ids: string[]): Promise<number> {
   if (!ids.length) return 0;
@@ -100,20 +99,9 @@ function formatCeoInlineSection(mailId: string): string[] {
 }
 
 function formatSchedulingSection(entry: MailTriageEntry): string[] {
-  if (!entry.scheduling_case_id) {
-    const interp = findMailInterpretation(entry.id);
-    if (interp?.intent === "schedule") {
-      return ["- intent: schedule · **案件未紐付け**"];
-    }
-    return ["（該当なし）"];
-  }
-  const sch = findSchedulingCase(entry.scheduling_case_id);
-  if (!sch) return [`- case: ${entry.scheduling_case_id}（未找到）`];
-  return [
-    `- case: **${sch.id}** · ${sch.title}`,
-    `- status: ${sch.status} · next: ${nextActionLabel(sch.next_action)}`,
-    entry.schedule_reply_parsed ? "- 返信パース: 済" : "- 返信パース: 未",
-  ];
+  return (
+    getCorrespondenceHooks().formatSchedulingHandoffSection?.(entry) ?? ["（該当なし）"]
+  );
 }
 
 function formatRecommendedActions(entry: MailTriageEntry): string[] {
@@ -131,18 +119,8 @@ function formatRecommendedActions(entry: MailTriageEntry): string[] {
   if (interp?.action_required && entry.routing === "secretary") {
     actions.push("秘書が返信下書きの作成を検討");
   }
-  if (entry.scheduling_case_id) {
-    const sch = findSchedulingCase(entry.scheduling_case_id);
-    if (sch) {
-      actions.push(
-        `日程調整案件 ${sch.id} · 次: ${nextActionLabel(sch.next_action)} · \`orgos executive scheduling draft --id ${sch.id} --write-draft\``
-      );
-    }
-  } else if (interp?.intent === "schedule") {
-    actions.push(
-      "日程意図 — 既存案件へ `orgos executive scheduling link-mail` または `executive scheduling process --all`"
-    );
-  }
+  const schedulingActions = getCorrespondenceHooks().recommendSchedulingActions?.(entry);
+  if (schedulingActions?.length) actions.push(...schedulingActions);
   if (entry.importance === "p0" || entry.urgency === "immediate") {
     actions.push("高優先度 — 当日対応の検討");
   }
