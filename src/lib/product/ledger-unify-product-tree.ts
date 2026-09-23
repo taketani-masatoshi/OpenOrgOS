@@ -31,6 +31,7 @@ const REQUIRED_RELATIVE = [
   "src/lib/finance/sole-prop-consumption-tax.ts",
   "src/lib/finance/sole-prop-consumption-score.ts",
   "src/lib/finance/expense-claim-integrity.ts",
+  "src/lib/finance/expense-claim-wire.ts",
 ] as const;
 
 export type LedgerUnifyProductTreeStatus = {

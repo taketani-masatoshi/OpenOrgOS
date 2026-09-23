@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 630
-  static_test_cases: 2940
-  tiered_execution_total: 630
+  vitest_total: 631
+  static_test_cases: 2943
+  tiered_execution_total: 631
   catalog_total: 47
   catalog_cli_registered: 48
   catalog_gap: 0
@@ -1733,6 +1733,10 @@ tests:
     axis: contract
     kind: contract
   monthly-close-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  monthly-close-lifecycle.integration.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
