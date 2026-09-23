@@ -1,199 +1,37 @@
-import { existsSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
-import { z } from "zod";
 import type { SchedulingCase, SchedulingParticipant } from "../../../schemas/executive/scheduling-cases.js";
-import { resolveContactRegistry } from "../secretary/contact-registry.js";
-import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { applyNextAction } from "./next-action.js";
-import { recordSchedulingLifecycleEvent } from "./lifecycle.js";
+import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import {
   loadSchedulingCases,
   nextSchedulingCaseId,
   insertSchedulingCase,
-  updateSchedulingCase,
 } from "./store.js";
+import {
+  extractSchedulingChatContinuationTitle,
+  extractSchedulingChatDuration,
+  extractSchedulingChatLocation,
+  extractSchedulingChatMeetingFormat,
+  extractSchedulingChatParticipantCount,
+  extractSchedulingChatParticipants,
+  extractSchedulingChatTitle,
+  isSchedulingChatIntent,
+  normalizeSchedulingChatMessage,
+} from "./chat-parse.js";
+import {
+  findSchedulingChatDraft,
+  saveSchedulingChatDraft,
+  schedulingChatDraftSchema,
+  type SchedulingChatDraft,
+} from "./chat-draft-store.js";
 
-const SCHEDULE_INTENT =
-  /(?:日程|スケジュール).{0,8}(?:調整|合わせ)|(?:\d+)\s*名.{0,12}(?:日程|調整|会議|MTG|打合せ)|(?:会議|MTG|打合せ).{0,8}(?:調整|設定)/i;
-
-const COUNT_PATTERN = /(\d+)\s*名/;
-const TITLE_PATTERNS = [
-  /「([^」]+)」.{0,12}(?:日程|調整)/,
-  /(?:日程調整|スケジュール調整)[：:]\s*([^。\n]+)/,
-  /(?:会議|MTG|打合せ)[「『:]([^」』。\n]+)/i,
-  /(?:^|[、。\s])([^、。\n]{2,40}?)(?:の)?(?:日程|スケジュール)(?:調整|を調整)/,
-];
-
-const schedulingChatParticipantSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email().optional(),
-  contact_ref: z.string().optional(),
-  role: z.enum(["internal", "external"]).default("external"),
-});
-
-const schedulingChatDraftSchema = z.object({
-  thread_id: z.string().min(1),
-  status: z.enum(["collecting", "completed"]),
-  turn_count: z.number().int().positive(),
-  title: z.string().optional(),
-  participants: z.array(schedulingChatParticipantSchema).default([]),
-  participant_count: z.number().int().positive().optional(),
-  duration_minutes: z.number().int().positive().optional(),
-  meeting_format: z.enum(["online", "in_person"]).optional(),
-  location: z.string().optional(),
-  case_id: z.string().optional(),
-  last_message_normalized: z.string().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
-});
-
-const schedulingChatDraftFileSchema = z.object({
-  version: z.literal(1).default(1),
-  drafts: z.array(schedulingChatDraftSchema).default([]),
-});
-
-type SchedulingChatDraft = z.output<typeof schedulingChatDraftSchema>;
+export { isSchedulingChatIntent } from "./chat-parse.js";
+export { findSchedulingChatDraft } from "./chat-draft-store.js";
 
 export interface SchedulingChatResult {
   handled: boolean;
   reply?: string;
   caseRow?: SchedulingCase;
   draft?: SchedulingChatDraft;
-}
-
-export function isSchedulingChatIntent(message: string): boolean {
-  return SCHEDULE_INTENT.test(message.trim());
-}
-
-function extractTitle(message: string): string | undefined {
-  for (const p of TITLE_PATTERNS) {
-    const m = message.match(p);
-    if (m?.[1]?.trim()) {
-      return m[1]
-        .replace(/^\d+\s*名で?/, "")
-        .trim()
-        .slice(0, 80);
-    }
-  }
-  return undefined;
-}
-
-function extractContinuationTitle(message: string): string | undefined {
-  const first = message.split(/[\n,、;；]/u)[0]?.trim();
-  if (
-    !first ||
-    first.length > 80 ||
-    /@|\b(?:EXT|STK)-\d+\b|(?:参加者|出席者|メンバー|所要|オンライン|対面)/iu.test(first)
-  ) {
-    return undefined;
-  }
-  return first.replace(/^(?:タイトル|件名)(?:は|：|:)?\s*/u, "").trim() || undefined;
-}
-
-function extractParticipantCount(message: string): number | undefined {
-  const m = message.match(COUNT_PATTERN);
-  if (m) return Math.min(Math.max(parseInt(m[1]!, 10), 2), 12);
-  return undefined;
-}
-
-function chatDraftPath(): string {
-  return join(getDataDir(), "executive", "scheduling-chat-drafts.yaml");
-}
-
-function loadChatDrafts(): z.output<typeof schedulingChatDraftFileSchema> {
-  const path = chatDraftPath();
-  if (!existsSync(path)) return { version: 1, drafts: [] };
-  return readYamlFile(path, schedulingChatDraftFileSchema);
-}
-
-function saveChatDraft(draft: SchedulingChatDraft): SchedulingChatDraft {
-  const file = loadChatDrafts();
-  const parsed = schedulingChatDraftSchema.parse(draft);
-  const index = file.drafts.findIndex((row) => row.thread_id === parsed.thread_id);
-  if (index >= 0) file.drafts[index] = parsed;
-  else file.drafts.push(parsed);
-  mkdirSync(join(getDataDir(), "executive"), { recursive: true });
-  writeYamlFile(chatDraftPath(), schedulingChatDraftFileSchema.parse(file));
-  return parsed;
-}
-
-export function findSchedulingChatDraft(threadId: string): SchedulingChatDraft | undefined {
-  return loadChatDrafts().drafts.find((row) => row.thread_id === threadId);
-}
-
-function normalizeMessage(message: string): string {
-  return message.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
-}
-
-function extractDuration(message: string): number | undefined {
-  const hours = message.match(/(\d+(?:\.\d+)?)\s*時間/);
-  if (hours) return Math.round(Number(hours[1]) * 60);
-  const minutes = message.match(/(\d+)\s*分/);
-  if (minutes) return Number(minutes[1]);
-  return undefined;
-}
-
-function extractMeetingFormat(message: string): "online" | "in_person" | undefined {
-  if (/(?:オンライン|online|zoom|meet|teams|web会議)/i.test(message)) return "online";
-  if (/(?:対面|訪問|来社|会議室|in[\s-]?person)/i.test(message)) return "in_person";
-  return undefined;
-}
-
-function extractLocation(message: string): string | undefined {
-  return message
-    .match(/(?:場所|会場)(?:は|：|:)\s*([^、。\n]+)/u)?.[1]
-    ?.trim()
-    .slice(0, 120);
-}
-
-function cleanParticipantName(raw: string): string {
-  const afterLabel = raw.split(/(?:参加者|出席者|メンバー)(?:は|：|:)\s*/u).at(-1) ?? raw;
-  return afterLabel
-    .replace(/^.*[。]\s*/u, "")
-    .replace(/[<（(\[]+$/u, "")
-    .replace(/(?:さん|様)$/u, "")
-    .trim();
-}
-
-function extractParticipants(message: string): Array<z.output<typeof schedulingChatParticipantSchema>> {
-  const found: Array<z.output<typeof schedulingChatParticipantSchema>> = [];
-  const segments = message.split(/[\n,、;；]+/u);
-  for (const segment of segments) {
-    const email = segment.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
-    const contactRef = segment.match(/\b(?:EXT|STK)-\d+\b/i)?.[0]?.toUpperCase();
-    if (!email && !contactRef) continue;
-    const marker = email ?? contactRef!;
-    const before = segment.slice(0, segment.indexOf(marker));
-    const name = cleanParticipantName(before.replace(/[<（(\[]\s*$/u, ""));
-    if (!name || /(?:日程|調整|所要|形式|オンライン|対面)/u.test(name)) continue;
-
-    let resolvedEmail = email;
-    let resolvedRef = contactRef;
-    if (contactRef) {
-      const lookup = contactRef.startsWith("EXT-")
-        ? resolveContactRegistry({ extId: contactRef })
-        : resolveContactRegistry({ stakeholderId: contactRef });
-      if (lookup.matches.length === 1) {
-        resolvedEmail ??= lookup.matches[0]!.email;
-        resolvedRef = lookup.matches[0]!.ref;
-      }
-    }
-    found.push({
-      name,
-      email: resolvedEmail,
-      contact_ref: resolvedRef,
-      role: "external",
-    });
-  }
-  return found.filter(
-    (participant, index, all) =>
-      all.findIndex(
-        (candidate) =>
-          candidate.email?.toLowerCase() === participant.email?.toLowerCase() &&
-          candidate.contact_ref === participant.contact_ref &&
-          candidate.name === participant.name
-      ) === index
-  );
 }
 
 function missingFields(draft: SchedulingChatDraft): string[] {
@@ -257,7 +95,7 @@ function formatSchedulingChatAck(caseRow: SchedulingCase): string {
 }
 
 export function handleSchedulingChatMessage(threadId: string, message: string): SchedulingChatResult {
-  const normalized = normalizeMessage(message);
+  const normalized = normalizeSchedulingChatMessage(message);
   const existing = findSchedulingChatDraft(threadId);
   const continuing = existing?.status === "collecting";
   if (!continuing && !isSchedulingChatIntent(message)) return { handled: false };
@@ -290,26 +128,26 @@ export function handleSchedulingChatMessage(threadId: string, message: string): 
           created_at: now,
           updated_at: now,
         };
-  const participants = extractParticipants(message);
+  const participants = extractSchedulingChatParticipants(message);
   const draft = schedulingChatDraftSchema.parse({
     ...base,
     status: "collecting",
     turn_count: base.turn_count + 1,
     title:
-      extractTitle(message) ??
-      (continuing ? extractContinuationTitle(message) : undefined) ??
+      extractSchedulingChatTitle(message) ??
+      (continuing ? extractSchedulingChatContinuationTitle(message) : undefined) ??
       base.title,
     participants: participants.length > 0 ? participants : base.participants,
-    participant_count: extractParticipantCount(message) ?? base.participant_count,
-    duration_minutes: extractDuration(message) ?? base.duration_minutes,
-    meeting_format: extractMeetingFormat(message) ?? base.meeting_format,
-    location: extractLocation(message) ?? base.location,
+    participant_count: extractSchedulingChatParticipantCount(message) ?? base.participant_count,
+    duration_minutes: extractSchedulingChatDuration(message) ?? base.duration_minutes,
+    meeting_format: extractSchedulingChatMeetingFormat(message) ?? base.meeting_format,
+    location: extractSchedulingChatLocation(message) ?? base.location,
     last_message_normalized: normalized,
     updated_at: now,
   });
   const missing = missingFields(draft);
   if (missing.length > 0) {
-    const saved = saveChatDraft(draft);
+    const saved = saveSchedulingChatDraft(draft);
     return {
       handled: true,
       reply: [
@@ -321,7 +159,7 @@ export function handleSchedulingChatMessage(threadId: string, message: string): 
   }
 
   const caseRow = createCaseFromDraft(draft);
-  const completed = saveChatDraft({
+  const completed = saveSchedulingChatDraft({
     ...draft,
     status: "completed",
     case_id: caseRow.id,
@@ -337,6 +175,9 @@ export function handleSchedulingChatMessage(threadId: string, message: string): 
 
 /** Legacy direct entry point: complete one-message requests only; never creates placeholders. */
 export function createSchedulingCaseFromChat(message: string): SchedulingCase | undefined {
-  const result = handleSchedulingChatMessage(`legacy:${normalizeMessage(message)}`, message);
+  const result = handleSchedulingChatMessage(
+    `legacy:${normalizeSchedulingChatMessage(message)}`,
+    message
+  );
   return result.caseRow;
 }

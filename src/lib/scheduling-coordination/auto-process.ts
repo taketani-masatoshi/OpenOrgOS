@@ -3,10 +3,8 @@ import { processAllScheduleMails, type ProcessScheduleMailResult } from "./proce
 import { advanceSchedulingWorkflow, refreshSchedulingReminder } from "./workflow.js";
 import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
 import { listTriageEntries } from "../correspondence/mail-triage-queue.js";
-import {
-  ensureSchedulingCorrespondenceDrafts,
-  reconcileSchedulingCorrespondence,
-} from "./lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
+import { reconcileSchedulingCorrespondence } from "./lifecycle.js";
 
 export interface ScheduleAutoProcessResult {
   processed: number;

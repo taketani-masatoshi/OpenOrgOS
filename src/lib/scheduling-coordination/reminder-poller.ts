@@ -1,5 +1,5 @@
 import { resolveMailConfig } from "../correspondence/mail-config.js";
-import { ensureSchedulingCorrespondenceDrafts } from "./lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 import { listSchedulingCases } from "./store.js";
 import { refreshSchedulingReminder } from "./workflow.js";
 
