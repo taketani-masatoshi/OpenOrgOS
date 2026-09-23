@@ -2267,6 +2267,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-cli-render.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-coordination.test.ts:
     axis: platform
     kind: unit

@@ -34,8 +34,22 @@ import {
   recordSchedulingParticipantResponse,
   rescheduleSchedulingCase,
 } from "../lib/scheduling-coordination/case-mutations.js";
+import {
+  formatSchedulingEmptyList,
+  formatSchedulingListLine,
+  formatSchedulingNewResult,
+  formatSchedulingProposeResult,
+  formatSchedulingRespondResult,
+} from "./scheduling-coordination-render.js";
 
 export type { SchedulingParticipantInput } from "../lib/scheduling-coordination/case-mutations.js";
+import {
+  formatSchedulingEmptyList,
+  formatSchedulingListLine,
+  formatSchedulingNewResult,
+  formatSchedulingProposeResult,
+  formatSchedulingRespondResult,
+} from "./scheduling-coordination-render.js";
 
 function requireSchedulingCase(id: string): SchedulingCase {
   const caseRow = findSchedulingCase(id);
@@ -58,14 +72,12 @@ export function runSchedulingList(opts: { status?: string; json?: boolean; activ
   }
 
   if (!cases.length) {
-    console.log("(no scheduling cases)");
+    console.log(formatSchedulingEmptyList());
     return;
   }
 
   for (const c of cases) {
-    console.log(
-      `${c.id} · ${c.title} · ${c.status} · next=${nextActionLabel(c.next_action)} · participants=${c.participants.length}`
-    );
+    console.log(formatSchedulingListLine(c));
   }
 }
 
@@ -109,9 +121,7 @@ export function runSchedulingNew(opts: {
     console.log(JSON.stringify(caseRow, null, 2));
     return;
   }
-  console.log(`✓ ${caseRow.id} · ${caseRow.title}`);
-  console.log(`  next: ${nextActionLabel(caseRow.next_action)}`);
-  console.log(`  run: orgos executive scheduling propose --id ${caseRow.id}`);
+  console.log(formatSchedulingNewResult(caseRow));
 }
 
 export function runSchedulingPropose(opts: {
@@ -135,11 +145,7 @@ export function runSchedulingPropose(opts: {
     console.log(JSON.stringify(updated, null, 2));
     return;
   }
-  console.log(`✓ ${updated.id} · ${updated.proposed_slots.length} slots`);
-  for (const s of updated.proposed_slots) {
-    console.log(`  ${s.id}: ${s.label}`);
-  }
-  console.log(`  next: ${nextActionLabel(updated.next_action)}`);
+  console.log(formatSchedulingProposeResult(updated));
 }
 
 export function runSchedulingRespond(opts: {
@@ -169,7 +175,7 @@ export function runSchedulingRespond(opts: {
     console.log(JSON.stringify(updated, null, 2));
     return;
   }
-  console.log(`✓ ${updated.id} · next=${nextActionLabel(updated.next_action)}`);
+  console.log(formatSchedulingRespondResult(updated));
 }
 
 export function runSchedulingLinkMail(opts: { id: string; mailId: string; json?: boolean }): void {

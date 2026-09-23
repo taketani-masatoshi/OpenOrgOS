@@ -14,7 +14,7 @@ import {
 } from "../correspondence/style-resolve.js";
 import { getJurisdictionPackRoot, resolveJurisdictionCode } from "../jurisdiction.js";
 import { loadSecretaryDraftTone } from "../secretary/tenant-behavior.js";
-import { joinSchedulingDraftLines, sanitizeSchedulingDraftBody } from "./draft-text.js";
+import { joinSchedulingDraftLines, sanitizeSchedulingDraftBody } from "./draft-text-lines.js";
 
 function isEnglishLocale(locale: string): boolean {
   return locale.startsWith("en");
