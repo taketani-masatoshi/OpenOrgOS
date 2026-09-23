@@ -14,7 +14,10 @@ import {
 } from "./escalate.js";
 import { getRegulationTemplateAbsPath } from "./jurisdiction.js";
 import { loadModuleManifest, type ModuleManifest } from "./modules.js";
-import { REGULATION_FAMILIES } from "./regulation-module-contract.js";
+import {
+  isRegulationRiskModuleId,
+  REGULATION_FAMILIES,
+} from "./regulation-module-contract.js";
 import { getCatalogRegulation, loadRegulationsCatalog } from "./regulations.js";
 import { getTenantId } from "./tenant.js";
 
@@ -71,18 +74,25 @@ function hasAnnex(body: string): boolean {
   return /^## 別紙/m.test(body);
 }
 
-/** Thin stub: short file, or only purpose/scope/responsibility without annex. */
+/**
+ * Thin stub: short file without annex, few articles without annex,
+ * or only purpose/scope/responsibility.
+ * Templates with ≥4 articles **and** a 別紙 are treated as thickened even if short.
+ */
 export function isThinStubTemplate(body: string): boolean {
-  const lines = templateLineCount(body);
-  if (lines >= 0 && lines < STUB_LINE_THRESHOLD) return true;
   const articles = countArticles(body);
-  if (articles > 0 && articles <= 3 && !hasAnnex(body)) return true;
-  const stubOnly =
+  const annex = hasAnnex(body);
+  if (articles >= 4 && annex) return false;
+
+  const lines = templateLineCount(body);
+  if (lines < STUB_LINE_THRESHOLD) return true;
+  if (articles > 0 && articles <= 3 && !annex) return true;
+  return (
     /第1条（目的）/.test(body) &&
     /第2条（適用範囲）/.test(body) &&
     /第3条（責任）/.test(body) &&
-    articles <= 3;
-  return stubOnly;
+    articles <= 3
+  );
 }
 
 function isThinStub(reg: CatalogRegulation): boolean {
@@ -247,7 +257,7 @@ export function planRegulationForModule(moduleId: string): RegulationModulePlan 
     declared.length === 0 &&
     bound.length === 0 &&
     familyCtx.role !== "sibling" &&
-    /bank|payroll|tax|invoice|refund|permit|privacy|social.?insurance/i.test(moduleId);
+    isRegulationRiskModuleId(moduleId);
 
   if (needsNewHint) {
     actions.push({

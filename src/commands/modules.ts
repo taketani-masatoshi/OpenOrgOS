@@ -21,6 +21,7 @@ import {
   loadEnabledRegulationIds,
 } from "../lib/regulations.js";
 import {
+  fileRegulationWorkflowWorkOrder,
   formatRegulationModulePlan,
   planRegulationForModule,
 } from "../lib/regulation-module-workflow.js";
@@ -172,9 +173,38 @@ export function runModulesActivate(moduleId: string, opts: ModulesActivateOption
   }
 }
 
-export function runModulesRegulationPlan(moduleId: string, opts: { tenant?: string; json?: boolean } = {}): void {
+export function runModulesRegulationPlan(
+  moduleId: string,
+  opts: {
+    tenant?: string;
+    json?: boolean;
+    /** File Compliance WO without activating the module. */
+    fileWo?: boolean;
+    dryRun?: boolean;
+  } = {}
+): void {
   if (opts.tenant) setTenantId(opts.tenant);
   const plan = planRegulationForModule(moduleId);
+  if (opts.fileWo) {
+    const result = fileRegulationWorkflowWorkOrder(moduleId, {
+      dryRun: opts.dryRun === true,
+    });
+    if (opts.json) {
+      console.log(JSON.stringify({ plan: result.plan, workOrder: result }, null, 2));
+      return;
+    }
+    console.log(formatRegulationModulePlan(result.plan));
+    if (opts.dryRun || result.skipped) {
+      if (result.deduped) {
+        console.log(`  Work Order: reused pending ${result.workOrderId}`);
+      } else {
+        console.log("  Work Order: dry-run / skipped (no write)");
+      }
+    } else if (result.workOrderId) {
+      console.log(`  Work Order: ${result.workOrderId} (LLM draft only · human approve)`);
+    }
+    return;
+  }
   if (opts.json) {
     console.log(JSON.stringify(plan, null, 2));
     return;

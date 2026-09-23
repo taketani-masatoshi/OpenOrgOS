@@ -1,6 +1,9 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
-import { checkModuleRegulationContract } from "../src/lib/regulation-module-contract.js";
+import {
+  checkModuleRegulationContract,
+  isRegulationRiskModuleId,
+} from "../src/lib/regulation-module-contract.js";
 import {
   formatRegulationModulePlan,
   planRegulationForModule,
@@ -31,11 +34,12 @@ describe("regulation-module-workflow", () => {
     );
   });
 
-  it("medical device is family owner without fork_family", () => {
+  it("medical device is family owner without fork_family or perpetual thicken", () => {
     const medical = planRegulationForModule("jp_medical_device");
     expect(medical.familyId).toBe("qms_gxp");
     expect(medical.doNotMutateRegulationIds).toEqual([]);
     expect(medical.actions.some((a) => a.kind === "fork_family")).toBe(false);
+    expect(medical.actions.some((a) => a.kind === "thicken")).toBe(false);
     expect(medical.actions.some((a) => a.kind === "reuse")).toBe(true);
   });
 
@@ -45,10 +49,25 @@ describe("regulation-module-workflow", () => {
     expect(plan.actions.find((a) => a.kind === "reuse")!.regulationIds).toContain("REG-037");
   });
 
+  it("jsox reuses REG-016 and REG-027", () => {
+    const plan = planRegulationForModule("jp_jsox");
+    const reuse = plan.actions.find((a) => a.kind === "reuse")!;
+    expect(reuse.regulationIds).toEqual(expect.arrayContaining(["REG-016", "REG-027"]));
+  });
+
+  it("tax modules optionally reference REG-030", () => {
+    const plan = planRegulationForModule("jp_tax_corporate");
+    const reuse = plan.actions.find((a) => a.kind === "reuse")!;
+    expect(reuse.regulationIds).toEqual(expect.arrayContaining(["REG-031", "REG-030"]));
+  });
+
   it("detects thin stubs beyond line count", () => {
     const stub = `# x\n\n## 第1条（目的）\na\n\n## 第2条（適用範囲）\nb\n\n## 第3条（責任）\nc\n`;
     expect(isThinStubTemplate(stub)).toBe(true);
-    const thick = stub + "\n## 第4条（手続）\n…\n".repeat(20) + "\n## 別紙1\nx\n";
+    const thick =
+      stub +
+      "\n## 第4条（手続）\n…\n".repeat(2) +
+      "\n## 別紙1\nx\n";
     expect(isThinStubTemplate(thick)).toBe(false);
   });
 
@@ -87,5 +106,16 @@ describe("regulation-module-contract", () => {
 
   it("accepts jp_medical_device family owner", () => {
     expect(checkModuleRegulationContract("jp_medical_device")).toEqual([]);
+  });
+
+  it("shares risk-module id detection with plan new-hints", () => {
+    expect(isRegulationRiskModuleId("jp_tax_corporate")).toBe(true);
+    expect(isRegulationRiskModuleId("jp_medical_device")).toBe(true);
+    expect(isRegulationRiskModuleId("hospitality")).toBe(false);
+  });
+
+  it("flags cash-like module with no regulation declarations", () => {
+    // Synthetic: unknown catalog id with no manifest returns []
+    expect(checkModuleRegulationContract("jp_not_a_real_module")).toEqual([]);
   });
 });

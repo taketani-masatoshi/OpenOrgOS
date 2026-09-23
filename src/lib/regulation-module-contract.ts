@@ -7,6 +7,13 @@ import { getRegulationsTemplatesDir } from "./jurisdiction.js";
 import { loadModuleManifest } from "./modules.js";
 import { loadRegulationsCatalog } from "./regulations.js";
 
+/**
+ * Module ids that typically need cash / PII / permit / QMS regulation bindings.
+ * Shared by `modules check` and regulation-plan `new` hints — keep one source.
+ */
+export const REGULATION_RISK_MODULE_ID_RE =
+  /bank|payroll|tax|invoice|refund|permit|privacy|social.?insurance|medical_device/i;
+
 /** Pack-level family registry (cousins that must fork, not merge). */
 export const REGULATION_FAMILIES: Record<
   string,
@@ -24,6 +31,10 @@ export const REGULATION_FAMILIES: Record<
     draftTemplate: "by-module/_families/qms-gxp/FORK-DRAFT.md",
   },
 };
+
+export function isRegulationRiskModuleId(moduleId: string): boolean {
+  return REGULATION_RISK_MODULE_ID_RE.test(moduleId);
+}
 
 export function checkModuleRegulationContract(
   catalogId: string
@@ -79,12 +90,8 @@ export function checkModuleRegulationContract(
   const requiredEmpty = !(manifest.required_regulations?.length);
   const optionalEmpty = !(manifest.optional_regulations?.length);
   const intentionalNone = /規程不要|no regulations|regs?:\s*none/i.test(manifest.notes ?? "");
-  const moneyish =
-    /bank|payroll|tax|invoice|refund|permit|privacy|social.?insurance|medical_device/i.test(
-      catalogId
-    );
   if (
-    moneyish &&
+    isRegulationRiskModuleId(catalogId) &&
     requiredEmpty &&
     optionalEmpty &&
     !manifest.regulation_family &&

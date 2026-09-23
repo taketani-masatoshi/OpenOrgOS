@@ -2,6 +2,8 @@ id: jp_consumption_refund
 required_seeds: []
 activation_seeds:
   - consumption-refund-claims.yaml.example
+optional_regulations:
+  - REG-030
 required_regulations:
   - REG-032
 notes: activation_ready — 消費税還付 CLAIM · pack · 入金仕訳。e-Tax は未対応 · 規程は REG-032 に吸収

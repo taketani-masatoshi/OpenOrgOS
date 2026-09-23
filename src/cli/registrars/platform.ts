@@ -322,11 +322,24 @@ export function registerPlatformCommands(program: Command): void {
     );
   modulesCmd
     .command("regulation-plan <id>")
-    .description("Classify regulation actions for a module (reuse/thicken/fork_family/new/none · no writes)")
+    .description(
+      "Classify regulation actions for a module (reuse/thicken/fork_family/new/none). Default: no writes."
+    )
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
-    .action((id: string, opts: { tenant?: string; json?: boolean }) =>
-      runModulesRegulationPlan(id, { tenant: opts.tenant, json: opts.json })
+    .option("--file-wo", "File Compliance Work Order for the plan (without module activate)")
+    .option("--dry-run", "With --file-wo: classify only, do not write WO")
+    .action(
+      (
+        id: string,
+        opts: { tenant?: string; json?: boolean; fileWo?: boolean; dryRun?: boolean }
+      ) =>
+        runModulesRegulationPlan(id, {
+          tenant: opts.tenant,
+          json: opts.json,
+          fileWo: opts.fileWo,
+          dryRun: opts.dryRun,
+        })
     );
   modulesCmd
     .command("scaffold-docs")
