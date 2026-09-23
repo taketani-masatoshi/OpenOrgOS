@@ -19,11 +19,14 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 
-- **日程調整モジュール境界** — `scheduling-coordination` を mail-reply / persist-next-action / case-mutations / chat-parse 等へ分割。判定・永続・副作用の依存方向を整理。モジュール地図は [scheduling-coordination-runbook.md](docs/org-os/scheduling-coordination-runbook.md) §8。
+- **日程調整の品質天井** — 純粋核（judgment context · transitions · reply-plan）と correspondence domain adapters（ADR 0078）。CLI 表示と draft-text を種別分割。境界テスト R1–R5 の許可リストを空へ。地図は [scheduling-coordination-runbook.md](docs/org-os/scheduling-coordination-runbook.md) §8。
+- **日程調整モジュール境界** — `scheduling-coordination` を mail-reply / persist-next-action / case-mutations / chat-parse 等へ分割。判定・永続・副作用の依存方向を整理。
 
 ### Fixed
 
+- **日程調整 F1–F4** — CLI propose を `proposeSlotsOntoSchedulingCase` に統一。`SchedulingCaseNotFoundError` 文言一本化。案件 ID / 返信日付の年に注入時計。リマインド期限を `scheduling_reminder_after_hours`（既定72h）に合わせる。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
+ `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 - **日程調整 workflow** — `advanceSchedulingWorkflow` が `exception_reason` のみの変化も保存し、`updated_at` に注入した `now` を使う。

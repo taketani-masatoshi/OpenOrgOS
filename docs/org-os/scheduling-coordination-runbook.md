@@ -105,46 +105,61 @@ orgos validate --tenant <id>
 ## 8. 付録 — モジュール地図
 
 **Path:** `src/lib/scheduling-coordination/`  
-**CLI:** `src/commands/scheduling-coordination.ts`
+**CLI:** `src/commands/scheduling-coordination.ts` · 表示は `scheduling-coordination-render.ts`（純粋）  
+**境界テスト:** `tests/scheduling-architecture.test.ts`（R1–R5 · 許可リスト空が天井）
 
-### 依存方向（上→下は呼ばない）
+### 層
 
 ```
-入口 (CLI / chat-intent / process-mail / auto-process / reminder-poller)
-  → 案件更新 (case-mutations / mail-reply / propose-case / ceo-confirm)
-    → 状態機械 (next-action 純粋 · persist-next-action · workflow)
-      → 永続 (store)
-  → 副作用 (correspondence-drafts / delegated-send / calendar-write)
+入口: cli.ts / steward-chat / operator-console / wire-console / tests/setup-tenant
+  → bootstrap/registerDomainAdapters()（idempotent · fail-closed）
+殻: case-command · mail-reply · workflow · delegated-send · calendar-write · correspondence-adapter
+  → 核: next-action · transitions · reply-plan · reply-parse · slots · ceo-choice · draft-tag · venue-gate
+殻 → store / correspondence（送信・下書き）/ venue-booking
 ```
 
-判定（`next-action`）は I/O しない。永続ヘルパと副作用は入口・案件更新側が呼ぶ。  
-`lifecycle.ts` / `process-mail.ts` は外部互換の再公開ファサード。新規呼び出しは分割モジュールを直接 import する。
+correspondence は `domain-adapters` 登録口だけを知る。日程調整は correspondence を呼べるが、逆向きの静的 import はない（ADR 0078）。
 
-### 役割
+### 核と殻
+
+| 層 | 規則 |
+|----|------|
+| **核** | ファイル I/O・`node:fs`・`./store`・他ドメイン直 import・裸の `new Date()` なし。会場予約事実は `SchedulingJudgmentContext` 経由 |
+| **殻** | `resolveNextAction` / `mutateSchedulingCase` / `planScheduleReply` の実行と副作用。`now` は入口で注入 |
+
+### アダプタのフック
+
+`onDraftApproved` · `onDraftSent` · `onCeoAnswer` · `caseRef` · `onFollowUpDue`（`scheduling_reminder_after_hours`）· `styleLintContext` · `handoffSection` / `handoffActions` · `onMailPoll`
+
+### 時計
+
+案件 ID 年（`nextSchedulingCaseId`）と返信の「9月1日」年推定は注入した `now` を使う。年またぎ規則自体は変えない。
+
+### 境界テストが強制すること
+
+| 規則 | 意味 |
+|------|------|
+| R1 | correspondence → scheduling-coordination import = 0 |
+| R2 | scheduling / correspondence→scheduling の動的 import = 0 |
+| R3 | 再公開のみのファサード = 0 |
+| R4 | 核モジュールの I/O・`new Date()` 違反は許可リストのみ（縮退） |
+| R5 | 入口が `registerDomainAdapters()` を呼ぶ |
+
+### 役割（抜粋）
 
 | モジュール | 役割 |
 |------------|------|
-| `next-action` | status / next_action / exception_reason の純粋判定 |
-| `persist-next-action` | 上記3フィールドに変化があるときだけ store 更新 |
-| `workflow` | リマインド更新 → next-action 永続 → clarify 下書き / CEO 質問 |
-| `store` | `scheduling-cases.yaml` の read / revision 付き write |
-| `case-mutations` | new / cancel / reschedule / respond 等の CLI 向け更新 |
-| `chat-parse` / `chat-intent` / `chat-draft-store` | Steward Chat の抽出・起票・下書き |
-| `mail-match` / `mail-intake` / `mail-reply` | 照合 · 安全受付 · 返信反映（対案含む） |
-| `process-mail` | メール入口オーケストレーション（ファサード再公開あり） |
-| `correspondence-drafts` / `draft-text` / `delegated-send` | 下書き生成 · 文面 · 委任送信 |
-| `ceo-confirm` / `ceo-choice` / `ceo-gates` | CEO ゲートと選択肢 |
-| `calendar-write` | ローカル予定 → 任意 Google（失敗後再試行可） |
-| `propose-case` / `slots` / `venue-*` | 候補生成 · 会場ゲート |
-| `rehearsal*` / `operational-readiness` | リハーサルと doctor 連携 |
+| `next-action` + `judgment-context` | 純粋判定 / 殻の resolve |
+| `transitions` + `case-command` | 純粋遷移 / find→fail→save |
+| `reply-plan` + `mail-reply` | 返信計画 / 保存と副作用 |
+| `workflow` | リマインド更新 → next-action → clarify / CEO 質問 |
+| `correspondence-adapter` + `draft-tag` | correspondence 向け実装 · タグ解析一本 |
+| `draft-text-*` / `clarify-text` | 種別ごとの文面 |
+| `propose-case` | CLI propose もここ（intake · 会食夜帯 · 下書き作り直し） |
 
-### 状態保存の差（統合しない）
+### 状態保存の差
 
 | 関数 | 保存の比較 | 副作用 |
 |------|------------|--------|
 | `persistSchedulingNextAction` | status · next_action · exception_reason | なし |
 | `advanceSchedulingWorkflow` | 同上（`updated_at` は注入 `now`） | その後 clarify / CEO 質問 |
-
-### 既知の非対称（変更しない）
-
-CLI の `proposeSchedulingCaseSlots` と lib の `proposeSlotsOntoSchedulingCase` は、CEO 受付検査と会食時間帯の扱いに差がある。重複ではなく既存仕様差。統合は別課題。
