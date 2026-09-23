@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 608
-  static_test_cases: 2802
-  tiered_execution_total: 608
+  vitest_total: 609
+  static_test_cases: 2810
+  tiered_execution_total: 609
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -2285,6 +2285,10 @@ tests:
     kind: unit
     domain: P01_kernel
   scheduling-mail.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-module-characterization.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
