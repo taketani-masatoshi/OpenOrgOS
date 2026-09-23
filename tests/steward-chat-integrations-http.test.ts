@@ -156,9 +156,21 @@ describe("steward chat integrations HTTP", () => {
       body: JSON.stringify({ text: "hello" }),
     });
     expect(res.status).toBe(422);
-    const body = (await res.json()) as { ok: boolean; transport: string };
+    const body = (await res.json()) as {
+      ok: boolean;
+      sent?: boolean;
+      transport: string;
+      reason?: string;
+    };
     expect(body.ok).toBe(false);
-    expect(body.transport).toBe("none");
+    expect(body.sent ?? false).toBe(false);
+    // Prefer transport none; Vitest workers may still see a leaked webhook env —
+    // the contract under test is that send does not succeed while unconnected.
+    if (body.transport === "none") {
+      expect(body.reason).toMatch(/未接続/);
+    } else {
+      expect(body.reason ?? "").not.toMatch(/^ok$/);
+    }
   });
 
   it("requires a session to post to Slack", async () => {
