@@ -450,10 +450,26 @@ describe("pdf esign case workflow — characterization", () => {
       expect(existsSync(join(workRoot(), record.id, "contract.pdf"))).toBe(true);
     });
 
-    it("attaches any existing file without the lite check", () => {
+    it("rejects an attachment that fails the lite check", () => {
       const record = createViaCli();
       const container = join(scratch, "whatever.asice");
       writeFileSync(container, "not a zip");
+      const out = captureConsole();
+      expect(() =>
+        cli.runEsignAttachContainer({ id: record.id, asice: container, json: true }),
+      ).toThrow("not_zip_local_header");
+      expect(out.json()).toStrictEqual({ ok: false, reason: "not_zip_local_header" });
+      expect(process.exitCode).toBe(1);
+      expect(findPdfEsignCase(record.id)!.status).toBe("draft");
+      expect(() =>
+        cli.runEsignAttachContainer({ id: record.id, asice: join(scratch, "nope.asice") }),
+      ).toThrow(`asice not found: ${join(scratch, "nope.asice")}`);
+    });
+
+    it("attaches a valid container after the lite check", () => {
+      const record = createViaCli();
+      const container = join(scratch, "signed.asice");
+      writeFileSync(container, buildAsiceContainer(pdf));
       captureConsole();
       const next = cli.runEsignAttachContainer({ id: record.id, asice: container, json: true });
       expect(next).toMatchObject({
@@ -461,9 +477,6 @@ describe("pdf esign case workflow — characterization", () => {
         container_digest: sha256File(container),
         status: "partially_signed",
       });
-      expect(() =>
-        cli.runEsignAttachContainer({ id: record.id, asice: join(scratch, "nope.asice") }),
-      ).toThrow(`asice not found: ${join(scratch, "nope.asice")}`);
     });
 
     it("requires an existing container file before verifying", async () => {

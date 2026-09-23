@@ -2,17 +2,14 @@
  * Issuer receipt ledger (`data/receipt-qr/receipts.yaml`, JSON body).
  * Path: src/lib/receipt-qr/registry.ts
  *
- * Mutations run under an exclusive lockfile and write via temp + rename.
- * A held lock fails fast (no retry) so callers can surface "busy".
+ * Mutations run under an exclusive lockfile (with brief retries) and write
+ * via temp + rename so concurrent Chat / CLI callers serialize.
  */
 import { randomUUID } from "node:crypto";
 import {
-  closeSync,
   existsSync,
   mkdirSync,
-  openSync,
   renameSync,
-  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
@@ -23,6 +20,7 @@ import {
   type StoredReceipt,
 } from "../../../schemas/receipt-qr.js";
 import { currentDate, readYamlFile } from "../utils.js";
+import { YamlFileBusyError, withYamlFileLock } from "../yaml-atomic.js";
 import { receiptIssuedDir, receiptRegistryPath } from "./paths.js";
 
 const SHA256_HEX = /^[a-f0-9]{64}$/;
@@ -54,22 +52,18 @@ function writeReceiptRegistryAtomic(registry: ReceiptRegistry): void {
 /** Load → mutate in place → validate → save, all under the registry lock. */
 export function withRegistryLock<T>(fn: (registry: ReceiptRegistry) => T): T {
   const path = receiptRegistryPath();
-  mkdirSync(dirname(path), { recursive: true });
-  const lockPath = `${path}.lock`;
-  let fd: number;
   try {
-    fd = openSync(lockPath, "wx", 0o600);
-  } catch {
-    throw new Error("Receipt registry is busy; retry the operation");
-  }
-  try {
-    const registry = loadReceiptRegistry();
-    const result = fn(registry);
-    writeReceiptRegistryAtomic(receiptRegistrySchema.parse(registry));
-    return result;
-  } finally {
-    closeSync(fd);
-    unlinkSync(lockPath);
+    return withYamlFileLock(path, () => {
+      const registry = loadReceiptRegistry();
+      const result = fn(registry);
+      writeReceiptRegistryAtomic(receiptRegistrySchema.parse(registry));
+      return result;
+    });
+  } catch (error) {
+    if (error instanceof YamlFileBusyError) {
+      throw new Error("Receipt registry is busy; retry the operation");
+    }
+    throw error;
   }
 }
 

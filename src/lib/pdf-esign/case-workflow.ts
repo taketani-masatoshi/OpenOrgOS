@@ -9,7 +9,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import type { PdfEsignCase, SivaMode } from "../../../schemas/pdf-esign.js";
-import { digestDocumentFile, digestFile } from "../document-digest.js";
+import { digestDocumentFile } from "../document-digest.js";
 import { digidocPdfEsignAdapter } from "./adapters/digidoc.js";
 import { asiceContainsPdfDigest, inspectAsiceContainer, type AsiceLiteResult } from "./asice-lite.js";
 import { insertPdfEsignCase, nextPdfEsignCaseId, updatePdfEsignCase } from "./case-store.js";
@@ -133,19 +133,28 @@ export async function sendEsignCase(
   return { ok: result.ok, case: next, message: result.message };
 }
 
-/** Record a signed container at an operator-provided path (structure checked at verify). */
+/**
+ * Record a signed container at an operator-provided path.
+ * Same lite ASiC-E gate as the Chat BFF upload path; structure is re-checked at verify.
+ */
 export function attachEsignContainerFile(
   record: PdfEsignCase,
   containerPath: string,
-): PdfEsignCase {
+): { ok: true; case: PdfEsignCase; pdf_digest_matches: boolean | null } | EsignStepFailure {
   if (!existsSync(containerPath)) {
     throw new Error(`asice not found: ${containerPath}`);
   }
-  return updatePdfEsignCase(record.id, {
+  const runtime = resolveDigidocRuntime();
+  const lite = inspectAsiceContainer(containerPath, {
+    maxAsiceBytes: runtime.max_asice_bytes,
+  });
+  if (!lite.ok) return { ok: false, case: record, reason: lite.reason };
+  const next = updatePdfEsignCase(record.id, {
     container_path: containerPath,
-    container_digest: digestFile(containerPath),
+    container_digest: lite.container_digest,
     status: "partially_signed",
   });
+  return { ok: true, case: next, pdf_digest_matches: pdfDigestMatches(record, lite) };
 }
 
 /** Store uploaded container bytes and record them only if the lite ASiC-E check passes. */

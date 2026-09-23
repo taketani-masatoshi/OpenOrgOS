@@ -133,9 +133,18 @@ export function runEsignAttachContainer(opts: {
   asice: string;
   json?: boolean;
 }): PdfEsignCase {
-  const next = attachEsignContainerFile(requirePdfEsignCase(opts.id), opts.asice);
-  emit(opts.json, { ok: true, case: next }, [`✓ container 添付 ${next.id}`]);
-  return next;
+  const attached = attachEsignContainerFile(requirePdfEsignCase(opts.id), opts.asice);
+  if (!attached.ok) {
+    emit(opts.json, { ok: false, reason: attached.reason }, [
+      `✗ container 検査に失敗: ${attached.reason}`,
+    ]);
+    process.exitCode = 1;
+    throw new Error(attached.reason ?? "asice_lite_failed");
+  }
+  emit(opts.json, { ok: true, case: attached.case }, [
+    `✓ container 添付 ${attached.case.id}`,
+  ]);
+  return attached.case;
 }
 
 /**

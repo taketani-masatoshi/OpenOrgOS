@@ -4,6 +4,7 @@
  *
  * Only L1 facts are stored: paths, digests, SiVa indication and counts.
  * PDFs, PINs and keys never live in this ledger.
+ * Mutations run under an exclusive lock and write via temp + rename.
  */
 import { existsSync } from "node:fs";
 import {
@@ -12,7 +13,8 @@ import {
   type PdfEsignCase,
   type PdfEsignCasesFile,
 } from "../../../schemas/pdf-esign.js";
-import { readYamlFile, writeYamlFile } from "../utils.js";
+import { readYamlFile } from "../utils.js";
+import { withYamlFileLock, writeYamlFileAtomic } from "../yaml-atomic.js";
 import { getPdfEsignCasesPath } from "./paths.js";
 
 export function loadPdfEsignCases(): PdfEsignCasesFile {
@@ -24,7 +26,17 @@ export function loadPdfEsignCases(): PdfEsignCasesFile {
 }
 
 export function savePdfEsignCases(file: PdfEsignCasesFile): void {
-  writeYamlFile(getPdfEsignCasesPath(), pdfEsignCasesFileSchema.parse(file));
+  writeYamlFileAtomic(getPdfEsignCasesPath(), pdfEsignCasesFileSchema.parse(file));
+}
+
+/** Load → mutate → validate → save under the cases.yaml lock. */
+function withPdfEsignCasesLock<T>(fn: (file: PdfEsignCasesFile) => T): T {
+  return withYamlFileLock(getPdfEsignCasesPath(), () => {
+    const file = loadPdfEsignCases();
+    const result = fn(file);
+    savePdfEsignCases(file);
+    return result;
+  });
 }
 
 export function listPdfEsignCases(): PdfEsignCase[] {
@@ -42,11 +54,14 @@ export function requirePdfEsignCase(id: string): PdfEsignCase {
 }
 
 /** `ES-YYYY-NNN` — sequence is per calendar year. */
-export function nextPdfEsignCaseId(now = new Date()): string {
+export function nextPdfEsignCaseId(
+  now = new Date(),
+  cases: PdfEsignCase[] = listPdfEsignCases(),
+): string {
   const year = now.getUTCFullYear();
   const prefix = `ES-${year}-`;
   let max = 0;
-  for (const c of listPdfEsignCases()) {
+  for (const c of cases) {
     if (!c.id.startsWith(prefix)) continue;
     const seq = Number.parseInt(c.id.slice(prefix.length), 10);
     if (Number.isFinite(seq) && seq > max) max = seq;
@@ -55,14 +70,14 @@ export function nextPdfEsignCaseId(now = new Date()): string {
 }
 
 export function insertPdfEsignCase(input: unknown): PdfEsignCase {
-  const record = pdfEsignCaseSchema.parse(input);
-  const file = loadPdfEsignCases();
-  if (file.cases.some((c) => c.id === record.id)) {
-    throw new Error(`esign case already exists: ${record.id}`);
-  }
-  file.cases.push(record);
-  savePdfEsignCases(file);
-  return record;
+  return withPdfEsignCasesLock((file) => {
+    const record = pdfEsignCaseSchema.parse(input);
+    if (file.cases.some((c) => c.id === record.id)) {
+      throw new Error(`esign case already exists: ${record.id}`);
+    }
+    file.cases.push(record);
+    return record;
+  });
 }
 
 /** Merge a patch into a case and bump `updated_at`. */
@@ -70,16 +85,16 @@ export function updatePdfEsignCase(
   id: string,
   patch: Partial<PdfEsignCase>,
 ): PdfEsignCase {
-  const file = loadPdfEsignCases();
-  const index = file.cases.findIndex((c) => c.id === id);
-  if (index < 0) throw new Error(`esign case not found: ${id}`);
-  const next = pdfEsignCaseSchema.parse({
-    ...file.cases[index],
-    ...patch,
-    id,
-    updated_at: new Date().toISOString(),
+  return withPdfEsignCasesLock((file) => {
+    const index = file.cases.findIndex((c) => c.id === id);
+    if (index < 0) throw new Error(`esign case not found: ${id}`);
+    const next = pdfEsignCaseSchema.parse({
+      ...file.cases[index],
+      ...patch,
+      id,
+      updated_at: new Date().toISOString(),
+    });
+    file.cases[index] = next;
+    return next;
   });
-  file.cases[index] = next;
-  savePdfEsignCases(file);
-  return next;
 }
