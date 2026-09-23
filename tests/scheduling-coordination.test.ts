@@ -139,7 +139,7 @@ describe("schedule_coordination", () => {
         start: "2026-08-20T14:00",
         end: "2026-08-20T15:00",
       },
-    ]);
+    ], new Date());
     expect(parsed.response).toBe("accept");
     expect(parsed.accepted_slot_ids).toContain("SLOT-001");
   });

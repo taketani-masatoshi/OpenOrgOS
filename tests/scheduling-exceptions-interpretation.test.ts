@@ -85,7 +85,7 @@ describe("scheduling exceptions and interpretation", () => {
   afterEach(() => rmSync(tenantRoot, { recursive: true, force: true }));
 
   it("returns deterministic structured regex interpretation", () => {
-    const result = parseScheduleReplyText("2026-08-20 で問題ありません。", slots);
+    const result = parseScheduleReplyText("2026-08-20 で問題ありません。", slots, new Date());
     expect(result).toMatchObject({
       response: "accept",
       slot_ids: ["SLOT-001"],

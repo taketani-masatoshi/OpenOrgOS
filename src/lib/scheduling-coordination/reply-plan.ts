@@ -61,7 +61,12 @@ export function planScheduleReply(input: {
   const ctx = input.ctx ?? {};
   const email = extractEmailAddress(input.from);
   const participant = findParticipantByEmail(caseRow, email);
-  const parsed = interpretScheduleReply(input.body, caseRow.proposed_slots, mailId);
+  const parsed = interpretScheduleReply(
+    input.body,
+    caseRow.proposed_slots,
+    mailId,
+    now
+  );
 
   const threadIds = new Set(caseRow.mail_thread_ids);
   threadIds.add(mailId);

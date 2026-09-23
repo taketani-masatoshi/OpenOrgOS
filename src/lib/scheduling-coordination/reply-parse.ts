@@ -42,7 +42,7 @@ function matchesAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((p) => p.test(text));
 }
 
-function extractIsoDates(text: string): string[] {
+function extractIsoDates(text: string, now: Date): string[] {
   const found: string[] = [];
   const iso = text.matchAll(/\b(20\d{2})[/-](\d{1,2})[/-](\d{1,2})\b/g);
   for (const m of iso) {
@@ -51,7 +51,7 @@ function extractIsoDates(text: string): string[] {
     found.push(`${m[1]}-${mm}-${dd}`);
   }
   const jp = text.matchAll(/(\d{1,2})月(\d{1,2})日/g);
-  const year = new Date().getFullYear();
+  const year = now.getFullYear();
   for (const m of jp) {
     const mm = m[1]!.padStart(2, "0");
     const dd = m[2]!.padStart(2, "0");
@@ -83,9 +83,10 @@ function slotTimeKey(start: string): string {
 
 export function matchSlotsInText(
   text: string,
-  slots: SchedulingProposedSlot[]
+  slots: SchedulingProposedSlot[],
+  now: Date
 ): SchedulingProposedSlot[] {
-  const dates = extractIsoDates(text);
+  const dates = extractIsoDates(text, now);
   const matched: SchedulingProposedSlot[] = [];
   for (const slot of slots) {
     const day = slotDateKey(slot.start);
@@ -103,11 +104,12 @@ export function matchSlotsInText(
 
 export function parseScheduleReplyText(
   text: string,
-  slots: SchedulingProposedSlot[] = []
+  slots: SchedulingProposedSlot[] = [],
+  now: Date
 ): ParsedScheduleReply {
   const body = normalizeText(text);
-  const matchedSlots = matchSlotsInText(body, slots);
-  const counterDates = extractIsoDates(body).filter(
+  const matchedSlots = matchSlotsInText(body, slots, now);
+  const counterDates = extractIsoDates(body, now).filter(
     (d) => !slots.some((s) => slotDateKey(s.start) === d)
   );
 

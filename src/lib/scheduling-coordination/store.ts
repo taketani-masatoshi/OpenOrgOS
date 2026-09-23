@@ -107,8 +107,8 @@ export function listSchedulingCases(opts?: {
   return cases.slice(0, limit);
 }
 
-export function nextSchedulingCaseId(cases: SchedulingCase[]): string {
-  const year = new Date().getFullYear();
+export function nextSchedulingCaseId(cases: SchedulingCase[], now: Date = new Date()): string {
+  const year = now.getFullYear();
   const prefix = `SCH-${year}-`;
   let max = 0;
   for (const c of cases) {

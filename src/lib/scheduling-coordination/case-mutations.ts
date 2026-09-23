@@ -69,7 +69,7 @@ export function openSchedulingCase(opts: {
     undefined as unknown as SchedulingCase,
     {
       type: "open",
-      id: nextSchedulingCaseId(file.cases),
+      id: nextSchedulingCaseId(file.cases, now),
       title: opts.title,
       participants: buildSchedulingParticipants(opts.participants),
       durationMinutes: opts.durationMinutes ?? 60,

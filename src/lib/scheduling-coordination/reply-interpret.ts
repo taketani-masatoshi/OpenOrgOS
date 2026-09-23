@@ -20,9 +20,10 @@ interface ScheduleVote {
 
 function fromMailVote(
   vote: MailInterpretVote,
-  slots: SchedulingProposedSlot[]
+  slots: SchedulingProposedSlot[],
+  now: Date
 ): ScheduleVote {
-  const parsed = parseScheduleReplyText(vote.summary_l1, slots);
+  const parsed = parseScheduleReplyText(vote.summary_l1, slots, now);
   return {
     source: vote.model,
     response: vote.response ?? parsed.response,
@@ -73,9 +74,10 @@ function aggregateVotes(votes: ScheduleVote[], fallback: ParsedScheduleReply): P
 export function interpretScheduleReply(
   text: string,
   slots: SchedulingProposedSlot[] = [],
-  mailId?: string
+  mailId?: string,
+  now: Date = new Date()
 ): ParsedScheduleReply {
-  const regex = parseScheduleReplyText(text, slots);
+  const regex = parseScheduleReplyText(text, slots, now);
   if (!mailId) return regex;
 
   const interp = findMailInterpretation(mailId);
@@ -89,10 +91,10 @@ export function interpretScheduleReply(
       counter_slots: regex.counter_slots,
       confidence: regex.confidence,
     },
-    ...interp.votes.map((vote) => fromMailVote(vote, slots)),
+    ...interp.votes.map((vote) => fromMailVote(vote, slots, now)),
   ];
   if (!interp.votes.length) {
-    const legacy = parseScheduleReplyText(interp.summary_l1, slots);
+    const legacy = parseScheduleReplyText(interp.summary_l1, slots, now);
     votes.push({
       source: "interpretation",
       response: interp.response ?? legacy.response,
