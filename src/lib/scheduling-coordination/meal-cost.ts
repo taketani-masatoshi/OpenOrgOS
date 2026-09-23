@@ -1,6 +1,6 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 
-export type SchedulingMealDraftKind = "clarify" | "proposal" | "reminder" | "confirm";
+type SchedulingDraftKind = SchedulingCase["correspondence"][number]["kind"];
 
 export function extractSchedulingCostLine(
   caseRow: Pick<SchedulingCase, "cost_estimate" | "notes">
@@ -38,7 +38,7 @@ export function assertMealCostForOutboundDraft(
     SchedulingCase,
     "id" | "title" | "purpose" | "notes" | "meeting_format" | "cost_estimate"
   >,
-  kind: SchedulingMealDraftKind
+  kind: SchedulingDraftKind
 ): void {
   if (kind !== "proposal" && kind !== "confirm") return;
   if (!schedulingCaseLooksLikeMeal(caseRow)) return;

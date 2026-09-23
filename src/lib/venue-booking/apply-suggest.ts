@@ -1,7 +1,7 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { requireCliHumanApproval, auditCliMutation } from "../console-auth/cli-operator.js";
 import { applyNextAction } from "../scheduling-coordination/next-action.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/correspondence-drafts.js";
 import { findSchedulingCase, updateSchedulingCase } from "../scheduling-coordination/store.js";
 import {
   formatVenueSuggestionLines,

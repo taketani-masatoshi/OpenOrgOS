@@ -44,7 +44,7 @@ function formatParticipantStatus(caseRow: SchedulingCase): string {
     .join("\n");
 }
 
-export type SchedulingDraftKind = "clarify" | "proposal" | "reminder" | "confirm";
+export type SchedulingDraftKind = SchedulingCase["correspondence"][number]["kind"];
 
 export function sanitizeSchedulingDraftBody(body: string): string {
   return body

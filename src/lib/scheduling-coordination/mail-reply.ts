@@ -15,7 +15,15 @@ import {
   nextSlotId,
   updateSchedulingCase,
 } from "./store.js";
-import type { ProcessScheduleMailResult } from "./process-mail-types.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
+import { maybeAutoSendAuthorizedProposals } from "./delegated-send.js";
+
+export interface ProcessScheduleMailResult {
+  mail_id: string;
+  case_id?: string;
+  action: "linked" | "updated" | "skipped" | "unlinked";
+  reason?: string;
+}
 
 function addMinutes(start: string, minutes: number): string {
   const value = new Date(`${start}:00`);
@@ -161,8 +169,6 @@ export async function applyScheduleReplyToCase(opts: {
     dismissPendingSchedulingQuestions(caseRow.id);
     const refreshed = findSchedulingCase(caseRow.id);
     if (refreshed?.next_action === "send_proposal") {
-      const { ensureSchedulingCorrespondenceDrafts } = await import("./correspondence-drafts.js");
-      const { maybeAutoSendAuthorizedProposals } = await import("./delegated-send.js");
       ensureSchedulingCorrespondenceDrafts(refreshed.id, "proposal");
       caseRow = (await maybeAutoSendAuthorizedProposals(refreshed.id)) ?? refreshed;
     }

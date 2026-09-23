@@ -7,7 +7,7 @@ import {
 } from "../../../schemas/venue-booking.js";
 import { findSchedulingCase, updateSchedulingCase } from "../scheduling-coordination/store.js";
 import { applyNextAction } from "../scheduling-coordination/next-action.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/correspondence-drafts.js";
 import { loadOrgApprovalRegistry } from "../org/approval/registry.js";
 import {
   assertHotpepperExternalRefShape,

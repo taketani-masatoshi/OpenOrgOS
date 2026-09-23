@@ -21,9 +21,9 @@ import {
   linkMailToCase,
 } from "./mail-intake.js";
 import { applyScheduleReplyToCase } from "./mail-reply.js";
-import type { ProcessScheduleMailResult } from "./process-mail-types.js";
+import type { ProcessScheduleMailResult } from "./mail-reply.js";
 
-export type { ProcessScheduleMailResult } from "./process-mail-types.js";
+export type { ProcessScheduleMailResult } from "./mail-reply.js";
 export { findCaseForMailEntry } from "./mail-match.js";
 export { linkMailToCase } from "./mail-intake.js";
 
