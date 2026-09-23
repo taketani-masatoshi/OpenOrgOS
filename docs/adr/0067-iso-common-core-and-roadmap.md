@@ -106,7 +106,7 @@ core_bindings:
 
 ## 参照
 
-- 実装: `src/lib/control-framework.ts`（`synthesizeCoreControls`）· `src/commands/controls-migrate-core.ts` · `src/commands/iso-scaffold.ts`
+- 実装: `src/lib/compliance/controls/maps.ts`（`synthesizeCoreControls`；互換バレル `src/lib/control-framework.ts`）· `src/commands/controls-migrate-core.ts` · `src/commands/iso-scaffold.ts`
 - スキーマ: `schemas/control-framework.ts` · `schemas/iso-catalog.ts`
 - テスト: `tests/iso-core-module.test.ts` · `tests/iso-pack-contract.test.ts` · `tests/iso-module-add.test.ts` · `tests/iso-coming-soon.test.ts`
 - 正本: `steward/standards/iso/core/00-このフォルダについて.md`

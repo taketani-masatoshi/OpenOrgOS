@@ -7,9 +7,9 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadCoreProfile } from "../lib/control-framework.js";
-import { findIsoCatalogEntry, isoCatalogPath } from "../lib/iso-catalog.js";
-import { getIsoStandardDir } from "../lib/standards.js";
+import { loadCoreProfile } from "../lib/compliance/controls/maps.js";
+import { findIsoCatalogEntry, isoCatalogPath } from "../lib/compliance/iso/catalog.js";
+import { getIsoStandardDir } from "../lib/compliance/packs/paths.js";
 
 export interface IsoScaffoldOptions {
   dryRun?: boolean;

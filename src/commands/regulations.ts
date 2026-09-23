@@ -1,11 +1,13 @@
+import { listCatalogRegulationIds } from "../lib/compliance/regulations/catalog.js";
 import {
   listEffectiveRegulations,
   loadEnabledRegulationIds,
-  listCatalogRegulationIds,
-  seedRegulationDocs,
-  validateRegulations,
+} from "../lib/compliance/regulations/effective.js";
+import {
   initTenantRegulationsRegistry,
-} from "../lib/regulations.js";
+  seedRegulationDocs,
+} from "../lib/compliance/regulations/seed.js";
+import { validateRegulations } from "../lib/compliance/regulations/validate.js";
 import { getTenantId } from "../lib/tenant.js";
 
 export function runRegulationsList(): void {

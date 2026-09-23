@@ -1,21 +1,22 @@
 import { setTenantId } from "../lib/tenant.js";
+import { assessAuditorEligibility } from "../lib/compliance/audit/eligibility.js";
+import { resolveAuditFramework } from "../lib/compliance/audit/framework.js";
 import {
-  assessAuditorEligibility,
   assessProgrammeCoverage,
   auditPlanProgress,
   concludeAuditPlan,
   createAuditPlan,
   findAuditPlan,
-  formatAuditPlan,
   loadAuditPlans,
   setAuditFinding,
-} from "../lib/iso-audit-plan.js";
+} from "../lib/compliance/audit/plan.js";
+import { formatAuditPlan } from "../lib/compliance/audit/plan-format.js";
 import {
   applyPrecheckFindings,
   assessFollowUp,
   buildAuditBrief,
   formatFollowUp,
-} from "../lib/iso-audit-precheck.js";
+} from "../lib/compliance/audit/precheck.js";
 import { isoAuditVerdict } from "../../schemas/iso-audit-plan.js";
 
 export interface IsoAuditPlanCliOptions {
@@ -40,12 +41,18 @@ export function runIsoAuditPlanCreate(
     precheckRunId?: string;
     operatorId?: string;
     force?: boolean;
-  },
+  }
 ): void {
   if (options.tenant) setTenantId(options.tenant);
-  const framework = options.framework === "financial" || options.framework === "jsox" ? options.framework : "iso";
+  const framework = resolveAuditFramework(
+    options.iso ?? "",
+    options.framework as "iso" | "financial" | "jsox" | undefined
+  );
   const standard = framework === "iso" ? options.iso : framework;
-  if (!standard) fail(framework === "iso" ? "--iso が必要です。" : "--framework financial|jsox を指定してください。");
+  if (!standard)
+    fail(
+      framework === "iso" ? "--iso が必要です。" : "--framework financial|jsox を指定してください。"
+    );
   if (!options.auditor) fail("--auditor <operator-id> が必要です。");
   if (!options.period) fail("--period YYYY-MM..YYYY-MM が必要です。");
 
@@ -59,8 +66,14 @@ export function runIsoAuditPlanCreate(
       auditorOperatorId: options.auditor,
       periodStart: start,
       periodEnd: end,
-      scopeControls: options.scope?.split(",").map((s) => s.trim()).filter(Boolean),
-      criteria: options.criteria?.split(",").map((s) => s.trim()).filter(Boolean),
+      scopeControls: options.scope
+        ?.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      criteria: options.criteria
+        ?.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
       sampling: options.sampling,
       precheckRunId: options.precheckRunId,
       createdBy: options.operatorId ?? options.auditor,
@@ -94,7 +107,7 @@ export function runIsoAuditPlanList(options: IsoAuditPlanCliOptions & { iso?: st
     const progress = auditPlanProgress(plan);
     console.log(
       `| ${plan.plan_id} | ${plan.standard} | ${plan.auditor_operator_id} | ` +
-        `${plan.period_start}〜${plan.period_end} | ${plan.status} | ${progress.judged}/${progress.total} |`,
+        `${plan.period_start}〜${plan.period_end} | ${plan.status} | ${progress.judged}/${progress.total} |`
     );
   }
 }
@@ -116,7 +129,7 @@ export function runIsoAuditFindingSet(
     sample?: string;
     note?: string;
     operatorId?: string;
-  },
+  }
 ): void {
   if (options.tenant) setTenantId(options.tenant);
   if (!options.plan) fail("--plan が必要です。");
@@ -134,7 +147,8 @@ export function runIsoAuditFindingSet(
       evidence: options.evidence,
       sample: options.sample,
       note: options.note,
-      recordedBy: options.operatorId ?? findAuditPlan(options.plan)?.auditor_operator_id ?? "unknown",
+      recordedBy:
+        options.operatorId ?? findAuditPlan(options.plan)?.auditor_operator_id ?? "unknown",
     });
     const progress = auditPlanProgress(findAuditPlan(options.plan)!);
     if (options.json) {
@@ -149,7 +163,7 @@ export function runIsoAuditFindingSet(
 }
 
 export function runIsoAuditConclude(
-  options: IsoAuditPlanCliOptions & { plan?: string; summary?: string; operatorId?: string },
+  options: IsoAuditPlanCliOptions & { plan?: string; summary?: string; operatorId?: string }
 ): void {
   if (options.tenant) setTenantId(options.tenant);
   if (!options.plan) fail("--plan が必要です。");
@@ -157,7 +171,8 @@ export function runIsoAuditConclude(
 
   try {
     const plan = concludeAuditPlan(options.plan, {
-      concludedBy: options.operatorId ?? findAuditPlan(options.plan)?.auditor_operator_id ?? "unknown",
+      concludedBy:
+        options.operatorId ?? findAuditPlan(options.plan)?.auditor_operator_id ?? "unknown",
       summary: options.summary,
     });
     if (options.json) {
@@ -166,7 +181,7 @@ export function runIsoAuditConclude(
       console.log(formatAuditPlan(plan));
       console.log("");
       console.log(
-        `署名は orgos iso audit sign --plan ${plan.plan_id} --operator-id <承認者> で行います。`,
+        `署名は orgos iso audit sign --plan ${plan.plan_id} --operator-id <承認者> で行います。`
       );
     }
   } catch (e) {
@@ -175,7 +190,7 @@ export function runIsoAuditConclude(
 }
 
 export function runIsoAuditEligibility(
-  options: IsoAuditPlanCliOptions & { iso?: string; auditor?: string; scope?: string },
+  options: IsoAuditPlanCliOptions & { iso?: string; auditor?: string; scope?: string }
 ): void {
   if (options.tenant) setTenantId(options.tenant);
   if (!options.iso) fail("--iso が必要です。");
@@ -184,7 +199,10 @@ export function runIsoAuditEligibility(
   const result = assessAuditorEligibility(
     options.auditor,
     options.iso,
-    options.scope?.split(",").map((s) => s.trim()).filter(Boolean) ?? [],
+    options.scope
+      ?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean) ?? []
   );
   if (options.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -198,11 +216,19 @@ export function runIsoAuditEligibility(
 }
 
 export function runIsoAuditProgramme(
-  options: IsoAuditPlanCliOptions & { iso?: string; framework?: string; months?: string; strict?: boolean },
+  options: IsoAuditPlanCliOptions & {
+    iso?: string;
+    framework?: string;
+    months?: string;
+    strict?: boolean;
+  }
 ): void {
   if (options.tenant) setTenantId(options.tenant);
-  const standard =
-    options.framework === "financial" || options.framework === "jsox" ? options.framework : options.iso;
+  const framework = resolveAuditFramework(
+    options.iso ?? "",
+    options.framework as "iso" | "financial" | "jsox" | undefined
+  );
+  const standard = framework === "iso" ? options.iso : framework;
   if (!standard) fail("--iso または --framework financial|jsox が必要です。");
 
   const months = Number(options.months ?? "12");
@@ -217,7 +243,7 @@ export function runIsoAuditProgramme(
     console.log("");
     console.log(
       `**要求事項:** ${coverage.rows.length} 件 · **期間内に監査された:** ` +
-        `${coverage.rows.length - coverage.never_audited.length} 件`,
+        `${coverage.rows.length - coverage.never_audited.length} 件`
     );
     if (coverage.never_audited.length > 0) {
       console.log("");
@@ -230,12 +256,13 @@ export function runIsoAuditProgramme(
 }
 
 export function runIsoAuditApplyPrecheck(
-  options: IsoAuditPlanCliOptions & { plan?: string; operatorId?: string },
+  options: IsoAuditPlanCliOptions & { plan?: string; operatorId?: string }
 ): void {
   if (options.tenant) setTenantId(options.tenant);
   if (!options.plan) fail("--plan が必要です。");
   try {
-    const recordedBy = options.operatorId ?? findAuditPlan(options.plan)?.auditor_operator_id ?? "unknown";
+    const recordedBy =
+      options.operatorId ?? findAuditPlan(options.plan)?.auditor_operator_id ?? "unknown";
     const proposals = applyPrecheckFindings(options.plan, recordedBy);
     const applied = proposals.filter((p) => !p.skipped);
     const residual = proposals.filter((p) => p.skipped);
@@ -243,7 +270,9 @@ export function runIsoAuditApplyPrecheck(
       console.log(JSON.stringify({ applied, residual }, null, 2));
       return;
     }
-    console.log(`事前検査を適用しました: 提案 ${applied.length} 件 · 人間残件 ${residual.length} 件`);
+    console.log(
+      `事前検査を適用しました: 提案 ${applied.length} 件 · 人間残件 ${residual.length} 件`
+    );
     for (const p of applied) console.log(`- ${p.requirement_id}: ${p.verdict} · ${p.sample}`);
     if (residual.length > 0) {
       console.log("人間が書く所見:");
@@ -255,7 +284,7 @@ export function runIsoAuditApplyPrecheck(
 }
 
 export function runIsoAuditBrief(
-  options: IsoAuditPlanCliOptions & { plan?: string; req?: string },
+  options: IsoAuditPlanCliOptions & { plan?: string; req?: string }
 ): void {
   if (options.tenant) setTenantId(options.tenant);
   if (!options.plan) fail("--plan が必要です。");
@@ -268,9 +297,7 @@ export function runIsoAuditBrief(
   }
 }
 
-export function runIsoAuditFollowUp(
-  options: IsoAuditPlanCliOptions & { plan?: string },
-): void {
+export function runIsoAuditFollowUp(options: IsoAuditPlanCliOptions & { plan?: string }): void {
   if (options.tenant) setTenantId(options.tenant);
   if (!options.plan) fail("--plan が必要です。");
   try {
@@ -283,4 +310,3 @@ export function runIsoAuditFollowUp(
     fail(e instanceof Error ? e.message : String(e));
   }
 }
-
