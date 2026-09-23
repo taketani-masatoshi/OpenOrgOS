@@ -10,7 +10,6 @@ import {
   upsertSchedulingCase,
   findSchedulingCase,
 } from "../src/lib/scheduling-coordination/store.js";
-import { proposeExecutiveSlots } from "../src/lib/scheduling-coordination/slots.js";
 import { applyNextAction } from "../src/lib/scheduling-coordination/next-action.js";
 import { parseScheduleReplyText } from "../src/lib/scheduling-coordination/reply-parse.js";
 import { interpretScheduleReply } from "../src/lib/scheduling-coordination/reply-interpret.js";

@@ -1,7 +1,8 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { currentDate } from "../utils.js";
 import { resolveNextAction } from "./judgment-context.js";
-import { proposeExecutiveSlots, type SlotTimePreference } from "./slots.js";
+import type { SlotTimePreference } from "./slots.js";
+import { proposeExecutiveSlotsFromWorkspace } from "./slots-workspace.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { schedulingCaseLooksLikeMeal } from "./meal-cost.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
@@ -35,7 +36,7 @@ export function proposeSlotsOntoSchedulingCase(
 
   const refreshDrafts = opts?.refreshDrafts ?? caseRow.proposed_slots.length > 0;
 
-  const slots = proposeExecutiveSlots({
+  const slots = proposeExecutiveSlotsFromWorkspace({
     from: opts?.from ?? caseRow.search_from ?? currentDate(),
     to: opts?.to ?? caseRow.search_to,
     count: opts?.count ?? 3,

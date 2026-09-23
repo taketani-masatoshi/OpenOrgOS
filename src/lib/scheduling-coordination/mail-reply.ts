@@ -5,7 +5,7 @@ import { findTriageEntry, upsertTriageEntry } from "../correspondence/mail-triag
 import { writeInboundHandoffDraft } from "../correspondence/mail-handoff.js";
 import { loadSchedulingJudgmentContext } from "./judgment-context.js";
 import { planScheduleReply } from "./reply-plan.js";
-import { proposeExecutiveSlots } from "./slots.js";
+import { proposeExecutiveSlotsFromWorkspace } from "./slots-workspace.js";
 import {
   findSchedulingCase,
   nextSlotId,
@@ -42,7 +42,7 @@ export async function applyScheduleReplyToCase(opts: {
     body: opts.body,
     now,
     nextSlotId,
-    proposeSlots: proposeExecutiveSlots,
+    proposeSlots: proposeExecutiveSlotsFromWorkspace,
     ctx: loadSchedulingJudgmentContext(caseRow),
   });
 

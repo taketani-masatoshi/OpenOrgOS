@@ -112,6 +112,7 @@ venues:
       to: "2026-07-17",
       count: 3,
       timePreference: "evening",
+      events: [],
     });
     expect(slots).toHaveLength(3);
     for (const slot of slots) {

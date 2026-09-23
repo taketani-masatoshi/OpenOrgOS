@@ -106,16 +106,16 @@ orgos validate --tenant <id>
 
 **Path:** `src/lib/scheduling-coordination/`  
 **CLI:** `src/commands/scheduling-coordination.ts` · 表示は `scheduling-coordination-render.ts`（純粋）  
-**境界テスト:** `tests/scheduling-architecture.test.ts`（R1–R5 · 許可リスト空が天井）
+**境界テスト:** `tests/scheduling-architecture.test.ts`（R1–R6 · 許可リスト空が天井）
 
 ### 層
 
 ```
 入口: cli.ts / steward-chat / operator-console / wire-console / tests/setup-tenant
   → bootstrap/registerDomainAdapters()（idempotent · fail-closed）
-殻: case-command · mail-reply · workflow · delegated-send · calendar-write · correspondence-adapter
+殻: case-command · mail-reply · workflow · delegated-send · calendar-write · correspondence-adapter · slots-workspace
   → 核: next-action · transitions · reply-plan · reply-parse · slots · ceo-choice · draft-tag · venue-gate
-殻 → store / correspondence（送信・下書き）/ venue-booking
+殻 → store / correspondence（送信・下書き）/ venue-booking / data（カレンダー）
 ```
 
 correspondence は `domain-adapters` 登録口だけを知る。日程調整は correspondence を呼べるが、逆向きの静的 import はない（ADR 0078）。
@@ -124,8 +124,8 @@ correspondence は `domain-adapters` 登録口だけを知る。日程調整は 
 
 | 層 | 規則 |
 |----|------|
-| **核** | ファイル I/O・`node:fs`・`./store`・他ドメイン直 import・裸の `new Date()` なし。会場予約事実は `SchedulingJudgmentContext` 経由 |
-| **殻** | `resolveNextAction` / `mutateSchedulingCase` / `planScheduleReply` の実行と副作用。`now` は入口で注入 |
+| **核** | ファイル I/O・`node:fs`・`./store`・`../data`・`../utils`・他ドメイン直 import・裸の `new Date()` なし。会場予約事実は `SchedulingJudgmentContext` 経由。スロット提案のカレンダーは引数注入 |
+| **殻** | `resolveNextAction` / `mutateSchedulingCase` / `planScheduleReply` / `proposeExecutiveSlotsFromWorkspace` の実行と副作用。`now` は入口で注入 |
 
 ### アダプタのフック
 
@@ -142,8 +142,9 @@ correspondence は `domain-adapters` 登録口だけを知る。日程調整は 
 | R1 | correspondence → scheduling-coordination import = 0 |
 | R2 | scheduling / correspondence→scheduling の動的 import = 0 |
 | R3 | 再公開のみのファサード = 0 |
-| R4 | 核モジュールの I/O・`new Date()` 違反は許可リストのみ（縮退） |
+| R4 | 核モジュールの I/O・`../data`・`../utils`・`new Date()` 違反は許可リストのみ（縮退） |
 | R5 | 入口が `registerDomainAdapters()` を呼ぶ |
+| R6 | `scheduling-case:` タグ正規表現は `draft-tag.ts` のみ |
 
 ### 役割（抜粋）
 

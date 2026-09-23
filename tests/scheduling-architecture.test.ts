@@ -172,7 +172,7 @@ describe("scheduling architecture ratchet", () => {
     expectExactAllowlist(hits, ALLOW_R3_REEXPORT_FACADES, "R3");
   });
 
-  it("R4: core modules must not import store/fs/cross-domain I/O or use new Date() (allowlisted until pure-core)", () => {
+  it("R4: core modules must not import store/fs/cross-domain I/O, workspace clock/data, or use new Date()", () => {
     const hits: string[] = [];
     for (const name of CORE_MODULES) {
       const file = join(SCHEDULING_DIR, name);
@@ -203,6 +203,12 @@ describe("scheduling architecture ratchet", () => {
         if (spec.includes("../secretary/")) {
           hits.push(`${pathRel}:../secretary/`);
         }
+        if (spec.includes("../data")) {
+          hits.push(`${pathRel}:../data`);
+        }
+        if (spec.includes("../utils")) {
+          hits.push(`${pathRel}:../utils`);
+        }
       }
       if (NEW_DATE.test(source)) {
         hits.push(`${pathRel}:new Date()`);
@@ -210,6 +216,24 @@ describe("scheduling architecture ratchet", () => {
       NEW_DATE.lastIndex = 0;
     }
     expectExactAllowlist(hits, ALLOW_R4_CORE_IO, "R4");
+  });
+
+  it("R6: scheduling-case tag regex lives only in draft-tag.ts", () => {
+    const tagRegex = /\\bscheduling-case:\(SCH-/;
+    const hits: string[] = [];
+    for (const file of [
+      ...walkTsFiles(SCHEDULING_DIR),
+      ...walkTsFiles(join(ROOT, "lib", "steward-chat")),
+      ...walkTsFiles(CORRESPONDENCE_DIR),
+    ]) {
+      const pathRel = rel(file);
+      if (pathRel.endsWith("/draft-tag.ts")) continue;
+      const source = readFileSync(file, "utf-8");
+      if (tagRegex.test(source)) {
+        hits.push(pathRel);
+      }
+    }
+    expectExactAllowlist(hits, [], "R6");
   });
 
   it("R5: entrypoints must call registerDomainAdapters() (allowlisted until invert-deps)", () => {

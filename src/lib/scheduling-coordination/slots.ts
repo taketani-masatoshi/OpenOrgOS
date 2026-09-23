@@ -1,7 +1,5 @@
 import type { CalendarEvent } from "../../../schemas/executive.js";
 import type { SchedulingProposedSlot } from "../../../schemas/executive/scheduling-cases.js";
-import { loadExecutiveCalendar } from "../data.js";
-import { currentDate } from "../utils.js";
 import {
   detectCalendarConflicts,
   filterEventsInRange,
@@ -16,13 +14,16 @@ const EVENING_SLOT_HOURS = [18, 19, 20];
 export type SlotTimePreference = "business_hours" | "evening";
 
 export interface ProposeSlotsOptions {
-  from?: string;
+  /** Inclusive start date (YYYY-MM-DD). Caller injects clock — no currentDate() here. */
+  from: string;
   to?: string;
   count?: number;
   durationMinutes?: number;
   existingSlots?: SchedulingProposedSlot[];
   /** Default business_hours; meal / in_person celebration → evening */
   timePreference?: SlotTimePreference;
+  /** Calendar events for overlap checks. Empty = ignore calendar. */
+  events?: CalendarEvent[];
 }
 
 /** Pure id allocator — kept out of store so core slot logic stays free of I/O imports. */
@@ -61,21 +62,19 @@ function isWeekday(isoDate: string): boolean {
   return day >= 1 && day <= 5;
 }
 
-export function proposeExecutiveSlots(opts: ProposeSlotsOptions = {}): SchedulingProposedSlot[] {
-  const from = opts.from ?? currentDate();
+/**
+ * Pure slot proposal — calendar events and the search start date must be injected.
+ * Shell: `proposeExecutiveSlotsFromWorkspace` in slots-workspace.ts.
+ */
+export function proposeExecutiveSlots(opts: ProposeSlotsOptions): SchedulingProposedSlot[] {
+  const from = opts.from;
   const to = opts.to ?? addCalendarDays(from, 14);
   const count = opts.count ?? 3;
   const durationMinutes = opts.durationMinutes ?? 60;
   const existing = opts.existingSlots ?? [];
   const hours =
     opts.timePreference === "evening" ? EVENING_SLOT_HOURS : DEFAULT_SLOT_HOURS;
-
-  let events: CalendarEvent[] = [];
-  try {
-    events = loadExecutiveCalendar().events;
-  } catch {
-    events = [];
-  }
+  const events = opts.events ?? [];
 
   const rangeEvents = filterEventsInRange(events, from, to);
   const conflicts = detectCalendarConflicts(rangeEvents);
