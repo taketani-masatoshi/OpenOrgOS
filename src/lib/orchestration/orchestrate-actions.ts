@@ -12,7 +12,7 @@ import {
   retryableFailedWorkOrders,
   syncDependencyStatuses,
 } from "./plan-graph.js";
-import { enrichHandoffDisplayFields, resolveWorkOrderTitle } from "./board-view.js";
+import { enrichHandoffDisplayFields, isCancellableWorkOrder, resolveWorkOrderTitle } from "./board-view.js";
 import {
   completeWorkOrderViaState,
   getWorkOrderDispatch,
@@ -43,7 +43,7 @@ export function cancelPendingWorkOrders(id: string): string[] {
   const cancelled: string[] = [];
 
   for (const node of graph.nodes.values()) {
-    if (node.status !== "pending" && node.status !== "waiting") continue;
+    if (!isCancellableWorkOrder(node)) continue;
     transitionWorkOrder(node.id, "blocked", {
       error: WORK_ORDER_CANCEL_BLOCK_REASON,
       skipQueueEvent: true,
@@ -110,7 +110,7 @@ function resolveAiaRunForNode(
   );
 }
 
-function formatAiaState(run?: AiaRunRecord): string {
+function formatAiaState(run?: Pick<AiaRunRecord, "state" | "fail_reason">): string {
   if (!run) return "—";
   const reason = run.fail_reason ? ` · ${run.fail_reason.slice(0, 28)}` : "";
   return `${run.state}${reason}`;
@@ -170,9 +170,7 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
   const ready = readyWorkOrders(graph);
   const blocked = blockedByFailure(graph);
   const retryable = retryableFailedWorkOrders(graph);
-  const cancellableCount = [...graph.nodes.values()].filter(
-    (node) => node.status === "pending" || node.status === "waiting",
-  ).length;
+  const cancellableCount = [...graph.nodes.values()].filter(isCancellableWorkOrder).length;
   const aiaConfig = loadAiaRuntimeConfig();
   const aiaMetrics = getSharedAiaScheduler().metrics();
   const aiaLookup = buildAiaRunLookup(loadAiaQueueFile().runs);
@@ -208,7 +206,7 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
           dispatch,
           wave: index + 1,
           retryable: retryableIds.has(node.id),
-          cancellable: node.status === "pending" || node.status === "waiting",
+          cancellable: isCancellableWorkOrder(node),
           aia: aiaRun
             ? {
                 run_id: aiaRun.run_id,
@@ -289,10 +287,9 @@ export function formatOrchestrationStatus(id: string): string {
   for (const node of payload.nodes) {
     const aiaLabel = node.aia
       ? formatAiaState({
-          run_id: node.aia.run_id,
           state: node.aia.state,
           fail_reason: node.aia.fail_reason,
-        } as AiaRunRecord)
+        })
       : "—";
     lines.push(
       `| ${node.wave} | ${node.id} | ${node.agent} | ${node.status} | ${node.depends_on.join(", ") || "—"} | ${node.dispatch.attempts}/${node.dispatch.max_attempts} | ${node.dispatch.trace_id ?? "—"} | ${aiaLabel} |`,

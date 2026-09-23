@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadAgentCapabilityManifest } from "./agent-capability.js";
 import { loadAgentCatalog, resolveAgentId } from "./agent-catalog.js";
+import { agentDefinitionRelPath } from "./agents/definition.js";
 import { validateTenantAgentRoster } from "./agent-roster.js";
 import { loadChainPolicy } from "./agent-reporting.js";
 import { loadRoutingRegistry } from "./routing.js";
@@ -24,7 +25,7 @@ export function validateAgentAlignment(): AgentAlignmentIssue[] {
   const routeById = new Map(routes.map((route) => [route.id, route]));
 
   for (const agent of Object.values(catalog.agents)) {
-    const definitionPath = join(ROOT_DIR, agent.path);
+    const definitionPath = join(ROOT_DIR, agentDefinitionRelPath(agent.id));
     if (!existsSync(definitionPath)) {
       issues.push({ source: "definition", message: `${agent.id}: missing ${agent.path}` });
       continue;

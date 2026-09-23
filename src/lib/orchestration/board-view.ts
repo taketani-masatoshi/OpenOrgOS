@@ -21,6 +21,12 @@ export const BOARD_COLUMNS: BoardColumn[] = [
   "done",
 ];
 
+export function isCancellableWorkOrder(
+  node: Pick<Handoff, "status">,
+): boolean {
+  return node.status === "pending" || node.status === "waiting";
+}
+
 export function statusToBoardColumn(status: HandoffStatus | string): BoardColumn {
   switch (status) {
     case "pending":
@@ -84,6 +90,15 @@ export interface BoardPlanCounts {
   running: number;
 }
 
+export function countBoardCards(cards: BoardCard[]): BoardPlanCounts {
+  return {
+    total: cards.length,
+    done: cards.filter((c) => c.closed).length,
+    attention: cards.filter((c) => c.column === "attention" && !c.closed).length,
+    running: cards.filter((c) => c.column === "active").length,
+  };
+}
+
 export interface BoardPlanSummary {
   id: string;
   title: string;
@@ -104,17 +119,18 @@ function buildCardFromNode(
   retryableIds: Set<string>,
 ): BoardCard {
   const dispatch = getWorkOrderDispatch(node);
+  const display = enrichHandoffDisplayFields(node);
   return {
     id: node.id,
     rootId,
-    title: resolveWorkOrderTitle(node),
-    column: statusToBoardColumn(node.status),
+    title: display.title,
+    column: display.column,
     status: node.status,
     agent: node.to_agent,
-    work_kind: node.work_kind ?? null,
-    due_date: node.due_date,
-    assignee: node.assignee_operator_id ?? node.assignee_employee_id,
-    blocked_on: node.blocked_on,
+    work_kind: display.work_kind,
+    due_date: display.due_date,
+    assignee: display.assignee,
+    blocked_on: display.blocked_on,
     depends_on: node.depends_on.map((depId) => {
       const dep = graph.nodes.get(depId);
       return {
@@ -124,7 +140,7 @@ function buildCardFromNode(
     }),
     wave: waveIndex + 1,
     retryable: retryableIds.has(node.id),
-    cancellable: node.status === "pending" || node.status === "waiting",
+    cancellable: isCancellableWorkOrder(node),
     closed: isClosedWorkOrder(node),
     finished_at: dispatch.finished_at,
   };
@@ -152,12 +168,7 @@ export function buildBoardPlanSummary(rootId: string): BoardPlanSummary {
     cards.push(buildCardFromNode(root, rootId, graph, 0, retryableIds));
   }
 
-  const counts: BoardPlanCounts = {
-    total: cards.length,
-    done: cards.filter((c) => c.closed).length,
-    attention: cards.filter((c) => c.column === "attention" && !c.closed).length,
-    running: cards.filter((c) => c.column === "active").length,
-  };
+  const counts: BoardPlanCounts = countBoardCards(cards);
 
   const openCards = cards.filter((c) => !c.closed);
   const status: "active" | "completed" =
@@ -222,12 +233,7 @@ function filterPlanCards(plan: BoardPlanSummary, options: BoardListOptions): Boa
   return {
     ...plan,
     status: openCards.length === 0 && cards.length > 0 ? "completed" : "active",
-    counts: {
-      total: cards.length,
-      done: cards.filter((c) => c.closed).length,
-      attention: cards.filter((c) => c.column === "attention" && !c.closed).length,
-      running: cards.filter((c) => c.column === "active").length,
-    },
+    counts: countBoardCards(cards),
     cards,
   };
 }

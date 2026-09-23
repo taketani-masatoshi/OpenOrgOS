@@ -27,6 +27,17 @@ export type AgentRosterProfile = keyof TenantAgentRoster["profiles"];
 
 export { AGENT_ROSTER_REL_PATH, LEGACY_AGENTS_ENABLED_REL_PATH };
 
+/**
+ * Run `fn` for each roster-managed tenant with that tenant set active.
+ * Leaves the last tenant active after the loop (same as prior for-loops).
+ */
+export function forEachRosterManagedTenant(fn: (tenantId: string) => void): void {
+  for (const tenantId of listRosterManagedTenants()) {
+    setTenantId(tenantId);
+    fn(tenantId);
+  }
+}
+
 function emptyRoster(): TenantAgentRoster {
   return tenantAgentRosterSchema.parse({
     version: 1,
@@ -75,16 +86,6 @@ export function initializeTenantAgentRoster(force = false): TenantAgentRoster {
   const current = loadTenantAgentRoster();
   if (current.exists && !force) return current.roster;
   const roster = syncRosterWithModules(buildDefaultTenantRoster());
-  writeTenantAgentRoster(roster);
-  return roster;
-}
-
-export function bootstrapTenantAgentRosterForCurrentTenant(force = false): TenantAgentRoster {
-  const current = loadTenantAgentRoster();
-  if (current.source === "agents.yaml" && !force) return current.roster;
-  const roster = syncRosterWithModules(buildDefaultTenantRoster());
-  const issues = validateTenantAgentRoster(roster);
-  if (issues.length) throw new Error(issues.join("; "));
   writeTenantAgentRoster(roster);
   return roster;
 }
@@ -296,10 +297,9 @@ export function repairCoreOperationalAgentGaps(opts?: { dryRun?: boolean }): Arr
   added: string[];
 }> {
   const results: Array<{ tenantId: string; added: string[] }> = [];
-  for (const tenantId of listRosterManagedTenants()) {
-    setTenantId(tenantId);
+  forEachRosterManagedTenant((tenantId) => {
     const loaded = loadTenantAgentRoster();
-    if (!loaded.exists) continue;
+    if (!loaded.exists) return;
     const operational = new Set(loaded.roster.profiles.operational);
     const added: string[] = [];
     for (const id of DEFAULT_CORE_OPERATIONAL_AGENTS) {
@@ -319,7 +319,7 @@ export function repairCoreOperationalAgentGaps(opts?: { dryRun?: boolean }): Arr
       writeTenantAgentRoster(next);
     }
     results.push({ tenantId, added });
-  }
+  });
   return results;
 }
 
@@ -327,12 +327,11 @@ export function bootstrapAllTenantAgentRosters(
   opts: { force?: boolean } = {}
 ): BootstrapTenantRosterResult[] {
   const results: BootstrapTenantRosterResult[] = [];
-  for (const tenantId of listRosterManagedTenants()) {
-    setTenantId(tenantId);
+  forEachRosterManagedTenant((tenantId) => {
     try {
       if (existsSync(agentRosterPath()) && !opts.force) {
         results.push({ tenantId, action: "skipped", detail: "agents.yaml exists" });
-        continue;
+        return;
       }
       const roster = syncRosterWithModules(buildDefaultTenantRoster());
       const issues = validateTenantAgentRoster(roster);
@@ -350,7 +349,7 @@ export function bootstrapAllTenantAgentRosters(
         detail: error instanceof Error ? error.message : String(error),
       });
     }
-  }
+  });
   return results;
 }
 

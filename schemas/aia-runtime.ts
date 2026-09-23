@@ -77,3 +77,25 @@ export const aiaRunRecordSchema = z.object({
 export type AiaRuntimeFile = z.output<typeof aiaRuntimeFileSchema>;
 export type AiaRunState = z.output<typeof aiaRunStateSchema>;
 export type AiaRunRecord = z.output<typeof aiaRunRecordSchema>;
+
+/** States that count toward max_concurrent_aia. */
+export const ACTIVE_RUN_STATES = ["admitted", "running", "merging"] as const satisfies readonly AiaRunState[];
+
+export type AiaActiveRunState = (typeof ACTIVE_RUN_STATES)[number];
+
+export function isActiveAiaRunState(state: AiaRunState): state is AiaActiveRunState {
+  return (ACTIVE_RUN_STATES as readonly string[]).includes(state);
+}
+
+export const aiaQueueFileSchema = z.object({
+  schema: z.literal("orgos.aia.queue.v1"),
+  runs: z.array(aiaRunRecordSchema).default([]),
+  queue_order: z.array(z.string()).default([]),
+});
+
+export type AiaQueueFile = z.output<typeof aiaQueueFileSchema>;
+
+/** Repo-relative workspace path for an AIA run (write side stays in scheduler). */
+export function aiaRunWorkspaceRelPath(runId: string): string {
+  return `data/scratch/aia-runs/${runId}`;
+}

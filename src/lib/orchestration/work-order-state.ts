@@ -7,6 +7,7 @@ import {
 } from "../../../schemas/routing.js";
 import type { QueueEventType } from "../../../schemas/queue.js";
 import { appendAuditEvent } from "../audit-log.js";
+import { utcDateCompact } from "../agents/utc-date.js";
 import { pushQueueEvent } from "../queue-db.js";
 import { loadHandoff, writeHandoffFiles } from "../routing.js";
 import { relayWorkOrderComplete } from "../agent-reporting.js";
@@ -155,7 +156,7 @@ export function reopenWorkOrderViaState(id: string): Handoff {
 }
 
 export function newOrchestrationTraceId(): string {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const date = utcDateCompact();
   const suffix = Math.random().toString(36).slice(2, 8);
   return `TRC-${date}-${suffix}`;
 }

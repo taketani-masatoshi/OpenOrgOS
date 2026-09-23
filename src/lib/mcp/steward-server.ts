@@ -7,7 +7,8 @@ import { mcpOperatorUser } from "../steward-chat/wire-witness.js";
 import { auditMcpToolCall } from "./audit.js";
 import { callStewardMcpTool, listStewardMcpTools } from "./tools.js";
 
-export function createStewardMcpServer(): Server {
+export function createStewardMcpServer(opts?: { token?: string }): Server {
+  const sessionToken = opts?.token;
   const server = new Server(
     { name: "orgos-steward", version: "0.8.0" },
     { capabilities: { tools: {} } }
@@ -19,13 +20,13 @@ export function createStewardMcpServer(): Server {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const args = (request.params.arguments ?? {}) as Record<string, unknown>;
-    const user = mcpOperatorUser();
+    const user = mcpOperatorUser(sessionToken);
     const tool = request.params.name;
 
     let output: { content: { type: "text"; text: string }[]; isError?: boolean } | undefined;
     const audited = await auditMcpToolCall(tool, args, user.operator_id, user.approver_id, async () => {
       try {
-        output = await callStewardMcpTool(tool, args);
+        output = await callStewardMcpTool(tool, args, { token: sessionToken });
         return { ok: !output.isError, error: output.isError ? output.content[0]?.text : undefined };
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

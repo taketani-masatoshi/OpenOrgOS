@@ -15,6 +15,9 @@ import {
 import { getTenantId, setTenantId } from "./tenant.js";
 import { resolveTenantPath } from "./utils.js";
 
+/** Catalog agents with `activation: tenant` should dominate; below this is a contract failure. */
+const MIN_TENANT_ACTIVATION_AGENT_COUNT = 40;
+
 function validateCurrentTenantActivation(): string[] {
   const issues: string[] = [];
   const tenantId = getTenantId();
@@ -71,7 +74,7 @@ export function validateAgentActivationContract(opts: { allTenants?: boolean } =
   issues.push(...validateAgentCatalog());
 
   const tenantAgents = listCatalogAgents().filter((agent) => agent.activation === "tenant").length;
-  if (tenantAgents < 40) {
+  if (tenantAgents < MIN_TENANT_ACTIVATION_AGENT_COUNT) {
     issues.push(`expected most agents to use activation: tenant (got ${tenantAgents})`);
   }
 

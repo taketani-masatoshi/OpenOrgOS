@@ -6,10 +6,11 @@ import {
   parseModuleMessageYaml,
 } from "../lib/module-messages/store.js";
 import { buildIntegrationTowerBriefLines } from "../lib/dispatch-tower/inventory.js";
+import { utcDateCompact } from "../lib/agents/utc-date.js";
 import type { ModuleMessage } from "../../schemas/module-message.js";
 
 function newMessageId(): string {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const date = utcDateCompact();
   const suffix = randomBytes(4).toString("hex");
   return `MSG-${date}-${suffix}`;
 }

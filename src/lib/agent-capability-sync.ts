@@ -11,15 +11,11 @@ import {
   type AgentCapabilityEntry,
   type AgentCapabilityManifest,
 } from "../../schemas/agent-capability.js";
-import { AGENT_CAPABILITY_MANIFEST_PATH } from "./agent-capability.js";
+import { AGENT_CAPABILITY_MANIFEST_PATH, agentSummarySlug } from "./agent-capability.js";
 import { listCatalogAgents, loadAgentCatalog } from "./agent-catalog.js";
 import { loadRoutingRegistry } from "./routing.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { readYamlFile } from "./utils.js";
-
-function slugFromId(id: string): string {
-  return id.replace(/_/g, "-");
-}
 
 function loadSeedManifest(): Map<AgentId, AgentCapabilityEntry> {
   try {
@@ -58,7 +54,7 @@ export function buildCapabilityManifest(): AgentCapabilityManifest {
     if (agent.class === "advisor") {
       agents.push({
         id: agent.id,
-        summary_slug: capBlock?.summary_slug ?? existing?.summary_slug ?? slugFromId(agent.id),
+        summary_slug: capBlock?.summary_slug ?? existing?.summary_slug ?? agentSummarySlug(agent.id),
         data_paths: [],
         docs_paths: capBlock?.docs_paths ?? existing?.docs_paths ?? agent.access.read.filter((p) => p.startsWith("docs/")),
         route_ids: [],
@@ -77,7 +73,7 @@ export function buildCapabilityManifest(): AgentCapabilityManifest {
 
     agents.push({
       id: agent.id,
-      summary_slug: capBlock?.summary_slug ?? existing?.summary_slug ?? slugFromId(agent.id),
+      summary_slug: capBlock?.summary_slug ?? existing?.summary_slug ?? agentSummarySlug(agent.id),
       data_paths: dataPaths,
       docs_paths: docsPaths,
       route_ids: routeIds,

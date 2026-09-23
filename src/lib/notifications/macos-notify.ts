@@ -4,8 +4,18 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
+const NOTIFY_DEFAULT_MAX_LEN = 180;
+const NOTIFY_UPDATED_AT_MAX_LEN = 40;
+const NOTIFY_SUMMARY_MAX_LEN = 120;
+const NOTIFY_TITLE_MAX_LEN = 48;
+const NOTIFY_BODY_MAX_LEN = 160;
+const NOTIFY_SUBTITLE_MAX_LEN = 80;
+const NOTIFY_SOUND_MAX_LEN = 32;
+const TERMINAL_NOTIFIER_TIMEOUT_MS = 8000;
+const OSASCRIPT_TIMEOUT_MS = 5000;
+
 /** AppleScript / shell 安全化 — 制御文字除去 · 長さ制限 */
-export function escapeAppleScriptString(value: string, maxLen = 180): string {
+export function escapeAppleScriptString(value: string, maxLen = NOTIFY_DEFAULT_MAX_LEN): string {
   return value
     .replace(/[\u0000-\u001f\u007f]/g, " ")
     .replace(/\\/g, "\\\\")
@@ -16,7 +26,7 @@ export function escapeAppleScriptString(value: string, maxLen = 180): string {
 }
 
 /** 表示用に中黒・全角括弧を避け、通知バナーが崩れない文字列にする */
-export function sanitizeNotificationText(value: string, maxLen = 180): string {
+export function sanitizeNotificationText(value: string, maxLen = NOTIFY_DEFAULT_MAX_LEN): string {
   return value
     .replace(/[·•]/g, " - ")
     .replace(/[（）]/g, (ch) => (ch === "（" ? "(" : ")"))
@@ -69,8 +79,8 @@ export function buildTodayDigestNotification(opts: {
   return {
     kind: "today",
     title: "MAL Today",
-    subtitle: `${slotLabel} - 更新 ${sanitizeNotificationText(updatedAt, 40)}`,
-    body: sanitizeNotificationText(opts.summary, 120),
+    subtitle: `${slotLabel} - 更新 ${sanitizeNotificationText(updatedAt, NOTIFY_UPDATED_AT_MAX_LEN)}`,
+    body: sanitizeNotificationText(opts.summary, NOTIFY_SUMMARY_MAX_LEN),
     sound: "Glass",
   };
 }
@@ -96,10 +106,10 @@ export async function displayMacOSNotification(
   if (process.env.ORGOS_SKIP_MACOS_NOTIFY === "1") return false;
   if (process.platform !== "darwin") return false;
 
-  const title = sanitizeNotificationText(input.title, 48);
-  const body = sanitizeNotificationText(input.body, 160);
+  const title = sanitizeNotificationText(input.title, NOTIFY_TITLE_MAX_LEN);
+  const body = sanitizeNotificationText(input.body, NOTIFY_BODY_MAX_LEN);
   const subtitle = input.subtitle
-    ? sanitizeNotificationText(input.subtitle, 80)
+    ? sanitizeNotificationText(input.subtitle, NOTIFY_SUBTITLE_MAX_LEN)
     : undefined;
   const sound = input.sound ?? "Glass";
 
@@ -126,7 +136,7 @@ export async function displayMacOSNotification(
       args.push("-group", "orgos-today-digest");
     }
     try {
-      await execFileAsync(tn, args, { timeout: 8000 });
+      await execFileAsync(tn, args, { timeout: TERMINAL_NOTIFIER_TIMEOUT_MS });
       return true;
     } catch {
       // fall through to osascript
@@ -134,11 +144,11 @@ export async function displayMacOSNotification(
   }
 
   const script = subtitle
-    ? `display notification "${escapeAppleScriptString(body)}" with title "${escapeAppleScriptString(title, 48)}" subtitle "${escapeAppleScriptString(subtitle, 80)}" sound name "${escapeAppleScriptString(sound, 32)}"`
-    : `display notification "${escapeAppleScriptString(body)}" with title "${escapeAppleScriptString(title, 48)}" sound name "${escapeAppleScriptString(sound, 32)}"`;
+    ? `display notification "${escapeAppleScriptString(body)}" with title "${escapeAppleScriptString(title, NOTIFY_TITLE_MAX_LEN)}" subtitle "${escapeAppleScriptString(subtitle, NOTIFY_SUBTITLE_MAX_LEN)}" sound name "${escapeAppleScriptString(sound, NOTIFY_SOUND_MAX_LEN)}"`
+    : `display notification "${escapeAppleScriptString(body)}" with title "${escapeAppleScriptString(title, NOTIFY_TITLE_MAX_LEN)}" sound name "${escapeAppleScriptString(sound, NOTIFY_SOUND_MAX_LEN)}"`;
 
   try {
-    await execFileAsync("/usr/bin/osascript", ["-e", script], { timeout: 5000 });
+    await execFileAsync("/usr/bin/osascript", ["-e", script], { timeout: OSASCRIPT_TIMEOUT_MS });
     return true;
   } catch {
     return false;

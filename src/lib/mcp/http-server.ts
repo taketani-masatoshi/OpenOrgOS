@@ -71,7 +71,7 @@ export async function startStewardMcpHttpServer(
 
       if (pathname === "/mcp/sse" && req.method === "GET") {
         const transport = new SSEServerTransport("/mcp/message", res);
-        const mcp = createStewardMcpServer();
+        const mcp = createStewardMcpServer({ token: extractBearer(req) });
         transport.onclose = () => {
           transports.delete(transport.sessionId);
         };

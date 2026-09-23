@@ -9,7 +9,11 @@ import { findTriageEntry } from "../correspondence/mail-triage-queue.js";
 import { listWorkOrders } from "../escalate.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { getDocsDir } from "../utils.js";
-import { getTask, listTasks, upsertTask } from "./store.js";
+import { listTasks, upsertTask } from "./store.js";
+import {
+  triageIntakePriority,
+  workOrderTaskPriority,
+} from "./candidate-priority.js";
 
 export function intakeFromTriage(triageId: string): ExecutiveTask {
   const entry = findTriageEntry(triageId);
@@ -19,10 +23,7 @@ export function intakeFromTriage(triageId: string): ExecutiveTask {
   );
   if (existing) return existing;
 
-  const priority: TaskPriority =
-    entry.importance === "p0" || entry.importance === "p1"
-      ? entry.importance
-      : "p2";
+  const priority = triageIntakePriority(entry.importance);
 
   return upsertTask({
     title: entry.subject || `Mail ${triageId}`,
@@ -47,14 +48,7 @@ export function intakeFromWorkOrder(workOrderId: string): ExecutiveTask {
   );
   if (existing) return existing;
 
-  const priority: TaskPriority =
-    wo.priority === "P0"
-      ? "p0"
-      : wo.priority === "P1"
-        ? "p1"
-        : wo.priority === "P3"
-          ? "p3"
-          : "p2";
+  const priority = workOrderTaskPriority(wo.priority);
 
   return upsertTask({
     title: wo.subject || wo.context.text?.slice(0, 120) || workOrderId,
@@ -195,10 +189,4 @@ export function importP0Register(opts: {
     );
   }
   return { drafts, written, skipped };
-}
-
-export function requireTask(id: string): ExecutiveTask {
-  const task = getTask(id);
-  if (!task) throw new Error(`Executive task ${id} not found`);
-  return task;
 }

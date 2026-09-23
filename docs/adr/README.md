@@ -64,6 +64,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0075](0075-wire-demo-walkthrough.md) | Wire Demo Walkthrough（MAL ↔ Southwood 一本道） | Accepted |
 | [0076](0076-public-web-mal-usecase.md) | Public Web 実ユースケース訴求（oorgos.org） | Accepted |
 | [0077](0077-workflow-structure-discussion-gate.md) | Workflow 構成議論ゲート（evaluate · WFS · APR） | Accepted |
+| [0082](0082-agent-infra-module-boundaries.md) | Agent 基盤のモジュール境界（層 · facade · 既知循環） | Accepted |
 
 ## 新規 ADR
 

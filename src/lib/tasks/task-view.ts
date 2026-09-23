@@ -8,6 +8,10 @@ import { listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import { listWorkOrders } from "../escalate.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { listTasks } from "./store.js";
+import {
+  triageCandidatePriority,
+  workOrderTaskPriority,
+} from "./candidate-priority.js";
 
 export type TaskCandidateKind = "mail" | "work_order" | "approval";
 
@@ -38,15 +42,6 @@ const PRIORITY_RANK: Record<TaskPriority, number> = {
   p2: 2,
   p3: 3,
 };
-
-function mapHandoffPriority(
-  p: "P0" | "P1" | "P2" | "P3" | undefined,
-): TaskPriority {
-  if (p === "P0") return "p0";
-  if (p === "P1") return "p1";
-  if (p === "P3") return "p3";
-  return "p2";
-}
 
 function sortTasks(tasks: ExecutiveTask[]): ExecutiveTask[] {
   return [...tasks].sort((a, b) => {
@@ -82,12 +77,7 @@ export function buildTaskView(opts?: { includeClosed?: boolean }): TaskView {
     for (const entry of listTriageEntries({ unprocessed: true, limit: 40 })) {
       if (!entry.id || linkedTriage.has(entry.id)) continue;
       if (entry.disposition === "spam") continue;
-      const priority: TaskPriority =
-        entry.importance === "p0" || entry.importance === "p1"
-          ? entry.importance
-          : entry.urgency === "immediate" || entry.urgency === "today"
-            ? "p1"
-            : "p2";
+      const priority = triageCandidatePriority(entry.importance, entry.urgency);
       candidates.push({
         kind: "mail",
         id: entry.id,
@@ -104,7 +94,7 @@ export function buildTaskView(opts?: { includeClosed?: boolean }): TaskView {
   try {
     for (const wo of listWorkOrders("pending")) {
       if (!wo.id || linkedWo.has(wo.id)) continue;
-      const priority = mapHandoffPriority(wo.priority);
+      const priority = workOrderTaskPriority(wo.priority);
       candidates.push({
         kind: "work_order",
         id: wo.id,

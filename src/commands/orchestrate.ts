@@ -19,7 +19,7 @@ import {
   retryFailedWorkOrders,
 } from "../lib/orchestration/orchestrate-actions.js";
 import { parseDependsSpec, resolvePlanRoot } from "../lib/orchestration/plan-graph.js";
-import { proposeOrchestrationPlan } from "../lib/orchestration/llm-planner.js";
+import { proposeOrchestrationPlan } from "../lib/orchestration/plan-proposal.js";
 import { setTenantId } from "../lib/tenant.js";
 import { auditCliMutation, requireCliOperator } from "../lib/console-auth/cli-operator.js";
 

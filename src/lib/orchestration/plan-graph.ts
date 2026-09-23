@@ -1,9 +1,8 @@
 import type { Handoff, HandoffStatus } from "../../../schemas/routing.js";
 import { loadHandoff, loadHandoffChildren } from "../routing.js";
 import {
-  getWorkOrderDispatch,
+  isCancelledWorkOrder,
   transitionWorkOrder,
-  WORK_ORDER_CANCEL_BLOCK_REASON,
 } from "./work-order-state.js";
 
 export interface PlanGraph {
@@ -173,11 +172,6 @@ export function blockedByFailure(graph: PlanGraph): Handoff[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-function isCancelledBlock(node: Handoff): boolean {
-  const dispatch = getWorkOrderDispatch(node);
-  return dispatch.last_error === WORK_ORDER_CANCEL_BLOCK_REASON;
-}
-
 export function syncParentPlanStatus(graph: PlanGraph): Handoff | undefined {
   const root = graph.nodes.get(graph.rootId) ?? loadHandoff(graph.rootId);
   if (!root.child_ids?.length) return undefined;
@@ -227,7 +221,7 @@ export function syncDependencyStatuses(graph: PlanGraph): Handoff[] {
     if (
       node.status === "blocked" &&
       node.depends_on.length > 0 &&
-      !isCancelledBlock(node) &&
+      !isCancelledWorkOrder(node) &&
       dependenciesCompleted(graph, node) &&
       !dependenciesFailed(graph, node)
     ) {
@@ -263,6 +257,26 @@ export function syncDependencyStatuses(graph: PlanGraph): Handoff[] {
   if (parent) updated.push(parent);
 
   return updated;
+}
+
+/** Ready DAG nodes, or pending/dispatched fallback when the wave is empty. */
+export function resolveRunnableWorkOrders(id: string): Handoff[] {
+  const rootId = resolvePlanRoot(id);
+  const graph = buildPlanGraph(rootId);
+  syncDependencyStatuses(graph);
+  const ready = readyWorkOrders(graph);
+  if (ready.length > 0) return ready;
+
+  const root = loadHandoff(id);
+  const candidates = root.child_ids?.length
+    ? loadHandoffChildren(root)
+    : root.task_type === "implement" || root.id.startsWith("IMP-")
+      ? [root]
+      : null;
+  if (!candidates) {
+    throw new Error(`${id} is not an implement work order or parent`);
+  }
+  return candidates.filter((w) => w.status === "pending" || w.status === "dispatched");
 }
 
 export function parseDependsSpec(specs: string[]): Map<string, string[]> {

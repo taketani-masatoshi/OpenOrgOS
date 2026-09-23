@@ -7,7 +7,6 @@ import { getCatalogAgent } from "./agent-catalog.js";
 import {
   ackRelay,
   listMissions,
-  loadMission,
   type AgentMission,
 } from "./agent-reporting.js";
 import { listWorkOrders } from "./escalate.js";
@@ -245,11 +244,4 @@ export function ackAgentInboxItem(missionId: string, notes?: string): AgentInbox
   const updated = ackRelay({ missionId, role: "steward", notes });
   const woById = new Map(listWorkOrders("all").map((wo) => [wo.id, wo]));
   return toInboxItem(updated, woById);
-}
-
-/** Load a single mission as an inbox item (throws if missing). */
-export function getAgentInboxItem(missionId: string): AgentInboxItem {
-  const mission = loadMission(missionId);
-  const woById = new Map(listWorkOrders("all").map((wo) => [wo.id, wo]));
-  return toInboxItem(mission, woById);
 }

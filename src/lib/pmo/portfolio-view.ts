@@ -18,6 +18,55 @@ const EMPTY_RAG: Record<PmoRag, number> = {
   red: 0,
 };
 
+const NOTE_UNREGISTERED_DIR = "未登録: data/projects/ がありません。";
+const NOTE_UNREGISTERED_PORTFOLIO =
+  "未登録: data/projects/ にポートフォリオ YAML がありません。";
+
+function unregisteredPortfolioView(asOf: string): PmoPortfolioView {
+  return {
+    as_of: asOf,
+    source_path: PMO_PORTFOLIO_REL,
+    coverage: "unregistered",
+    total: 0,
+    by_status: { ...EMPTY_STATUS },
+    by_rag: { ...EMPTY_RAG },
+    overdue_milestones: 0,
+    open_risks: 0,
+    projects: [],
+    notes: [NOTE_UNREGISTERED_PORTFOLIO],
+  };
+}
+
+function unregisteredMilestonesView(asOf: string, horizon: number): PmoMilestonesView {
+  return {
+    as_of: asOf,
+    horizon_days: horizon,
+    coverage: "unregistered",
+    overdue: [],
+    upcoming: [],
+    notes: [NOTE_UNREGISTERED_DIR],
+  };
+}
+
+function unregisteredRisksView(asOf: string): PmoRisksView {
+  return {
+    as_of: asOf,
+    coverage: "unregistered",
+    open: [],
+    by_severity: { high: 0, medium: 0, low: 0 },
+    notes: [NOTE_UNREGISTERED_DIR],
+  };
+}
+
+function unregisteredShowView(asOf: string): PmoShowView {
+  return {
+    as_of: asOf,
+    coverage: "unregistered",
+    found: false,
+    notes: [NOTE_UNREGISTERED_DIR],
+  };
+}
+
 export interface PmoPortfolioRow {
   id: string;
   title: string;
@@ -100,18 +149,7 @@ export function buildPmoPortfolioView(opts?: { asOf?: string }): PmoPortfolioVie
   const asOf = opts?.asOf ?? currentDate();
   const notes: string[] = [];
   if (!pmoDirExists()) {
-    return {
-      as_of: asOf,
-      source_path: PMO_PORTFOLIO_REL,
-      coverage: "unregistered",
-      total: 0,
-      by_status: { ...EMPTY_STATUS },
-      by_rag: { ...EMPTY_RAG },
-      overdue_milestones: 0,
-      open_risks: 0,
-      projects: [],
-      notes: ["未登録: data/projects/ にポートフォリオ YAML がありません。"],
-    };
+    return unregisteredPortfolioView(asOf);
   }
 
   const loaded = loadPmoPortfolio();
@@ -163,14 +201,7 @@ export function buildPmoMilestonesView(opts?: { asOf?: string; days?: number }):
   const asOf = opts?.asOf ?? currentDate();
   const horizon = opts?.days ?? 14;
   if (!pmoDirExists()) {
-    return {
-      as_of: asOf,
-      horizon_days: horizon,
-      coverage: "unregistered",
-      overdue: [],
-      upcoming: [],
-      notes: ["未登録: data/projects/ がありません。"],
-    };
+    return unregisteredMilestonesView(asOf, horizon);
   }
 
   const loaded = loadPmoPortfolio();
@@ -209,13 +240,7 @@ export function buildPmoMilestonesView(opts?: { asOf?: string; days?: number }):
 export function buildPmoRisksView(opts?: { asOf?: string }): PmoRisksView {
   const asOf = opts?.asOf ?? currentDate();
   if (!pmoDirExists()) {
-    return {
-      as_of: asOf,
-      coverage: "unregistered",
-      open: [],
-      by_severity: { high: 0, medium: 0, low: 0 },
-      notes: ["未登録: data/projects/ がありません。"],
-    };
+    return unregisteredRisksView(asOf);
   }
 
   const loaded = loadPmoPortfolio();
@@ -251,12 +276,7 @@ export function buildPmoRisksView(opts?: { asOf?: string }): PmoRisksView {
 export function buildPmoShowView(id: string, opts?: { asOf?: string }): PmoShowView {
   const asOf = opts?.asOf ?? currentDate();
   if (!pmoDirExists()) {
-    return {
-      as_of: asOf,
-      coverage: "unregistered",
-      found: false,
-      notes: ["未登録: data/projects/ がありません。"],
-    };
+    return unregisteredShowView(asOf);
   }
   const loaded = loadPmoPortfolio();
   const project = loaded.projects.find((p) => p.id === id);
