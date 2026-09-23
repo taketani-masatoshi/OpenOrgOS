@@ -14,7 +14,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 
-- **Community connector 出荷フラグ** — `connector_slack` / `connector_asana` / `connector_gdrive` を `publish/protocol/community-integration.json` で true（接続 UI 開放）。`tenant_mail_connect_*` は ADR 0004 どおり false のまま。
+- **Community connector 出荷フラグ** — `connector_slack` / `connector_asana` / `connector_gdrive` を `publish/protocol/community-integration.json` で true（接続 UI 開放）。`tenant_mail_connect_*` は ADR 0004 どおり false のまま。integrations HTTP テストは未出荷ケースをフラグ一時オフで隔離する。
 
 ### Added
 

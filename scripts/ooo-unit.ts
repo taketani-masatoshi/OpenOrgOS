@@ -80,6 +80,9 @@ function main(): void {
     process.exit(2);
   }
 
+  // Stale lock from a killed run blocks global fixture restore forever.
+  rmSync(join(disposable, "tests", ".fixture-restore.lock"), { recursive: true, force: true });
+
   const cited = citedTestFiles();
   const missing = cited.filter((p) => !existsSync(join(ROOT_DIR, p)));
   const runnable = cited.filter((p) => existsSync(join(ROOT_DIR, p)));

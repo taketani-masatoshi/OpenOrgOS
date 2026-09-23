@@ -11,6 +11,10 @@ import {
   connectorSecretsFilePath,
   resetConnectorSecretsHydrationForTest,
 } from "../src/lib/integrations/connector-secrets-store.js";
+import {
+  readCommunityIntegrationFlags,
+  setCommunityIntegrationFlag,
+} from "../src/lib/protocol/community-integration-flags.js";
 
 /**
  * Connectors are the console's only outbound door, so the HTTP surface is
@@ -26,6 +30,8 @@ describe("steward chat integrations HTTP", () => {
   beforeEach(async () => {
     setTenantId("demo");
     resetConnectorSecretsHydrationForTest();
+    delete process.env.ORGOS_SLACK_WEBHOOK_URL;
+    delete process.env.ORGOS_ASANA_PAT;
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
@@ -86,15 +92,21 @@ describe("steward chat integrations HTTP", () => {
   });
 
   it("refuses to connect a provider the platform has not shipped", async () => {
-    const res = await fetch(`${baseUrl}/chat/v1/integrations/slack/connect`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Cookie: cookie },
-      body: "{}",
-    });
-    expect(res.status).toBe(403);
-    const body = (await res.json()) as { ok: boolean; platform_ready: boolean };
-    expect(body.ok).toBe(false);
-    expect(body.platform_ready).toBe(false);
+    const before = readCommunityIntegrationFlags().connector_slack;
+    setCommunityIntegrationFlag("connector_slack", false);
+    try {
+      const res = await fetch(`${baseUrl}/chat/v1/integrations/slack/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: cookie },
+        body: "{}",
+      });
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { ok: boolean; platform_ready: boolean };
+      expect(body.ok).toBe(false);
+      expect(body.platform_ready).toBe(false);
+    } finally {
+      setCommunityIntegrationFlag("connector_slack", before);
+    }
   });
 
   it("returns 404 for an unknown provider", async () => {
@@ -129,6 +141,9 @@ describe("steward chat integrations HTTP", () => {
   });
 
   it("refuses to post to Slack while it is unconnected", async () => {
+    delete process.env.ORGOS_SLACK_WEBHOOK_URL;
+    resetConnectorSecretsHydrationForTest();
+    if (existsSync(connectorSecretsFilePath())) rmSync(connectorSecretsFilePath());
     const res = await fetch(`${baseUrl}/chat/v1/integrations/slack/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: cookie },
