@@ -181,6 +181,7 @@ export interface ActivateModuleResult {
   regulationsSeeded: string[];
   controlsInitialized: number;
   regulationWorkOrderId?: string;
+  regulationWoDeduped?: boolean;
 }
 
 export interface ActivateModuleOptions {
@@ -244,9 +245,11 @@ export function activateTenantModule(
       : initTenantControlsFile().count;
 
   let regulationWorkOrderId: string | undefined;
+  let regulationWoDeduped: boolean | undefined;
   if (!opts.skipRegulationWo) {
     const wo = fileRegulationWorkflowWorkOrder(moduleId);
     regulationWorkOrderId = wo.workOrderId;
+    regulationWoDeduped = wo.deduped;
   }
 
   return {
@@ -259,6 +262,7 @@ export function activateTenantModule(
     regulationsSeeded,
     controlsInitialized,
     regulationWorkOrderId,
+    regulationWoDeduped,
   };
 }
 
@@ -287,8 +291,9 @@ export function formatActivateModuleResult(result: ActivateModuleResult): string
     lines.push(`  controls initialized: ${result.controlsInitialized} entries`);
   }
   if (result.regulationWorkOrderId) {
+    const dedupeNote = result.regulationWoDeduped ? " · reused pending" : "";
     lines.push(
-      `  regulation Work Order: ${result.regulationWorkOrderId} (LLM draft only · human approve)`
+      `  regulation Work Order: ${result.regulationWorkOrderId} (LLM draft only · human approve${dedupeNote})`
     );
   }
   return lines.join("\n");

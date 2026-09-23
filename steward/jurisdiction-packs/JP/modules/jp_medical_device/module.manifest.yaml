@@ -21,6 +21,12 @@ optional_regulations:
   - REG-011
   - REG-025
   - REG-026
+required_regulations:
+  - REG-025
+  - REG-026
+regulation_family:
+  id: qms_gxp
+  role: owner
 notes: production_ready — 医療機器 製造 · 製造販売 · 販売 · QMS/GVP · 運用台帳 · CAPA · PMS · 申請ドラフト（JP）
 cli_commands:
   - show

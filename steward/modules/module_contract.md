@@ -37,7 +37,8 @@ steward/modules/{id}/
 | `activation_seeds` | string[] | （既定 `[]`） | activation_ready で必要な seed 一式 |
 | `optional_regulations` | string[] | 任意 | 関連する REG カタログ id（推奨） |
 | `required_regulations` | string[] | 任意 | モジュール有効時にテナントで `enabled: true` 必須（validate error · リスク領域） |
-| `notes` | string | 任意 | tier 根拠等のメモ |
+| `regulation_family` | object | 任意 | `{ id, role?: owner\|sibling, do_not_mutate? }` — fork_family 分類（例: `qms_gxp`） |
+| `notes` | string | 任意 | tier 根拠等のメモ。規程不要ならその旨を書く |
 
 ## 3. readiness tier 別の要件
 

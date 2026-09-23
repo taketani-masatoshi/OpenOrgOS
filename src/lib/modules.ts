@@ -18,6 +18,7 @@ import { z } from "zod";
 import { loadRegulationsCatalog } from "./regulations.js";
 import { loadTenantRegulationsFile } from "./regulations.js";
 import { isSkeletonTenant } from "./ops-config.js";
+import { checkModuleRegulationContract } from "./regulation-module-contract.js";
 import { getModuleTier, type ReadinessTier } from "./module-readiness.js";
 import {
   getJurisdictionPackRoot,
@@ -497,6 +498,17 @@ const moduleManifestSchema = z.object({
    * regulations.yaml (validateRegulations error). Prefer risk-domain REGs.
    */
   required_regulations: z.array(z.string()).optional(),
+  /**
+   * Risk-domain cousin family (e.g. qms_gxp). sibling → fork_family WO;
+   * owner → source regs for siblings (do not self-fork).
+   */
+  regulation_family: z
+    .object({
+      id: z.string().min(1),
+      role: z.enum(["owner", "sibling"]).optional(),
+      do_not_mutate: z.array(z.string()).optional(),
+    })
+    .optional(),
   cli_commands: z.array(z.string()).optional(),
   notes: z.string().optional(),
   /**
@@ -593,6 +605,7 @@ export function checkModuleCatalogOnly(catalogId: string, tier: ReadinessTier): 
   if (tier === "production_ready") {
     issues.push(...checkSeedFiles(catalogId, manifest.required_seeds, "production"));
   }
+  issues.push(...checkModuleRegulationContract(catalogId));
   return issues;
 }
 

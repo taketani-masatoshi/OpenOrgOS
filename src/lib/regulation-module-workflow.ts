@@ -6,15 +6,17 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import type { CatalogRegulation } from "../../schemas/regulations-catalog.js";
+import { handoffSchema } from "../../schemas/routing.js";
 import {
   generateWorkOrderId,
+  listWorkOrders,
   writeWorkOrderFiles,
 } from "./escalate.js";
 import { getRegulationTemplateAbsPath } from "./jurisdiction.js";
-import { loadModuleManifest } from "./modules.js";
+import { loadModuleManifest, type ModuleManifest } from "./modules.js";
+import { REGULATION_FAMILIES } from "./regulation-module-contract.js";
 import { getCatalogRegulation, loadRegulationsCatalog } from "./regulations.js";
 import { getTenantId } from "./tenant.js";
-import { handoffSchema } from "../../schemas/routing.js";
 
 export type RegulationActionKind =
   | "reuse"
@@ -29,32 +31,64 @@ export interface RegulationPlanAction {
   rationale: string;
   /** LLM may draft pack/tenant text; must not auto-apply as 施行. */
   llmDraftAllowed: boolean;
+  /** Pack-relative draft scaffold for fork_family / thicken. */
+  draftTemplate?: string;
 }
 
 export interface RegulationModulePlan {
   moduleId: string;
   actions: RegulationPlanAction[];
-  /** Sibling QMS-family regs that must not be overwritten. */
+  /** Sibling family regs that must not be overwritten. */
   doNotMutateRegulationIds: string[];
+  familyId?: string;
+}
+
+/** Subject prefix used for WO dedupe on re-activate. */
+export const REGULATION_WO_SUBJECT_PREFIX = "Module regulation workflow:";
+
+export function regulationWorkflowSubject(moduleId: string): string {
+  return `${REGULATION_WO_SUBJECT_PREFIX} ${moduleId}`;
 }
 
 const STUB_LINE_THRESHOLD = 40;
 
-/** Modules whose quality system resembles MD QMS but must fork, not merge. */
-const QMS_FAMILY_FORK_MODULE_RE =
-  /cosmetic|化粧品|quasi.?drug|医薬部外|otc.?drug|general.?drug/i;
-
-const MEDICAL_DEVICE_QMS_REGS = ["REG-025", "REG-026"] as const;
-
-function templateLineCount(reg: CatalogRegulation): number {
+function templateBody(reg: CatalogRegulation): string | null {
   const abs = getRegulationTemplateAbsPath(reg.template);
-  if (!existsSync(abs)) return -1;
-  return readFileSync(abs, "utf-8").split("\n").length;
+  if (!existsSync(abs)) return null;
+  return readFileSync(abs, "utf-8");
+}
+
+function templateLineCount(body: string): number {
+  return body.split("\n").length;
+}
+
+function countArticles(body: string): number {
+  const matches = body.match(/^## 第\d+条/gm);
+  return matches?.length ?? 0;
+}
+
+function hasAnnex(body: string): boolean {
+  return /^## 別紙/m.test(body);
+}
+
+/** Thin stub: short file, or only purpose/scope/responsibility without annex. */
+export function isThinStubTemplate(body: string): boolean {
+  const lines = templateLineCount(body);
+  if (lines >= 0 && lines < STUB_LINE_THRESHOLD) return true;
+  const articles = countArticles(body);
+  if (articles > 0 && articles <= 3 && !hasAnnex(body)) return true;
+  const stubOnly =
+    /第1条（目的）/.test(body) &&
+    /第2条（適用範囲）/.test(body) &&
+    /第3条（責任）/.test(body) &&
+    articles <= 3;
+  return stubOnly;
 }
 
 function isThinStub(reg: CatalogRegulation): boolean {
-  const n = templateLineCount(reg);
-  return n >= 0 && n < STUB_LINE_THRESHOLD;
+  const body = templateBody(reg);
+  if (body == null) return false;
+  return isThinStubTemplate(body);
 }
 
 function regsBoundToModule(moduleId: string, catalog: CatalogRegulation[]): CatalogRegulation[] {
@@ -70,6 +104,56 @@ function uniqueIds(ids: string[]): string[] {
   return [...new Set(ids)];
 }
 
+function resolveFamilyContext(
+  moduleId: string,
+  manifest: ModuleManifest | null
+): {
+  familyId?: string;
+  role?: "owner" | "sibling";
+  sourceRegs: string[];
+  draftTemplate?: string;
+} {
+  const declared = manifest?.regulation_family;
+  if (declared?.id && REGULATION_FAMILIES[declared.id]) {
+    const fam = REGULATION_FAMILIES[declared.id]!;
+    const role =
+      declared.role ??
+      (fam.ownerModuleIds.includes(moduleId) ? "owner" : "sibling");
+    return {
+      familyId: declared.id,
+      role,
+      sourceRegs: uniqueIds([
+        ...fam.sourceRegs,
+        ...(declared.do_not_mutate ?? []),
+      ]),
+      draftTemplate: fam.draftTemplate,
+    };
+  }
+
+  for (const [familyId, fam] of Object.entries(REGULATION_FAMILIES)) {
+    if (fam.ownerModuleIds.includes(moduleId)) {
+      return {
+        familyId,
+        role: "owner",
+        sourceRegs: [...fam.sourceRegs],
+        draftTemplate: fam.draftTemplate,
+      };
+    }
+    if (
+      fam.moduleIdHint.test(moduleId) ||
+      fam.moduleIdHint.test(manifest?.notes ?? "")
+    ) {
+      return {
+        familyId,
+        role: "sibling",
+        sourceRegs: [...fam.sourceRegs],
+        draftTemplate: fam.draftTemplate,
+      };
+    }
+  }
+  return { sourceRegs: [] };
+}
+
 /**
  * Deterministic classification for a catalog module id.
  * Does not write tenant files.
@@ -79,22 +163,23 @@ export function planRegulationForModule(moduleId: string): RegulationModulePlan 
   const catalog = loadRegulationsCatalog().regulations;
   const actions: RegulationPlanAction[] = [];
   const doNotMutateRegulationIds: string[] = [];
+  const familyCtx = resolveFamilyContext(moduleId, manifest);
 
   if (!manifest) {
-    const forkHint = QMS_FAMILY_FORK_MODULE_RE.test(moduleId);
-    if (forkHint) {
-      for (const id of MEDICAL_DEVICE_QMS_REGS) {
+    if (familyCtx.role === "sibling" && familyCtx.familyId) {
+      for (const id of familyCtx.sourceRegs) {
         if (getCatalogRegulation(id)) doNotMutateRegulationIds.push(id);
       }
       return {
         moduleId,
+        familyId: familyCtx.familyId,
         actions: [
           {
             kind: "fork_family",
-            regulationIds: [...MEDICAL_DEVICE_QMS_REGS],
-            rationale:
-              "Module id suggests cosmetics/quasi-drug family; draft sibling REG — do not overwrite REG-025/026. Manifest still missing.",
+            regulationIds: [...familyCtx.sourceRegs],
+            rationale: `Family ${familyCtx.familyId}: draft sibling REG from source regs — do not overwrite owners. Manifest still missing.`,
             llmDraftAllowed: true,
+            draftTemplate: familyCtx.draftTemplate,
           },
         ],
         doNotMutateRegulationIds: uniqueIds(doNotMutateRegulationIds),
@@ -136,31 +221,32 @@ export function planRegulationForModule(moduleId: string): RegulationModulePlan 
     actions.push({
       kind: "thicken",
       regulationIds: thinBound.map((r) => r.id),
-      rationale: `module-bound template(s) are thin stubs (<${STUB_LINE_THRESHOLD} lines); thicken pack template before tenant 施行`,
+      rationale:
+        `module-bound template(s) look like stubs (short file, ≤3 articles without 別紙, or purpose/scope/responsibility only); thicken pack template before tenant 施行`,
       llmDraftAllowed: true,
     });
   }
 
-  const looksLikeQmsCousin = QMS_FAMILY_FORK_MODULE_RE.test(moduleId) ||
-    QMS_FAMILY_FORK_MODULE_RE.test(manifest.notes ?? "");
-  if (looksLikeQmsCousin) {
-    for (const id of MEDICAL_DEVICE_QMS_REGS) {
+  if (familyCtx.role === "sibling" && familyCtx.familyId) {
+    for (const id of familyCtx.sourceRegs) {
       if (getCatalogRegulation(id)) doNotMutateRegulationIds.push(id);
     }
     actions.push({
       kind: "fork_family",
-      regulationIds: [...MEDICAL_DEVICE_QMS_REGS],
+      regulationIds: [...familyCtx.sourceRegs],
       rationale:
-        "Quality-system vocabulary may overlap medical-device QMS/GVP, but legal duties differ. " +
-        "Draft a sibling REG or annex; do NOT merge into or overwrite REG-025/026 tenant 施行文.",
+        `Family ${familyCtx.familyId}: quality-system vocabulary may overlap an owner module, but legal duties differ. ` +
+        `Draft a sibling REG or annex using ${familyCtx.draftTemplate ?? "family FORK-DRAFT"}; ` +
+        `do NOT merge into or overwrite ${familyCtx.sourceRegs.join(", ")} tenant 施行文.`,
       llmDraftAllowed: true,
+      draftTemplate: familyCtx.draftTemplate,
     });
   }
 
   const needsNewHint =
     declared.length === 0 &&
     bound.length === 0 &&
-    !looksLikeQmsCousin &&
+    familyCtx.role !== "sibling" &&
     /bank|payroll|tax|invoice|refund|permit|privacy|social.?insurance/i.test(moduleId);
 
   if (needsNewHint) {
@@ -186,6 +272,7 @@ export function planRegulationForModule(moduleId: string): RegulationModulePlan 
 
   return {
     moduleId,
+    familyId: familyCtx.familyId,
     actions,
     doNotMutateRegulationIds: uniqueIds(doNotMutateRegulationIds),
   };
@@ -194,13 +281,14 @@ export function planRegulationForModule(moduleId: string): RegulationModulePlan 
 export function formatRegulationModulePlan(plan: RegulationModulePlan): string {
   const lines = [
     `# Regulation plan — \`${plan.moduleId}\``,
+    plan.familyId ? `**Family:** \`${plan.familyId}\`` : "",
     "",
-    "| kind | REG ids | LLM draft | rationale |",
-    "|------|---------|-----------|-----------|",
-  ];
+    "| kind | REG ids | LLM draft | draft scaffold | rationale |",
+    "|------|---------|-----------|----------------|-----------|",
+  ].filter((l) => l !== undefined);
   for (const a of plan.actions) {
     lines.push(
-      `| ${a.kind} | ${a.regulationIds.join(", ") || "—"} | ${a.llmDraftAllowed ? "yes" : "no"} | ${a.rationale.replace(/\|/g, "/")} |`
+      `| ${a.kind} | ${a.regulationIds.join(", ") || "—"} | ${a.llmDraftAllowed ? "yes" : "no"} | ${a.draftTemplate ?? "—"} | ${a.rationale.replace(/\|/g, "/")} |`
     );
   }
   if (plan.doNotMutateRegulationIds.length) {
@@ -224,8 +312,11 @@ function buildWorkOrderText(plan: RegulationModulePlan): {
   acceptance_criteria: string[];
 } {
   const md = formatRegulationModulePlan(plan);
+  const scaffolds = plan.actions
+    .map((a) => a.draftTemplate)
+    .filter((x): x is string => Boolean(x));
   return {
-    subject: `Module regulation workflow: ${plan.moduleId}`,
+    subject: regulationWorkflowSubject(plan.moduleId),
     background:
       "Module was activated (or regulation-plan requested). Classify regulations by risk domain; " +
       "LLM drafts pack/tenant text only. Do not treat medical-device QMS as cosmetics QMS.",
@@ -238,6 +329,9 @@ function buildWorkOrderText(plan: RegulationModulePlan): {
       "- Never merge fork_family sources into one REG without an explicit new id / annex",
       plan.doNotMutateRegulationIds.length
         ? `- Forbidden overwrite: ${plan.doNotMutateRegulationIds.join(", ")}`
+        : "",
+      scaffolds.length
+        ? `- Start from scaffold(s): ${scaffolds.map((s) => `\`${s}\``).join(", ")}`
         : "",
       "",
       "## Human steps after draft",
@@ -264,6 +358,8 @@ export interface FileRegulationWorkflowWoOptions {
   dryRun?: boolean;
   fromAgent?: string;
   toAgent?: AgentId;
+  /** When true (default), reuse pending WO with the same subject instead of filing again. */
+  dedupe?: boolean;
 }
 
 export interface FileRegulationWorkflowWoResult {
@@ -273,6 +369,15 @@ export interface FileRegulationWorkflowWoResult {
   mdPath?: string;
   promptPath?: string;
   skipped?: boolean;
+  /** true when an existing pending WO was reused */
+  deduped?: boolean;
+}
+
+function findPendingRegulationWorkflowWo(moduleId: string) {
+  const subject = regulationWorkflowSubject(moduleId);
+  return listWorkOrders("pending").find(
+    (h) => h.subject === subject && h.to_agent === "compliance"
+  );
 }
 
 /** File a Compliance Work Order for the regulation plan (LLM draft gate). */
@@ -282,9 +387,22 @@ export function fileRegulationWorkflowWorkOrder(
 ): FileRegulationWorkflowWoResult {
   const plan = planRegulationForModule(moduleId);
   const text = buildWorkOrderText(plan);
+  const dedupe = opts.dedupe !== false;
 
   if (opts.dryRun) {
     return { plan, skipped: true };
+  }
+
+  if (dedupe) {
+    const existing = findPendingRegulationWorkflowWo(moduleId);
+    if (existing) {
+      return {
+        plan,
+        workOrderId: existing.id,
+        skipped: true,
+        deduped: true,
+      };
+    }
   }
 
   const id = generateWorkOrderId();
