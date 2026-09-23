@@ -8,9 +8,7 @@ import {
   assertWireGovernanceApproval,
   normalizePersonName,
 } from "../../jurisdiction/wire-governance/index.js";
-import {
-  isCorrespondenceApprovalSubject,
-} from "../../correspondence/review.js";
+import { isCorrespondenceApprovalSubject } from "../../correspondence/approval-subject.js";
 import {
   findOperatorByApproverName,
   findOperatorById,

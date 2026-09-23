@@ -1,7 +1,7 @@
 import { humanApproveOrgApproval, findOrgApproval } from "../org/approval/approve.js";
+import { isCorrespondenceApprovalSubject } from "../correspondence/approval-subject.js";
 import {
   formatCorrespondenceDraftReview,
-  isCorrespondenceApprovalSubject,
   loadCorrespondenceDraftForApproval,
 } from "../correspondence/review.js";
 import {

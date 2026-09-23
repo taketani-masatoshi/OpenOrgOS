@@ -3,9 +3,16 @@ import { NOTIFICATIONS_REGISTRY_PATH } from "../steward-paths.js";
 import { loadRegistryFile } from "../utils.js";
 import { sendWebhook } from "../webhook.js";
 import type { TodayContext } from "../../../schemas/steward-chat.js";
-import { buildTodaySummaryForPush } from "../steward-chat/today-context.js";
 import { getTenantId } from "../tenant.js";
 import { pushQueueEvent } from "../queue-db.js";
+
+export function buildTodaySummaryForPush(ctx: TodayContext): string {
+  const decisionLines =
+    ctx.decisions.length > 0
+      ? ctx.decisions.map((d, i) => `${i + 1}. ${d.title}`).join("; ")
+      : "P0 なし";
+  return `${ctx.company_name} · ${ctx.report_date}: 判断=${decisionLines}; 承認待ち=${ctx.approvals.length}; inbox=${ctx.inbox_pending.length}; mail_intake=${ctx.mail_intake_pending_count}`;
+}
 
 export function notificationsRegistryPath(): string {
   return process.env.ORGOS_NOTIFICATIONS_REGISTRY?.trim() || NOTIFICATIONS_REGISTRY_PATH;

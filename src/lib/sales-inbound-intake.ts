@@ -11,6 +11,7 @@ import {
 import { currentDate } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { linkMailTriageEntry } from "./sales-mail-link.js";
+import { extractEmailAddress } from "./correspondence/mail-address.js";
 import {
   loadMailTriageQueue,
   saveMailTriageQueue,
@@ -20,11 +21,6 @@ export interface InboundIntakeResult {
   created: string[];
   skipped: string[];
   dry_run: boolean;
-}
-
-function extractEmailAddress(from: string): string {
-  const m = from.match(/<([^>]+)>/);
-  return (m?.[1] ?? from).trim().toLowerCase();
 }
 
 function extractDomain(email: string): string {

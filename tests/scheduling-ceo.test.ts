@@ -2,11 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import {
-  answerCeoInline,
-  applyCeoInlineAnswerSideEffects,
-  loadCeoInlineQueue,
-} from "../src/lib/correspondence/ceo-inline-question.js";
+import { answerCeoInline, loadCeoInlineQueue } from "../src/lib/correspondence/ceo-inline-question.js";
+import { applyCeoInlineAnswerSideEffects } from "../src/lib/correspondence/ceo-inline-answer.js";
 import { ensureSchedulingCeoConfirmQuestion } from "../src/lib/scheduling-coordination/ceo-confirm.js";
 import { applyNextAction } from "../src/lib/scheduling-coordination/next-action.js";
 import { findSchedulingCase, upsertSchedulingCase } from "../src/lib/scheduling-coordination/store.js";

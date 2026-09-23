@@ -4,11 +4,8 @@ import {
   setCliOperatorContext,
 } from "../console-auth/cli-operator.js";
 import { authenticateOperator } from "../console-auth/operator-rbac.js";
-import {
-  answerCeoInline,
-  applyCeoInlineAnswerSideEffects,
-  loadCeoInlineQueue,
-} from "../correspondence/ceo-inline-question.js";
+import { answerCeoInline, loadCeoInlineQueue } from "../correspondence/ceo-inline-question.js";
+import { applyCeoInlineAnswerSideEffects } from "../correspondence/ceo-inline-answer.js";
 import { approveAndSendSchedulingProposals } from "./approve-send-proposals.js";
 import { injectAndProcessScheduleAcceptReply } from "./inject-schedule-reply-mail.js";
 import {

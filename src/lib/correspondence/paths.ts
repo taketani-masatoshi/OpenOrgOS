@@ -36,11 +36,6 @@ export function getMailReceivedDir(): string {
   return join(getExecutiveRecordsDir(), "mail-received");
 }
 
-/** @deprecated Use getMailReceivedDir — legacy path name mail-inbox */
-export function getMailInboxDir(): string {
-  return getMailReceivedDir();
-}
-
 export function correspondenceDraftYamlPath(draftId: string): string {
   return join(getCorrespondenceDraftsDir(), `${draftId}.yaml`);
 }

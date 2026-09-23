@@ -3,6 +3,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { getDataDir } from "../utils.js";
 import { loadMailConfig, resolveMailConfig } from "./mail-config.js";
+import { normalizeEmailAddress } from "./mail-address.js";
 
 function loadCompanyPublicDisclosure(): {
   contact_email?: string;
@@ -33,15 +34,11 @@ function parseCcList(cc?: string): string[] {
     .filter(Boolean);
 }
 
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
 function shouldIncludeCc(
   email: string,
   opts: { fromEmail: string; toEmail?: string; seen: Set<string> }
 ): boolean {
-  const norm = normalizeEmail(email);
+  const norm = normalizeEmailAddress(email);
   if (!norm || opts.seen.has(norm)) return false;
   if (norm === opts.fromEmail) return false;
   if (opts.toEmail && norm === opts.toEmail) return false;
@@ -68,7 +65,7 @@ export function resolveDefaultCorrespondenceCc(
   opts: ResolveDefaultCorrespondenceCcOptions
 ): ResolveDefaultCorrespondenceCcResult {
   const explicit = parseCcList(opts.explicitCc);
-  const seen = new Set(explicit.map(normalizeEmail));
+  const seen = new Set(explicit.map(normalizeEmailAddress));
   const applied: string[] = [];
   const merged = [...explicit];
 
@@ -76,8 +73,8 @@ export function resolveDefaultCorrespondenceCc(
     return { cc: merged.length ? merged.join(", ") : undefined, appliedDefaults: [] };
   }
 
-  const fromEmail = normalizeEmail(resolveMailConfig().from.email);
-  const toEmail = opts.to ? normalizeEmail(opts.to) : undefined;
+  const fromEmail = normalizeEmailAddress(resolveMailConfig().from.email);
+  const toEmail = opts.to ? normalizeEmailAddress(opts.to) : undefined;
   const fileConfig = loadMailConfig();
   const disclosure = loadCompanyPublicDisclosure();
 
@@ -104,7 +101,7 @@ export function resolveDefaultCorrespondenceCc(
 
   for (const { email, source } of candidates) {
     if (!shouldIncludeCc(email, { fromEmail, toEmail, seen })) continue;
-    seen.add(normalizeEmail(email));
+    seen.add(normalizeEmailAddress(email));
     merged.push(email);
     applied.push(source);
   }

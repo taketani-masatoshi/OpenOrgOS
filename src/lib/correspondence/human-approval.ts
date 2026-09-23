@@ -6,8 +6,8 @@ import {
   normalizePersonName,
 } from "../org/authorized-approvers.js";
 import { findOperatorById } from "../org/operators.js";
-import { isCorrespondenceApprovalSubject } from "./review.js";
-import { CorrespondenceApprovalGateError } from "./send-gate.js";
+import { isCorrespondenceApprovalSubject } from "./approval-subject.js";
+import { CorrespondenceApprovalGateError } from "./approval-gate-error.js";
 import { CORRESPONDENCE_CLI } from "./cli-labels.js";
 
 /** Operator IDs that must not grant human approval or send correspondence. */

@@ -3,6 +3,7 @@
  */
 import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triage.js";
 import { findTriageEntry } from "./mail-triage-queue.js";
+import { extractEmailAddress } from "./mail-address.js";
 import { loadCorrespondenceCaseRef, type CorrespondenceCaseRef } from "./case-status.js";
 import { resolveEmailFromContactRef, resolveSenderByEmail } from "../secretary/contact-registry.js";
 import { loadSalesQuotes, loadSalesPipeline } from "../data.js";
@@ -32,11 +33,6 @@ export interface FactsVerifyResult {
   recipient_ok: boolean;
   recipient_email?: string;
   warnings: string[];
-}
-
-function extractEmail(from: string): string {
-  const m = from.match(/<([^>]+)>/);
-  return (m?.[1] ?? from).trim().toLowerCase();
 }
 
 function addQuoteClaims(caseRef: CorrespondenceCaseRef | undefined, claims: CorrespondenceClaim[]): void {
@@ -307,7 +303,7 @@ export function buildFactsVerify(opts: {
   let recipientOk = false;
   let recipientEmail: string | undefined;
   if (entry) {
-    const email = extractEmail(entry.from);
+    const email = extractEmailAddress(entry.from);
     const resolved = resolveSenderByEmail(email);
     if (resolved.known && resolved.match?.email) {
       recipientOk = true;

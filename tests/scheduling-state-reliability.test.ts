@@ -14,7 +14,7 @@ import {
 import { processScheduleMailEntry } from "../src/lib/scheduling-coordination/process-mail.js";
 import { upsertTriageEntry } from "../src/lib/correspondence/mail-triage-queue.js";
 import { loadExecutiveCalendar } from "../src/lib/data.js";
-import { applyCeoInlineAnswerSideEffects } from "../src/lib/correspondence/ceo-inline-question.js";
+import { applyCeoInlineAnswerSideEffects } from "../src/lib/correspondence/ceo-inline-answer.js";
 import {
   seedSchedulingContacts,
   seedSchedulingTenant,

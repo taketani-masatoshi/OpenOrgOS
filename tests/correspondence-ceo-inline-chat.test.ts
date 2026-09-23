@@ -1,11 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { saveCeoInlineQueue } from "../src/lib/correspondence/ceo-inline-question.js";
+import {
+  getCeoInlineQueuePath,
+  saveCeoInlineQueue,
+} from "../src/lib/correspondence/ceo-inline-question.js";
 import { ceoInlineQueueSchema } from "../schemas/correspondence/ceo-inline-question.js";
 
 describe("correspondence ceo inline chat api", () => {
@@ -14,6 +17,8 @@ describe("correspondence ceo inline chat api", () => {
   const env = { ...process.env };
 
   beforeEach(() => {
+    process.env.ORGOS_TENANT = "demo";
+    process.env.STEWARD_TENANT = "demo";
     setTenantId("demo");
     process.env.STEWARD_CHAT_AUTH = "0";
     process.env.ORGOS_SESSION_PERSIST = "0";
@@ -48,8 +53,7 @@ describe("correspondence ceo inline chat api", () => {
       handle.close(() => resolve());
       handle = undefined;
     });
-    const exec = join(getDataDir(), "executive");
-    if (existsSync(exec)) rmSync(exec, { recursive: true, force: true });
+    rmSync(getCeoInlineQueuePath(), { force: true });
     process.env = { ...env };
   });
 

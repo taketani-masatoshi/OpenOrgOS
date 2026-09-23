@@ -197,8 +197,6 @@ export function createCorrespondenceDraft(
   return { draft, approvalId };
 }
 
-import { writeVenueBookingHandoff } from "../scheduling-coordination/venue-handoff.js";
-
 function schedulingCaseIdFromDraftNotes(notes?: string): string | undefined {
   return notes?.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
 }

@@ -1,5 +1,4 @@
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
-import { loadCorrespondenceDraft } from "./draft.js";
 import { bodyContainsMeasurementPlaceholder } from "./measurement-ref.js";
 import {
   loadCorrespondenceStyle,
@@ -312,10 +311,9 @@ export function formatStyleLintReport(result: StyleLintResult): string {
 }
 
 export function lintCorrespondenceDraft(
-  draftId: string,
+  draft: CorrespondenceDraft,
   opts?: { locale?: string; companyName?: string; meetingFormat?: "online" | "in_person" | "unspecified" }
 ): StyleLintResult {
-  const draft = loadCorrespondenceDraft(draftId);
   let meetingFormat = opts?.meetingFormat;
   let isMeal: boolean | undefined;
   let hasCostLine: boolean | undefined;

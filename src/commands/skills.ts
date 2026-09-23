@@ -35,7 +35,7 @@ import {
   runSlackNotifySkill,
   runCorrespondenceDraft,
   runCorrespondenceCompose,
-} from "./secretary-correspondence.js";
+} from "./mail-outbound.js";
 import {
   formatControlStatusReport,
   computeControlGaps,

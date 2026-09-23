@@ -21,10 +21,8 @@ import { listSenderIdentificationPending } from "../correspondence/sender-identi
 import {
   listPendingCeoInlineQuestions,
 } from "../correspondence/ceo-inline-question.js";
-import {
-  isCorrespondenceApprovalSubject,
-  loadCorrespondenceDraftForApproval,
-} from "../correspondence/review.js";
+import { isCorrespondenceApprovalSubject } from "../correspondence/approval-subject.js";
+import { loadCorrespondenceDraftForApproval } from "../correspondence/review.js";
 import { isTenantConfigApprovalSubject } from "../org/tenant-config-change.js";
 import { getCashflowTodaySummary } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
 import {
@@ -741,12 +739,4 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
   }
 
   return `${lines.join("\n")}\n`;
-}
-
-export function buildTodaySummaryForPush(ctx: TodayContext): string {
-  const decisionLines =
-    ctx.decisions.length > 0
-      ? ctx.decisions.map((d, i) => `${i + 1}. ${d.title}`).join("; ")
-      : "P0 なし";
-  return `${ctx.company_name} · ${ctx.report_date}: 判断=${decisionLines}; 承認待ち=${ctx.approvals.length}; inbox=${ctx.inbox_pending.length}; mail_intake=${ctx.mail_intake_pending_count}`;
 }

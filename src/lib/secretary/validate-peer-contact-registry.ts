@@ -1,5 +1,4 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { peersRegistrySchema } from "../../../schemas/protocol/peers.js";
 import { readYamlFile, resolveTenantPath } from "../utils.js";
 import { getPeersYamlPath } from "../protocol/paths.js";
