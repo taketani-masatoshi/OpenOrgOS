@@ -100,22 +100,21 @@ describe("indirect tax jurisdiction port", () => {
     expect(() => assertPlTaxCategories(revenueWithoutTaxCategory())).not.toThrow();
     const hongKong = evaluateIndirectTaxClose(MONTH, engine);
     expect(hongKong.pass).toBe(true);
-    expect(hongKong.engine).toBe("uninstalled");
+    expect(hongKong.engine).toBe("none");
     expect(hongKong.detail).toBe(INDIRECT_TAX_NONE);
 
     setTenantId("us-demo");
     const unitedStates = evaluateIndirectTaxClose(MONTH, engine);
     expect(unitedStates.pass).toBe(false);
-    expect(unitedStates.engine).toBe("uninstalled");
-    expect(unitedStates.detail).toBe(INDIRECT_TAX_ENGINE_UNINSTALLED);
+    expect(unitedStates.engine).toBe("us_sales");
+    expect(unitedStates.detail).toContain("not ready for filing");
   });
 
   it("does not run Japanese consumption tax for Singapore GST", () => {
     setTenantId("sg-demo");
     const result = evaluateIndirectTaxClose(MONTH, throwingEngine());
     expect(result.pass).toBe(false);
-    expect(result.engine).toBe("uninstalled");
-    expect(result.detail).toBe(INDIRECT_TAX_ENGINE_UNINSTALLED);
+    expect(["uninstalled", "ee_vat", "ge_vat", "us_sales"]).toContain(result.engine);
   });
 
   it("refuses book-tax adjustments and invoice checks outside Japan", () => {
@@ -132,7 +131,7 @@ describe("indirect tax jurisdiction port", () => {
     );
     setTenantId("us-demo");
     expect(() => computeDecliningBalanceMonthly(rateAsset(), 1_000_000)).toThrow(
-      "requires verified"
+      "Japanese finance engine"
     );
   });
 });

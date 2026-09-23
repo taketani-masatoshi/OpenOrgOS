@@ -57,6 +57,15 @@ export const fixedAssetSchema = z
     useful_life_assumption: z.string().optional(),
     depreciation_method: depreciationMethodTax,
     annual_depreciation: z.number().nonnegative(),
+    /**
+     * Declining-balance (定率法) requires verified fiscal opening and guarantee basis.
+     * Without these, OrgOS refuses to estimate statutory amounts.
+     */
+    fiscal_opening_book_value_yen: z.number().nonnegative().optional(),
+    revised_acquisition_cost_yen: z.number().nonnegative().optional(),
+    guarantee_amount_yen: z.number().nonnegative().optional(),
+    declining_rate_pct: z.number().positive().max(100).optional(),
+    revised_declining_rate_pct: z.number().positive().max(100).optional(),
     /** When set, do not post monthly depreciation. The amount is an immediate expense, not a statute lookup. */
     small_amount: z.boolean().optional(),
     /** Tax depreciation for the year. Book depreciation above this is an add-back. Not a statutory limit table. */

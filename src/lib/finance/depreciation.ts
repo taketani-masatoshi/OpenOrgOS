@@ -4,6 +4,7 @@ import { withFinanceMutation } from "./reconciliation-transaction.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
 import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
+import { resolveDecliningBalanceRate } from "./depreciation-rates.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 
 const MONTHS_PER_YEAR = 12;
@@ -34,10 +35,43 @@ export function computeStraightLineMonthly(asset: FixedAsset): number {
 }
 
 export function computeDecliningBalanceMonthly(asset: FixedAsset, bookValue: number): number {
+  assertJapaneseFinanceEngine();
   if (bookValue <= 1) return 0;
-  throw new Error(
-    `Declining depreciation requires verified fiscal opening, guarantee and revised basis: ${asset.id}`
+  const opening = asset.fiscal_opening_book_value_yen;
+  const guarantee = asset.guarantee_amount_yen;
+  if (
+    opening === undefined ||
+    guarantee === undefined ||
+    !Number.isSafeInteger(opening) ||
+    !Number.isSafeInteger(guarantee) ||
+    opening < 0 ||
+    guarantee < 1 ||
+    !asset.useful_life_years
+  ) {
+    throw new Error(
+      `Declining depreciation requires verified fiscal opening, guarantee and revised basis: ${asset.id}`
+    );
+  }
+  const pack = resolveDecliningBalanceRate(asset.useful_life_years);
+  const expectedGuarantee = Math.max(
+    1,
+    Math.floor(asset.acquisition_cost * pack.guarantee_rate_pct)
   );
+  if (guarantee !== expectedGuarantee) {
+    throw new Error(`Declining depreciation guarantee amount invalid: ${asset.id}`);
+  }
+  const atGuarantee = bookValue <= guarantee;
+  if (atGuarantee && asset.revised_acquisition_cost_yen === undefined) {
+    throw new Error(
+      `Declining depreciation requires revised acquisition cost at guarantee: ${asset.id}`
+    );
+  }
+  const ratePct = atGuarantee
+    ? (asset.revised_declining_rate_pct ?? pack.revised_rate_pct)
+    : (asset.declining_rate_pct ?? pack.rate_pct);
+  const basis = atGuarantee ? asset.revised_acquisition_cost_yen! : opening;
+  const annual = Math.floor((basis * ratePct) / 100);
+  return Math.min(Math.max(0, Math.floor(bookValue) - 1), Math.floor(annual / MONTHS_PER_YEAR));
 }
 
 export function computeAssetMonthlyDepreciation(asset: FixedAsset, period: string): number {

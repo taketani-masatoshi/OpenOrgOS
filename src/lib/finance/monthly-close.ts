@@ -104,7 +104,11 @@ function depreciationPosted(month: string): boolean {
 }
 
 function payrollPosted(month: string): boolean {
-  return loadJournalEntries().entries.some((entry) => entry.entry_id === `JE-PAYROLL-${month}`);
+  return loadJournalEntries().entries.some(
+    (entry) =>
+      entry.entry_id === `JE-PAYROLL-${month}` ||
+      entry.entry_id.startsWith(`JE-PAYROLL-${month}-`)
+  );
 }
 
 function previousMonth(month: string): string {

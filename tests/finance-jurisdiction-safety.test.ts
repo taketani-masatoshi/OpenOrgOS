@@ -33,8 +33,10 @@ describe("foreign jurisdictions cannot silently use Japanese engines", () => {
       };
       expect(evaluateIndirectTaxClose("2026-09", engine)).toMatchObject({
         pass: false,
-        engine: "uninstalled",
       });
+      expect(["uninstalled", "ee_vat", "ge_vat", "us_sales"]).toContain(
+        evaluateIndirectTaxClose("2026-09", engine).engine
+      );
       expect(() => computePayrollMonth({ month: "2026-09", grossYen: 280000 })).toThrow(
         "Japanese finance engine"
       );

@@ -46,4 +46,21 @@ payments の必須項目：journal_entry_id（計上）、payment_journal_entry_
 - 会社単位給与仕訳から複数従業員の年間証憑を作る経路を拒否。一括支払仕訳も拒否。
 - `test:finance` に管轄安全・消込復旧の回帰を登録。`.worktrees/` を gitignore。
 
-実テナントは変更していない。commit / push / 公開は行っていない。Core の core.hooksPath は未設定を確認済みで、ローカル hook が有効な状態とは判定しない。
+## 2026-09-24 大きい残債の実装
+
+1. **従業員別給与・年税額・還付追徴**
+   - `payroll` 仕訳 source に `employee_id` / `event`（accrual|payment|yea_settlement）
+   - 従業員別 ID: `JE-PAYROLL-{period}-{employeeId}`
+   - `yea-declarations/FY####.yaml` + `computeAnnualSalarySettlement` で年税額と還付/追徴を確定し、必要時に精算仕訳を起票
+   - 従業員別仕訳があれば複数従業員の年間証憑を許可
+
+2. **消費税共通按分・経過措置・法定定率法**
+   - `consumption-tax-period-evidence/{period}.yaml` で課税売上割合・経過措置適格を明示
+   - 証憑があるときだけ common / nonqualified_80|50 を控除
+   - 定率法は期首簿価・保証額・改定取得価額と JP pack seed の償却率で月次計算。未登録耐用年数は拒否
+
+3. **外国エンジン能力ゲート + e-Tax/eLTAX**
+   - `indirect-tax/capability.ts`: EE/GE/US は `filing: false` のまま識別
+   - `jp_etax` / `jp_eltax` モジュールと `src/lib/etax`・`eltax`・`efiling`・CLI を取り込み。eLTAX は手続拒否のまま。本番提出は認定ゲート前に fail-closed
+
+実テナントは変更していない。push は行っていない。

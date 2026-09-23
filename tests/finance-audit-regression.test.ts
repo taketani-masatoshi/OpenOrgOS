@@ -224,7 +224,7 @@ describe("accounting audit regressions", () => {
   });
 
   it.each([
-    ["common", "Common-use purchase tax allocation is not implemented"],
+    ["common", "taxable_sales_ratio_pct"],
     [undefined, "evidence incomplete"],
   ] as const)("C4: rejects incomplete purchase use %s", (use, message) => {
     resetFixtureJournalEntries();
@@ -251,7 +251,7 @@ describe("accounting audit regressions", () => {
       line("1100", 0, 1000),
     ]);
     expect(() => buildConsumptionTaxSummary({ period: "2026-09" })).toThrow(
-      "Transitional invoice deduction rates"
+      "Transitional invoice deduction rates require period evidence"
     );
   });
   it("C1: carries a reduced-rate return in the later month as negative tax", () => {

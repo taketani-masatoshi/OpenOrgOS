@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, beforeEach } from "vitest";
 import YAML from "yaml";
@@ -21,11 +21,41 @@ import { getDataDir } from "../src/lib/utils.js";
 import { resetFixtureJournalEntries } from "./helpers/finance-fixture.js";
 
 const months = Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`);
-function source() {
+function clearYearEndArtifacts() {
+  for (const rel of [
+    join("finance", "year-end-adjustment"),
+    join("finance", "yea-declarations"),
+    join("finance", "payroll-annual-source"),
+  ]) {
+    const path = join(getDataDir(), rel);
+    if (existsSync(path)) rmSync(path, { recursive: true, force: true });
+  }
+}
+function writeDeclaration() {
+  const dir = join(getDataDir(), "finance", "yea-declarations");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    join(dir, "FY2026.yaml"),
+    YAML.stringify({
+      version: 1,
+      fiscal_year: "FY2026",
+      employees: [
+        {
+          employee_id: "EMP-TEST",
+          income_deductions_yen: 480000,
+          tax_credits_yen: 0,
+          other_income_yen: 0,
+        },
+      ],
+    })
+  );
+}
+function source(employeeId = "EMP-TEST") {
   const payments = months.map((period) => {
     const id = postPayrollJournalEntry({
       period,
       authorizedBy: "OP-TEST",
+      employeeId,
       grossYen: 280000,
       withholdingYen: 5720,
       socialEmployeeYen: 41300,
@@ -34,6 +64,7 @@ function source() {
     const paymentId = postPayrollPaymentJournalEntry({
       period,
       authorizedBy: "OP-TEST",
+      employeeId,
       amountYen: 232980,
     })!;
     const paidOn = loadJournalEntries()
@@ -55,14 +86,18 @@ function source() {
     version: 1,
     calendar_year: "2026",
     currency: "JPY",
-    employees: [{ employee_id: "EMP-TEST", coverage_months: months, payments }],
+    employees: [{ employee_id: employeeId, coverage_months: months, payments }],
   };
   const path = join(dir, "2026.yaml");
   writeFileSync(path, YAML.stringify(file));
+  writeDeclaration();
   return { path, file };
 }
 describe("annual payroll evidence and posting", () => {
-  beforeEach(() => resetFixtureJournalEntries());
+  beforeEach(() => {
+    resetFixtureJournalEntries();
+    clearYearEndArtifacts();
+  });
   it("does not create records during readiness reads", () => {
     buildPayrollYearEndReadiness("FY2026");
     expect(existsSync(join(getDataDir(), "finance", "year-end-adjustment", "FY2026.yaml"))).toBe(
@@ -81,6 +116,7 @@ describe("annual payroll evidence and posting", () => {
     expect(summarizeYearEndAdjustment(doc).totals).toEqual({
       annual_gross_yen: null,
       withholding_total_yen: null,
+      yea_settlement_yen: null,
     });
     expect(doc.blockers).toContain("actual_annual_payroll_missing");
     expect(() => markYearEndReadyForHandoff("FY2026")).toThrow("incomplete");
@@ -89,11 +125,11 @@ describe("annual payroll evidence and posting", () => {
   it("reconciles all twelve actual payroll journals and hands off without computing settlement", () => {
     source();
     const doc = computeYearEndAdjustment("FY2026");
-    expect(summarizeYearEndAdjustment(doc).totals).toEqual({
-      annual_gross_yen: 3360000,
-      withholding_total_yen: 68640,
-    });
-    expect(doc.employees[0]?.yea_settlement_yen).toBeUndefined();
+    expect(summarizeYearEndAdjustment(doc).totals.annual_gross_yen).toBe(3360000);
+    expect(summarizeYearEndAdjustment(doc).totals.withholding_total_yen).toBe(68640);
+    expect(typeof doc.employees[0]?.yea_settlement_yen).toBe("number");
+    expect(typeof doc.employees[0]?.annual_tax_yen).toBe("number");
+    expect(summarizeYearEndAdjustment(doc).calculation_complete).toBe(true);
     expect(markYearEndReadyForHandoff("FY2026").status).toBe("ready_for_handoff");
     expect(buildPayrollYearEndReadiness("FY2026").ready_for_tax_handoff).toBe(true);
     expect(() => computeYearEndAdjustment("FY2026")).toThrow("cannot be overwritten");
@@ -122,8 +158,79 @@ describe("annual payroll evidence and posting", () => {
       payments: file.employees[0]!.payments,
     });
     writeFileSync(path, YAML.stringify(file));
-    expect(() => computeYearEndAdjustment("FY2026")).toThrow("multiple employees");
+    expect(() => computeYearEndAdjustment("FY2026")).toThrow(
+      /multiple employees|allocated more than once/
+    );
   });
+  it(
+    "certifies two employees when each has employee-scoped payroll journals",
+    () => {
+      resetFixtureJournalEntries();
+      clearYearEndArtifacts();
+      const first = source("EMP-A");
+      const secondPayments = months.map((period) => {
+        const id = postPayrollJournalEntry({
+          period,
+          authorizedBy: "OP-TEST",
+          employeeId: "EMP-B",
+          grossYen: 280000,
+          withholdingYen: 5720,
+          socialEmployeeYen: 41300,
+          socialEmployerYen: 42280,
+        });
+        const paymentId = postPayrollPaymentJournalEntry({
+          period,
+          authorizedBy: "OP-TEST",
+          employeeId: "EMP-B",
+          amountYen: 232980,
+        })!;
+        const paidOn = loadJournalEntries()
+          .entries.find((e) => e.entry_id === paymentId)!
+          .occurred_at.slice(0, 10);
+        return {
+          journal_entry_id: id,
+          payment_journal_entry_id: paymentId,
+          paid_on: paidOn,
+          gross_yen: 280000,
+          withholding_yen: 5720,
+          social_employee_yen: 41300,
+          social_employer_yen: 42280,
+        };
+      });
+      first.file.employees.push({
+        employee_id: "EMP-B",
+        coverage_months: months,
+        payments: secondPayments,
+      });
+      writeFileSync(first.path, YAML.stringify(first.file));
+      const dir = join(getDataDir(), "finance", "yea-declarations");
+      writeFileSync(
+        join(dir, "FY2026.yaml"),
+        YAML.stringify({
+          version: 1,
+          fiscal_year: "FY2026",
+          employees: [
+            {
+              employee_id: "EMP-A",
+              income_deductions_yen: 480000,
+              tax_credits_yen: 0,
+              other_income_yen: 0,
+            },
+            {
+              employee_id: "EMP-B",
+              income_deductions_yen: 480000,
+              tax_credits_yen: 0,
+              other_income_yen: 0,
+            },
+          ],
+        })
+      );
+      const doc = computeYearEndAdjustment("FY2026");
+      expect(doc.employees).toHaveLength(2);
+      expect(doc.blockers).toEqual([]);
+    },
+    60_000
+  );
   it("invalidates handoff when source changes", () => {
     const { path, file } = source();
     computeYearEndAdjustment("FY2026");

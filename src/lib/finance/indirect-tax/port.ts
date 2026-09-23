@@ -2,8 +2,6 @@
  * Indirect-tax close gate.
  * The ledger is shared. Only Japan + vat_credit runs the consumption-tax engine.
  */
-import type { IndirectTaxFamily } from "../../../../schemas/jurisdiction.js";
-import { getResolvedJurisdiction } from "../../jurisdiction.js";
 import { loadChartOfAccounts } from "../../data.js";
 import { buildConsumptionTaxSummary, runConsumptionTaxCheck } from "../consumption-tax.js";
 import { loadJournalEntries } from "../expense-claim-journal.js";
@@ -11,13 +9,15 @@ import {
   assertJapaneseFinanceEngine,
   JP_TAX_PROFILE_REQUIRED,
 } from "../jp-engine-guard.js";
-import { jpIndirectTaxEngineInstalled } from "./family.js";
+import {
+  resolveIndirectTaxCapability,
+  type IndirectTaxEngineId,
+} from "./capability.js";
 
 export const INDIRECT_TAX_ENGINE_UNINSTALLED = "indirect tax engine not installed";
 export const INDIRECT_TAX_NONE = "no indirect tax";
 export { JP_TAX_PROFILE_REQUIRED };
-
-export type IndirectTaxEngineId = "jp" | "uninstalled";
+export type { IndirectTaxEngineId };
 
 export type JpIndirectTaxEngine = {
   missingLineTaxCodes(month: string): string[];
@@ -69,11 +69,6 @@ function defaultJpEngine(): JpIndirectTaxEngine {
   };
 }
 
-function idleDetail(family: IndirectTaxFamily): string {
-  if (family === "none") return INDIRECT_TAX_NONE;
-  return INDIRECT_TAX_ENGINE_UNINSTALLED;
-}
-
 function evaluateJpClose(month: string, engine: JpIndirectTaxEngine): IndirectTaxCloseResult {
   const missing = engine.missingLineTaxCodes(month);
   if (missing.length > 0) {
@@ -112,15 +107,22 @@ export function evaluateIndirectTaxClose(
   month: string,
   engine: JpIndirectTaxEngine = defaultJpEngine()
 ): IndirectTaxCloseResult {
-  const resolved = getResolvedJurisdiction();
-  const family = resolved.pack.indirect_tax_family;
-  if (!jpIndirectTaxEngineInstalled()) {
+  const capability = resolveIndirectTaxCapability();
+  if (capability.engine === "jp" && capability.installed) {
+    return evaluateJpClose(month, engine);
+  }
+  if (capability.engine === "none") {
     return {
-      pass: family === "none",
-      detail: idleDetail(family),
+      pass: true,
+      detail: INDIRECT_TAX_NONE,
       label: "間接税",
-      engine: "uninstalled",
+      engine: "none",
     };
   }
-  return evaluateJpClose(month, engine);
+  return {
+    pass: false,
+    detail: capability.detail || INDIRECT_TAX_ENGINE_UNINSTALLED,
+    label: "間接税",
+    engine: capability.engine === "uninstalled" ? "uninstalled" : capability.engine,
+  };
 }

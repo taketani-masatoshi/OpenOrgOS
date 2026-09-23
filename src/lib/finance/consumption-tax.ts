@@ -14,6 +14,11 @@ import {
 import { loadChartOfAccounts, loadTaxProfile } from "../data.js";
 import { journalEntriesPath, loadJournalEntries } from "./expense-claim-journal.js";
 import type { TaxCategory } from "../../../schemas/finance/journal-entry.js";
+import {
+  applyCommonUseAllocation,
+  applyTransitionalInvoiceRate,
+  readConsumptionTaxPeriodEvidence,
+} from "./consumption-tax-period-evidence.js";
 
 const TAX_RATE_10 = 0.1;
 const TAX_RATE_8 = 0.08;
@@ -72,6 +77,7 @@ function aggregateFromJournal(
     );
   const coa = loadChartOfAccounts();
   const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
+  const periodEvidence = readConsumptionTaxPeriodEvidence(period);
   for (const raw of loadJournalEntries().entries) {
     const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
     if (!entry.occurred_at.startsWith(period)) continue;
@@ -97,33 +103,28 @@ function aggregateFromJournal(
       if (ten) totals.purchases10 += amount;
       else totals.purchases8 += amount;
       if (line.purchase_use === "non_taxable_only") continue;
-      // Transitional and common-use credits require period-wide eligibility evidence.
-      // Do not infer eligibility from an obsolete 80/50 label or a monthly ratio.
-      if (line.purchase_use === "common") {
-        throw new Error(
-          `Common-use purchase tax allocation is not implemented: ${entry.entry_id}/${line.account_code}`
-        );
-      }
-      if (
-        line.invoice_status === "nonqualified_80" ||
-        line.invoice_status === "nonqualified_50"
-      ) {
-        throw new Error(
-          `Transitional invoice deduction rates are not auto-applied: ${entry.entry_id}/${line.account_code}`
-        );
-      }
-      if (
-        line.purchase_use !== "taxable_only" ||
-        line.invoice_status !== "qualified" ||
-        line.tax_amount_yen === undefined
-      ) {
+      if (line.tax_amount_yen === undefined) {
         throw new Error(
           `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
         );
       }
-      const tax = Math.sign(amount) * line.tax_amount_yen;
-      if (ten) totals.purchaseTax10 += tax;
-      else totals.purchaseTax8 += tax;
+      let deductible = Math.sign(amount) * line.tax_amount_yen;
+      if (line.purchase_use === "common") {
+        deductible = applyCommonUseAllocation(deductible, periodEvidence);
+      } else if (line.purchase_use !== "taxable_only") {
+        throw new Error(
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+        );
+      }
+      if (line.invoice_status === "nonqualified_80" || line.invoice_status === "nonqualified_50") {
+        deductible = applyTransitionalInvoiceRate(deductible, line.invoice_status, periodEvidence);
+      } else if (line.invoice_status !== "qualified") {
+        throw new Error(
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+        );
+      }
+      if (ten) totals.purchaseTax10 += deductible;
+      else totals.purchaseTax8 += deductible;
     }
   }
   return totals;

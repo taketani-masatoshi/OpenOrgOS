@@ -261,6 +261,7 @@ export function postMonthlyPlJournalEntries(input: {
 export function postPayrollJournalEntry(input: {
   period: string;
   authorizedBy: string;
+  employeeId?: string;
   grossYen?: number;
   withholdingYen?: number;
   socialEmployerYen?: number;
@@ -285,38 +286,51 @@ export function postPayrollJournalEntry(input: {
     throw new Error("Explicit payroll withholding and both social insurance amounts required");
   const net = gross - withholding - socialEmployee;
   if (net < 0) throw new Error("Payroll deductions exceed gross");
-  const entryId = `JE-PAYROLL-${input.period}`;
+  const entryId = input.employeeId
+    ? `JE-PAYROLL-${input.period}-${input.employeeId}`
+    : `JE-PAYROLL-${input.period}`;
 
   appendJournalEntry({
     entry_id: entryId,
     occurred_at: `${input.period}-25T00:00:00.000Z`,
-    description: `Payroll ${input.period}`,
-    source: { kind: "payroll", period: input.period },
-    evidence_refs: [`payroll:${input.period}`],
+    description: input.employeeId
+      ? `Payroll ${input.period} ${input.employeeId}`
+      : `Payroll ${input.period}`,
+    source: {
+      kind: "payroll",
+      period: input.period,
+      employee_id: input.employeeId,
+      event: "accrual",
+    },
+    evidence_refs: [`payroll:${input.period}${input.employeeId ? `:${input.employeeId}` : ""}`],
     lines: [
       {
         account_code: accounts.payroll_expense,
         debit_yen: gross + social,
         credit_yen: 0,
         tax_category: "out_of_scope",
+        person_id: input.employeeId,
       },
       {
         account_code: accounts.withholding_payable,
         debit_yen: 0,
         credit_yen: withholding,
         tax_category: "out_of_scope",
+        person_id: input.employeeId,
       },
       {
         account_code: accounts.social_insurance_payable,
         debit_yen: 0,
         credit_yen: social + socialEmployee,
         tax_category: "out_of_scope",
+        person_id: input.employeeId,
       },
       {
         account_code: accounts.payroll_payable,
         debit_yen: 0,
         credit_yen: net,
         tax_category: "out_of_scope",
+        person_id: input.employeeId,
       },
     ],
   });
@@ -615,6 +629,7 @@ export function postRemittanceJournalEntry(input: {
 export function postPayrollPaymentJournalEntry(input: {
   period: string;
   authorizedBy: string;
+  employeeId?: string;
   amountYen?: number;
 }): string | null {
   const accounts = resolveJournalSourceAccounts();
@@ -625,27 +640,103 @@ export function postPayrollPaymentJournalEntry(input: {
     trial.rows.find((row) => row.account_code === accounts.payroll_payable)?.balance_yen ?? 0;
   const amount = input.amountYen ?? payable;
   if (amount <= 0) return null;
-  const entryId = `JE-PAYROLL-PAY-${input.period}`;
+  const entryId = input.employeeId
+    ? `JE-PAYROLL-PAY-${input.period}-${input.employeeId}`
+    : `JE-PAYROLL-PAY-${input.period}`;
   appendJournalEntry({
     entry_id: entryId,
     occurred_at: occurredAt,
-    description: `Payroll payment ${input.period}`,
-    source: { kind: "payroll", period: input.period },
-    evidence_refs: [`payroll-payment:${input.period}`],
+    description: input.employeeId
+      ? `Payroll payment ${input.period} ${input.employeeId}`
+      : `Payroll payment ${input.period}`,
+    source: {
+      kind: "payroll",
+      period: input.period,
+      employee_id: input.employeeId,
+      event: "payment",
+    },
+    evidence_refs: [
+      `payroll-payment:${input.period}${input.employeeId ? `:${input.employeeId}` : ""}`,
+    ],
     lines: [
       {
         account_code: accounts.payroll_payable,
         debit_yen: amount,
         credit_yen: 0,
         tax_category: "out_of_scope",
+        person_id: input.employeeId,
       },
       {
         account_code: accounts.bank_control,
         debit_yen: 0,
         credit_yen: amount,
         tax_category: "out_of_scope",
+        person_id: input.employeeId,
       },
     ],
+  });
+  return entryId;
+}
+
+/** Year-end withholding settlement: 追徴 (Dr receivable / Cr withholding) or 還付 (reverse). */
+export function postYearEndWithholdingSettlement(input: {
+  fiscalYear: string;
+  employeeId: string;
+  settlementYen: number;
+  authorizedBy: string;
+  occurredAt: string;
+}): string {
+  if (!Number.isSafeInteger(input.settlementYen) || input.settlementYen === 0) {
+    throw new Error("Year-end settlement requires a non-zero integer amount");
+  }
+  const accounts = resolveJournalSourceAccounts();
+  const entryId = `JE-PAYROLL-YEA-${input.fiscalYear}-${input.employeeId}`;
+  const amount = Math.abs(input.settlementYen);
+  const additional = input.settlementYen > 0;
+  appendJournalEntry({
+    entry_id: entryId,
+    occurred_at: input.occurredAt,
+    description: `Year-end withholding ${additional ? "additional" : "refund"} ${input.employeeId}`,
+    source: {
+      kind: "payroll",
+      period: input.occurredAt.slice(0, 7),
+      employee_id: input.employeeId,
+      event: "yea_settlement",
+    },
+    evidence_refs: [`yea-settlement:${input.fiscalYear}:${input.employeeId}`],
+    lines: additional
+      ? [
+          {
+            account_code: accounts.payroll_payable,
+            debit_yen: amount,
+            credit_yen: 0,
+            tax_category: "out_of_scope",
+            person_id: input.employeeId,
+          },
+          {
+            account_code: accounts.withholding_payable,
+            debit_yen: 0,
+            credit_yen: amount,
+            tax_category: "out_of_scope",
+            person_id: input.employeeId,
+          },
+        ]
+      : [
+          {
+            account_code: accounts.withholding_payable,
+            debit_yen: amount,
+            credit_yen: 0,
+            tax_category: "out_of_scope",
+            person_id: input.employeeId,
+          },
+          {
+            account_code: accounts.payroll_payable,
+            debit_yen: 0,
+            credit_yen: amount,
+            tax_category: "out_of_scope",
+            person_id: input.employeeId,
+          },
+        ],
   });
   return entryId;
 }

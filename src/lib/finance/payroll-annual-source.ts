@@ -54,13 +54,7 @@ export function readAnnualPayrollSource(fiscalYear: string) {
   const seenEmployees = new Set<string>();
   const seenPayments = new Set<string>();
   const proof: unknown[] = [];
-  // One journal currently models one monthly company payroll run. Multi-employee
-  // annual certification needs per-employee journals; refuse batch conflation.
-  if (source.employees.length > 1) {
-    throw new Error(
-      "Annual payroll cannot certify multiple employees from company-level payroll journals"
-    );
-  }
+  const multiEmployee = source.employees.length > 1;
   const employees = source.employees.map((employee) => {
     if (seenEmployees.has(employee.employee_id))
       throw new Error("Duplicate annual payroll employee");
@@ -86,6 +80,20 @@ export function readAnnualPayrollSource(fiscalYear: string) {
       const entry = journals.find((e) => e.entry_id === payment.journal_entry_id);
       if (!entry || entry.source?.kind !== "payroll" || !entry.occurred_at.startsWith(`${year}-`))
         throw new Error("Annual payroll journal/date mismatch");
+      if (entry.source.event && entry.source.event !== "accrual")
+        throw new Error("Annual payroll accrual event required");
+      if (multiEmployee) {
+        if (entry.source.employee_id !== employee.employee_id) {
+          throw new Error(
+            "Annual payroll cannot certify multiple employees from company-level payroll journals"
+          );
+        }
+      } else if (
+        entry.source.employee_id &&
+        entry.source.employee_id !== employee.employee_id
+      ) {
+        throw new Error("Annual payroll employee_id does not match journal source");
+      }
       if (journals.some((e) => e.reversal_of === entry.entry_id))
         throw new Error("Reversed payroll cannot certify annual receipts");
       const credit = (code: string) =>
@@ -114,6 +122,13 @@ export function readAnnualPayrollSource(fiscalYear: string) {
         throw new Error(
           "Annual payroll requires a distinct, unreversed payment journal on the payment date"
         );
+      if (settlement.source?.kind !== "payroll")
+        throw new Error("Annual payroll payment journal must be payroll-sourced");
+      if (multiEmployee && settlement.source.employee_id !== employee.employee_id) {
+        throw new Error(
+          "Annual payroll cannot certify multiple employees from company-level payroll journals"
+        );
+      }
       const settlementCredit = (code: string) =>
         settlement.lines
           .filter((l) => l.account_code === code)
@@ -126,7 +141,6 @@ export function readAnnualPayrollSource(fiscalYear: string) {
         )
       )
         throw new Error("Annual payroll payment does not reconcile to net pay and bank");
-      // Accrual without settlement, or settlement that pays more than one accrual, is out of scope.
       if (settlement.lines.length !== 2)
         throw new Error("Annual payroll refuses batch or multi-leg payment journals");
       seenPayments.add(settlement.entry_id);
@@ -146,6 +160,7 @@ export function readAnnualPayrollSource(fiscalYear: string) {
   for (const entry of journals) {
     if (
       entry.source?.kind === "payroll" &&
+      (!entry.source.event || entry.source.event === "accrual") &&
       entry.occurred_at.startsWith(year) &&
       !seenIds.has(entry.entry_id) &&
       !seenPayments.has(entry.entry_id)

@@ -44,6 +44,9 @@ export const journalSourceSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("payroll"),
     period: monthString,
+    /** Required for multi-employee annual certification and year-end settlement. */
+    employee_id: z.string().min(1).optional(),
+    event: z.enum(["accrual", "payment", "yea_settlement"]).optional(),
   }),
   z.object({
     kind: z.literal("ar_ap"),

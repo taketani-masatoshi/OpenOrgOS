@@ -12,10 +12,16 @@ import { getDataDir } from "../utils.js";
 import { getClock } from "../runtime-context.js";
 import { loadPayroll } from "../data.js";
 import { payrollCalendarYear, readAnnualPayrollSource } from "./payroll-annual-source.js";
+import {
+  computeAnnualSalarySettlement,
+  readYeaDeclaration,
+} from "./payroll-yea-settlement.js";
 import { withFinanceMutation } from "./reconciliation-transaction.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { appendJournalEntry } from "./expense-claim-journal.js";
+import { postYearEndWithholdingSettlement } from "./journal-sources.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
+import { fiscalYearEndDate, resolveCompanyFiscalYearEndMonth } from "./fiscal-year.js";
 
 const bonusRunSchema = z.object({
   version: z.literal(1),
@@ -52,7 +58,9 @@ const yeaSchema = z.object({
       annual_gross_yen: z.number().int().nonnegative().safe().optional(),
       withholding_total_yen: z.number().int().nonnegative().safe().optional(),
       social_employee_total_yen: z.number().int().nonnegative().safe().optional(),
-      yea_settlement_yen: z.number().optional(),
+      annual_tax_yen: z.number().int().nonnegative().safe().optional(),
+      yea_settlement_yen: z.number().int().safe().optional(),
+      settlement_journal_entry_id: z.string().optional(),
       note: z.string().optional(),
     })
   ),
@@ -224,6 +232,7 @@ export function computeYearEndAdjustment(fiscalYear: string) {
         throw new Error("Finalized annual payroll cannot be overwritten by compute");
     }
     const actual = readAnnualPayrollSource(fiscalYear);
+    const declaration = readYeaDeclaration(fiscalYear);
     const payroll = actual ? null : loadPayroll();
     const ids = actual
       ? []
@@ -231,18 +240,64 @@ export function computeYearEndAdjustment(fiscalYear: string) {
           ...(payroll?.employee_payroll?.employee_ids ?? []),
           ...(payroll?.officers ?? []).flatMap((o) => (o.employee_id ? [o.employee_id] : [])),
         ];
+    const blockers: string[] = [];
+    if (!actual) blockers.push("actual_annual_payroll_missing");
+    if (actual && !declaration) blockers.push("yea_declaration_missing");
+    const employees =
+      actual?.employees.map((row) => {
+        const declared = declaration?.employees.find((d) => d.employee_id === row.employee_id);
+        if (!declared) {
+          blockers.push(`yea_declaration_missing:${row.employee_id}`);
+          return {
+            employee_id: row.employee_id,
+            annual_gross_yen: row.annual_gross_yen,
+            withholding_total_yen: row.withholding_total_yen,
+            social_employee_total_yen: row.social_employee_total_yen,
+            note: "YEA declaration missing for settlement",
+          };
+        }
+        const settlement = computeAnnualSalarySettlement({
+          fiscalYear,
+          employeeId: row.employee_id,
+          annualGrossYen: row.annual_gross_yen,
+          socialEmployeeTotalYen: row.social_employee_total_yen,
+          withholdingTotalYen: row.withholding_total_yen,
+          incomeDeductionsYen: declared.income_deductions_yen,
+          taxCreditsYen: declared.tax_credits_yen,
+          otherIncomeYen: declared.other_income_yen,
+        });
+        const occurredAt = `${fiscalYearEndDate(fiscalYear, resolveCompanyFiscalYearEndMonth())}T12:00:00.000Z`;
+        const settlementId =
+          settlement.yea_settlement_yen === 0
+            ? undefined
+            : postYearEndWithholdingSettlement({
+                fiscalYear,
+                employeeId: row.employee_id,
+                settlementYen: settlement.yea_settlement_yen,
+                authorizedBy: "yea-compute",
+                occurredAt,
+              });
+        return {
+          employee_id: row.employee_id,
+          annual_gross_yen: row.annual_gross_yen,
+          withholding_total_yen: row.withholding_total_yen,
+          social_employee_total_yen: row.social_employee_total_yen,
+          annual_tax_yen: settlement.annual_tax_yen,
+          yea_settlement_yen: settlement.yea_settlement_yen,
+          settlement_journal_entry_id: settlementId,
+        };
+      }) ??
+      [...new Set(ids)].map((employee_id) => ({
+        employee_id,
+        note: "Annual receipts and withholding unavailable; payroll plan not substituted",
+      }));
     const next = yeaSchema.parse({
       version: 1,
       fiscal_year: fiscalYear,
       status: "in_progress",
       source_sha256: actual?.sha256,
-      blockers: actual ? [] : ["actual_annual_payroll_missing"],
-      employees:
-        actual?.employees ??
-        [...new Set(ids)].map((employee_id) => ({
-          employee_id,
-          note: "Annual receipts and withholding unavailable; payroll plan not substituted",
-        })),
+      blockers: [...new Set(blockers)],
+      employees,
       updated_at: getClock().now().toISOString(),
     });
     mkdirSync(join(path, ".."), { recursive: true });
@@ -253,12 +308,22 @@ export function computeYearEndAdjustment(fiscalYear: string) {
 
 /** Chat / Console 向け集計。個人別明細は YAML（gitignore）のみ。 */
 export function summarizeYearEndAdjustment(yea: z.infer<typeof yeaSchema>) {
+  const settlementReady =
+    yea.blockers.length === 0 &&
+    yea.employees.length > 0 &&
+    yea.employees.every(
+      (row) =>
+        row.annual_gross_yen !== undefined &&
+        row.withholding_total_yen !== undefined &&
+        row.annual_tax_yen !== undefined &&
+        row.yea_settlement_yen !== undefined
+    );
   return {
     fiscal_year: yea.fiscal_year,
     status: yea.status,
     employee_count: yea.employees.length,
     blockers: yea.blockers,
-    calculation_complete: false,
+    calculation_complete: settlementReady,
     totals: {
       annual_gross_yen:
         yea.blockers.length ||
@@ -272,6 +337,9 @@ export function summarizeYearEndAdjustment(yea: z.infer<typeof yeaSchema>) {
         yea.employees.some((row) => row.withholding_total_yen === undefined)
           ? null
           : yea.employees.reduce((sum, row) => sum + row.withholding_total_yen!, 0),
+      yea_settlement_yen: settlementReady
+        ? yea.employees.reduce((sum, row) => sum + (row.yea_settlement_yen ?? 0), 0)
+        : null,
     },
     note: "個人別明細は year-end-adjustment YAML（gitignore）。e-file 提出はしない。",
   };
@@ -283,7 +351,11 @@ function assertYearEndEvidence(doc: z.infer<typeof yeaSchema>): void {
     !doc.source_sha256 ||
     doc.employees.length === 0 ||
     doc.employees.some(
-      (e) => e.annual_gross_yen === undefined || e.withholding_total_yen === undefined
+      (e) =>
+        e.annual_gross_yen === undefined ||
+        e.withholding_total_yen === undefined ||
+        e.annual_tax_yen === undefined ||
+        e.yea_settlement_yen === undefined
     )
   )
     throw new Error("Annual payroll actuals incomplete");
