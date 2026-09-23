@@ -1,0 +1,14 @@
+# Tenant integrations (L2 — copy to integrations.yaml)
+# Webhook secrets · setup completion stamp. Mail SMTP config: records/executive/mail-config.yaml
+#
+version: "1"
+setup:
+  completed_at: null
+  completed_by: null
+webhooks:
+  - id: secretary_escalate
+    url: https://example.com/hooks/secretary
+    # secret: set locally only — never commit
+notes: |
+  Run: orgos tenant setup
+  Status: orgos integrations status
