@@ -22,7 +22,9 @@ import { buildClaudeDesktopMcpSnippet, buildContinueMcpSnippet } from "./mcp-sni
 
 export function buildPortableAgentPack(agentId: AgentId, opts?: { fullPolicy?: boolean }): string {
   const registry = loadAgentRegistryEntries().find((a) => a.id === agentId);
-  const label = registry?.name_ja ? `${registry.name}（${registry.name_ja}）` : (registry?.name ?? agentId);
+  const label = registry?.name_ja
+    ? `${registry.name}（${registry.name_ja}）`
+    : (registry?.name ?? agentId);
   const policy = rewriteMarkdownLinksForPortableExport(
     opts?.fullPolicy ? loadOperatorPolicyMarkdown() : operatorPolicyExcerpt(60)
   );
@@ -148,9 +150,7 @@ export function validateAgentPackExports(): string[] {
   for (const entry of targets) {
     const rel = `steward/platform/agent/exports/agents/${entry.id}.pack.md`;
     const packPath = join(agentsDir, `${entry.id}.pack.md`);
-    const expected = normalizeAgentExportForCompare(
-      buildPortableAgentPack(entry.id as AgentId)
-    );
+    const expected = normalizeAgentExportForCompare(buildPortableAgentPack(entry.id as AgentId));
     if (!existsSync(packPath)) {
       issues.push(`${rel} missing; run orgos operator export --all`);
       continue;

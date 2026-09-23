@@ -39,7 +39,10 @@ function validateBearer(req: IncomingMessage): boolean {
 }
 
 function unauthorized(res: ServerResponse): void {
-  json(res, 401, { error: "unauthorized", detail: "Authorization: Bearer <ORGOS_MCP_TOKEN> required" });
+  json(res, 401, {
+    error: "unauthorized",
+    detail: "Authorization: Bearer <ORGOS_MCP_TOKEN> required",
+  });
 }
 
 export async function startStewardMcpHttpServer(
@@ -107,8 +110,7 @@ export async function startStewardMcpHttpServer(
   });
 
   const addr = server.address();
-  const actualPort =
-    typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+  const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
   const base = `http://${host}:${actualPort}`;
   return {
     url: base,

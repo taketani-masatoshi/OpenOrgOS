@@ -11,8 +11,16 @@ import {
   resetAiaSchedulerForTests,
   saveAiaRuntimeConfig,
 } from "../src/lib/aia/scheduler.js";
-import { formatOrchestrationStatus, retryFailedWorkOrders } from "../src/lib/orchestration/orchestrate-actions.js";
-import { DISPATCH_MANIFEST_PREFIX, loadHandoff, routingQueueDir, writeHandoffFiles } from "../src/lib/routing.js";
+import {
+  formatOrchestrationStatus,
+  retryFailedWorkOrders,
+} from "../src/lib/orchestration/orchestrate-actions.js";
+import {
+  DISPATCH_MANIFEST_PREFIX,
+  loadHandoff,
+  routingQueueDir,
+  writeHandoffFiles,
+} from "../src/lib/routing.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
 vi.mock("../src/lib/llm-pool/registry.js", async (importOriginal) => {
@@ -80,7 +88,7 @@ describe("orchestration dispatch integration", () => {
       depends_on?: string[];
       status?: string;
       dispatch?: { attempts?: number; max_attempts?: number };
-    } = {},
+    } = {}
   ) {
     const handoff = handoffSchema.parse({
       id,
@@ -102,7 +110,7 @@ describe("orchestration dispatch integration", () => {
     writeFileSync(
       join(routingQueueDir(), handoff.agent_prompt_path!),
       "# Work order prompt\n\nRun validate.",
-      "utf-8",
+      "utf-8"
     );
     created.push(id);
     return handoff;
@@ -349,7 +357,7 @@ describe("orchestration dispatch integration", () => {
     const before = new Set(
       existsSync(routingQueueDir())
         ? readdirSync(routingQueueDir()).filter((n) => n.startsWith(DISPATCH_MANIFEST_PREFIX))
-        : [],
+        : []
     );
 
     const result = await runDispatch(parent.id, { dryRun: true });
@@ -361,7 +369,7 @@ describe("orchestration dispatch integration", () => {
     const after = new Set(
       existsSync(routingQueueDir())
         ? readdirSync(routingQueueDir()).filter((n) => n.startsWith(DISPATCH_MANIFEST_PREFIX))
-        : [],
+        : []
     );
     expect([...after].filter((n) => !before.has(n))).toEqual([]);
     expect(loadHandoff("IMP-DISP-DRY-A").status).toBe("pending");

@@ -1,9 +1,6 @@
 import { existsSync } from "node:fs";
 import type { AgentId } from "../../schemas/classification.js";
-import {
-  tenantAgentRosterSchema,
-  type TenantAgentRoster,
-} from "../../schemas/agent-roster.js";
+import { tenantAgentRosterSchema, type TenantAgentRoster } from "../../schemas/agent-roster.js";
 import { getCatalogAgent, listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
 import { isAgentActive } from "./agent-activation.js";
 import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModulesSafe } from "./modules.js";
@@ -112,7 +109,11 @@ export function validateTenantAgentRoster(roster = loadTenantAgentRoster().roste
       if (profile === "developer" && agent?.activation !== "developer_explicit") {
         issues.push(`${id}: developer profile is only for developer_explicit agents`);
       }
-      if (profile === "task" && agent?.activation === "tenant" && !roster.profiles.operational.includes(id)) {
+      if (
+        profile === "task" &&
+        agent?.activation === "tenant" &&
+        !roster.profiles.operational.includes(id)
+      ) {
         issues.push(`${id}: task profile requires operational activation`);
       }
     }
@@ -174,8 +175,7 @@ export function setTenantAgentEnabled(
   const developer = new Set(roster.profiles.developer);
   const task = new Set(roster.profiles.task);
   const disabled = new Set(roster.disabled);
-  const target =
-    profile === "developer" ? developer : profile === "task" ? task : operational;
+  const target = profile === "developer" ? developer : profile === "task" ? task : operational;
 
   if (enabled) {
     target.add(resolved);
@@ -245,9 +245,7 @@ export function clearTaskProfile(): TenantAgentRoster {
   return updated;
 }
 
-export function listActiveTenantAgents(
-  profile: AgentRosterProfile = "operational"
-): AgentId[] {
+export function listActiveTenantAgents(profile: AgentRosterProfile = "operational"): AgentId[] {
   return listCatalogAgents()
     .map((agent) => agent.id as AgentId)
     .filter((id) => isRosterAgentActive(id, { profile }))

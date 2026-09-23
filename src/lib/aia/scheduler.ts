@@ -8,14 +8,8 @@ import {
   type AiaRuntimeFile,
 } from "../../../schemas/aia-runtime.js";
 import { getTenantId, tenantDataPath } from "../tenant.js";
-import {
-  hydrateAiaQueueState,
-  persistAiaQueueState,
-  saveAiaQueueFile,
-} from "./queue-store.js";
-import {
-  loadAiaRuntimeConfig,
-} from "./runtime-config.js";
+import { hydrateAiaQueueState, persistAiaQueueState, saveAiaQueueFile } from "./queue-store.js";
+import { loadAiaRuntimeConfig } from "./runtime-config.js";
 import {
   llmPoolHasCapacity,
   resolveConcurrentJobsLimit,
@@ -72,7 +66,7 @@ export class AiaScheduler {
 
   countRunningForModule(moduleId: string): number {
     return [...this.runs.values()].filter(
-      (r) => r.module_id === moduleId && isActiveAiaRunState(r.state),
+      (r) => r.module_id === moduleId && isActiveAiaRunState(r.state)
     ).length;
   }
 
@@ -86,7 +80,7 @@ export class AiaScheduler {
     const queued = [...this.runs.values()].filter((r) => r.state === "queued").length;
     const running = this.runningCount;
     const moduleRejects = [...this.runs.values()].filter(
-      (r) => r.fail_reason === "concurrent_jobs_exceeded",
+      (r) => r.fail_reason === "concurrent_jobs_exceeded"
     ).length;
     return {
       aia_running: running,
@@ -105,11 +99,13 @@ export class AiaScheduler {
       };
     }
     if (existing?.state === "queued") {
-      return this.promoteQueuedRun(req.run_id) ?? {
-        admitted: false,
-        reason: "still queued",
-        queued: true,
-      };
+      return (
+        this.promoteQueuedRun(req.run_id) ?? {
+          admitted: false,
+          reason: "still queued",
+          queued: true,
+        }
+      );
     }
     if (existing) {
       return { admitted: false, reason: `run ${req.run_id} already tracked` };
@@ -148,7 +144,7 @@ export class AiaScheduler {
   private blockReason(
     agentId: string,
     moduleId: string | undefined,
-    moduleLimit: number,
+    moduleLimit: number
   ): string | null {
     if (moduleId && this.countRunningForModule(moduleId) >= moduleLimit) {
       return `module ${moduleId} concurrent_jobs limit (${moduleLimit}) reached`;
@@ -190,7 +186,7 @@ export class AiaScheduler {
     const blockReason = this.blockReason(
       run.agent_id,
       run.module_id,
-      resolveConcurrentJobsLimit(run.agent_id),
+      resolveConcurrentJobsLimit(run.agent_id)
     );
     if (blockReason) {
       return { admitted: false, reason: blockReason, queued: true };
@@ -202,7 +198,7 @@ export class AiaScheduler {
         module_id: run.module_id,
         work_order_id: run.work_order_id,
       },
-      run.module_id,
+      run.module_id
     );
   }
 
@@ -258,7 +254,7 @@ export function gcAiaRunWorkspace(runId: string): void {
 
 export function createAiaScheduler(
   config?: AiaRuntimeFile,
-  opts?: { hydrate?: boolean },
+  opts?: { hydrate?: boolean }
 ): AiaScheduler {
   return new AiaScheduler(config, opts);
 }
@@ -290,10 +286,9 @@ export function detachAiaSchedulerSingletonForTests(): void {
 export function admitWithBackoff(
   scheduler: AiaScheduler,
   req: AiaAdmissionRequest,
-  opts?: { maxWaitMs?: number; intervalMs?: number },
+  opts?: { maxWaitMs?: number; intervalMs?: number }
 ): AiaAdmissionResult {
-  const maxWait =
-    opts?.maxWaitMs ?? scheduler.runtimeConfig.queue_timeout_seconds * 1000;
+  const maxWait = opts?.maxWaitMs ?? scheduler.runtimeConfig.queue_timeout_seconds * 1000;
   const interval = opts?.intervalMs ?? 50;
   const deadline = Date.now() + maxWait;
   while (Date.now() < deadline) {

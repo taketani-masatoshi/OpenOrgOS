@@ -1,9 +1,6 @@
 import type { Handoff, HandoffStatus } from "../../../schemas/routing.js";
 import { loadHandoff, loadHandoffChildren } from "../routing.js";
-import {
-  isCancelledWorkOrder,
-  transitionWorkOrder,
-} from "./work-order-state.js";
+import { isCancelledWorkOrder, transitionWorkOrder } from "./work-order-state.js";
 
 export interface PlanGraph {
   rootId: string;
@@ -63,9 +60,7 @@ function detectCycle(nodes: Map<string, Handoff>): void {
 }
 
 export function computeWaves(nodes: Map<string, Handoff>): string[][] {
-  const ids = [...nodes.values()]
-    .filter((node) => !(node.child_ids?.length))
-    .map((node) => node.id);
+  const ids = [...nodes.values()].filter((node) => !node.child_ids?.length).map((node) => node.id);
   const depth = new Map<string, number>();
 
   function nodeDepth(id: string, stack: Set<string>): number {
@@ -91,9 +86,7 @@ export function computeWaves(nodes: Map<string, Handoff>): string[][] {
   const maxDepth = Math.max(0, ...depth.values());
   const waves: string[][] = [];
   for (let wave = 0; wave <= maxDepth; wave += 1) {
-    const layer = ids
-      .filter((id) => depth.get(id) === wave)
-      .sort((a, b) => a.localeCompare(b));
+    const layer = ids.filter((id) => depth.get(id) === wave).sort((a, b) => a.localeCompare(b));
     if (layer.length) waves.push(layer);
   }
   return waves;
@@ -130,9 +123,9 @@ export function readyWorkOrders(graph: PlanGraph): Handoff[] {
       (node) =>
         node.status === "pending" &&
         node.task_type === "implement" &&
-        !(node.child_ids?.length) &&
+        !node.child_ids?.length &&
         dependenciesCompleted(graph, node) &&
-        !dependenciesFailed(graph, node),
+        !dependenciesFailed(graph, node)
     )
     .sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -149,7 +142,7 @@ export function retryableFailedWorkOrders(graph: PlanGraph): Handoff[] {
 
 export function blockedByFailure(graph: PlanGraph): Handoff[] {
   const failedIds = new Set(
-    [...graph.nodes.values()].filter((node) => node.status === "failed").map((node) => node.id),
+    [...graph.nodes.values()].filter((node) => node.status === "failed").map((node) => node.id)
   );
   if (!failedIds.size) return [];
 
@@ -159,7 +152,9 @@ export function blockedByFailure(graph: PlanGraph): Handoff[] {
     changed = false;
     for (const node of graph.nodes.values()) {
       if (blocked.has(node.id)) continue;
-      const blockedDep = node.depends_on.some((depId) => failedIds.has(depId) || blocked.has(depId));
+      const blockedDep = node.depends_on.some(
+        (depId) => failedIds.has(depId) || blocked.has(depId)
+      );
       if (blockedDep) {
         blocked.add(node.id);
         changed = true;
@@ -168,7 +163,9 @@ export function blockedByFailure(graph: PlanGraph): Handoff[] {
   }
 
   return [...graph.nodes.values()]
-    .filter((node) => blocked.has(node.id) && node.status !== "completed" && node.status !== "blocked")
+    .filter(
+      (node) => blocked.has(node.id) && node.status !== "completed" && node.status !== "blocked"
+    )
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
@@ -178,7 +175,7 @@ export function syncParentPlanStatus(graph: PlanGraph): Handoff | undefined {
 
   const children = root.child_ids
     .map((id) => graph.nodes.get(id) ?? loadHandoff(id))
-    .filter((node) => node.task_type === "implement" && !(node.child_ids?.length));
+    .filter((node) => node.task_type === "implement" && !node.child_ids?.length);
 
   if (children.length === 0) return undefined;
 
@@ -208,7 +205,10 @@ export function syncDependencyStatuses(graph: PlanGraph): Handoff[] {
   for (const node of graph.nodes.values()) {
     if (node.task_type !== "implement") continue;
 
-    if (dependenciesFailed(graph, node) && !["failed", "completed", "blocked"].includes(node.status)) {
+    if (
+      dependenciesFailed(graph, node) &&
+      !["failed", "completed", "blocked"].includes(node.status)
+    ) {
       const next = transitionWorkOrder(node.id, "blocked", {
         error: "upstream dependency failed",
         skipQueueEvent: true,

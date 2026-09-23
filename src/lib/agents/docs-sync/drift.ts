@@ -36,12 +36,27 @@ export function validateAgentDocsGeneratedDrift(): string[] {
     ["steward_agent_roster.md", "catalog-index", buildCatalogRosterIndex(), roster],
     ["steward_agent_roster.md", "catalog-stats", buildCatalogStatsBlock(), roster],
     ["skill_delegation_map.md", "agent-label-index", buildAgentLabelIndex(), delegation],
-    ["skill_delegation_map.md", "executing-agent-overrides", buildExecutingAgentOverrideTable(), delegation],
+    [
+      "skill_delegation_map.md",
+      "executing-agent-overrides",
+      buildExecutingAgentOverrideTable(),
+      delegation,
+    ],
     ["skill_delegation_map.md", "steward-self-execute", buildStewardSelfExecuteTable(), delegation],
     ["skill_delegation_map.md", "routing-skill-index", buildRoutingSkillIndex(), delegation],
-    ["skill_delegation_map.md", "execution-decision-tree", buildExecutionDecisionTree(), delegation],
+    [
+      "skill_delegation_map.md",
+      "execution-decision-tree",
+      buildExecutionDecisionTree(),
+      delegation,
+    ],
     ["skill_delegation_map.md", "skill-registry-index", buildSkillRegistryIndex(), delegation],
-    ["skill_delegation_map.md", "skill-runtime-note", buildSkillDelegationRuntimeNote(), delegation],
+    [
+      "skill_delegation_map.md",
+      "skill-runtime-note",
+      buildSkillDelegationRuntimeNote(),
+      delegation,
+    ],
   ] as const) {
     const section = extractGeneratedSection(text, name);
     if (!section) {

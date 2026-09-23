@@ -8,10 +8,7 @@ import { listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import { listWorkOrders } from "../escalate.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { listTasks } from "./store.js";
-import {
-  triageCandidatePriority,
-  workOrderTaskPriority,
-} from "./candidate-priority.js";
+import { triageCandidatePriority, workOrderTaskPriority } from "./candidate-priority.js";
 
 export type TaskCandidateKind = "mail" | "work_order" | "approval";
 
@@ -58,17 +55,13 @@ export function buildTaskView(opts?: { includeClosed?: boolean }): TaskView {
   const tasks = sortTasks(listTasks({ includeClosed: opts?.includeClosed }));
 
   const linkedTriage = new Set(
-    tasks.map((t) => t.links?.triage_id).filter((v): v is string => Boolean(v)),
+    tasks.map((t) => t.links?.triage_id).filter((v): v is string => Boolean(v))
   );
   const linkedWo = new Set(
-    tasks
-      .map((t) => t.links?.work_order_id)
-      .filter((v): v is string => Boolean(v)),
+    tasks.map((t) => t.links?.work_order_id).filter((v): v is string => Boolean(v))
   );
   const linkedApr = new Set(
-    tasks
-      .map((t) => t.links?.approval_id)
-      .filter((v): v is string => Boolean(v)),
+    tasks.map((t) => t.links?.approval_id).filter((v): v is string => Boolean(v))
   );
 
   const candidates: TaskCandidate[] = [];
@@ -126,15 +119,12 @@ export function buildTaskView(opts?: { includeClosed?: boolean }): TaskView {
   }
 
   candidates.sort((a, b) => {
-    const pr =
-      (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9);
+    const pr = (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9);
     if (pr !== 0) return pr;
     return (a.id ?? "").localeCompare(b.id ?? "");
   });
 
-  const open = tasks.filter(
-    (t) => t.status === "open" || t.status === "in_progress",
-  );
+  const open = tasks.filter((t) => t.status === "open" || t.status === "in_progress");
   return {
     tasks,
     candidates,

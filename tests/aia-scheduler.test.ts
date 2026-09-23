@@ -29,7 +29,7 @@ describe("aia scheduler", () => {
         tier: "soft",
         max_concurrent_aia: 2,
       }),
-      { hydrate: false },
+      { hydrate: false }
     );
     expect(scheduler.clampParallelHint(5)).toBe(2);
   });
@@ -41,7 +41,7 @@ describe("aia scheduler", () => {
         tier: "soft",
         max_concurrent_aia: 1,
       }),
-      { hydrate: false },
+      { hydrate: false }
     );
     const first = scheduler.tryAdmit({
       run_id: "RUN-test-1",
@@ -72,7 +72,7 @@ describe("aia scheduler", () => {
         max_concurrent_aia: 1,
         llm_backpressure: false,
       }),
-      { hydrate: false },
+      { hydrate: false }
     );
 
     const first = scheduler.tryAdmit({
@@ -107,7 +107,7 @@ describe("aia scheduler", () => {
         max_concurrent_aia: 10,
         llm_backpressure: false,
       }),
-      { hydrate: false },
+      { hydrate: false }
     );
 
     const first = scheduler.tryAdmit({
@@ -131,8 +131,6 @@ describe("aia scheduler", () => {
     expect(resolveConcurrentJobsLimit("jp_bank_corporate")).toBe(1);
     expect(resolveConcurrentJobsLimit("rental")).toBe(2);
     // Core agent without module binding falls back to tenant max_concurrent_aia
-    expect(resolveConcurrentJobsLimit("finance")).toBe(
-      loadAiaRuntimeConfig().max_concurrent_aia,
-    );
+    expect(resolveConcurrentJobsLimit("finance")).toBe(loadAiaRuntimeConfig().max_concurrent_aia);
   });
 });

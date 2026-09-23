@@ -20,14 +20,20 @@ function command(parent: Command, name: string): Command {
 }
 
 function optionLongs(cmd: Command): string[] {
-  return cmd.options.map((option) => option.long).filter((long): long is string => Boolean(long)).sort();
+  return cmd.options
+    .map((option) => option.long)
+    .filter((long): long is string => Boolean(long))
+    .sort();
 }
 
 function childNames(cmd: Command): string[] {
   return cmd.commands.map((item) => item.name()).sort();
 }
 
-function snapshotRoot(program: Command, root: string): {
+function snapshotRoot(
+  program: Command,
+  root: string
+): {
   name: string;
   children: string[];
   options: string[];

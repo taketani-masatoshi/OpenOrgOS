@@ -40,10 +40,7 @@ export function buildSkillDelegationRuntimeNote(): string {
 }
 
 export function buildAgentLabelIndex(): string {
-  const lines = [
-    "| 表示名 | Agent id |",
-    "|--------|----------|",
-  ];
+  const lines = ["| 表示名 | Agent id |", "|--------|----------|"];
   for (const agent of [...listCatalogAgents()].sort((a, b) => a.id.localeCompare(b.id))) {
     lines.push(`| ${agent.name_ja ?? agent.name} | \`${agent.id}\` |`);
   }
@@ -60,9 +57,7 @@ export function buildExecutingAgentOverrideTable(): string {
     a.localeCompare(b)
   )) {
     const skill = skills.find((entry) => entry.id === skillId);
-    lines.push(
-      `| \`${skillId}\` | \`${skill?.agent_id ?? "—"}\` | \`${agentId}\` |`
-    );
+    lines.push(`| \`${skillId}\` | \`${skill?.agent_id ?? "—"}\` | \`${agentId}\` |`);
   }
   return lines.join("\n");
 }
@@ -73,21 +68,16 @@ export function buildStewardSelfExecuteTable(): string {
     "|----------|-----------------|--------------|",
   ];
   for (const skillId of [...STEWARD_SELF_EXECUTE_SKILLS].sort()) {
-    lines.push(
-      `| \`${skillId}\` | \`executive_steward\` | Steward **自実行**（CLI）→ 要約読取 |`
-    );
+    lines.push(`| \`${skillId}\` | \`executive_steward\` | Steward **自実行**（CLI）→ 要約読取 |`);
   }
   return lines.join("\n");
 }
 
 export function buildRoutingSkillIndex(): string {
-  const routes = loadRoutingRegistry().routes
-    .filter((route) => route.skill)
+  const routes = loadRoutingRegistry()
+    .routes.filter((route) => route.skill)
     .sort((a, b) => a.id.localeCompare(b.id));
-  const lines = [
-    "| route id | agent id | skill id |",
-    "|----------|----------|----------|",
-  ];
+  const lines = ["| route id | agent id | skill id |", "|----------|----------|----------|"];
   for (const route of routes) {
     lines.push(`| ${route.id} | \`${route.agent}\` | \`${route.skill}\` |`);
   }
@@ -127,10 +117,14 @@ export function validateSkillDelegationNarrativeDrift(): string[] {
     ""
   );
   if (/cursor-only/i.test(narrative)) {
-    issues.push("skill_delegation_map.md: remove cursor-only from narrative; use generated runtime note");
+    issues.push(
+      "skill_delegation_map.md: remove cursor-only from narrative; use generated runtime note"
+    );
   }
   if (!text.includes("skill-execution-mode.ts")) {
-    issues.push("skill_delegation_map.md must reference src/lib/skill-execution-mode.ts as execution SoT");
+    issues.push(
+      "skill_delegation_map.md must reference src/lib/skill-execution-mode.ts as execution SoT"
+    );
   }
   const requiredSections = [
     "agent-label-index",

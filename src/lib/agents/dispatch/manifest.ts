@@ -78,7 +78,7 @@ export function buildDispatchManifest(
   id: string,
   parallel = 3,
   runtimePref?: DispatchRuntime,
-  traceId?: string,
+  traceId?: string
 ): DispatchManifest {
   const scheduler = getSharedAiaScheduler();
   const effectiveParallel = scheduler.clampParallelHint(parallel);

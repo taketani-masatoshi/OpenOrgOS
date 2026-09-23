@@ -2,10 +2,7 @@ import { existsSync } from "node:fs";
 import type { AgentId } from "../../../../schemas/classification.js";
 import type { AgentReadinessResult } from "../../../../schemas/agent-capability.js";
 import type { AgentReadinessProfile } from "../../../../schemas/agent-catalog.js";
-import {
-  agentDefinitionPath,
-  getAgentCapability,
-} from "../../agent-capability.js";
+import { agentDefinitionPath, getAgentCapability } from "../../agent-capability.js";
 import { getCatalogAgent, listCatalogAgents } from "../../agent-catalog.js";
 import { listActiveTenantAgents } from "../../agent-roster.js";
 import { evaluateAgentPulseChecks } from "../../agent-pulse.js";
@@ -32,11 +29,35 @@ export function computeAgentReadiness(agentId: AgentId): AgentReadinessResult {
     const axes = [
       scoreAdvisorDefinition(agentId),
       scoreSkillCli(agentId, cap),
-      { id: "routing", label: "routing", score: WEIGHTS.routing, max: WEIGHTS.routing, detail: "advisor — auto-route なし" },
-      { id: "data_sot", label: "データSoT", score: WEIGHTS.data_sot, max: WEIGHTS.data_sot, detail: "advisor — tenant 不要" },
-      { id: "dashboard", label: "要約", score: WEIGHTS.dashboard, max: WEIGHTS.dashboard, detail: "advisor — pulse 不要" },
+      {
+        id: "routing",
+        label: "routing",
+        score: WEIGHTS.routing,
+        max: WEIGHTS.routing,
+        detail: "advisor — auto-route なし",
+      },
+      {
+        id: "data_sot",
+        label: "データSoT",
+        score: WEIGHTS.data_sot,
+        max: WEIGHTS.data_sot,
+        detail: "advisor — tenant 不要",
+      },
+      {
+        id: "dashboard",
+        label: "要約",
+        score: WEIGHTS.dashboard,
+        max: WEIGHTS.dashboard,
+        detail: "advisor — pulse 不要",
+      },
       scoreEvidenceActivationBoundary(agentId),
-      { id: "tenant", label: "テナント", score: WEIGHTS.tenant, max: WEIGHTS.tenant, detail: "advisor — tenant 不要" },
+      {
+        id: "tenant",
+        label: "テナント",
+        score: WEIGHTS.tenant,
+        max: WEIGHTS.tenant,
+        detail: "advisor — tenant 不要",
+      },
     ];
     const total = axes.reduce((s, a) => s + a.score, 0);
     const max = axes.reduce((s, a) => s + a.max, 0);

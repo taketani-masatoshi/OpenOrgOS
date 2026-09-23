@@ -10,17 +10,12 @@ import { listWorkOrders } from "../escalate.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { getDocsDir } from "../utils.js";
 import { listTasks, upsertTask } from "./store.js";
-import {
-  triageIntakePriority,
-  workOrderTaskPriority,
-} from "./candidate-priority.js";
+import { triageIntakePriority, workOrderTaskPriority } from "./candidate-priority.js";
 
 export function intakeFromTriage(triageId: string): ExecutiveTask {
   const entry = findTriageEntry(triageId);
   if (!entry) throw new Error(`Triage entry ${triageId} not found`);
-  const existing = listTasks({ includeClosed: true }).find(
-    (t) => t.links?.triage_id === triageId,
-  );
+  const existing = listTasks({ includeClosed: true }).find((t) => t.links?.triage_id === triageId);
   if (existing) return existing;
 
   const priority = triageIntakePriority(entry.importance);
@@ -44,7 +39,7 @@ export function intakeFromWorkOrder(workOrderId: string): ExecutiveTask {
   const wo = listWorkOrders("all").find((h) => h.id === workOrderId);
   if (!wo) throw new Error(`Work order ${workOrderId} not found`);
   const existing = listTasks({ includeClosed: true }).find(
-    (t) => t.links?.work_order_id === workOrderId,
+    (t) => t.links?.work_order_id === workOrderId
   );
   if (existing) return existing;
 
@@ -69,11 +64,11 @@ export function intakeFromWorkOrder(workOrderId: string): ExecutiveTask {
 
 export function intakeFromApproval(approvalId: string): ExecutiveTask {
   const apr = listOrgApprovals({ status: "pending_approval" }).find(
-    (a) => a.approval_id === approvalId,
+    (a) => a.approval_id === approvalId
   );
   if (!apr) throw new Error(`Pending approval ${approvalId} not found`);
   const existing = listTasks({ includeClosed: true }).find(
-    (t) => t.links?.approval_id === approvalId,
+    (t) => t.links?.approval_id === approvalId
   );
   if (existing) return existing;
 
@@ -115,10 +110,7 @@ export function parseP0RegisterMarkdown(md: string): P0ImportDraft[] {
     }
     const item = /^[-*]\s+\[([ xX])\]\s+(.+)$/.exec(line.trim());
     if (!item) continue;
-    const title = item[2]!
-      .trim()
-      .replace(/\*\*/g, "")
-      .replace(/\s+/g, " ");
+    const title = item[2]!.trim().replace(/\*\*/g, "").replace(/\s+/g, " ");
     if (!title) continue;
     const slug = title
       .toLowerCase()
@@ -144,17 +136,16 @@ export function resolveP0RegisterPath(file?: string): string {
   }
   const defaultPath = join(getDocsDir(), "company", "executive-remaining-tasks.md");
   if (!existsSync(defaultPath)) {
-    throw new Error(
-      "docs/company/executive-remaining-tasks.md not found — pass --file",
-    );
+    throw new Error("docs/company/executive-remaining-tasks.md not found — pass --file");
   }
   return defaultPath;
 }
 
-export function importP0Register(opts: {
-  file?: string;
-  write?: boolean;
-}): { drafts: P0ImportDraft[]; written: ExecutiveTask[]; skipped: number } {
+export function importP0Register(opts: { file?: string; write?: boolean }): {
+  drafts: P0ImportDraft[];
+  written: ExecutiveTask[];
+  skipped: number;
+} {
   const path = resolveP0RegisterPath(opts.file);
   const md = readFileSync(path, "utf8");
   const drafts = parseP0RegisterMarkdown(md).filter((d) => !d.checked);
@@ -165,9 +156,7 @@ export function importP0Register(opts: {
   }
   for (const d of drafts) {
     const existing = listTasks({ includeClosed: true }).find(
-      (t) =>
-        t.origin?.kind === "p0_register" &&
-        (t.origin.ref === d.slug || t.title === d.title),
+      (t) => t.origin?.kind === "p0_register" && (t.origin.ref === d.slug || t.title === d.title)
     );
     if (existing) {
       skipped++;
@@ -185,7 +174,7 @@ export function importP0Register(opts: {
           captured_at: new Date().toISOString(),
         },
         next_action: "Complete remaining P0 item",
-      }),
+      })
     );
   }
   return { drafts, written, skipped };

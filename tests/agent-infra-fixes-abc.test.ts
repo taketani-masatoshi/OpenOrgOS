@@ -3,10 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTenantId, runWithTenantId } from "../src/lib/tenant.js";
-import {
-  getSharedAiaScheduler,
-  resetAiaSchedulerForTests,
-} from "../src/lib/aia/scheduler.js";
+import { getSharedAiaScheduler, resetAiaSchedulerForTests } from "../src/lib/aia/scheduler.js";
 import { agentDefinitionExists } from "../src/lib/agent-readiness.js";
 import { getCatalogAgent } from "../src/lib/agent-catalog.js";
 import { getInstallRoot } from "../src/lib/orgos-paths.js";
@@ -39,7 +36,7 @@ describe("agent infra fixes A/B/C", () => {
       const result = await callStewardMcpTool(
         "steward_wire_flush",
         {},
-        { token: "demo-operator-key-2" },
+        { token: "demo-operator-key-2" }
       );
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toMatch(/forbidden/i);
@@ -51,7 +48,7 @@ describe("agent infra fixes A/B/C", () => {
         async (_tool, _args, operatorId, _approverId, fn) => {
           seen.operatorId = operatorId;
           return fn();
-        },
+        }
       );
 
       const sessionToken = "demo-operator-key-2";
@@ -64,9 +61,15 @@ describe("agent infra fixes A/B/C", () => {
       expect(createStewardMcpServer({ token: sessionToken })).toBeTruthy();
       expect(createStewardMcpServer()).toBeTruthy();
 
-      await audit.auditMcpToolCall("steward_today", {}, user.operator_id, user.approver_id, async () => ({
-        ok: true,
-      }));
+      await audit.auditMcpToolCall(
+        "steward_today",
+        {},
+        user.operator_id,
+        user.approver_id,
+        async () => ({
+          ok: true,
+        })
+      );
       expect(seen.operatorId).toBe(user.operator_id);
     });
   });

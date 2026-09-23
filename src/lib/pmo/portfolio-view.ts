@@ -19,8 +19,7 @@ const EMPTY_RAG: Record<PmoRag, number> = {
 };
 
 const NOTE_UNREGISTERED_DIR = "未登録: data/projects/ がありません。";
-const NOTE_UNREGISTERED_PORTFOLIO =
-  "未登録: data/projects/ にポートフォリオ YAML がありません。";
+const NOTE_UNREGISTERED_PORTFOLIO = "未登録: data/projects/ にポートフォリオ YAML がありません。";
 
 function unregisteredPortfolioView(asOf: string): PmoPortfolioView {
   return {
@@ -262,7 +261,9 @@ export function buildPmoRisksView(opts?: { asOf?: string }): PmoRisksView {
     }
   }
 
-  open.sort((a, b) => a.project_id.localeCompare(b.project_id) || a.risk_id.localeCompare(b.risk_id));
+  open.sort(
+    (a, b) => a.project_id.localeCompare(b.project_id) || a.risk_id.localeCompare(b.risk_id)
+  );
 
   return {
     as_of: asOf,
@@ -333,7 +334,9 @@ export function formatPmoMilestonesMarkdown(view: PmoMilestonesView): string {
   ];
   if (view.overdue.length === 0) lines.push("- （なし）");
   for (const row of view.overdue) {
-    lines.push(`- \`${row.project_id}\` ${row.title} · due ${row.due} · ${Math.abs(row.days)} 日超過`);
+    lines.push(
+      `- \`${row.project_id}\` ${row.title} · due ${row.due} · ${Math.abs(row.days)} 日超過`
+    );
   }
   lines.push("", `## 間近（${view.upcoming.length}）`);
   if (view.upcoming.length === 0) lines.push("- （なし）");

@@ -70,7 +70,11 @@ export {
   validateAgentDocsDrift,
 };
 
-export function syncAgentDocs(write = false): { orgChart: string; roster: string; delegation: string } {
+export function syncAgentDocs(write = false): {
+  orgChart: string;
+  roster: string;
+  delegation: string;
+} {
   let orgChart = readFileSync(ORG_CHART_PATH, "utf-8");
   orgChart = replaceGeneratedSection(orgChart, "org-chart-mermaid", buildOrgChartMermaidBlock());
   orgChart = replaceGeneratedSection(orgChart, "org-chart-sixteen", buildOrgChartSixteenTable());
@@ -86,14 +90,22 @@ export function syncAgentDocs(write = false): { orgChart: string; roster: string
     "executing-agent-overrides",
     buildExecutingAgentOverrideTable()
   );
-  delegation = replaceGeneratedSection(delegation, "steward-self-execute", buildStewardSelfExecuteTable());
+  delegation = replaceGeneratedSection(
+    delegation,
+    "steward-self-execute",
+    buildStewardSelfExecuteTable()
+  );
   delegation = replaceGeneratedSection(delegation, "routing-skill-index", buildRoutingSkillIndex());
   delegation = replaceGeneratedSection(
     delegation,
     "execution-decision-tree",
     buildExecutionDecisionTree()
   );
-  delegation = replaceGeneratedSection(delegation, "skill-registry-index", buildSkillRegistryIndex());
+  delegation = replaceGeneratedSection(
+    delegation,
+    "skill-registry-index",
+    buildSkillRegistryIndex()
+  );
   delegation = replaceGeneratedSection(
     delegation,
     "skill-runtime-note",

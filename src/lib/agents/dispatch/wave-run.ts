@@ -2,21 +2,14 @@ import type { DispatchManifest } from "../../../../schemas/queue.js";
 import { loadCloudAgentConfig } from "../../cloud-agent.js";
 import { isLlmApiConfigured } from "../../operator-runtime/llm-api.js";
 import { hasConfiguredLlmWorkers } from "../../llm-pool/registry.js";
-import {
-  getSharedAiaScheduler,
-  persistAiaMetrics,
-} from "../../aia/scheduler.js";
+import { getSharedAiaScheduler, persistAiaMetrics } from "../../aia/scheduler.js";
 import {
   buildPlanGraph,
   resolvePlanRoot,
   syncDependencyStatuses,
 } from "../../orchestration/plan-graph.js";
 import { newOrchestrationTraceId } from "../../orchestration/work-order-state.js";
-import {
-  buildDispatchManifest,
-  writeDispatchManifest,
-  type DispatchRuntime,
-} from "./manifest.js";
+import { buildDispatchManifest, writeDispatchManifest, type DispatchRuntime } from "./manifest.js";
 import { loadCursorSdk } from "./cursor-sdk.js";
 import { runCursorTask, runPortableTask } from "./task-runners.js";
 
@@ -39,7 +32,7 @@ export interface DispatchRunOptions {
 
 async function executeManifestBatch(
   manifest: DispatchManifest,
-  scheduler: ReturnType<typeof getSharedAiaScheduler>,
+  scheduler: ReturnType<typeof getSharedAiaScheduler>
 ): Promise<{ mode: DispatchRunResult["mode"]; results: DispatchRunResult["results"] }> {
   const hasRunnableTask = manifest.tasks.some((t) => t.mode !== "manifest");
   if (!manifest.cursor_sdk_available || !hasRunnableTask) {
@@ -86,7 +79,7 @@ async function executeManifestBatch(
   for (let i = 0; i < manifest.tasks.length; i += parallel) {
     const batch = manifest.tasks.slice(i, i + parallel);
     const batchResults = await Promise.all(
-      batch.map((task) => runCursorTask(task, manifest, scheduler, Agent, apiKey, cloudCfg)),
+      batch.map((task) => runCursorTask(task, manifest, scheduler, Agent, apiKey, cloudCfg))
     );
     results.push(...batchResults);
   }
@@ -99,7 +92,7 @@ async function executeManifestBatch(
 
 export async function runDispatch(
   id: string,
-  options?: DispatchRunOptions,
+  options?: DispatchRunOptions
 ): Promise<DispatchRunResult> {
   const scheduler = getSharedAiaScheduler();
   const traceId = options?.traceId ?? newOrchestrationTraceId();
@@ -135,7 +128,10 @@ export async function runDispatch(
     syncDependencyStatuses(buildPlanGraph(rootId));
 
     if (options?.wave != null) break;
-    if (buildDispatchManifest(id, options?.parallel ?? 3, options?.runtime, traceId).tasks.length === 0) {
+    if (
+      buildDispatchManifest(id, options?.parallel ?? 3, options?.runtime, traceId).tasks.length ===
+      0
+    ) {
       break;
     }
   }

@@ -55,9 +55,7 @@ export async function callStewardMcpTool(
   if (requiredPerm) {
     const perms = mcpOperatorPermissions(token) as OperatorPermission[];
     if (!perms.includes(requiredPerm)) {
-      return errorResult(
-        `forbidden: operator lacks permission ${requiredPerm} for tool ${tool}`,
-      );
+      return errorResult(`forbidden: operator lacks permission ${requiredPerm} for tool ${tool}`);
     }
   }
 

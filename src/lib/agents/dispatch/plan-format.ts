@@ -14,7 +14,7 @@ export function formatDispatchPlan(manifest: DispatchManifest): string {
     "|------------|-------|------|---------|--------|",
     ...manifest.tasks.map(
       (t) =>
-        `| ${t.work_order_id} | ${t.agent} | ${t.mode} | ${t.attempt ?? "—"} | ${t.prompt_relative ?? "—"} |`,
+        `| ${t.work_order_id} | ${t.agent} | ${t.mode} | ${t.attempt ?? "—"} | ${t.prompt_relative ?? "—"} |`
     ),
     "",
   ];
@@ -27,7 +27,7 @@ export function formatDispatchPlan(manifest: DispatchManifest): string {
       "3. Prompt MD includes full agent definition (tool-neutral)",
       "",
       "Optional Cursor: `npm install @cursor/sdk` + `CURSOR_API_KEY`",
-      "",
+      ""
     );
   }
   return lines.join("\n");

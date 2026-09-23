@@ -1,29 +1,14 @@
 import type { Handoff, HandoffStatus } from "../../../schemas/routing.js";
 import type { WorkKind } from "../../../schemas/dispatch-tower.js";
 import { listHandoffs } from "../routing.js";
-import {
-  buildPlanGraph,
-  retryableFailedWorkOrders,
-  syncDependencyStatuses,
-} from "./plan-graph.js";
-import {
-  getWorkOrderDispatch,
-  isClosedWorkOrder,
-} from "./work-order-state.js";
+import { buildPlanGraph, retryableFailedWorkOrders, syncDependencyStatuses } from "./plan-graph.js";
+import { getWorkOrderDispatch, isClosedWorkOrder } from "./work-order-state.js";
 
 export type BoardColumn = "todo" | "waiting" | "active" | "attention" | "done";
 
-export const BOARD_COLUMNS: BoardColumn[] = [
-  "attention",
-  "todo",
-  "waiting",
-  "active",
-  "done",
-];
+export const BOARD_COLUMNS: BoardColumn[] = ["attention", "todo", "waiting", "active", "done"];
 
-export function isCancellableWorkOrder(
-  node: Pick<Handoff, "status">,
-): boolean {
+export function isCancellableWorkOrder(node: Pick<Handoff, "status">): boolean {
   return node.status === "pending" || node.status === "waiting";
 }
 
@@ -46,7 +31,9 @@ export function statusToBoardColumn(status: HandoffStatus | string): BoardColumn
   }
 }
 
-export function resolveWorkOrderTitle(handoff: Pick<Handoff, "id" | "subject" | "context">): string {
+export function resolveWorkOrderTitle(
+  handoff: Pick<Handoff, "id" | "subject" | "context">
+): string {
   const subject = handoff.subject?.trim();
   if (subject) return subject;
   const text = handoff.context?.text?.trim();
@@ -108,7 +95,7 @@ export interface BoardPlanSummary {
 }
 
 function isLeafWorkOrder(node: Handoff): boolean {
-  return node.task_type === "implement" && !(node.child_ids?.length);
+  return node.task_type === "implement" && !node.child_ids?.length;
 }
 
 function buildCardFromNode(
@@ -116,7 +103,7 @@ function buildCardFromNode(
   rootId: string,
   graph: ReturnType<typeof buildPlanGraph>,
   waveIndex: number,
-  retryableIds: Set<string>,
+  retryableIds: Set<string>
 ): BoardCard {
   const dispatch = getWorkOrderDispatch(node);
   const display = enrichHandoffDisplayFields(node);
@@ -188,7 +175,9 @@ export function listPlanRoots(includeCompleted: boolean): {
   completed_roots: string[];
 } {
   const implement = listHandoffs().filter((h) => h.task_type === "implement" && !h.parent_id);
-  const active_roots = [...new Set(implement.filter((h) => h.status !== "completed").map((h) => h.id))].sort();
+  const active_roots = [
+    ...new Set(implement.filter((h) => h.status !== "completed").map((h) => h.id)),
+  ].sort();
   const completed_roots = includeCompleted
     ? [...new Set(implement.filter((h) => h.status === "completed").map((h) => h.id))].sort()
     : [];
@@ -238,9 +227,7 @@ function filterPlanCards(plan: BoardPlanSummary, options: BoardListOptions): Boa
   };
 }
 
-export function buildOrchestrationBoardList(
-  options: BoardListOptions | boolean = {},
-): {
+export function buildOrchestrationBoardList(options: BoardListOptions | boolean = {}): {
   plans: BoardPlanSummary[];
   active_roots: string[];
   completed_roots: string[];
@@ -251,7 +238,9 @@ export function buildOrchestrationBoardList(
   const includeCompleted = opts.includeCompleted ?? false;
   const view = opts.view ?? "incomplete";
 
-  const { active_roots, completed_roots } = listPlanRoots(includeCompleted || view !== "incomplete");
+  const { active_roots, completed_roots } = listPlanRoots(
+    includeCompleted || view !== "incomplete"
+  );
   const rootIds =
     includeCompleted || view !== "incomplete"
       ? [...new Set([...active_roots, ...completed_roots])].sort()

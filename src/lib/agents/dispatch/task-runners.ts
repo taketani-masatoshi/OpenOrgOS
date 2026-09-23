@@ -16,14 +16,14 @@ import type { CursorSdkAgent } from "./cursor-sdk.js";
 type Scheduler = ReturnType<typeof getSharedAiaScheduler>;
 type DispatchTaskResult = { work_order_id: string; ok: boolean; detail: string };
 
-function notifyDispatchModuleMessage(
-  task: DispatchTask,
-  ok: boolean,
-  detail: string,
-): void {
+function notifyDispatchModuleMessage(task: DispatchTask, ok: boolean, detail: string): void {
   try {
     const date = utcDateCompact();
-    const suffix = task.work_order_id.replace(/[^a-z0-9]/gi, "").slice(-12).toLowerCase() || "dispatch";
+    const suffix =
+      task.work_order_id
+        .replace(/[^a-z0-9]/gi, "")
+        .slice(-12)
+        .toLowerCase() || "dispatch";
     appendModuleMessage({
       message_id: `MSG-${date}-${suffix}`,
       schema: "orgos.module.message.v1",
@@ -46,7 +46,7 @@ function notifyDispatchModuleMessage(
 function startDispatchRun(
   task: DispatchTask,
   manifest: DispatchManifest,
-  scheduler: Scheduler,
+  scheduler: Scheduler
 ): { runId: string } | DispatchTaskResult {
   const runId = `RUN-${task.work_order_id}`;
   transitionWorkOrder(task.work_order_id, "running", {
@@ -79,7 +79,7 @@ function completeManifestOnly(
   task: DispatchTask,
   manifest: DispatchManifest,
   scheduler: Scheduler,
-  runId: string,
+  runId: string
 ): DispatchTaskResult {
   const detail = `manifest · ${task.prompt_relative ?? task.prompt_path}`;
   scheduler.release(runId, true);
@@ -98,7 +98,7 @@ function finishDispatchOutcome(
   runId: string,
   ok: boolean,
   detail: string,
-  opts?: { notifyDetail?: string; returnSlice?: number },
+  opts?: { notifyDetail?: string; returnSlice?: number }
 ): DispatchTaskResult {
   const notifyDetail = opts?.notifyDetail ?? detail;
   const returnSlice = opts?.returnSlice ?? 300;
@@ -127,7 +127,7 @@ function finishDispatchOutcome(
 export async function runPortableTask(
   task: DispatchTask,
   manifest: DispatchManifest,
-  scheduler: Scheduler,
+  scheduler: Scheduler
 ): Promise<DispatchTaskResult> {
   const started = startDispatchRun(task, manifest, scheduler);
   if ("ok" in started) return started;
@@ -150,7 +150,7 @@ export async function runPortableTask(
       scheduler,
       runId,
       dispatched.ok,
-      dispatched.detail,
+      dispatched.detail
     );
   }
 
@@ -163,72 +163,69 @@ export async function runCursorTask(
   scheduler: Scheduler,
   Agent: CursorSdkAgent,
   apiKey: string,
-  cloudCfg: ReturnType<typeof loadCloudAgentConfig>,
+  cloudCfg: ReturnType<typeof loadCloudAgentConfig>
 ): Promise<DispatchTaskResult> {
   const started = startDispatchRun(task, manifest, scheduler);
   if ("ok" in started) return started;
   const { runId } = started;
 
   return runWithFsGuardAgentAsync(task.agent, async () => {
-  try {
-    const promptText = readPromptText(task.prompt_relative ?? "");
-    const prompt = promptText || `Execute work order ${task.work_order_id}`;
-    const baseOpts: Record<string, unknown> = {
-      apiKey,
-      model: { id: cloudCfg.cloud?.model ?? "composer-2.5" },
-    };
-    const useCloud = task.mode === "cursor_cloud";
-    const result =
-      useCloud && cloudCfg.cloud?.repository
-        ? await Agent.prompt(prompt, {
-            ...baseOpts,
-            cloud: { repository: cloudCfg.cloud.repository, ref: cloudCfg.cloud.ref ?? "main" },
-          })
-        : await Agent.prompt(prompt, { ...baseOpts, local: { cwd: ROOT_DIR } });
+    try {
+      const promptText = readPromptText(task.prompt_relative ?? "");
+      const prompt = promptText || `Execute work order ${task.work_order_id}`;
+      const baseOpts: Record<string, unknown> = {
+        apiKey,
+        model: { id: cloudCfg.cloud?.model ?? "composer-2.5" },
+      };
+      const useCloud = task.mode === "cursor_cloud";
+      const result =
+        useCloud && cloudCfg.cloud?.repository
+          ? await Agent.prompt(prompt, {
+              ...baseOpts,
+              cloud: { repository: cloudCfg.cloud.repository, ref: cloudCfg.cloud.ref ?? "main" },
+            })
+          : await Agent.prompt(prompt, { ...baseOpts, local: { cwd: ROOT_DIR } });
 
-    pushQueueEvent({
-      type: "dispatch_complete",
-      ref: task.work_order_id,
-      status: "done",
-      payload: {
-        status: result.status,
-        manifest_id: manifest.id,
-        trace_id: manifest.trace_id,
-      },
-    });
-    const ok =
-      result.status === "completed" ||
-      result.status === "success" ||
-      !!result.result;
-    const notifyDetail = String(result.result ?? result.status ?? "done");
-    const transitionDetail = ok
-      ? notifyDetail
-      : String(result.result ?? result.status ?? "failed");
-    scheduler.release(runId, ok);
-    notifyDispatchModuleMessage(task, ok, notifyDetail);
-    if (ok) {
-      transitionWorkOrder(task.work_order_id, "completed", {
-        traceId: manifest.trace_id,
-        runId,
-        completionNotes: notifyDetail.slice(0, 300),
+      pushQueueEvent({
+        type: "dispatch_complete",
+        ref: task.work_order_id,
+        status: "done",
+        payload: {
+          status: result.status,
+          manifest_id: manifest.id,
+          trace_id: manifest.trace_id,
+        },
       });
-    } else {
-      transitionWorkOrder(task.work_order_id, "failed", {
-        traceId: manifest.trace_id,
-        runId,
-        error: transitionDetail,
+      const ok = result.status === "completed" || result.status === "success" || !!result.result;
+      const notifyDetail = String(result.result ?? result.status ?? "done");
+      const transitionDetail = ok
+        ? notifyDetail
+        : String(result.result ?? result.status ?? "failed");
+      scheduler.release(runId, ok);
+      notifyDispatchModuleMessage(task, ok, notifyDetail);
+      if (ok) {
+        transitionWorkOrder(task.work_order_id, "completed", {
+          traceId: manifest.trace_id,
+          runId,
+          completionNotes: notifyDetail.slice(0, 300),
+        });
+      } else {
+        transitionWorkOrder(task.work_order_id, "failed", {
+          traceId: manifest.trace_id,
+          runId,
+          error: transitionDetail,
+        });
+      }
+      return {
+        work_order_id: task.work_order_id,
+        ok,
+        detail: notifyDetail.slice(0, 200),
+      };
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      return finishDispatchOutcome(task, manifest, scheduler, runId, false, detail, {
+        returnSlice: detail.length,
       });
     }
-    return {
-      work_order_id: task.work_order_id,
-      ok,
-      detail: notifyDetail.slice(0, 200),
-    };
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    return finishDispatchOutcome(task, manifest, scheduler, runId, false, detail, {
-      returnSlice: detail.length,
-    });
-  }
   });
 }

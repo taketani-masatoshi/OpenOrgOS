@@ -2,10 +2,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../../../schemas/classification.js";
 import type { AgentReadinessAxis } from "../../../../schemas/agent-capability.js";
-import {
-  agentDefinitionPath,
-  getAgentCapability,
-} from "../../agent-capability.js";
+import { agentDefinitionPath, getAgentCapability } from "../../agent-capability.js";
 import { getCatalogAgent, isAgentActive } from "../../agent-catalog.js";
 import { loadRoutingRegistry } from "../../routing.js";
 import { loadSkillRegistry } from "../../skill-registry.js";
@@ -92,7 +89,11 @@ export function scoreDefinition(agentId: AgentId): AgentReadinessAxis {
     label: "定義",
     score,
     max: WEIGHTS.definition,
-    detail: checks.filter((c) => !c.ok).map((c) => c.label).join(", ") || "OK",
+    detail:
+      checks
+        .filter((c) => !c.ok)
+        .map((c) => c.label)
+        .join(", ") || "OK",
   };
 }
 
@@ -103,14 +104,12 @@ export function scoreSkillCli(
   const skills = skillRegistry();
   const owned = skills.filter((skill) => resolveExecutingAgentId(skill) === agentId);
   const cliSkills = owned.filter((skill) => skill.runtime === "cli" && skill.cli_command);
-  const manifestSkills =
-    cap?.skills.filter((sid) => owned.some((skill) => skill.id === sid)) ?? [];
+  const manifestSkills = cap?.skills.filter((sid) => owned.some((skill) => skill.id === sid)) ?? [];
   let score = owned.length > 0 ? 8 : 4;
   if (cliSkills.length >= 1) score += 6;
   if (manifestSkills.length >= 2) score += 4;
   if (cliSkills.length >= 2 || owned.some((skill) => skill.runtime === "agent")) score += 2;
-  const max =
-    agentId === "executive_steward" ? EXECUTIVE_STEWARD_SKILL_CLI_MAX : WEIGHTS.skill_cli;
+  const max = agentId === "executive_steward" ? EXECUTIVE_STEWARD_SKILL_CLI_MAX : WEIGHTS.skill_cli;
   score = Math.min(score, max);
   return {
     id: "skill_cli",
@@ -127,7 +126,13 @@ export function scoreSkillCli(
 export function scoreDataSot(cap: ReturnType<typeof getAgentCapability>): AgentReadinessAxis {
   const paths = [...(cap?.data_paths ?? []), ...(cap?.docs_paths ?? [])];
   if (paths.length === 0) {
-    return { id: "data_sot", label: "データSoT", score: 8, max: WEIGHTS.data_sot, detail: "パス未定義" };
+    return {
+      id: "data_sot",
+      label: "データSoT",
+      score: 8,
+      max: WEIGHTS.data_sot,
+      detail: "パス未定義",
+    };
   }
   let tenantHits = 0;
   let templateHits = 0;
@@ -154,7 +159,13 @@ export function scoreRouting(
   const expected = cap?.route_ids.length ?? 0;
   const matched = cap?.route_ids.filter((id) => routes.some((r) => r.id === id)) ?? [];
   if (routes.length === 0 && expected === 0) {
-    return { id: "routing", label: "routing", score: 8, max: WEIGHTS.routing, detail: "route なし（コア委譲）" };
+    return {
+      id: "routing",
+      label: "routing",
+      score: 8,
+      max: WEIGHTS.routing,
+      detail: "route なし（コア委譲）",
+    };
   }
   const score =
     expected > 0
@@ -198,7 +209,11 @@ export function scoreOrchestration(agentId: AgentId): AgentReadinessAxis | null 
     label: "orchestration",
     score,
     max: WEIGHTS.orchestration,
-    detail: checks.filter((check) => !check.ok).map((check) => check.label).join(", ") || "DAG + CLI + tests",
+    detail:
+      checks
+        .filter((check) => !check.ok)
+        .map((check) => check.label)
+        .join(", ") || "DAG + CLI + tests",
   };
 }
 
@@ -298,6 +313,10 @@ export function scoreAdvisorDefinition(agentId: AgentId): AgentReadinessAxis {
     label: "定義",
     score: Math.round((ok / checks.length) * WEIGHTS.definition),
     max: WEIGHTS.definition,
-    detail: checks.filter((c) => !c.ok).map((c) => c.label).join(", ") || "OK",
+    detail:
+      checks
+        .filter((c) => !c.ok)
+        .map((c) => c.label)
+        .join(", ") || "OK",
   };
 }

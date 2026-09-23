@@ -68,11 +68,7 @@ export function buildOrgChartMermaid(): string {
     listCatalogAgents().find((agent) => agent.id === id)
   ).filter((agent): agent is AgentCatalogEntry => Boolean(agent));
 
-  const lines: string[] = [
-    "flowchart TB",
-    'CEO["CEO 人間"]',
-    "CEO --> executive_steward",
-  ];
+  const lines: string[] = ["flowchart TB", 'CEO["CEO 人間"]', "CEO --> executive_steward"];
 
   for (const agent of agents) {
     lines.push(`${agent.id}["${mermaidNodeLabel(agent)}"]`);
@@ -92,19 +88,14 @@ export function buildOrgChartMermaidBlock(): string {
 }
 
 export function buildOrgChartSixteenTable(): string {
-  const lines = [
-    "| # | 記事の役割 | Agent id | 定義 |",
-    "|---|-----------|----------|------|",
-  ];
+  const lines = ["| # | 記事の役割 | Agent id | 定義 |", "|---|-----------|----------|------|"];
   ORG_CHART_SIXTEEN_ROLE_IDS.forEach((id, index) => {
     const agent = listCatalogAgents().find((a) => a.id === id);
     if (!agent) {
       lines.push(`| ${index + 1} | ${SIXTEEN_ROLE_LABELS[id]} | \`${id}\` | — |`);
       return;
     }
-    lines.push(
-      `| ${index + 1} | ${SIXTEEN_ROLE_LABELS[id]} | \`${id}\` | ${agentMdLink(agent)} |`
-    );
+    lines.push(`| ${index + 1} | ${SIXTEEN_ROLE_LABELS[id]} | \`${id}\` | ${agentMdLink(agent)} |`);
   });
   return lines.join("\n");
 }

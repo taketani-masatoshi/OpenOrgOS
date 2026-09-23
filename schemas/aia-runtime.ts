@@ -30,8 +30,7 @@ export const aiaRuntimeFileSchema = z
     metrics: aiaRuntimeMetricsSchema.optional(),
   })
   .superRefine((file, ctx) => {
-    const expected =
-      file.tier === "soft" ? 10 : file.tier === "target" ? 20 : 30;
+    const expected = file.tier === "soft" ? 10 : file.tier === "target" ? 20 : 30;
     if (file.max_concurrent_aia > expected && file.tier !== "hard") {
       // Allow explicit lower caps; warn only when over tier label without hard
       if (file.max_concurrent_aia > 30) {
@@ -79,7 +78,11 @@ export type AiaRunState = z.output<typeof aiaRunStateSchema>;
 export type AiaRunRecord = z.output<typeof aiaRunRecordSchema>;
 
 /** States that count toward max_concurrent_aia. */
-export const ACTIVE_RUN_STATES = ["admitted", "running", "merging"] as const satisfies readonly AiaRunState[];
+export const ACTIVE_RUN_STATES = [
+  "admitted",
+  "running",
+  "merging",
+] as const satisfies readonly AiaRunState[];
 
 export type AiaActiveRunState = (typeof ACTIVE_RUN_STATES)[number];
 

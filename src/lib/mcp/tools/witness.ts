@@ -7,7 +7,7 @@ import type { WitnessAttestationSide } from "../../../../schemas/protocol/witnes
 import { errorResult, jsonResult, type McpToolResult } from "../result.js";
 
 export async function handleStewardWitnessRegister(
-  args: Record<string, unknown>,
+  args: Record<string, unknown>
 ): Promise<McpToolResult> {
   const eventId = String(args.event_id ?? "").trim();
   const side = args.side as WitnessAttestationSide;
@@ -19,7 +19,7 @@ export async function handleStewardWitnessRegister(
 }
 
 export async function handleStewardWitnessVerify(
-  args: Record<string, unknown>,
+  args: Record<string, unknown>
 ): Promise<McpToolResult> {
   const eventId = String(args.event_id ?? "").trim();
   if (!eventId) {
@@ -30,7 +30,7 @@ export async function handleStewardWitnessVerify(
 }
 
 export async function handleStewardWitnessFlush(
-  _args: Record<string, unknown>,
+  _args: Record<string, unknown>
 ): Promise<McpToolResult> {
   const result = await flushWitnessPendingFromChat();
   return jsonResult(result);

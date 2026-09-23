@@ -54,9 +54,13 @@ export function buildCapabilityManifest(): AgentCapabilityManifest {
     if (agent.class === "advisor") {
       agents.push({
         id: agent.id,
-        summary_slug: capBlock?.summary_slug ?? existing?.summary_slug ?? agentSummarySlug(agent.id),
+        summary_slug:
+          capBlock?.summary_slug ?? existing?.summary_slug ?? agentSummarySlug(agent.id),
         data_paths: [],
-        docs_paths: capBlock?.docs_paths ?? existing?.docs_paths ?? agent.access.read.filter((p) => p.startsWith("docs/")),
+        docs_paths:
+          capBlock?.docs_paths ??
+          existing?.docs_paths ??
+          agent.access.read.filter((p) => p.startsWith("docs/")),
         route_ids: [],
         skills: [...new Set(skillsByAgent.get(agent.id) ?? existing?.skills ?? [])].sort(),
         pulse_checks: [],
@@ -95,7 +99,11 @@ export function syncAgentCapabilityManifest(write = false): AgentCapabilityManif
     const header =
       "# Generated from steward/core/agents/registry.yaml + skills + routing.\n" +
       "# Regenerate: npm run agent:capability:sync\n\n";
-    writeFileSync(AGENT_CAPABILITY_MANIFEST_PATH, header + YAML.stringify(manifest, { lineWidth: 120 }), "utf-8");
+    writeFileSync(
+      AGENT_CAPABILITY_MANIFEST_PATH,
+      header + YAML.stringify(manifest, { lineWidth: 120 }),
+      "utf-8"
+    );
   }
   return manifest;
 }

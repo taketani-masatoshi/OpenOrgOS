@@ -1,5 +1,5 @@
 import { handoffSchema } from "../../../schemas/routing.js";
-import type { AiaRunRecord } from "../../../schemas/aia-runtime.js";
+import type { AiaRunRecord, AiaRunState } from "../../../schemas/aia-runtime.js";
 import type { WorkOrderDispatch } from "../../../schemas/routing.js";
 import { loadAiaQueueFile } from "../aia/queue-store.js";
 import { getSharedAiaScheduler, loadAiaRuntimeConfig } from "../aia/scheduler.js";
@@ -12,7 +12,11 @@ import {
   retryableFailedWorkOrders,
   syncDependencyStatuses,
 } from "./plan-graph.js";
-import { enrichHandoffDisplayFields, isCancellableWorkOrder, resolveWorkOrderTitle } from "./board-view.js";
+import {
+  enrichHandoffDisplayFields,
+  isCancellableWorkOrder,
+  resolveWorkOrderTitle,
+} from "./board-view.js";
 import {
   completeWorkOrderViaState,
   getWorkOrderDispatch,
@@ -54,7 +58,10 @@ export function cancelPendingWorkOrders(id: string): string[] {
   return cancelled;
 }
 
-export function completeWorkOrderRun(id: string, notes?: string): ReturnType<typeof completeWorkOrderViaState> {
+export function completeWorkOrderRun(
+  id: string,
+  notes?: string
+): ReturnType<typeof completeWorkOrderViaState> {
   const rootId = resolvePlanRoot(id);
   const updated = completeWorkOrderViaState(id, notes);
   syncDependencyStatuses(buildPlanGraph(rootId));
@@ -68,10 +75,7 @@ export function reopenWorkOrderRun(id: string): ReturnType<typeof reopenWorkOrde
   return updated;
 }
 
-export function applyDependsToWorkOrders(
-  rootId: string,
-  depends: Map<string, string[]>,
-): void {
+export function applyDependsToWorkOrders(rootId: string, depends: Map<string, string[]>): void {
   for (const [childId, depIds] of depends.entries()) {
     const handoff = loadHandoff(childId);
     const updated = handoffSchema.parse({
@@ -98,16 +102,13 @@ function buildAiaRunLookup(runs: AiaRunRecord[]) {
 function resolveAiaRunForNode(
   nodeId: string,
   dispatch: WorkOrderDispatch,
-  lookup: ReturnType<typeof buildAiaRunLookup>,
+  lookup: ReturnType<typeof buildAiaRunLookup>
 ): AiaRunRecord | undefined {
   if (dispatch.last_run_id) {
     const byId = lookup.byRunId.get(dispatch.last_run_id);
     if (byId) return byId;
   }
-  return (
-    lookup.byWorkOrderId.get(nodeId) ??
-    lookup.byRunId.get(`RUN-${nodeId}`)
-  );
+  return lookup.byWorkOrderId.get(nodeId) ?? lookup.byRunId.get(`RUN-${nodeId}`);
 }
 
 function formatAiaState(run?: Pick<AiaRunRecord, "state" | "fail_reason">): string {
@@ -149,7 +150,7 @@ export interface OrchestrationStatusPayload {
     cancellable: boolean;
     aia?: {
       run_id: string;
-      state: string;
+      state: AiaRunState;
       fail_reason?: string;
     };
   }>;
@@ -157,7 +158,7 @@ export interface OrchestrationStatusPayload {
     run_id: string;
     work_order_id?: string;
     agent_id: string;
-    state: string;
+    state: AiaRunState;
     fail_reason?: string;
   }>;
   blocked_downstream: Array<{ id: string; agent: string; status: string }>;
@@ -216,7 +217,7 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
             : undefined,
         },
       ];
-    }),
+    })
   );
 
   const seenRuns = new Set<string>();
@@ -292,7 +293,7 @@ export function formatOrchestrationStatus(id: string): string {
         })
       : "—";
     lines.push(
-      `| ${node.wave} | ${node.id} | ${node.agent} | ${node.status} | ${node.depends_on.join(", ") || "—"} | ${node.dispatch.attempts}/${node.dispatch.max_attempts} | ${node.dispatch.trace_id ?? "—"} | ${aiaLabel} |`,
+      `| ${node.wave} | ${node.id} | ${node.agent} | ${node.status} | ${node.depends_on.join(", ") || "—"} | ${node.dispatch.attempts}/${node.dispatch.max_attempts} | ${node.dispatch.trace_id ?? "—"} | ${aiaLabel} |`
     );
   }
 
@@ -302,7 +303,7 @@ export function formatOrchestrationStatus(id: string): string {
     lines.push("|--------|------------|-------|-------|-------------|");
     for (const run of payload.aia_runs) {
       lines.push(
-        `| ${run.run_id} | ${run.work_order_id ?? "—"} | ${run.agent_id} | ${run.state} | ${run.fail_reason ?? "—"} |`,
+        `| ${run.run_id} | ${run.work_order_id ?? "—"} | ${run.agent_id} | ${run.state} | ${run.fail_reason ?? "—"} |`
       );
     }
   }

@@ -5,10 +5,7 @@
 
 import { join } from "node:path";
 import type { AgentId } from "../../../schemas/classification.js";
-import {
-  AGENT_ID_ALIASES,
-  AGENT_IDS,
-} from "../../../schemas/generated/agent-ids.js";
+import { AGENT_ID_ALIASES, AGENT_IDS } from "../../../schemas/generated/agent-ids.js";
 import {
   agentCatalogSchema,
   type AgentCatalog,
@@ -77,8 +74,10 @@ export function validateAgentCatalog(): string[] {
       }
     }
     if (agent.class === "advisor") {
-      if (agent.access.write.length) issues.push(`${agent.id}: advisor must not declare write access`);
-      if (agent.dispatch_modes.includes("implement")) issues.push(`${agent.id}: advisor cannot implement`);
+      if (agent.access.write.length)
+        issues.push(`${agent.id}: advisor must not declare write access`);
+      if (agent.dispatch_modes.includes("implement"))
+        issues.push(`${agent.id}: advisor cannot implement`);
       if (agent.auto_route) issues.push(`${agent.id}: advisor cannot auto-route`);
       if (agent.auto_pulse) issues.push(`${agent.id}: advisor cannot auto-pulse`);
     }

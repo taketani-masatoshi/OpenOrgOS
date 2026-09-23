@@ -6,9 +6,7 @@
 import type { TaskPriority } from "../../../schemas/executive.js";
 
 /** Work-order handoff priority (P0–P3) → TaskPriority. */
-export function workOrderTaskPriority(
-  p: "P0" | "P1" | "P2" | "P3" | undefined,
-): TaskPriority {
+export function workOrderTaskPriority(p: "P0" | "P1" | "P2" | "P3" | undefined): TaskPriority {
   if (p === "P0") return "p0";
   if (p === "P1") return "p1";
   if (p === "P3") return "p3";
@@ -19,9 +17,7 @@ export function workOrderTaskPriority(
  * Intake-from-triage: only explicit p0/p1 importance; otherwise p2.
  * (Does not elevate by urgency.)
  */
-export function triageIntakePriority(
-  importance: string | undefined,
-): TaskPriority {
+export function triageIntakePriority(importance: string | undefined): TaskPriority {
   return importance === "p0" || importance === "p1" ? importance : "p2";
 }
 
@@ -30,7 +26,7 @@ export function triageIntakePriority(
  */
 export function triageCandidatePriority(
   importance: string | undefined,
-  urgency: string | undefined,
+  urgency: string | undefined
 ): TaskPriority {
   if (importance === "p0" || importance === "p1") return importance;
   if (urgency === "immediate" || urgency === "today") return "p1";

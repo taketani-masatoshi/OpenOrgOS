@@ -20,7 +20,7 @@ function intakeMailPriority(importance: string | undefined): TaskPriority {
 /** Mirror of buildTaskView mail candidate priority (task-view.ts). */
 function viewMailPriority(
   importance: string | undefined,
-  urgency: string | undefined,
+  urgency: string | undefined
 ): TaskPriority {
   return importance === "p0" || importance === "p1"
     ? importance
@@ -55,11 +55,12 @@ describe("tasks priority mapping (characterization)", () => {
 
     for (const row of cases) {
       expect(intakeMailPriority(row.importance), `intake ${row.importance}/${row.urgency}`).toBe(
-        row.intake,
+        row.intake
       );
-      expect(viewMailPriority(row.importance, row.urgency), `view ${row.importance}/${row.urgency}`).toBe(
-        row.view,
-      );
+      expect(
+        viewMailPriority(row.importance, row.urgency),
+        `view ${row.importance}/${row.urgency}`
+      ).toBe(row.view);
     }
 
     // Explicit mismatch lock: urgency-elevated mail is p2 on intake, p1 on view.

@@ -74,7 +74,7 @@ describe("mcp tools dispatch (characterization)", () => {
     const result = await callStewardMcpTool(
       "steward_ask",
       { message: "status?" },
-      { token: TOKEN },
+      { token: TOKEN }
     );
     expect(result.isError).not.toBe(true);
     expect(result.content[0]?.text).toBe("HANDLER:steward_ask");
@@ -100,14 +100,11 @@ describe("mcp tools dispatch (characterization)", () => {
     const result = await callStewardMcpTool(
       "steward_witness_register",
       { event_id: "00000000-0000-4000-8000-000000000001", side: "sent" },
-      { token: TOKEN },
+      { token: TOKEN }
     );
     expect(result.isError).not.toBe(true);
     expect(result.content[0]?.text).toContain("steward_witness_register");
-    expect(register).toHaveBeenCalledWith(
-      "00000000-0000-4000-8000-000000000001",
-      "sent",
-    );
+    expect(register).toHaveBeenCalledWith("00000000-0000-4000-8000-000000000001", "sent");
   });
 
   it("steward_witness_verify reaches verifyWitnessFromChat handler", async () => {
@@ -118,7 +115,7 @@ describe("mcp tools dispatch (characterization)", () => {
     const result = await callStewardMcpTool(
       "steward_witness_verify",
       { event_id: "00000000-0000-4000-8000-000000000001" },
-      { token: TOKEN },
+      { token: TOKEN }
     );
     expect(result.isError).not.toBe(true);
     expect(result.content[0]?.text).toContain("steward_witness_verify");
@@ -152,7 +149,7 @@ describe("mcp tools dispatch (characterization)", () => {
     const result = await callStewardMcpTool(
       "ledger_trial_balance",
       { as_of: "2024-01-01" },
-      { token: TOKEN },
+      { token: TOKEN }
     );
     expect(result.isError).not.toBe(true);
     const body = JSON.parse(result.content[0]!.text) as Record<string, unknown>;
@@ -174,7 +171,7 @@ describe("mcp tools dispatch (characterization)", () => {
         credit_account: "売上高",
         amount_yen: 1,
       },
-      { token: TOKEN },
+      { token: TOKEN }
     );
     expect(result.isError).not.toBe(true);
     const body = JSON.parse(result.content[0]!.text) as Record<string, unknown>;
@@ -184,11 +181,7 @@ describe("mcp tools dispatch (characterization)", () => {
   });
 
   it("ledger_propose_bank_match reaches bank reconcile proposal handler", async () => {
-    const result = await callStewardMcpTool(
-      "ledger_propose_bank_match",
-      {},
-      { token: TOKEN },
-    );
+    const result = await callStewardMcpTool("ledger_propose_bank_match", {}, { token: TOKEN });
     expect(result.isError).not.toBe(true);
     const body = JSON.parse(result.content[0]!.text) as Record<string, unknown>;
     expect(body).toMatchObject({
@@ -208,7 +201,7 @@ describe("mcp tools dispatch (characterization)", () => {
     const result = await callStewardMcpTool(
       "steward_approve",
       { approval_id: "NOTICE-X" },
-      { token: TOKEN },
+      { token: TOKEN }
     );
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toMatch(/not available/i);

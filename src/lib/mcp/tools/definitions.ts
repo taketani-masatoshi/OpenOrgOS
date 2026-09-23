@@ -72,8 +72,7 @@ export const MCP_TOOL_DEFINITIONS: McpToolDefinition[] = [
   },
   {
     name: "ledger_propose_manual_entry",
-    description:
-      "Propose a two-line manual journal (does NOT post — approve in Workbench)",
+    description: "Propose a two-line manual journal (does NOT post — approve in Workbench)",
     inputSchema: {
       type: "object",
       properties: {

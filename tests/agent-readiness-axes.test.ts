@@ -1,8 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import {
-  computeAgentReadiness,
-  computeAgentReadinessProfile,
-} from "../src/lib/agent-readiness.js";
+import { computeAgentReadiness, computeAgentReadinessProfile } from "../src/lib/agent-readiness.js";
 import { listCatalogAgents } from "../src/lib/agent-catalog.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
@@ -125,7 +122,7 @@ describe("agent readiness axis scores (characterization)", () => {
 
   it("bootstrap profile axis fingerprint when catalog has bootstrap agents", () => {
     const bootstrap = listCatalogAgents().filter(
-      (agent) => agent.readiness_profile === "bootstrap" && agent.status !== "planned",
+      (agent) => agent.readiness_profile === "bootstrap" && agent.status !== "planned"
     );
     if (bootstrap.length === 0) {
       expect(computeAgentReadinessProfile("bootstrap")).toEqual([]);
@@ -136,12 +133,7 @@ describe("agent readiness axis scores (characterization)", () => {
     expect(finger.profile).toBe("bootstrap");
     expect(finger.axes.length).toBeLessThan(7);
     // Snapshot only when catalog actually ships a bootstrap agent.
-    expect(finger.axes.map((a) => a.id)).toEqual([
-      "definition",
-      "skill_cli",
-      "data_sot",
-      "test",
-    ]);
+    expect(finger.axes.map((a) => a.id)).toEqual(["definition", "skill_cli", "data_sot", "test"]);
   });
 
   it("computeAgentReadinessProfile returns non-empty operational and advisor sets on mal", () => {

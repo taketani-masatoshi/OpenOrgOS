@@ -16,10 +16,7 @@ import { ROOT_DIR } from "../tenant.js";
 
 const IMPORT_RE = /(?:from|import)\s+["'](\.[^"']+)["']/g;
 
-const TRACKED_PEERS = [
-  "src/lib/agent-pulse.ts",
-  "src/lib/agent-workspace.ts",
-] as const;
+const TRACKED_PEERS = ["src/lib/agent-pulse.ts", "src/lib/agent-workspace.ts"] as const;
 
 export interface AgentInfraLayerEdge {
   from: string;
@@ -47,9 +44,7 @@ function resolveRelativeImport(fromAbs: string, specifier: string): string | nul
 
 function scanFiles(): string[] {
   const scoped = listAgentInfraScopedFiles().map((rel) => join(ROOT_DIR, rel));
-  const peers = TRACKED_PEERS.map((rel) => join(ROOT_DIR, rel)).filter((abs) =>
-    existsSync(abs)
-  );
+  const peers = TRACKED_PEERS.map((rel) => join(ROOT_DIR, rel)).filter((abs) => existsSync(abs));
   return [...scoped, ...peers];
 }
 
@@ -79,9 +74,7 @@ export function collectAgentInfraLayerUpwardEdges(): AgentInfraLayerEdge[] {
 }
 
 export function collectAgentInfraLayerViolationKeys(): string[] {
-  return [
-    ...new Set(collectAgentInfraLayerUpwardEdges().map(formatAgentInfraLayerEdge)),
-  ].sort();
+  return [...new Set(collectAgentInfraLayerUpwardEdges().map(formatAgentInfraLayerEdge))].sort();
 }
 
 /** Hard rules from the plan (independent of rank). */

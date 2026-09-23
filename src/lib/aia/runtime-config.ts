@@ -1,8 +1,5 @@
 import { existsSync } from "node:fs";
-import {
-  aiaRuntimeFileSchema,
-  type AiaRuntimeFile,
-} from "../../../schemas/aia-runtime.js";
+import { aiaRuntimeFileSchema, type AiaRuntimeFile } from "../../../schemas/aia-runtime.js";
 import { tenantDataPath } from "../tenant.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 
@@ -26,9 +23,7 @@ export function saveAiaRuntimeConfig(config: AiaRuntimeFile): string {
   return path;
 }
 
-export function persistAiaMetrics(scheduler: {
-  metrics(): Record<string, number>;
-}): void {
+export function persistAiaMetrics(scheduler: { metrics(): Record<string, number> }): void {
   const path = aiaRuntimeConfigPath();
   const config = loadAiaRuntimeConfig();
   const next = {

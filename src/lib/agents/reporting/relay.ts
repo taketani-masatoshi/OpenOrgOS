@@ -124,7 +124,9 @@ export function submitAgentReport(opts: SubmitAgentReportOptions): AgentMission 
   if (opts.missionId) {
     mission = loadMission(opts.missionId);
     if (mission.field_agent !== opts.agentId) {
-      throw new Error(`mission ${opts.missionId} belongs to ${mission.field_agent}, not ${opts.agentId}`);
+      throw new Error(
+        `mission ${opts.missionId} belongs to ${mission.field_agent}, not ${opts.agentId}`
+      );
     }
     mission = agentMissionSchema.parse({
       ...mission,
@@ -216,9 +218,7 @@ export function ackRelay(opts: AckRelayOptions): AgentMission {
           notes: opts.notes,
         },
         steward:
-          opts.forward === false
-            ? mission.relay.steward
-            : { status: "pending", notes: opts.notes },
+          opts.forward === false ? mission.relay.steward : { status: "pending", notes: opts.notes },
       },
     });
     writeMission(updated);
@@ -232,7 +232,9 @@ export function ackRelay(opts: AckRelayOptions): AgentMission {
   }
 
   if (mission.relay.steward.status !== "pending") {
-    throw new Error(`Steward inbox for ${opts.missionId} is already ${mission.relay.steward.status}`);
+    throw new Error(
+      `Steward inbox for ${opts.missionId} is already ${mission.relay.steward.status}`
+    );
   }
   const updated = agentMissionSchema.parse({
     ...mission,
@@ -288,8 +290,7 @@ export function relayWorkOrderComplete(handoff: Handoff, notes?: string): AgentM
   if (!linked) {
     linked = createMissionFromWorkOrder(handoff) ?? undefined;
   }
-  const missionId =
-    linked && linked.field_agent === handoff.to_agent ? linked.id : undefined;
+  const missionId = linked && linked.field_agent === handoff.to_agent ? linked.id : undefined;
 
   return submitAgentReport({
     agentId: handoff.to_agent as AgentId,

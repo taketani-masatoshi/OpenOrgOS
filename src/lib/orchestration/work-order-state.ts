@@ -59,7 +59,11 @@ export interface TransitionContext {
   eventPayload?: Record<string, unknown>;
 }
 
-export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: TransitionContext = {}): Handoff {
+export function transitionWorkOrder(
+  id: string,
+  to: HandoffStatus,
+  ctx: TransitionContext = {}
+): Handoff {
   const handoff = loadHandoff(id);
   assertTransitionAllowed(handoff.status, to);
 
@@ -98,7 +102,10 @@ export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: Transiti
     ...handoff,
     status: to,
     dispatch: nextDispatch,
-    completion_notes: to === "completed" ? (ctx.completionNotes ?? handoff.completion_notes) : handoff.completion_notes,
+    completion_notes:
+      to === "completed"
+        ? (ctx.completionNotes ?? handoff.completion_notes)
+        : handoff.completion_notes,
   });
 
   writeHandoffFiles(updated, undefined, { audit: false });

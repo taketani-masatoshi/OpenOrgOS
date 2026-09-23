@@ -100,9 +100,7 @@ function terminalNotifierPath(): string | undefined {
  * - なければ osascript（Script Editor アイコンになりやすい）
  * CI: ORGOS_SKIP_MACOS_NOTIFY=1
  */
-export async function displayMacOSNotification(
-  input: MacOSNotificationInput
-): Promise<boolean> {
+export async function displayMacOSNotification(input: MacOSNotificationInput): Promise<boolean> {
   if (process.env.ORGOS_SKIP_MACOS_NOTIFY === "1") return false;
   if (process.platform !== "darwin") return false;
 

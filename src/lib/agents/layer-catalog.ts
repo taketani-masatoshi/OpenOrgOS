@@ -195,9 +195,7 @@ export function listAgentInfraScopedFiles(): string[] {
   for (const dir of SCOPED_DIRS) {
     listTsFiles(join(lib, dir), files);
   }
-  return files
-    .map((abs) => relative(ROOT_DIR, abs).replace(/\\/g, "/"))
-    .sort();
+  return files.map((abs) => relative(ROOT_DIR, abs).replace(/\\/g, "/")).sort();
 }
 
 export function resolveAgentInfraFileLayer(relPath: string): AgentInfraLayer | undefined {

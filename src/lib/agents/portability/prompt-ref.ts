@@ -44,7 +44,10 @@ export function formatAgentPromptRef(agent: AgentId, format: AgentToolFormat = "
   }
 }
 
-export function formatSkillReference(skill: ResolvedSkillEntry, format: AgentToolFormat = "portable"): string {
+export function formatSkillReference(
+  skill: ResolvedSkillEntry,
+  format: AgentToolFormat = "portable"
+): string {
   const rel = `${skill.skillDirRel}/${skill.file}`;
   switch (format) {
     case "cursor":

@@ -4,16 +4,12 @@ import { runOperatorAsk } from "../../operator-runtime/ask.js";
 import { flushWireFromChat } from "../../steward-chat/wire-witness.js";
 import { errorResult, jsonResult, textResult, type McpToolResult } from "../result.js";
 
-export async function handleStewardToday(
-  _args: Record<string, unknown>,
-): Promise<McpToolResult> {
+export async function handleStewardToday(_args: Record<string, unknown>): Promise<McpToolResult> {
   const ctx = buildTodayContext();
   return textResult(formatTodayContextMarkdown(ctx));
 }
 
-export async function handleStewardAsk(
-  args: Record<string, unknown>,
-): Promise<McpToolResult> {
+export async function handleStewardAsk(args: Record<string, unknown>): Promise<McpToolResult> {
   const message = String(args.message ?? "").trim();
   if (!message) {
     return errorResult("message is required");
@@ -29,16 +25,14 @@ export async function handleStewardAsk(
   return textResult(result.reply || result.detail, !result.ok);
 }
 
-export async function handleStewardApprove(
-  _args: Record<string, unknown>,
-): Promise<McpToolResult> {
+export async function handleStewardApprove(_args: Record<string, unknown>): Promise<McpToolResult> {
   return errorResult(
-    "steward_approve is not available. Humans approve via Chat/Wire UI or `org approval approve`.",
+    "steward_approve is not available. Humans approve via Chat/Wire UI or `org approval approve`."
   );
 }
 
 export async function handleStewardWireFlush(
-  _args: Record<string, unknown>,
+  _args: Record<string, unknown>
 ): Promise<McpToolResult> {
   const result = await flushWireFromChat();
   return jsonResult(result);

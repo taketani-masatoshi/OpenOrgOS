@@ -64,14 +64,23 @@ export function validateStewardRosterDrift(): string[] {
     issues.push("steward_agent_roster.md must declare registry.yaml as canonical source");
   }
 
-  const tableIds = extractBacktickIds(text).filter((id) => catalogIds.has(id) || resolveAgentId(id));
+  const tableIds = extractBacktickIds(text).filter(
+    (id) => catalogIds.has(id) || resolveAgentId(id)
+  );
   for (const id of tableIds) {
     if (!resolveAgentId(id)) {
       issues.push(`steward_agent_roster.md references unknown agent: ${id}`);
     }
   }
 
-  for (const required of ["executive_steward", "secretary", "finance", "contract", "compliance", "operations"]) {
+  for (const required of [
+    "executive_steward",
+    "secretary",
+    "finance",
+    "contract",
+    "compliance",
+    "operations",
+  ]) {
     if (!text.includes(required)) {
       issues.push(`steward_agent_roster.md missing core agent mention: ${required}`);
     }
