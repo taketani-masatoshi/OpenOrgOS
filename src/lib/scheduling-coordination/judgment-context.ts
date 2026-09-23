@@ -4,6 +4,7 @@ import type {
 } from "../../../schemas/executive/scheduling-cases.js";
 import { findVenueReservation } from "../venue-booking/store.js";
 import { applyNextAction } from "./next-action.js";
+import { caseNeedsVenueReservationForConfirm } from "./venue-gate.js";
 
 /** Venue reservation facts needed for pure next-action judgment (no I/O). */
 export type SchedulingJudgmentContext = {
@@ -39,4 +40,17 @@ export function resolveNextAction(caseInput: SchedulingCaseInput): SchedulingCas
     venue_reservation_id: withId.venue_reservation_id,
   });
   return applyNextAction(caseInput, ctx);
+}
+
+/**
+ * Shell: load VR from store then evaluate confirm gate (pure gate stays I/O-free).
+ */
+export function resolveCaseNeedsVenueReservationForConfirm(
+  caseRow: Pick<
+    SchedulingCase,
+    "meeting_format" | "status" | "venue_reservation_id" | "location"
+  >
+): boolean {
+  const ctx = loadSchedulingJudgmentContext(caseRow);
+  return caseNeedsVenueReservationForConfirm(caseRow, ctx.venueReservation);
 }
