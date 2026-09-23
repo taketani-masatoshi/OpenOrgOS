@@ -1,0 +1,29 @@
+<!-- jp_statutory_meetings · {{meeting_id}} · ドラフト — 内容確認・署名は人間 -->
+
+# {{meeting_title}} 議事録
+
+1. 日時　{{meeting_date_reiwa}}　{{start_time}}
+2. 場所　{{place}}
+3. 出席した取締役・監査役等　{{attending_block}}
+4. 議長　{{chair_name}}
+5. 議事録の作成に係る職務を行った取締役　{{author_name}}
+6. 議決権の状況
+{{voting_status_block}}
+
+7. 議事の経過の要領及びその結果
+
+{{resolutions_block}}
+
+（会社法施行規則72条3項3号に掲げる意見・発言があった場合は、その概要を記載）
+
+以上の議事を明確にするため、本議事録を作成する。
+
+{{company_name}}　{{meeting_title}}
+
+---
+
+## 作成メモ（確定前に削除）
+
+- 記載事項: {{minutes_basis}}
+- 備置: {{retention_note}}（会社法318条2項・3項）
+- 一次資料: {{source_regulation_url}}

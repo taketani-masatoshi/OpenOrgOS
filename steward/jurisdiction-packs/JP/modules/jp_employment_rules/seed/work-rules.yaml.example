@@ -1,0 +1,89 @@
+# 就業規則の整備状況（事業場単位 · 架空サンプル）
+# 労働者側当事者は employee_id のみで参照する（氏名・連絡先は書かない）
+work_rules:
+  - workplace_id: WP-HQ
+    title: サンプル商事 就業規則（本社）
+    established_on: 2024-04-01
+    last_revised_on: 2026-04-01
+    filed_on: 2026-04-15
+    opinion:
+      heard_on: 2026-03-10
+      letter_attached: true
+      party:
+        type: majority_representative
+        representative_employee_id: EMP-105
+        selection_method: vote
+        representative_is_manager: false
+    included_items:
+      - start_end_time
+      - break_time
+      - holidays
+      - leave
+      - wage_determination
+      - wage_calculation_payment
+      - wage_cutoff_payment_date
+      - wage_raise
+      - retirement_including_dismissal
+      - retirement_allowance
+      - safety_health
+      - commendation_discipline
+    adopted_policies:
+      - retirement_allowance
+      - safety_health
+      - commendation_discipline
+    notification:
+      method: electronic
+      notified_on: 2026-04-01
+
+  - workplace_id: WP-OSAKA
+    title: サンプル商事 就業規則（大阪営業所）
+    established_on: 2025-04-01
+    last_revised_on: 2026-07-01
+    filed_on: 2025-05-10
+    opinion:
+      letter_attached: false
+    included_items:
+      - start_end_time
+      - break_time
+      - holidays
+      - leave
+      - wage_determination
+      - wage_calculation_payment
+      - wage_cutoff_payment_date
+      - wage_raise
+      - retirement_including_dismissal
+    adopted_policies:
+      - retirement_allowance
+    notification:
+      method: posting
+      notified_on: 2025-05-01
+    notes: 改定後未届出 · 意見書未添付 · 退職手当の規定漏れ · 改定後未周知（検出用）
+
+  - workplace_id: WP-DEPOT
+    title: サンプル商事 就業規則（配送センター）
+    established_on: 2026-01-05
+    last_revised_on: 2026-01-05
+    filed_on: 2026-01-20
+    opinion:
+      heard_on: 2025-12-15
+      letter_attached: true
+      party:
+        type: majority_representative
+        representative_employee_id: EMP-205
+        selection_method: employer_appointed
+        representative_is_manager: false
+    included_items:
+      - start_end_time
+      - break_time
+      - holidays
+      - leave
+      - wage_determination
+      - wage_calculation_payment
+      - wage_cutoff_payment_date
+      - wage_raise
+      - retirement_including_dismissal
+    adopted_policies: []
+    notification:
+      method: written_delivery
+      notified_on: 2026-01-05
+    notes: 交替制の就業時転換の規定漏れ · 代表者を使用者が指名（検出用）

@@ -1,0 +1,47 @@
+# 一次資料（e-Gov 法令検索）· 取得日 2026-09-24
+retrieved_on: 2026-09-24
+sources:
+  - id: egov-companies-act
+    title: "会社法（平成十七年法律第八十六号）"
+    url: "https://laws.e-gov.go.jp/law/417AC0000000086"
+    articles: ["124", "296", "298", "299", "300", "309", "318", "319", "325の3", "325の4", "326", "341", "368", "369", "370", "371"]
+    retrieved_on: 2026-09-24
+    notes: "招集期限 · 招集手続省略 · 決議要件 · 決議の省略 · 議事録備置 · 基準日"
+  - id: egov-companies-act-regulation
+    title: "会社法施行規則（平成十八年法務省令第十二号）"
+    url: "https://laws.e-gov.go.jp/law/418M60000010012"
+    articles: ["72", "101"]
+    retrieved_on: 2026-09-24
+    notes: "株主総会議事録（72条）· 取締役会議事録（101条）の記載事項"
+  - id: egov-civil-code
+    title: "民法（明治二十九年法律第八十九号）"
+    url: "https://laws.e-gov.go.jp/law/129AC0000000089"
+    articles: ["140", "141", "143"]
+    retrieved_on: 2026-09-24
+    notes: "期間計算 — 初日不算入 · 暦による計算（招集期限は発信日と会日を算入しない · 大判昭和10年7月15日）"
+
+templates:
+  - id: shareholders-notice
+    name: "株主総会招集ご通知"
+    template: templates/shoshu-tsuchi-shareholders.md.example
+    legal_basis: "会社法298条1項・299条"
+  - id: shareholders-minutes
+    name: "株主総会議事録"
+    template: templates/gijiroku-shareholders.md.example
+    legal_basis: "会社法318条1項 · 会社法施行規則72条3項"
+  - id: board-notice
+    name: "取締役会招集通知"
+    template: templates/shoshu-tsuchi-board.md.example
+    legal_basis: "会社法368条1項"
+  - id: board-minutes
+    name: "取締役会議事録"
+    template: templates/gijiroku-board.md.example
+    legal_basis: "会社法369条3項 · 会社法施行規則101条3項"
+  - id: written-proposal
+    name: "提案書兼同意書（決議の省略）"
+    template: templates/teian-sho.md.example
+    legal_basis: "会社法319条1項・370条"
+  - id: deemed-minutes
+    name: "議事録（決議の省略）"
+    template: templates/minashi-ketsugi-gijiroku.md.example
+    legal_basis: "会社法施行規則72条4項1号・101条4項1号"

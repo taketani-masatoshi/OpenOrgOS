@@ -1,0 +1,29 @@
+<!-- jp_statutory_meetings · {{meeting_id}} · ドラフト — 出席取締役・監査役の署名又は記名押印は人間 -->
+
+# {{meeting_title}} 議事録
+
+1. 日時　{{meeting_date_reiwa}}　{{start_time}}
+2. 場所　{{place}}
+3. 出席者　{{attending_block}}
+4. 議長　{{chair_name}}
+
+5. 議事の経過の要領及びその結果
+
+{{resolutions_block}}
+
+（特別の利害関係を有する取締役の氏名 · 会社法施行規則101条3項6号の意見・発言の概要 · 373条2項の取締役会である旨 等、該当する場合は記載）
+
+以上の議事を明確にするため、本議事録を作成し、出席した取締役及び監査役は次に署名又は記名押印する。
+
+{{meeting_date_reiwa}}
+{{company_name}}
+
+{{signatures_block}}
+
+---
+
+## 作成メモ（確定前に削除）
+
+- 記載事項: {{minutes_basis}}
+- 備置: {{retention_note}}（会社法371条1項）
+- 一次資料: {{source_regulation_url}}

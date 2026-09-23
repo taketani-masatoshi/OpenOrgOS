@@ -1,0 +1,165 @@
+# 法定手続の詳細（meetings.yaml の id をキーに1件ずつ）— 架空サンプル
+# SM-2026-EGM-07 と BM-2026-WR-08 は checklist の検出テスト用に意図的な不備を含む。
+# 株主名簿・個人住所は記載しない（L2）。人は stakeholder_id で参照する。
+entity: sample
+as_of: 2026-09-24
+meetings:
+  - meeting_id: SM-2026-AGM
+    title: 第8期定時株主総会
+    session: annual
+    mode: convened
+    start_time: "10:00"
+    place: 本店 会議室
+    fiscal_year_end: 2026-03-31
+    record_date: 2026-03-31
+    record_date_in_articles: true
+    notice_sent_on: 2026-06-10
+    notice_method: written
+    attendee_stakeholder_ids: [STK-DIR-001, STK-DIR-002, STK-DIR-003, STK-AUD-001]
+    resolutions:
+      - id: R1
+        agenda: 第8期計算書類承認の件
+        type: ordinary
+        votes: { voting_rights_total: 1000, voting_rights_present: 800, voting_rights_for: 780 }
+        outcome_recorded: approved
+      - id: R2
+        agenda: 取締役3名選任の件
+        type: director_election
+        votes: { voting_rights_total: 1000, voting_rights_present: 800, voting_rights_for: 760 }
+        outcome_recorded: approved
+      - id: R3
+        agenda: 定款一部変更の件
+        type: special
+        votes: { voting_rights_total: 1000, voting_rights_present: 800, voting_rights_for: 600 }
+        outcome_recorded: approved
+    minutes:
+      status: finalized
+      medium: paper
+      prepared_on: 2026-06-26
+      author_stakeholder_id: STK-DIR-001
+      chair_stakeholder_id: STK-DIR-001
+      recorded_items: [datetime_place, proceedings_and_results, attending_officers, minutes_author_director, chair]
+      conditional_items_applicable: [chair]
+      kept_at_head_office: true
+      branch_copy_kept: true
+
+  - meeting_id: SM-2026-EGM-07
+    title: 臨時株主総会（募集株式発行）
+    session: extraordinary
+    mode: convened
+    start_time: "14:00"
+    place: 本店 会議室
+    record_date: 2026-04-10
+    record_date_in_articles: false
+    record_date_notice_on: 2026-04-01   # 公告期限 2026-03-26 を経過（124条3項）
+    notice_sent_on: 2026-07-10          # 期限 2026-07-07 を経過（299条1項）
+    notice_method: oral                 # 取締役会設置会社は書面必須（299条2項2号）
+    attendee_stakeholder_ids: [STK-DIR-001, STK-DIR-002]
+    resolutions:
+      - id: R1
+        agenda: 募集株式の募集事項決定の件
+        type: special
+        votes: { voting_rights_total: 1000, voting_rights_present: 900, voting_rights_for: 590 }
+        outcome_recorded: approved      # 590/900 は 2/3 未満（309条2項）
+      - id: R2
+        agenda: 資本金の額の計上に関する件
+        type: ordinary
+    minutes:
+      status: drafted
+      medium: paper
+      chair_stakeholder_id: STK-DIR-001
+      recorded_items: [datetime_place, proceedings_and_results, attending_officers]
+      kept_at_head_office: false
+
+  - meeting_id: SM-2026-WR-05
+    title: 株主総会（決議の省略 · 役員報酬総額）
+    session: extraordinary
+    mode: written_resolution
+    written_consent: { eligible: 12, consented: 12, completed_on: 2026-05-20 }
+    consent_documents_kept: true
+    resolutions:
+      - id: R1
+        agenda: 取締役の報酬等の総額決定の件
+        type: ordinary
+        proposer_stakeholder_id: STK-DIR-001
+        outcome_recorded: approved
+    minutes:
+      status: finalized
+      medium: electronic
+      prepared_on: 2026-05-20
+      author_stakeholder_id: STK-DIR-001
+      recorded_items: [deemed_matters, proposer, deemed_date, minutes_author_director]
+      kept_at_head_office: true
+      branch_copy_kept: true
+
+  - meeting_id: SM-2026-EGM-11
+    title: 臨時株主総会（商号変更）
+    session: extraordinary
+    mode: convened
+    start_time: "10:00"
+    place: 本店 会議室
+    record_date: 2026-09-30
+    record_date_in_articles: false
+    record_date_notice_on: 2026-09-14
+    resolutions:
+      - id: R1
+        agenda: 定款一部変更（商号変更）の件
+        type: special
+
+  - meeting_id: BM-2026-09
+    title: 取締役会（9月定例）
+    mode: convened
+    start_time: "09:30"
+    place: 本店 会議室
+    notice_sent_on: 2026-09-05
+    notice_method: electronic
+    attendee_stakeholder_ids: [STK-DIR-001, STK-DIR-002, STK-DIR-003, STK-AUD-001]
+    resolutions:
+      - id: R1
+        agenda: 重要な財産の処分の件
+        type: board
+        votes: { directors_eligible: 3, directors_present: 3, directors_for: 3 }
+        outcome_recorded: approved
+      - id: R2
+        agenda: 取締役との取引承認の件（特別利害関係取締役 STK-DIR-002 は議決に不参加）
+        type: board
+        votes: { directors_eligible: 2, directors_present: 2, directors_for: 2 }
+        outcome_recorded: approved
+    minutes:
+      status: finalized
+      medium: paper
+      prepared_on: 2026-09-10
+      chair_stakeholder_id: STK-DIR-001
+      recorded_items: [datetime_place, proceedings_and_results, attendee_signatures, chair, special_interest_directors]
+      conditional_items_applicable: [chair, special_interest_directors]
+      kept_at_head_office: true
+
+  - meeting_id: BM-2026-10
+    title: 取締役会（10月定例）
+    mode: convened
+    start_time: "09:30"
+    place: 本店 会議室
+    convocation_omission: { eligible: 4, consented: 4 }
+    attendee_stakeholder_ids: [STK-DIR-001, STK-DIR-002, STK-DIR-003, STK-AUD-001]
+    resolutions:
+      - id: R1
+        agenda: 臨時株主総会招集の件
+        type: board
+
+  - meeting_id: BM-2026-WR-08
+    title: 取締役会（決議の省略 · 支店設置）
+    mode: written_resolution
+    written_consent: { eligible: 3, consented: 3, completed_on: 2026-08-20 }
+    consent_documents_kept: true
+    resolutions:
+      - id: R1
+        agenda: 支店設置の件
+        type: board
+        proposer_stakeholder_id: STK-DIR-001
+    minutes:
+      status: finalized
+      medium: paper
+      prepared_on: 2026-08-20
+      author_stakeholder_id: STK-DIR-001
+      recorded_items: [deemed_matters, proposing_director, deemed_date, minutes_author_director]
+      kept_at_head_office: true

@@ -1,0 +1,68 @@
+# 一次資料（L0 · 公表）— retrieved_on は本モジュール作成時の確認日
+sources:
+  - id: egov-takken-act
+    title: "宅地建物取引業法（昭和27年法律第176号）"
+    url: "https://laws.e-gov.go.jp/law/327AC1000000176"
+    type: law
+    retrieved_on: "2026-09-24"
+    articles: ["2", "3", "4", "7", "9", "22の2", "22の3", "25", "26", "31の3", "35", "37", "46", "48", "49", "50", "64の9", "64の13"]
+  - id: egov-takken-order
+    title: "宅地建物取引業法施行令（昭和39年政令第383号）"
+    url: "https://laws.e-gov.go.jp/law/339CO0000000383"
+    type: cabinet_order
+    retrieved_on: "2026-09-24"
+    articles: ["2の4", "7"]
+    notes: "営業保証金 1,000万円/500万円 · 弁済業務保証金分担金 60万円/30万円"
+  - id: egov-takken-rule
+    title: "宅地建物取引業法施行規則（昭和32年建設省令第12号）"
+    url: "https://laws.e-gov.go.jp/law/332M50004000012"
+    type: regulation
+    retrieved_on: "2026-09-24"
+    articles: ["3", "15の5の3", "17の2", "18", "19"]
+    notes: "更新申請 90日前〜30日前 · 専任宅建士 1/5 · 従業者名簿10年 · 帳簿5年/10年 · 標識"
+  - id: mlit-fee-notice
+    title: "宅地建物取引業者が宅地又は建物の売買等に関して受けることができる報酬の額（昭和45年建設省告示第1552号 · 最終改正 令和6年国土交通省告示第949号）"
+    url: "https://www.mlit.go.jp/tochi_fudousan_kensetsugyo/const/content/001750143.pdf"
+    type: notice
+    retrieved_on: "2026-09-24"
+    articles: ["第二", "第三", "第四", "第五", "第六", "第七", "第八", "第九", "第十", "第十一"]
+    notes: "令和6年7月1日施行 · 低廉な空家等（800万円以下）30万円×1.1 · 長期の空家等 2.2か月"
+  - id: mlit-takken-index
+    title: "国土交通省 宅地建物取引業法関係（報酬告示の掲載ページ）"
+    url: "https://www.mlit.go.jp/totikensangyo/const/1_6_bt_000266.html"
+    type: guide
+    retrieved_on: "2026-09-24"
+  - id: mlit-takken-guideline
+    title: "宅地建物取引業法の解釈・運用の考え方（国土交通省）"
+    url: "https://www.mlit.go.jp/totikensangyo/const/1_6_bt_000268.html"
+    type: guideline
+    retrieved_on: "2026-09-24"
+    articles: ["第46条第1項関係"]
+    notes: "免税事業者の仕入れに係る消費税等相当額は税抜金額の0.04倍が限度 · 特例は媒介契約時に説明・合意"
+  - id: mlit-guideline-2024-summary
+    title: "「宅地建物取引業法の解釈・運用の考え方」（通達）の改正（令和6年7月1日施行）概要"
+    url: "https://www.mlit.go.jp/tochi_fudousan_kensetsugyo/const/content/001750144.pdf"
+    type: guideline
+    retrieved_on: "2026-09-24"
+  - id: mlit-consumer-fee-notice
+    title: "＜消費者の皆様向け＞不動産取引に関するお知らせ（仲介手数料の上限額）"
+    url: "https://www.mlit.go.jp/totikensangyo/const/1_6_bf_000013.html"
+    type: guide
+    retrieved_on: "2026-09-24"
+  - id: egov-civil-code
+    title: "民法（明治29年法律第89号）— 期間の計算"
+    url: "https://laws.e-gov.go.jp/law/129AC0000000089"
+    type: law
+    retrieved_on: "2026-09-24"
+    articles: ["140", "143"]
+    notes: "日数期間は初日不算入 · 年月期間は応当日の前日に満了"
+  - id: egov-rental-housing-management-act
+    title: "賃貸住宅の管理業務等の適正化に関する法律（令和2年法律第60号）— 関連法 · 本モジュール対象外"
+    url: "https://laws.e-gov.go.jp/law/502AC0000000060"
+    type: law
+    retrieved_on: "2026-09-24"
+  - id: egov-real-estate-joint-venture-act
+    title: "不動産特定共同事業法（平成6年法律第77号）— 関連法 · 本モジュール対象外"
+    url: "https://laws.e-gov.go.jp/law/406AC0000000077"
+    type: law
+    retrieved_on: "2026-09-24"

@@ -1,0 +1,15 @@
+---
+title: 特許請求の範囲
+application_id: {{application_id}}
+generated: {{generated_on}}
+sources:
+  - {{source_law_url}}
+  - {{source_form_url}}
+---
+
+> **ひな形（非提出稿）** — 特許法36条5項・6項、特許法施行規則24条の3・24条の4・様式第29の2 に準拠。請求項の番号・引用関係は `operations patent checklist` で形式確認し、権利範囲の妥当性は弁理士等が判断すること。
+
+```text
+【書類名】特許請求の範囲
+{{claims_body}}
+```

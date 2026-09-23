@@ -24,6 +24,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **規程草案 scaffold + 化粧品 sibling** — WO 起票時に `docs/company/regulations/drafts/*-草案.md` を決定論生成（施行は触らない）。`jp_cosmetics_mah` skeleton（qms_gxp sibling）。Skill `regulation_module_draft`。
 - **規程ワークフローの残ギャップ対処** — test-registry 登録、flag-only で REG enable/seed、dedupe 時 WO 更新、REG-030 optional warning、REG-038 採番、family 追加手順、scaffold skill 改名、FORK はリンク+プレビュー。
 - **JP 社内規程（会計・税務）雛形の増強** — 経理（REG-027）· 経費精算（REG-005）を起草スタイル準拠で拡充。モジュール連動の REG-031〜034（法人税務準備 · 消費税務 · 適格請求書 · 源泉・法定調書）をカタログ追加。提出・e-Tax は人間/税理士権限のまま。
+- **取適法（旧下請法）モジュール** — `jp_subcontractor_act` を `activation_ready` で追加。適用対象判定（`jp_subcontractor_scope`）と禁止行為点検（`jp_subcontractor_checklist`）。一次資料は公取委 https://www.jftc.go.jp/toriteki/ 。行政提出は人間。
+- **JP 未実装モジュール 8 件** — 株主総会・取締役会、就業規則・36協定、労働条件通知、取適法（旧下請法）、個情漏えい報告、在留・外国人雇用、宅建業、特許出願を `activation_ready` の CLI + seed として追加。人事・法務・知財・ガバナンス・購買・個情・行政の Agent に bind。提出・届出は人間。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)

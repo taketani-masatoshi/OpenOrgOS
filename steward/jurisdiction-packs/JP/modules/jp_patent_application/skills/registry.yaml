@@ -1,0 +1,15 @@
+skills:
+  - id: jp_patent_draft
+    file: jp_patent_draft.md
+    runtime: cli
+    cli_command: operations patent draft
+    argv: [operations, patent, draft]
+    description: 特許願・明細書・特許請求の範囲・要約書のドラフト MD を様式第26/29/29の2/31 準拠のひな形から生成（提出しない）
+    agent_id: intellectual_property
+  - id: jp_patent_deadlines
+    file: jp_patent_deadlines.md
+    runtime: cli
+    cli_command: operations patent deadlines
+    argv: [operations, patent, deadlines]
+    description: 優先期間・新規性喪失の例外・審査請求・出願公開・特許料の期限一覧（特許法3条2項の休日順延 · needs_review 付き）
+    agent_id: intellectual_property

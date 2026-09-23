@@ -129,13 +129,29 @@ npm run orgos -- skills run monthly-close
 <!-- orgos:generated:executing-agent-overrides:start -->
 | Skill id | registry agent_id | executing agent_id |
 |----------|-------------------|-------------------|
+| `jp_36_agreement` | `human_resources` | `human_resources` |
+| `jp_board_meeting_pack` | `corporate_governance` | `corporate_governance` |
+| `jp_breach_deadline_watch` | `privacy_officer` | `privacy_officer` |
 | `jp_company_incorporation` | `secretary` | `legal` |
+| `jp_employment_contract_draft` | `human_resources` | `human_resources` |
+| `jp_fixed_term_conversion_check` | `human_resources` | `human_resources` |
+| `jp_foreign_employment_notice` | `human_resources` | `human_resources` |
+| `jp_foreign_worker_check` | `human_resources` | `human_resources` |
+| `jp_patent_deadlines` | `intellectual_property` | `intellectual_property` |
+| `jp_patent_draft` | `intellectual_property` | `intellectual_property` |
+| `jp_ppc_breach_report` | `privacy_officer` | `privacy_officer` |
 | `jp_registry_change` | `secretary` | `legal` |
+| `jp_shareholder_meeting_pack` | `corporate_governance` | `corporate_governance` |
+| `jp_subcontractor_checklist` | `procurement` | `procurement` |
+| `jp_subcontractor_scope` | `procurement` | `procurement` |
 | `jp_subsidy_draft` | `finance` | `government_affairs` |
 | `jp_subsidy_eligibility` | `finance` | `government_affairs` |
 | `jp_subsidy_labor_cost` | `finance` | `government_affairs` |
+| `jp_takken_compliance_check` | `compliance` | `compliance` |
+| `jp_takken_fee_calc` | `compliance` | `compliance` |
 | `jp_trademark_checklist` | `compliance` | `intellectual_property` |
 | `jp_trademark_draft` | `compliance` | `intellectual_property` |
+| `jp_work_rules_draft` | `human_resources` | `human_resources` |
 | `tax_filing_prep` | `tax` | `tax` |
 <!-- orgos:generated:executing-agent-overrides:end -->
 
@@ -332,6 +348,9 @@ Skill id / CLI が指定された
 | `iso_internal_audit_run` | cli | `internal_audit` | `iso-internal-audit-run` | core |
 | `journal_export_csv` | cli | `accounting` | `journal-export-csv` | core |
 | `journal_post` | cli | `accounting` | `journal-post` | core |
+| `jp_36_agreement` | cli | `human_resources` | `operations work-rules agreement-check` | jp_employment_rules |
+| `jp_board_meeting_pack` | cli | `corporate_governance` | `operations statutory-meetings schedule` | jp_statutory_meetings |
+| `jp_breach_deadline_watch` | cli | `privacy_officer` | `operations data-breach deadlines` | jp_data_breach |
 | `jp_carbon_neutral_show` | cli | `compliance` | `jp-carbon-neutral-show` | jp_carbon_neutral_2050 |
 | `jp_carbon_neutral_targets` | cli | `compliance` | `jp-carbon-neutral-targets` | jp_carbon_neutral_2050 |
 | `jp_certification_list` | cli | `compliance` | `jp-certification-list` | jp_certification |
@@ -341,6 +360,11 @@ Skill id / CLI が指定された
 | `jp_consumption_refund_show` | cli | `tax` | `jp-consumption-refund-show` | jp_consumption_refund |
 | `jp_consumption_tax_return` | cli | `tax` | `jp-consumption-tax-return` | jp_tax_consumption |
 | `jp_corporate_tax_return` | cli | `tax` | `jp-corporate-tax-return` | jp_tax_corporate |
+| `jp_employment_contract_draft` | cli | `human_resources` | `operations labor-contract draft` | jp_labor_contract |
+| `jp_fixed_term_conversion_check` | cli | `human_resources` | `operations labor-contract conversion-check` | jp_labor_contract |
+| `jp_foreign_employment_notice` | cli | `human_resources` | `operations foreign-workers notifications` | jp_visa_employment |
+| `jp_foreign_worker_check` | cli | `human_resources` | `operations foreign-workers check` | jp_visa_employment |
+| `jp_individual_income_tax` | cli | `tax` | `tax-individual` | jp_tax_individual |
 | `jp_inspection_list` | cli | `compliance` | `jp-inspection-list` | jp_inspection |
 | `jp_inspection_types` | cli | `compliance` | `jp-inspection-types` | jp_inspection |
 | `jp_invoice_registration` | cli | `tax` | `jp-invoice-registration` | jp_invoice_qualified |
@@ -349,23 +373,32 @@ Skill id / CLI が指定された
 | `jp_medical_device_qms` | cli | `medical_device_regulatory` | `operations medical-device qms` | jp_medical_device |
 | `jp_minpaku_gate` | cli | `compliance` | `jp-minpaku-gate-check` | jp_minpaku |
 | `jp_minpaku_ops` | cli | `compliance` | `jp-minpaku-gate` | jp_minpaku |
+| `jp_patent_deadlines` | cli | `intellectual_property` | `operations patent deadlines` | jp_patent_application |
+| `jp_patent_draft` | cli | `intellectual_property` | `operations patent draft` | jp_patent_application |
 | `jp_payroll_run` | cli | `human_resources` | `jp-payroll-run` | jp_payroll |
 | `jp_permit_application_ops` | cli | `compliance` | `operations permit-app create` | jp_permit_application |
 | `jp_permit_gap` | cli | `compliance` | `operations permit gap` | jp_permit_registry |
 | `jp_permit_obligations` | cli | `compliance` | `operations permit obligations` | jp_permit_registry |
+| `jp_ppc_breach_report` | cli | `privacy_officer` | `operations data-breach draft` | jp_data_breach |
 | `jp_privacy_policy_show` | cli | `compliance` | `jp-privacy-policy-show` | jp_privacy_policy |
 | `jp_privacy_policy_status` | cli | `compliance` | `jp-privacy-policy-status` | jp_privacy_policy |
 | `jp_qualified_invoice_issue` | cli | `tax` | `jp-qualified-invoice-issue` | jp_invoice_qualified |
 | `jp_registry_change` | cli | `secretary` | `operations corporate` | jp_corporate_registration |
+| `jp_shareholder_meeting_pack` | cli | `corporate_governance` | `operations statutory-meetings checklist` | jp_statutory_meetings |
 | `jp_social_insurance_prep` | cli | `human_resources` | `jp-social-insurance-prep` | jp_social_insurance |
+| `jp_subcontractor_checklist` | cli | `procurement` | `operations subcontract check` | jp_subcontractor_act |
+| `jp_subcontractor_scope` | cli | `procurement` | `operations subcontract scope` | jp_subcontractor_act |
 | `jp_subsidy_draft` | cli | `finance` | `operations subsidy draft` | jp_subsidy_application |
 | `jp_subsidy_eligibility` | cli | `finance` | `operations subsidy eligibility` | jp_subsidy_application |
 | `jp_subsidy_labor_cost` | cli | `finance` | `operations subsidy labor-cost` | jp_subsidy_application |
+| `jp_takken_compliance_check` | cli | `compliance` | `operations takken check` | jp_takken |
+| `jp_takken_fee_calc` | cli | `compliance` | `operations takken fee` | jp_takken |
 | `jp_trademark_checklist` | cli | `compliance` | `operations trademark checklist` | jp_trademark_application |
 | `jp_trademark_draft` | cli | `compliance` | `operations trademark draft` | jp_trademark_application |
 | `jp_withholding_payment` | cli | `tax` | `jp-withholding-payment` | jp_withholding_statutory |
 | `jp_women_empowerment_kpi` | cli | `compliance` | `jp-women-empowerment-kpi` | jp_women_empowerment |
 | `jp_women_empowerment_show` | cli | `compliance` | `jp-women-empowerment-show` | jp_women_empowerment |
+| `jp_work_rules_draft` | cli | `human_resources` | `operations work-rules draft` | jp_employment_rules |
 | `jp-cashflow-schedule` | cli | `finance` | `jp bank cashflow generate` | jp_bank_corporate |
 | `jp-treasury-position` | cli | `finance` | `jp bank position show` | jp_bank_corporate |
 | `jsox_evaluate` | cli | `internal_audit` | `jsox-evaluate` | jp_jsox |

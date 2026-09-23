@@ -1,0 +1,15 @@
+skills:
+  - id: jp_takken_compliance_check
+    file: jp_takken_ops.md
+    runtime: cli
+    cli_command: operations takken check
+    argv: [operations, takken, check]
+    description: 宅建業の取引点検（35条説明の時期 · 37条書面 · 報酬上限）と事務所の掲示・帳簿・名簿
+    agent_id: compliance
+  - id: jp_takken_fee_calc
+    file: jp_takken_ops.md
+    runtime: cli
+    cli_command: operations takken fee
+    argv: [operations, takken, fee]
+    description: 報酬告示に基づく媒介・代理報酬の上限計算（売買・交換・貸借 · 低廉な空家等 · 免税事業者）
+    agent_id: compliance

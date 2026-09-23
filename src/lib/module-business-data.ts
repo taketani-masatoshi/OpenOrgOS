@@ -26,6 +26,14 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
   jp_medical_device: "data/medical-device",
   jp_permit_registry: "data/permit-registry",
   jp_consumption_refund: "data/tax",
+  jp_statutory_meetings: "data/governance",
+  jp_employment_rules: "data/hr/employment-rules",
+  jp_labor_contract: "data/hr/labor-contracts",
+  jp_subcontractor_act: "data/procurement/subcontract",
+  jp_data_breach: "data/privacy/breach",
+  jp_visa_employment: "data/hr/foreign-workers",
+  jp_takken: "data/takken",
+  jp_patent_application: "data/ip/patent",
 };
 
 export function isModuleEnabled(moduleId: string): boolean {

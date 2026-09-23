@@ -1,0 +1,15 @@
+skills:
+  - id: jp_work_rules_draft
+    file: jp_employment_rules_ops.md
+    runtime: cli
+    cli_command: operations work-rules draft
+    argv: [operations, work-rules, draft]
+    description: 就業規則骨子 · 36協定届 記載項目 MD を生成（事業場の点検結果つき）
+    agent_id: human_resources
+  - id: jp_36_agreement
+    file: jp_employment_rules_ops.md
+    runtime: cli
+    cli_command: operations work-rules agreement-check
+    argv: [operations, work-rules, agreement-check]
+    description: 36協定の限度時間 · 特別条項 · 届出 · 有効期限を点検
+    agent_id: human_resources

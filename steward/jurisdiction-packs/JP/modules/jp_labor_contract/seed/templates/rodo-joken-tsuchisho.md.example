@@ -1,0 +1,69 @@
+# 労働条件通知書（ドラフト）
+
+> 生成: {{generated_on}} · 契約 `{{contract_id}}` · jp_labor_contract
+> **ドラフト** — 準備支援のみ。法令適合の最終確認・交付は人間（人事担当・社労士）が行う。
+> 氏名・住所等の個人情報は tracked 出力しない。交付版は人事台帳から記入し `records/`（L2）で保管する。
+
+| 項目 | 内容 |
+|------|------|
+| 使用者 | {{company_name}} |
+| 労働者 | 従業員番号 `{{employee_id}}`（氏名は交付時に記入） |
+| 締結日 | {{concluded_on}} |
+
+## 1. 契約期間（労基則5条1項1号）
+
+- {{contract_period_dates}}
+- {{contract_period}}
+- 試用期間: {{probation}}
+
+### 契約の更新（有期のみ · 労基則5条1項1号の2）
+
+- 更新の判断基準: {{renewal_criteria}}
+- 更新上限（通算契約期間・更新回数）の有無と内容: {{renewal_cap}}
+
+### 無期転換（通算5年超となる契約のみ · 労基則5条5項）
+
+- 無期転換申込みに関する事項: {{conversion_application}}
+- 転換後の労働条件: {{post_conversion_terms}}
+
+## 2. 就業の場所・従事すべき業務（労基則5条1項1号の3）
+
+| | 雇入れ直後 | 変更の範囲 |
+|---|---|---|
+| 就業の場所 | {{workplace}} | {{workplace_change_scope}} |
+| 従事すべき業務 | {{duties}} | {{duties_change_scope}} |
+
+就業場所の都道府県（最低賃金の適用地域）: {{workplace_prefecture}}
+
+## 3. 労働時間等（労基則5条1項2号）
+
+- 始業・終業の時刻: {{working_hours}}
+- 所定時間外労働の有無: {{overtime}}
+- 休憩時間: {{breaks}}
+- 休日: {{holidays}}
+- 休暇: {{leave}}
+- 交替制（就業時転換）: {{shift_rotation}}
+
+## 4. 賃金（労基則5条1項3号）
+
+- 賃金形態: {{wage_unit}}
+- 金額: {{wage_amount}}
+- 決定・計算・支払の方法: {{wage_calculation}}
+- 締切日・支払日: {{wage_closing_and_payment}}
+
+## 5. 退職に関する事項（解雇の事由を含む · 労基則5条1項4号）
+
+- {{retirement}}
+
+## 6. パートタイム・有期雇用労働者の特定事項（パート有期法6条1項 · 同施行規則2条）
+
+- 昇給の有無: {{pay_raise}}
+- 退職手当の有無: {{retirement_allowance}}
+- 賞与の有無: {{bonus}}
+- 待遇の相違の内容・理由の説明を求めることができる旨（2026-10-01〜）: {{treatment_explanation_right}}
+- 雇用管理の改善等に関する相談窓口: {{consultation_desk}}
+
+---
+
+「（要記載）」は当該契約で書面明示が必要な未記入項目。「—（該当なし）」は明示義務の対象外。
+公表資料: 厚生労働省「モデル労働条件通知書」https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_roudou/roudoukijun/roudoukijunkankei.html

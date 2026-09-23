@@ -148,3 +148,28 @@ modules:
   jp_social_insurance:
     tier: activation_ready
     notes: 算定基礎届 · 月額変更届準備データ · operations social-insurance CLI
+  jp_statutory_meetings:
+    tier: activation_ready
+    notes: 株主総会・取締役会の招集期限 · 基準日 · 決議要件 · 議事録 · operations statutory-meetings CLI
+      · 発出・提出は人間
+  jp_employment_rules:
+    tier: activation_ready
+    notes: 就業規則・36協定の点検とドラフト · operations work-rules CLI · 届出は人間
+  jp_labor_contract:
+    tier: activation_ready
+    notes: 労働条件通知書 · 無期転換 · 最低賃金点検 · operations labor-contract CLI
+  jp_subcontractor_act:
+    tier: activation_ready
+    notes: 取適法（旧下請法）適用判定 · 支払期日 · 禁止行為点検 · operations subcontract CLI
+  jp_data_breach:
+    tier: activation_ready
+    notes: 個情漏えい等の報告対象判定 · 速報/確報期限 · operations data-breach CLI · 提出は人間
+  jp_visa_employment:
+    tier: activation_ready
+    notes: 在留資格の就労可否 · 資格外活動上限 · 雇用状況届出期限 · operations foreign-workers CLI
+  jp_takken:
+    tier: activation_ready
+    notes: 宅建業免許 · 専任宅建士 · 35条/37条 · 報酬上限 · operations takken CLI
+  jp_patent_application:
+    tier: activation_ready
+    notes: 特許願ひな形 · 優先期間/審査請求/年金の期限 · operations patent CLI · 提出は人間

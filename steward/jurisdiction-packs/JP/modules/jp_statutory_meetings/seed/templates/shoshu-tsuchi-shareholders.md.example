@@ -1,0 +1,40 @@
+<!-- jp_statutory_meetings · {{meeting_id}} · ドラフト — 発出判断・最終確認は人間（取締役） -->
+
+{{notice_date_reiwa}}
+
+株主各位
+
+{{head_office}}
+{{company_name}}
+代表取締役　{{representative_name}}
+
+# {{meeting_title}} 招集ご通知
+
+拝啓　平素は格別のご高配を賜り、厚く御礼申し上げます。
+
+さて、当社{{meeting_title}}を下記のとおり開催いたしますので、ご出席くださいますようご通知申し上げます。
+
+{{remote_voting_paragraph}}
+
+敬具
+
+記
+
+1. 日時　{{meeting_date_reiwa}}　{{start_time}}
+2. 場所　{{place}}
+3. 目的事項
+
+　決議事項
+{{agenda_block}}
+
+以上
+
+---
+
+## 作成メモ（発出前に削除）
+
+- 発出期限: {{latest_dispatch_date}}（{{notice_basis}} · 発信日と会日の間に所定日数を置く）
+- 通知方法: {{notice_method_note}}
+- 基準日: {{record_date_note}}
+- 記載事項: 会社法298条1項各号（日時・場所・目的事項 等）· 同5号の法務省令事項は人間確認
+- 一次資料: {{source_companies_act_url}}

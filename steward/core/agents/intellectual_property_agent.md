@@ -8,7 +8,7 @@
 ## 役割
 
 商標 · 特許 · ライセンス · 侵害初動。
-**モジュール:** `jp_trademark_application`
+**モジュール:** `jp_trademark_application` · `jp_patent_application`
 
 
 ## Primary Folders
@@ -49,6 +49,10 @@
 
 | 手段 | 内容 |
 |------|------|
+| jp_trademark_checklist | `orgos operations trademark checklist` |
+| jp_trademark_draft | `orgos operations trademark draft` |
+| jp_patent_deadlines | `orgos operations patent deadlines` |
+| jp_patent_draft | `orgos operations patent draft` |
 | agent_pulse | `orgos agent pulse --agent intellectual_property` |
 
 

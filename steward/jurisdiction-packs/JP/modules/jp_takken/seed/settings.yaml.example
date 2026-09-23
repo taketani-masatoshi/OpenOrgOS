@@ -1,0 +1,8 @@
+# 宅建業モジュール設定（架空例示 · L1）
+entity: "サンプル不動産株式会社"
+as_of: "2026-09-24"
+settings:
+  tax_status: taxable                  # taxable（課税事業者）| exempt（免税事業者 · 税抜×1.04 以内）
+  self_seller_new_housing: false       # 自ら売主となる新築住宅あり → 帳簿10年（施行規則第18条第3項）
+  ledger_retention_years: 5            # 帳簿 閉鎖後の保存年数
+  employee_register_retention_years: 10  # 従業者名簿 最終記載日からの保存年数（施行規則第17条の2第4項）

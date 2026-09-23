@@ -1,0 +1,33 @@
+# 資格外活動の週次就労時間（架空サンプル · L2 — テナントでは gitignore）
+# hours: 当社での実労働時間 · other_employer_hours: 他の就労先の時間（本人申告 · 上限は全就労先の合算）
+# is_school_long_vacation: 在籍教育機関の学則上の長期休業期間（学則・資格外活動許可書で確認）
+# max_daily_hours: 長期休業期間の週は日別最大時間を記録（1日8時間以内の確認用）
+as_of: "2026-09-24"
+
+weeks:
+  - employee_id: EMP-102
+    week_start: "2026-07-06"
+    hours: 26
+    other_employer_hours: 0
+  # 28h/週 超過（alert）
+  - employee_id: EMP-102
+    week_start: "2026-07-13"
+    hours: 30
+    other_employer_hours: 0
+  # 他の就労先の時間が未記録（needs_review）
+  - employee_id: EMP-102
+    week_start: "2026-07-20"
+    hours: 20
+  - employee_id: EMP-102
+    week_start: "2026-08-10"
+    hours: 40
+    is_school_long_vacation: true
+    max_daily_hours: 8
+    other_employer_hours: 0
+  # 長期休業期間でも 1日8時間超（alert）
+  - employee_id: EMP-102
+    week_start: "2026-08-17"
+    hours: 45
+    is_school_long_vacation: true
+    max_daily_hours: 9
+    other_employer_hours: 0

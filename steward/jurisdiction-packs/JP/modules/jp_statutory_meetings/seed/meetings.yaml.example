@@ -1,0 +1,33 @@
+# 会議一覧（ガバナンス SoT · governance_meeting_prep と共用）
+# 法定手続の詳細は statutory-meetings.yaml に同じ id で記載する。
+entity: sample
+as_of: 2026-09-24
+meetings:
+  - id: SM-2026-AGM
+    kind: shareholders
+    scheduled_on: 2026-06-26
+    status: held
+  - id: SM-2026-EGM-07
+    kind: shareholders
+    scheduled_on: 2026-07-15
+    status: held
+  - id: SM-2026-WR-05
+    kind: shareholders
+    scheduled_on: 2026-05-20
+    status: held
+  - id: SM-2026-EGM-11
+    kind: shareholders
+    scheduled_on: 2026-11-20
+    status: planned
+  - id: BM-2026-09
+    kind: board
+    scheduled_on: 2026-09-10
+    status: held
+  - id: BM-2026-10
+    kind: board
+    scheduled_on: 2026-10-15
+    status: planned
+  - id: BM-2026-WR-08
+    kind: board
+    scheduled_on: 2026-08-20
+    status: held

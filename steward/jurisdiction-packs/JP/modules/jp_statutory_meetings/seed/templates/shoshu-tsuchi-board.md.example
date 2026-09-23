@@ -1,0 +1,30 @@
+<!-- jp_statutory_meetings · {{meeting_id}} · ドラフト — 発出判断は招集権者（人間） -->
+
+{{notice_date_reiwa}}
+
+取締役各位
+監査役各位（監査役設置会社の場合）
+
+{{company_name}}
+取締役会招集権者　{{representative_name}}
+
+# {{meeting_title}} 招集通知
+
+下記のとおり取締役会を開催いたしますので、ご出席ください。
+
+記
+
+1. 日時　{{meeting_date_reiwa}}　{{start_time}}
+2. 場所　{{place}}
+3. 議題
+{{agenda_block}}
+
+以上
+
+---
+
+## 作成メモ（発出前に削除）
+
+- 発出期限: {{latest_dispatch_date}}（{{notice_basis}}）
+- 取締役（監査役設置会社は監査役を含む）全員の同意があれば招集手続を省略可（会社法368条2項）
+- 一次資料: {{source_companies_act_url}}

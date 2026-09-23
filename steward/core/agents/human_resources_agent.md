@@ -7,7 +7,8 @@
 
 ## 役割
 
-採用支援 · 就業規則 · 社保 · 給与連携 · 36協定。
+採用支援 · 就業規則 · 36協定 · 労働条件通知 · 在留・外国人雇用 · 社保 · 給与連携。
+**モジュール:** `jp_employment_rules` · `jp_labor_contract` · `jp_visa_employment`
 
 ## Primary Folders
 
@@ -50,6 +51,12 @@
 | 手段 | 内容 |
 |------|------|
 | hr_headcount | `orgos hr headcount` · `orgos hr headcount --json`（L1 在籍人数 · 氏名非出力） |
+| jp_work_rules_draft | `orgos operations work-rules draft` |
+| jp_36_agreement | `orgos operations work-rules agreement-check` |
+| jp_employment_contract_draft | `orgos operations labor-contract draft` |
+| jp_fixed_term_conversion_check | `orgos operations labor-contract conversion-check` |
+| jp_foreign_worker_check | `orgos operations foreign-workers check` |
+| jp_foreign_employment_notice | `orgos operations foreign-workers notifications` |
 | agent_pulse | `orgos agent pulse --agent human_resources` |
 
 

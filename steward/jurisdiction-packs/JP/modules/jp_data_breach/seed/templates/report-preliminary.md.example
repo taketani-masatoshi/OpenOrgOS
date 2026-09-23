@@ -1,0 +1,32 @@
+# 個人データ漏えい等報告（速報）記載項目下書き — {{incident_id}}
+
+> 生成日: {{generated_on}} · 本書は報告準備のための下書きであり、法令適合を保証するものではありません。
+> 報告要否・記載内容の最終判断と提出（報告フォームへの入力）は人間が行います。自動送信はしません。
+> テナントでは L2 相当 — 本ファイルを含む `docs/compliance/privacy/breach/` は gitignore を推奨します。
+
+| 項目 | 内容 |
+|------|------|
+| 事案 | {{incident_title}} |
+| 報告者（事業者の名称） | {{company_name}} |
+| 報告先 | {{recipient_label}} |
+| 報告区分 | 速報（施行規則8条1項 · 知った後速やかに · 通則編GL 目安 概ね3〜5日以内） |
+| 速報目安（知った日を1日目とした5日目） | {{preliminary_limit_on}} |
+| 確報期限（施行規則8条2項） | {{final_due_on}} |
+| 判定 | {{assessment_status}} |
+| 該当事態（施行規則7条） | {{triggered_labels}} |
+
+## 報告事項（施行規則8条1項各号 · 報告時点で把握しているもの）
+
+{{report_items_block}}
+
+## 未把握の事項
+
+{{missing_items_block}}
+
+## 要確認（needs_review）
+
+{{needs_review_block}}
+
+## 出典
+
+{{sources_block}}

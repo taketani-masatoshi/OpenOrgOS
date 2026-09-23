@@ -1,0 +1,26 @@
+id: jp_statutory_meetings
+required_seeds: []
+activation_seeds:
+  - meetings.yaml.example
+  - statutory-meetings.yaml.example
+  - governance-settings.yaml.example
+  - sources.yaml.example
+  - templates/shoshu-tsuchi-shareholders.md.example
+  - templates/gijiroku-shareholders.md.example
+  - templates/shoshu-tsuchi-board.md.example
+  - templates/gijiroku-board.md.example
+  - templates/teian-sho.md.example
+  - templates/minashi-ketsugi-gijiroku.md.example
+optional_regulations:
+  - REG-002
+  - REG-003
+notes: activation_ready — 株主総会・取締役会の招集期限 · 基準日 · 決議要件 · 議事録記載事項 · 備置の確認と招集通知・議事録ドラフト（JP 法域のみ · 提出・発出は人間）
+cli_commands:
+  - show
+  - validate
+  - schedule
+  - checklist
+  - draft
+security:
+  limits:
+    concurrent_jobs: 1

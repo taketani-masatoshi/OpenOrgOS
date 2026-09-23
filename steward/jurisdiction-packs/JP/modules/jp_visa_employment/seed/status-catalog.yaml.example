@@ -1,0 +1,185 @@
+# 在留資格カタログ（L0 · 公表法令の整理）
+# work_allowed は入管法19条1項の区分と一致すること（validate が statutory.ts と照合）。
+# permitted / excluded_job_categories は社内の業務区分との対応表（架空サンプル）。
+# マップされていない業務区分は needs_review — 最終判断は人間・行政書士。
+as_of: "2026-09-24"
+
+job_categories:
+  - id: software_engineering
+    label_ja: ソフトウェア開発
+  - id: interpretation_translation
+    label_ja: 通訳・翻訳
+  - id: marketing
+    label_ja: マーケティング・企画
+  - id: accounting
+    label_ja: 経理・財務
+  - id: restaurant_service
+    label_ja: 飲食店ホール・調理補助
+  - id: retail_sales
+    label_ja: 小売店舗の販売
+  - id: factory_line_work
+    label_ja: 製造ラインの単純作業
+  - id: food_service_industry
+    label_ja: 外食業（特定技能の特定産業分野）
+  - id: foreign_cuisine_chef
+    label_ja: 外国料理の調理師
+  - id: nursing_care_work
+    label_ja: 介護業務
+  - id: adult_entertainment_venue
+    label_ja: 風俗営業等の営業所での業務
+    fueiho_regulated: true
+
+statuses:
+  # 別表第二 — 身分・地位（就労制限なし）
+  - code: permanent_resident
+    name_ja: 永住者
+    legal_basis: 入管法 別表第二
+    work_allowed: unrestricted
+  - code: spouse_of_japanese_national
+    name_ja: 日本人の配偶者等
+    legal_basis: 入管法 別表第二
+    work_allowed: unrestricted
+  - code: spouse_of_permanent_resident
+    name_ja: 永住者の配偶者等
+    legal_basis: 入管法 別表第二
+    work_allowed: unrestricted
+  - code: long_term_resident
+    name_ja: 定住者
+    legal_basis: 入管法 別表第二
+    work_allowed: unrestricted
+  - code: special_permanent_resident
+    name_ja: 特別永住者
+    legal_basis: 入管特例法（平成3年法律第71号）
+    work_allowed: unrestricted
+    notes: 在留カードではなく特別永住者証明書。外国人雇用状況届出の対象外。
+
+  # 別表第一の一の表
+  - code: diplomat
+    name_ja: 外交
+    legal_basis: 入管法 別表第一の一
+    work_allowed: restricted_to_activity
+    notes: 外国人雇用状況届出の対象外（労働施策総合推進法施行規則1条の2）。
+  - code: official
+    name_ja: 公用
+    legal_basis: 入管法 別表第一の一
+    work_allowed: restricted_to_activity
+    notes: 外国人雇用状況届出の対象外（労働施策総合推進法施行規則1条の2）。
+  - code: professor
+    name_ja: 教授
+    legal_basis: 入管法 別表第一の一
+    work_allowed: restricted_to_activity
+  - code: artist
+    name_ja: 芸術
+    legal_basis: 入管法 別表第一の一
+    work_allowed: restricted_to_activity
+  - code: religious_activities
+    name_ja: 宗教
+    legal_basis: 入管法 別表第一の一
+    work_allowed: restricted_to_activity
+  - code: journalist
+    name_ja: 報道
+    legal_basis: 入管法 別表第一の一
+    work_allowed: restricted_to_activity
+
+  # 別表第一の二の表
+  - code: highly_skilled_professional
+    name_ja: 高度専門職
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    permitted_job_categories: [software_engineering]
+    notes: 1号は法務大臣が指定する機関での活動に限る — 指定書を確認。
+  - code: business_manager
+    name_ja: 経営・管理
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+  - code: legal_accounting_services
+    name_ja: 法律・会計業務
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+  - code: medical_services
+    name_ja: 医療
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+  - code: researcher
+    name_ja: 研究
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+  - code: instructor
+    name_ja: 教育
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+  - code: engineer_humanities_international_services
+    name_ja: 技術・人文知識・国際業務
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    permitted_job_categories: [software_engineering, interpretation_translation, marketing, accounting]
+    excluded_job_categories: [factory_line_work, restaurant_service]
+    notes: 学術上の素養を背景とする業務等。単純作業が主となる業務は範囲外となり得る（個別判断）。
+  - code: intra_company_transferee
+    name_ja: 企業内転勤
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    permitted_job_categories: [software_engineering, interpretation_translation, marketing, accounting]
+    excluded_job_categories: [factory_line_work, restaurant_service]
+  - code: nursing_care
+    name_ja: 介護
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    permitted_job_categories: [nursing_care_work]
+  - code: entertainer
+    name_ja: 興行
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+  - code: skilled_labor
+    name_ja: 技能
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    permitted_job_categories: [foreign_cuisine_chef]
+  - code: specified_skilled_worker_i
+    name_ja: 特定技能1号
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    permitted_job_categories: [food_service_industry, nursing_care_work]
+    notes: 指定書の特定産業分野と一致すること。支援計画等の義務は needs_review。
+  - code: specified_skilled_worker_ii
+    name_ja: 特定技能2号
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    permitted_job_categories: [food_service_industry]
+    notes: 指定書の特定産業分野と一致すること。
+  - code: technical_intern_training
+    name_ja: 技能実習
+    legal_basis: 入管法 別表第一の二
+    work_allowed: restricted_to_activity
+    notes: 技能実習計画に基づく活動のみ。育成就労制度（令和9年4月1日施行）は本モジュール対象外。
+
+  # 別表第一の三・四の表 — 原則就労不可（資格外活動許可が必要）
+  - code: cultural_activities
+    name_ja: 文化活動
+    legal_basis: 入管法 別表第一の三
+    work_allowed: not_allowed
+  - code: temporary_visitor
+    name_ja: 短期滞在
+    legal_basis: 入管法 別表第一の三
+    work_allowed: not_allowed
+  - code: student
+    name_ja: 留学
+    legal_basis: 入管法 別表第一の四
+    work_allowed: not_allowed
+    notes: 包括許可は週28時間以内（学則上の長期休業期間は1日8時間以内）· 教育機関に在籍している間に限る。
+  - code: trainee
+    name_ja: 研修
+    legal_basis: 入管法 別表第一の四
+    work_allowed: not_allowed
+  - code: dependent
+    name_ja: 家族滞在
+    legal_basis: 入管法 別表第一の四
+    work_allowed: not_allowed
+    notes: 包括許可は週28時間以内。
+
+  # 別表第一の五の表
+  - code: designated_activities
+    name_ja: 特定活動
+    legal_basis: 入管法 別表第一の五
+    work_allowed: restricted_to_activity
+    notes: 法務大臣が個々に指定する活動のみ — 指定書を確認（業務区分は needs_review）。

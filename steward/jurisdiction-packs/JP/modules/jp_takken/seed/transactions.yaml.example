@@ -1,0 +1,102 @@
+# 宅建業 取引台帳（架空例示 · L1）
+# 金額は税抜（消費税等相当額を含まない）の price_yen / monthly_rent_yen。報酬 fee_* は受領額（税込）。
+# real_estate_brokerage の deals.yaml は価格を持たないため、報酬上限の計算はこのファイルの金額を正とする。
+# 当事者の氏名・住所は書かない（records/ 側 · L2）。担当宅建士は employee_id。
+entity: "サンプル不動産株式会社"
+as_of: "2026-09-24"
+transactions:
+  - id: TX-001
+    deal_id: DEAL-001
+    office_id: OFF-MAIN
+    kind: lease
+    role: brokerage
+    residential: true
+    monthly_rent_yen: 100000
+    contract_on: "2026-07-10"
+    explained_35_on: "2026-07-05"
+    explained_35_by: EMP-001
+    delivered_37_on: "2026-07-10"
+    signed_37_by: EMP-001
+    fee_charged_yen: 55000            # 貸主 0.55か月分
+    fee_from_other_party_yen: 55000   # 借主 0.55か月分 · 合計 1.1か月分 = 上限ちょうど
+    notes: "居住用賃貸の媒介 · 双方から0.5か月分ずつ（例示）"
+
+  - id: TX-002
+    office_id: OFF-MAIN
+    kind: sale
+    role: brokerage
+    price_yen: 30000000
+    contract_on: "2026-08-01"
+    explained_35_on: "2026-07-28"
+    explained_35_by: EMP-003
+    delivered_37_on: "2026-08-01"
+    signed_37_by: EMP-003
+    fee_charged_yen: 1056000          # (3%+6万円)×1.1 = 上限ちょうど
+    fee_from_other_party_yen: 1056000 # 両手 · 依頼者の一方ごとに上限
+    notes: "中古マンション売買の媒介（例示）"
+
+  - id: TX-003
+    office_id: OFF-MAIN
+    kind: sale
+    role: brokerage
+    price_yen: 5000000
+    low_cost_vacant_house: true
+    mediation_contract_on: "2026-06-01"
+    special_fee_agreed_on: "2026-06-01"   # 媒介契約締結時に説明・合意
+    contract_on: "2026-07-20"
+    explained_35_on: "2026-07-15"
+    explained_35_by: EMP-001
+    delivered_37_on: "2026-07-20"
+    signed_37_by: EMP-001
+    fee_charged_yen: 330000           # 低廉な空家等の特例 30万円×1.1 以内
+    notes: "郊外の空き家売買の媒介（例示）"
+
+  - id: TX-004
+    office_id: OFF-MAIN
+    kind: sale
+    role: brokerage
+    price_yen: 10000000
+    contract_on: "2026-09-01"
+    explained_35_on: "2026-09-01"     # 契約日と同日 → needs_review
+    explained_35_by: EMP-002
+    fee_charged_yen: 400000           # 上限 396,000 円超過 → fail（検出用）
+    notes: "37条書面 未交付 → fail（検出用）"
+
+  - id: TX-005
+    office_id: OFF-BR1
+    kind: lease
+    role: brokerage
+    residential: true
+    monthly_rent_yen: 80000
+    contract_on: "2026-09-20"
+    explained_35_on: "2026-09-22"     # 契約成立後の説明 → fail（検出用）
+    explained_35_by: EMP-012          # 宅建士証 失効後 → fail（検出用）
+    delivered_37_on: "2026-09-20"
+    signed_37_by: EMP-011
+    fee_charged_yen: 88000            # 承諾なしで一方から1.1か月分 → fail（上限 44,000 円）
+    notes: "居住用賃貸の媒介（例示）"
+
+  - id: TX-006
+    deal_id: DEAL-002                 # real_estate_brokerage deals.yaml にない → needs_review
+    office_id: OFF-BR1
+    kind: sale
+    role: brokerage
+    price_yen: 4000000
+    low_cost_vacant_house: true       # 事前合意 special_fee_agreed_on 未記録 → needs_review
+    mediation_contract_on: "2026-07-01"
+    contract_on: "2026-08-20"
+    explained_35_on: "2026-08-18"
+    explained_35_by: EMP-011
+    delivered_37_on: "2026-08-22"     # 契約後2日 →「遅滞なく」needs_review
+    signed_37_by: EMP-011
+    fee_charged_yen: 250000           # 通常上限 198,000 円 < 250,000 円 ≤ 特例上限 330,000 円
+    notes: "空き家売買の媒介（例示）"
+
+  - id: TX-007
+    office_id: OFF-MAIN
+    kind: lease
+    role: agency
+    residential: false
+    monthly_rent_yen: 300000
+    mediation_contract_on: "2026-09-15"
+    notes: "店舗賃貸の代理 · 契約前（例示）"

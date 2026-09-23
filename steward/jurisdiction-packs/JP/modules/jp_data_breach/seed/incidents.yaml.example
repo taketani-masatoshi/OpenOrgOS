@@ -1,0 +1,125 @@
+# jp_data_breach — 漏えい等事案台帳（架空サンプル）
+# テナントでは L2 相当（事案の経緯に個人の事情が混じり得る）— data/privacy/breach/incidents.yaml は gitignore 推奨
+# data_items はカテゴリ名のみ。氏名・連絡先・番号等の実値は書かない。人は employee_id / stakeholder_id で参照。
+# flags は true / false / "unknown"（未確認は needs_review）
+entity: サンプル商事株式会社
+as_of: "2026-09-24"
+incidents:
+  # ① 要配慮個人情報 — 速報済 · 確報期限（2026-09-30）が近い
+  - id: BR-2026-001
+    title: 健康診断結果を含む従業員データの USB メモリ紛失
+    occurred_on: "2026-08-31"
+    known_on: "2026-09-01"
+    discovered_by: 人事部（EMP-0102）
+    data_scope: personal_data
+    data_items: [氏名, 社員番号, 健康診断結果]
+    data_subject_categories: [従業員]
+    flags:
+      sensitive: true
+      financial_harm_risk: false
+      unlawful_purpose: false
+      encrypted_high_level: false
+    affected_count: 45
+    report_recipient: ppc
+    reports:
+      preliminary_submitted_on: "2026-09-03"
+    individuals_notified_on: "2026-09-05"
+    status: reported_preliminary
+    report_items:
+      summary: 健康診断結果の集計作業に使用した USB メモリを社外移動中に紛失。警察へ遺失届提出済み。
+      medium: USB メモリ（暗号化なし）
+      cause: 私物バッグでの社外持出しと媒体暗号化の未実施
+      secondary_damage: 現時点で二次被害の報告なし
+      prevention_done: [USB メモリの社外持出し禁止を周知]
+      prevention_planned: [全社 USB 媒体の暗号化必須化, 健康情報の取扱手順見直し]
+      other_notes: 対象従業員向け相談窓口を人事部に設置
+
+  # ③ 不正目的（2024-04-01 施行 · 取得しようとしている個人情報）— 速報未提出で GL 目安超過 · 60日目が日曜 → 翌月曜
+  - id: BR-2026-002
+    title: EC サイト入力フォームの改ざんによる入力情報の窃取
+    occurred_on: "2026-08-10"
+    known_on: "2026-08-20"
+    discovered_by: 外部セキュリティ事業者からの通報（STK-SEC-0001）
+    data_scope: being_acquired
+    intended_for_database: true
+    data_items: [氏名, 配送先住所, メールアドレス, クレジットカード情報]
+    data_subject_categories: [顧客]
+    flags:
+      sensitive: false
+      financial_harm_risk: true
+      unlawful_purpose: true
+      encrypted_high_level: false
+    affected_count: unknown
+    affected_count_upper_bound: 800
+    report_recipient: ppc
+    status: investigating
+    report_items:
+      summary: 決済画面の入力フォームに第三者が不正スクリプトを埋め込み、入力内容が外部へ送信されていた。
+      medium: ウェブサイト（入力フォーム）
+      cause: CMS プラグインの脆弱性を突いた不正アクセス（調査中）
+
+  # ④ 境界 — 本人の数 1,000 ちょうど（「千人を超える」に該当しない）
+  - id: BR-2026-003
+    title: メールマガジンの CC 誤送信（1,000 件）
+    known_on: "2026-09-10"
+    discovered_by: マーケティング部（EMP-0240）
+    data_items: [メールアドレス]
+    data_subject_categories: [会員]
+    flags:
+      sensitive: false
+      financial_harm_risk: false
+      unlawful_purpose: false
+      encrypted_high_level: false
+    affected_count: 1000
+    report_recipient: ppc
+    status: not_reportable
+
+  # 事実未確認 — 本人の数・不正目的とも unknown → needs_review（暫定で期限を監視）
+  - id: BR-2026-004
+    title: 会員サイトの設定不備による会員情報の閲覧可能状態
+    known_on: "2026-09-22"
+    discovered_by: 情報システム部（EMP-0311）
+    data_items: [氏名, 会員番号, メールアドレス]
+    data_subject_categories: [会員]
+    flags:
+      sensitive: false
+      financial_harm_risk: false
+      unlawful_purpose: unknown
+      encrypted_high_level: false
+    affected_count: unknown
+    status: investigating
+
+  # 高度な暗号化 + 復号鍵の漏えいなし → 除外（施行規則7条1号括弧書 · 同条全体に及ぶ）
+  - id: BR-2026-005
+    title: 全ディスク暗号化済みノート PC の盗難
+    known_on: "2026-09-15"
+    discovered_by: 営業部（EMP-0415）
+    data_items: [氏名, 病歴]
+    data_subject_categories: [顧客]
+    flags:
+      sensitive: true
+      financial_harm_risk: false
+      unlawful_purpose: true
+      encrypted_high_level: true
+      encryption_key_compromised: false
+    affected_count: 300
+    report_recipient: ppc
+    status: not_reportable
+
+  # 受託者 — 委託元へ通知済 → 報告・本人通知義務の免除（法26条1項ただし書 · 2項括弧書）
+  - id: BR-2026-006
+    title: 受託した配送ラベル印刷データの誤公開（委託元へ通知済）
+    known_on: "2026-09-11"
+    discovered_by: 業務受託チーム（EMP-0520）
+    data_items: [氏名, 配送先住所]
+    data_subject_categories: [委託元の顧客]
+    flags:
+      sensitive: false
+      financial_harm_risk: false
+      unlawful_purpose: false
+      encrypted_high_level: false
+    affected_count: 1500
+    is_entrustee: true
+    entrustor_ref: STK-ENTRUSTOR-0001
+    entrustor_notified_on: "2026-09-12"
+    status: closed

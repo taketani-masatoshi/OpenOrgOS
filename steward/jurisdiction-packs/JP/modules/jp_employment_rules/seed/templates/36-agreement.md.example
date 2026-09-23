@@ -1,0 +1,44 @@
+# 時間外労働・休日労働に関する協定届 記載項目（{{agreement_id}}）
+
+> **ドラフト（{{generated_on}} 生成 · jp_employment_rules）** — 様式本体は厚生労働省の主要様式から取得し、人間が転記・署名・届出する。自動送信しない。本書は法令適合を保証しない。
+
+| 項目 | 内容 |
+|------|------|
+| 使用する様式 | {{form_label}} |
+| 事業の名称 | {{company_name}} {{workplace_name}}（`{{workplace_id}}`） |
+| 所轄労働基準監督署 | {{labor_standards_office}} |
+| 業務区分 | {{work_category_label}} |
+| 対象労働者の範囲（36条2項1号） | {{covered_workers}} |
+| 延長・休日労働させることができる場合（36条2項3号） | {{extension_reasons}} |
+| 1年の起算日（施行規則17条1項2号） | {{period_start}} |
+| 有効期間（施行規則17条1項1号） | {{effective_from}} 〜 {{effective_to}} |
+
+## 延長することができる時間（36条2項4号 · 4項）
+
+| 期間 | 協定 | 法定の限度時間 |
+|------|------|----------------|
+| 1日 | {{general_daily}} | — |
+| 1か月 | {{general_monthly}} | {{statutory_monthly}} |
+| 1年 | {{general_annual}} | {{statutory_annual}} |
+| 休日労働の日数（1か月） | {{holiday_days}} | — |
+
+## 特別条項（36条5項 · 施行規則17条1項4〜7号）
+
+{{special_block}}
+
+## 労働者側当事者（36条1項 · 施行規則6条の2）
+
+{{party_block}}
+
+## チェックボックス（施行規則17条1項3号）
+
+- [{{caps_checkbox}}] 時間外労働と休日労働の合計が月100時間未満、2〜6か月平均80時間以内を満たすこと
+
+## 現状の検出事項
+
+{{findings_block}}
+
+## 参照
+
+- 主要様式ダウンロード（厚生労働省）: {{source_forms_url}}
+- 労働基準法（e-Gov）: {{source_law_url}}

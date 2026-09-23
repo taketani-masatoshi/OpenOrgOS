@@ -1,0 +1,16 @@
+---
+title: 明細書
+application_id: {{application_id}}
+generated: {{generated_on}}
+sources:
+  - {{source_law_url}}
+  - {{source_form_url}}
+---
+
+> **ひな形（非提出稿）** — 特許法36条3項・4項、特許法施行規則24条・24条の2・様式第29 の見出し順に準拠（段落番号は備考18）。記載内容の十分性（実施可能要件等）は弁理士等が判断すること。
+
+```text
+【書類名】明細書
+【発明の名称】{{invention_title}}
+{{specification_body}}
+```

@@ -1,0 +1,259 @@
+# 労働契約台帳（L2 — 賃金額を含むためテナントでは gitignore）
+# 従業員は employee_id のみで参照する。氏名・住所・マイナンバー・口座は書かない。
+# サンプル値は架空（サンプル商事）。LC-2026-002 / 003 / 006 / 007 は検出テスト用に意図的な不備を含む。
+entity: サンプル商事株式会社
+as_of: "2026-09-24"
+contracts:
+  - id: LC-2026-001
+    employee_id: E-1001
+    contract_type: indefinite
+    part_time: false
+    concluded_on: "2026-03-15"
+    start_date: "2026-04-01"
+    probation_months: 3
+    workplace_prefecture: 東京都
+    wage:
+      unit: monthly
+      base_amount: 280000
+      minimum_wage_eligible_allowances: 0
+      monthly_average_scheduled_hours: 160
+    disclosures:
+      contract_period: 期間の定めなし
+      workplace: 本社（東京都）
+      workplace_change_scope: 会社の定める事業所（テレワークを行う場所を含む）
+      duties: 経理事務
+      duties_change_scope: 会社の定める業務
+      working_hours: 始業 9:00 · 終業 18:00
+      overtime: 所定時間外労働あり（36協定の範囲内）
+      breaks: 60分（12:00〜13:00）
+      holidays: 土日祝日・年末年始
+      leave: 年次有給休暇は労基法39条による · 就業規則の特別休暇
+      wage_calculation: 月給制 · 就業規則（賃金規程）による
+      wage_closing_and_payment: 毎月末日締め · 翌月25日払い
+      retirement: 定年60歳 · 自己都合退職は30日前までに届出 · 解雇事由は就業規則第○条
+      pay_raise: あり（年1回 · 業績・勤務成績による）
+    notes: 正社員 · 完全記載のサンプル
+
+  - id: LC-2026-002
+    employee_id: E-1002
+    contract_type: fixed_term
+    part_time: true
+    concluded_on: "2026-03-20"
+    start_date: "2026-04-01"
+    end_date: "2027-03-31"
+    renewal: may_renew
+    workplace_prefecture: 大阪府
+    wage:
+      unit: hourly
+      base_amount: 1150
+      minimum_wage_eligible_allowances: 0
+    disclosures:
+      contract_period: 2026-04-01 〜 2027-03-31
+      renewal_criteria: 契約期間満了時の業務量・勤務成績・会社の経営状況により判断
+      renewal_cap: 更新上限なし
+      workplace: 大阪営業所
+      duties: 受付・電話応対
+      duties_change_scope: 変更なし
+      working_hours: 始業 10:00 · 終業 15:00
+      overtime: なし
+      breaks: 45分
+      holidays: 土日祝日
+      leave: 年次有給休暇は労基法39条による
+      wage_calculation: 時給制
+      wage_closing_and_payment: 毎月末日締め · 翌月25日払い
+      retirement: 自己都合退職は14日前までに届出 · 解雇事由は就業規則第○条
+      pay_raise: なし
+      retirement_allowance: なし
+      bonus: なし
+      consultation_desk: 人事部 相談窓口（社内内線）
+    notes: 検出テスト用 — 最低賃金（大阪府）未満 · 就業場所の変更の範囲が未記載
+
+  - id: LC-2026-003
+    employee_id: E-1003
+    contract_type: fixed_term
+    part_time: false
+    concluded_on: "2026-03-01"
+    start_date: "2026-04-01"
+    end_date: "2030-03-31"
+    renewal: none
+    term_basis: standard
+    age_at_conclusion: 45
+    probation_months: 2
+    workplace_prefecture: 神奈川県
+    wage:
+      unit: daily
+      base_amount: 10400
+      minimum_wage_eligible_allowances: 0
+      daily_scheduled_hours: 8
+    disclosures:
+      contract_period: 2026-04-01 〜 2030-03-31（更新しない）
+      workplace: 横浜倉庫
+      workplace_change_scope: 変更なし
+      duties: 在庫管理
+      duties_change_scope: 倉庫内業務全般
+      working_hours: 始業 8:30 · 終業 17:30
+      overtime: 所定時間外労働あり（36協定の範囲内）
+      breaks: 60分
+      holidays: 土日
+      leave: 年次有給休暇は労基法39条による
+      wage_calculation: 日給制
+      wage_closing_and_payment: 毎月20日締め · 当月末日払い
+      retirement: 契約期間満了により退職 · 解雇事由は就業規則第○条
+      pay_raise: なし
+      retirement_allowance: なし
+      bonus: あり（年2回 · 会社業績による）
+      consultation_desk: 人事部 相談窓口（社内内線）
+    notes: 検出テスト用 — 契約期間4年（労基法14条の3年上限超過）
+
+  - id: LC-2025-004
+    employee_id: E-1004
+    contract_type: fixed_term
+    part_time: false
+    concluded_on: "2025-09-10"
+    start_date: "2025-10-01"
+    end_date: "2026-09-30"
+    renewal: may_renew
+    renewal_intent: renew
+    workplace_prefecture: 東京都
+    wage:
+      unit: monthly
+      base_amount: 230000
+      minimum_wage_eligible_allowances: 10000
+      monthly_average_scheduled_hours: 160
+    disclosures:
+      contract_period: 1年（更新する場合がある）
+      renewal_criteria: 契約期間満了時の業務量・勤務成績により判断
+      renewal_cap: 更新上限なし
+      workplace: 本社（東京都）
+      workplace_change_scope: 本社および都内の事業所
+      duties: 顧客サポート
+      duties_change_scope: 顧客サポートおよび付随業務
+      working_hours: 始業 9:00 · 終業 18:00
+      overtime: 所定時間外労働あり（36協定の範囲内）
+      breaks: 60分
+      holidays: 土日祝日
+      leave: 年次有給休暇は労基法39条による
+      wage_calculation: 月給制 · 職務手当を含む
+      wage_closing_and_payment: 毎月末日締め · 翌月25日払い
+      retirement: 自己都合退職は30日前までに届出 · 解雇事由は就業規則第○条
+      pay_raise: あり（年1回）
+      retirement_allowance: なし
+      bonus: あり（年2回 · 会社業績による）
+      consultation_desk: 人事部 相談窓口（社内内線）
+    notes: 2021-10-01 から1年契約を更新 — 本契約満了時で通算ちょうど5年
+
+  - id: LC-2026-005
+    employee_id: E-1004
+    contract_type: fixed_term
+    part_time: false
+    concluded_on: "2026-09-15"
+    start_date: "2026-10-01"
+    end_date: "2027-09-30"
+    renewal: may_renew
+    workplace_prefecture: 東京都
+    wage:
+      unit: monthly
+      base_amount: 235000
+      minimum_wage_eligible_allowances: 10000
+      monthly_average_scheduled_hours: 160
+    disclosures:
+      contract_period: 2026-10-01 〜 2027-09-30（更新する場合がある）
+      renewal_criteria: 契約期間満了時の業務量・勤務成績により判断
+      renewal_cap: 更新上限なし
+      workplace: 本社（東京都）
+      workplace_change_scope: 本社および都内の事業所
+      duties: 顧客サポート
+      duties_change_scope: 顧客サポートおよび付随業務
+      working_hours: 始業 9:00 · 終業 18:00
+      overtime: 所定時間外労働あり（36協定の範囲内）
+      breaks: 60分
+      holidays: 土日祝日
+      leave: 年次有給休暇は労基法39条による
+      wage_calculation: 月給制 · 職務手当を含む
+      wage_closing_and_payment: 毎月末日締め · 翌月25日払い
+      retirement: 自己都合退職は30日前までに届出 · 解雇事由は就業規則第○条
+      pay_raise: あり（年1回）
+      retirement_allowance: なし
+      bonus: あり（年2回 · 会社業績による）
+      consultation_desk: 人事部 相談窓口（社内内線）
+      treatment_explanation_right: 通常の労働者との待遇の相違の内容・理由について説明を求めることができる
+      conversion_application: 本契約期間中に無期労働契約への転換を申し込むことができる（2027-09-30 まで）
+      post_conversion_terms: 転換後は期間の定めなし · その他の労働条件は本契約と同一（就業規則の定めによる）
+    notes: 通算5年を超える更新 — 無期転換申込機会と転換後の労働条件を明示
+
+  - id: LC-2026-006
+    employee_id: E-1005
+    contract_type: fixed_term
+    part_time: true
+    concluded_on: "2026-03-20"
+    start_date: "2026-04-01"
+    end_date: "2026-10-15"
+    renewal: may_renew
+    renewal_intent: not_renew
+    non_renewal_specified_in_advance: false
+    workplace_prefecture: 福岡県
+    wage:
+      unit: hourly
+      base_amount: 1100
+      minimum_wage_eligible_allowances: 0
+    renewal_cap:
+      type: renewal_count
+      value: 2
+      introduced_or_shortened_after_initial: true
+    disclosures:
+      contract_period: 2026-04-01 〜 2026-10-15（更新する場合がある）
+      renewal_criteria: 契約期間満了時の業務量により判断
+      renewal_cap: 更新は通算2回まで
+      workplace: 福岡コールセンター
+      workplace_change_scope: 変更なし
+      duties: 電話応対
+      duties_change_scope: 変更なし
+      working_hours: 始業 13:00 · 終業 18:00
+      overtime: なし
+      breaks: 休憩なし（労働時間6時間以下）
+      holidays: 土日祝日
+      leave: 年次有給休暇は労基法39条による
+      wage_calculation: 時給制
+      wage_closing_and_payment: 毎月末日締め · 翌月25日払い
+      retirement: 自己都合退職は14日前までに届出 · 解雇事由は就業規則第○条
+      pay_raise: なし
+      retirement_allowance: なし
+      bonus: なし
+      consultation_desk: 人事部 相談窓口（社内内線）
+    notes: 検出テスト用 — 更新上限を途中で新設したが理由説明日が未記録 · 雇止め予定（予告期限経過）
+
+  - id: LC-2026-007
+    employee_id: E-1006
+    contract_type: fixed_term
+    part_time: false
+    concluded_on: "2026-06-01"
+    start_date: "2026-07-01"
+    end_date: "2030-06-30"
+    renewal: none
+    term_basis: advanced_professional
+    probation_months: 12
+    workplace_prefecture: 東京都
+    wage:
+      unit: monthly
+      base_amount: 600000
+      minimum_wage_eligible_allowances: 0
+      monthly_average_scheduled_hours: 160
+    disclosures:
+      contract_period: 2026-07-01 〜 2030-06-30（更新しない）
+      workplace: 研究開発センター（東京都）
+      workplace_change_scope: 変更なし
+      duties: 研究開発（データ解析）
+      duties_change_scope: 研究開発業務全般
+      working_hours: 始業 9:30 · 終業 18:30
+      overtime: 所定時間外労働あり（36協定の範囲内）
+      breaks: 60分
+      holidays: 土日祝日
+      leave: 年次有給休暇は労基法39条による
+      wage_calculation: 年俸制（月額払い）
+      wage_closing_and_payment: 毎月末日締め · 翌月25日払い
+      retirement: 契約期間満了により退職 · 解雇事由は就業規則第○条
+      pay_raise: なし
+      retirement_allowance: なし
+      bonus: なし
+      consultation_desk: 人事部 相談窓口（社内内線）
+    notes: 検出テスト用 — 高度専門職の5年特例（needs_review）· 試用期間12か月（needs_review）

@@ -265,3 +265,59 @@ modules:
     data_root: data/jp-women-empowerment/
     summary_dir: agent-summaries/jp-women-empowerment/
     notes: activation_ready — 女性活躍推進法 · 一般事業主行動計画 · 応援宣言
+  - id: jp_statutory_meetings
+    enabled: false
+    agent: jp_statutory_meetings
+    docs_root: docs/company/governance/
+    data_root: data/governance/
+    summary_dir: agent-summaries/corporate-governance/
+    notes: 株主総会・取締役会 — 招集期限 · 議事録ドラフト（MAL では未使用）
+  - id: jp_employment_rules
+    enabled: false
+    agent: jp_employment_rules
+    docs_root: docs/company/hr/work-rules/
+    data_root: data/hr/employment-rules/
+    summary_dir: agent-summaries/human-resources/
+    notes: 就業規則・36協定（MAL では未使用）
+  - id: jp_labor_contract
+    enabled: false
+    agent: jp_labor_contract
+    docs_root: docs/company/hr/labor-contracts/
+    data_root: data/hr/labor-contracts/
+    summary_dir: agent-summaries/human-resources/
+    notes: 労働条件通知書・無期転換（MAL では未使用）
+  - id: jp_subcontractor_act
+    enabled: false
+    agent: jp_subcontractor_act
+    docs_root: docs/procurement/subcontract/
+    data_root: data/procurement/subcontract/
+    summary_dir: agent-summaries/procurement/
+    notes: 取適法（旧下請法）点検（MAL では未使用）
+  - id: jp_data_breach
+    enabled: false
+    agent: jp_data_breach
+    docs_root: docs/compliance/privacy/breach/
+    data_root: data/privacy/breach/
+    summary_dir: agent-summaries/privacy-officer/
+    notes: 個情漏えい等報告準備（MAL では未使用）
+  - id: jp_visa_employment
+    enabled: false
+    agent: jp_visa_employment
+    docs_root: docs/company/hr/foreign-workers/
+    data_root: data/hr/foreign-workers/
+    summary_dir: agent-summaries/human-resources/
+    notes: 在留資格・外国人雇用状況届出（MAL では未使用）
+  - id: jp_takken
+    enabled: false
+    agent: jp_takken
+    docs_root: docs/takken/
+    data_root: data/takken/
+    summary_dir: agent-summaries/jp-takken/
+    notes: 宅地建物取引業（MAL では未使用）
+  - id: jp_patent_application
+    enabled: false
+    agent: jp_patent_application
+    docs_root: docs/ip/patent/
+    data_root: data/ip/patent/
+    summary_dir: agent-summaries/intellectual-property/
+    notes: 特許出願ひな形・期限（MAL では未使用）

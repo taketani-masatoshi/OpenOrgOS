@@ -52,6 +52,8 @@ agents:
       - jp_permit_obligations
       - jp_privacy_policy_show
       - jp_privacy_policy_status
+      - jp_takken_compliance_check
+      - jp_takken_fee_calc
       - jp_trademark_checklist
       - jp_trademark_draft
       - jp_women_empowerment_kpi
@@ -126,6 +128,8 @@ agents:
     skills:
       - governance_meeting_prep
       - governance_register_review
+      - jp_board_meeting_pack
+      - jp_shareholder_meeting_pack
     pulse_checks:
       - type: path_exists
         path: data/governance/
@@ -388,8 +392,14 @@ agents:
       - hr_headcount
       - hr_labor_compliance
       - hr_policy_review
+      - jp_36_agreement
+      - jp_employment_contract_draft
+      - jp_fixed_term_conversion_check
+      - jp_foreign_employment_notice
+      - jp_foreign_worker_check
       - jp_payroll_run
       - jp_social_insurance_prep
+      - jp_work_rules_draft
       - payroll_calc
     pulse_checks:
       - type: path_exists
@@ -420,6 +430,8 @@ agents:
     skills:
       - ip_portfolio_review
       - ip_trademark_status
+      - jp_patent_deadlines
+      - jp_patent_draft
     pulse_checks:
       - type: path_exists
         path: data/ip/
@@ -690,6 +702,8 @@ agents:
     route_ids:
       - privacy-officer
     skills:
+      - jp_breach_deadline_watch
+      - jp_ppc_breach_report
       - privacy_data_inventory
       - privacy_impact_review
     pulse_checks:
@@ -706,6 +720,8 @@ agents:
     route_ids:
       - procurement-order
     skills:
+      - jp_subcontractor_checklist
+      - jp_subcontractor_scope
       - procurement_order_review
       - procurement_vendor_eval
     pulse_checks:
@@ -975,6 +991,7 @@ agents:
       - jp_consumption_refund_show
       - jp_consumption_tax_return
       - jp_corporate_tax_return
+      - jp_individual_income_tax
       - jp_invoice_registration
       - jp_qualified_invoice_issue
       - jp_withholding_payment

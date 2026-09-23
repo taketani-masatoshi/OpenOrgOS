@@ -1,0 +1,21 @@
+id: jp_labor_contract
+required_seeds: []
+activation_seeds:
+  - labor-contracts.yaml.example
+  - fixed-term-history.yaml.example
+  - minimum-wages.yaml.example
+  - sources.yaml.example
+  - templates/rodo-joken-tsuchisho.md.example
+optional_regulations:
+  - REG-004
+  - REG-010
+notes: activation_ready — 労働条件通知書の明示事項（2024-04-01 改正対応）· 有期契約上限 · 無期転換通算 · 雇止め予告 · 地域別最低賃金チェック · 通知書ドラフト（JP 法域のみ · 判定は準備支援）
+cli_commands:
+  - show
+  - validate
+  - check
+  - conversion-check
+  - draft
+security:
+  limits:
+    concurrent_jobs: 1

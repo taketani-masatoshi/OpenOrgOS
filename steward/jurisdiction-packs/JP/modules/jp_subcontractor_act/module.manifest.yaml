@@ -1,0 +1,19 @@
+id: jp_subcontractor_act
+required_seeds: []
+activation_seeds:
+  - settings.yaml.example
+  - subcontract-parties.yaml.example
+  - transactions.yaml.example
+  - sources.yaml.example
+optional_regulations:
+  - REG-004
+notes: activation_ready — 取適法（旧下請法）適用対象判定 · 明示 · 60日支払期日 · 手形等禁止 · 支払遅延 · 減額 · 記録保存 · 遅延利息（JP 法域のみ · 点検支援）
+cli_commands:
+  - show
+  - validate
+  - scope
+  - check
+  - late-interest
+security:
+  limits:
+    concurrent_jobs: 1

@@ -1,0 +1,83 @@
+sources:
+  - id: egov-roudou-kijun-ho
+    title: "労働基準法（14条 契約期間 · 15条 労働条件の明示 · 21条 試用期間）"
+    url: "https://laws.e-gov.go.jp/law/322AC0000000049"
+    type: law
+    retrieved_on: "2026-09-24"
+  - id: egov-roudou-kijun-ho-kisoku
+    title: "労働基準法施行規則（5条 明示事項 · 令和5年厚労省令39号で2024-04-01改正）"
+    url: "https://laws.e-gov.go.jp/law/322M40000100023"
+    type: ordinance
+    retrieved_on: "2026-09-24"
+    notes: "5条1項1号の2（更新上限）· 1号の3（変更の範囲）· 3項（書面事項）· 5項・6項（無期転換）"
+  - id: egov-roudou-keiyaku-ho
+    title: "労働契約法（18条 無期転換 · 19条 雇止め法理）"
+    url: "https://laws.e-gov.go.jp/law/419AC0000000128"
+    type: law
+    retrieved_on: "2026-09-24"
+  - id: egov-tsusan-kijun-shorei
+    title: "労働契約法第十八条第一項の通算契約期間に関する基準を定める省令（平成24年厚労省令148号）"
+    url: "https://laws.e-gov.go.jp/law/424M60000100148"
+    type: ordinance
+    retrieved_on: "2026-09-24"
+    notes: "クーリング: 直前通算の1/2（1か月未満切上げ · 上限6か月）· 端数日は30日=1か月"
+  - id: mhlw-yatoidome-kokuji
+    title: "有期労働契約の締結、更新、雇止め等に関する基準（平成15年厚労告357号 · 令和5年告示114号改正）"
+    url: "https://www.mhlw.go.jp/web/t_doc?dataId=73aa5469&dataType=0&pageNo=1"
+    type: notice
+    retrieved_on: "2026-09-24"
+    notes: "1条 更新上限の新設・短縮理由の事前説明 · 2条 3回以上更新または1年超継続は30日前までに予告"
+  - id: mhlw-koudo-senmon-kokuji
+    title: "労働基準法第十四条第一項第一号の規定に基づき厚生労働大臣が定める基準（平成15年厚労告356号）"
+    url: "https://www.mhlw.go.jp/web/t_doc?dataId=73aa5468&dataType=0&pageNo=1"
+    type: notice
+    retrieved_on: "2026-09-24"
+  - id: egov-part-yuki-ho
+    title: "短時間労働者及び有期雇用労働者の雇用管理の改善等に関する法律（6条 文書の交付等）"
+    url: "https://laws.e-gov.go.jp/law/405AC0000000076"
+    type: law
+    retrieved_on: "2026-09-24"
+  - id: egov-part-yuki-ho-kisoku
+    title: "同法施行規則（2条 特定事項 · 令和8年厚労省令87号で2026-10-01に4号追加）"
+    url: "https://laws.e-gov.go.jp/law/405M50002000034/20261001_508M60000100087?occasion_date=20261001"
+    type: ordinance
+    retrieved_on: "2026-09-24"
+    notes: "昇給・退職手当・賞与の有無 · 相談窓口 · 2026-10-01〜 法14条2項の説明を求めることができる旨"
+  - id: egov-saitei-chingin-ho
+    title: "最低賃金法（4条 効力）"
+    url: "https://laws.e-gov.go.jp/law/334AC0000000137"
+    type: law
+    retrieved_on: "2026-09-24"
+  - id: egov-saitei-chingin-ho-kisoku
+    title: "最低賃金法施行規則（1条 算入しない賃金 · 2条 時間額への換算）"
+    url: "https://laws.e-gov.go.jp/law/334M50002000016"
+    type: ordinance
+    retrieved_on: "2026-09-24"
+  - id: mhlw-minimum-wage-r7
+    title: "地域別最低賃金の全国一覧（令和7年度）"
+    url: "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_roudou/roudoukijun/minimumichiran/"
+    type: data
+    retrieved_on: "2026-09-24"
+  - id: mhlw-minimum-wage-r8-toshin
+    title: "令和8年度最低賃金額答申（2026-10-01〜12-02 順次発効予定）"
+    url: "https://www.mhlw.go.jp/stf/newpage_75950.html"
+    type: data
+    retrieved_on: "2026-09-24"
+    notes: "発効確定後に minimum-wages.yaml へ追加し verified_through を更新"
+  - id: mhlw-meiji-rule-2024
+    title: "2024年4月からの労働条件明示のルール変更（厚労省リーフレット）"
+    url: "https://www.mhlw.go.jp/content/11200000/001298245.pdf"
+    type: guide
+    retrieved_on: "2026-09-24"
+  - id: mhlw-model-tsuchisho
+    title: "モデル労働条件通知書"
+    url: "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_roudou/roudoukijun/roudoukijunkankei.html"
+    type: guide
+    retrieved_on: "2026-09-24"
+
+forms:
+  - id: form-rodo-joken-tsuchisho
+    name: "労働条件通知書"
+    template: templates/rodo-joken-tsuchisho.md.example
+    legal_basis: "労基法15条1項 · 労基則5条 · パート有期法6条1項"
+    notes: "厚労省モデル労働条件通知書の記載項目に準拠した MD ひな形"
