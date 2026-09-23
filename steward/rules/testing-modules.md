@@ -132,7 +132,7 @@ npm run test:platform -- P04_wire_stack
 - 試験ファイル: `tests/finance-official-filing-receipt.test.ts`
 - 製品ゲート通し: `tests/finance-filing-product-gate.test.ts`（filing-score 0 · confirm 無し拒否 · LLM 拒否 · fixture XSD 拒否 · 任意ローカル XSD）
 - 個人現金出納帳ピン分離: `tests/sole-prop-monthly-cashbook.test.ts`
-- 決算書硬0: `tests/companies-act-score-acceptance.test.ts`（ダミー example_yen でも 0）
+- 決算書開発ピン: `tests/companies-act-score-acceptance.test.ts`（fixture 円空差分で 12、誤円は 0）
 - **政府へ送らない**（ソケット非開通）。採点試験は一時ディレクトリに `.gitignore` で `/records/` を置いた使い捨てルートだけ使う
 - tip の `records/finance/official-filing-receipt.yaml` に偽番号を書いて法定充足にしない
 - 現状確認 CLI: `orgos tax filing-score`（受付が無い間は 0）

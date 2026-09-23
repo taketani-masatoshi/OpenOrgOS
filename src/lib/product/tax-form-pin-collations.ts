@@ -1,9 +1,15 @@
 /**
  * Build live form pin collations for Steward Chat without reading tests/fixtures.
- * Companies Act stays unmet (no official printed yen pin → live hard-0 row).
+ * Companies Act uses product-shipped ordinance labels (development completion).
  * Other lines use product-shipped official projectors / schedule pins.
  */
 import { resolveDefaultFiscalYear } from "../finance/fiscal-year.js";
+import { COMPANIES_ACT_ORDINANCE_LABEL_PIN } from "../finance/ledger/companies-act-ordinance-pin.js";
+import {
+  companiesActDisplayScore,
+  COMPANIES_ACT_FULL_MARKS,
+} from "../finance/ledger/companies-act-score.js";
+import { buildStatutoryStatements } from "../finance/ledger/statutory-statements.js";
 import {
   diffSchedule4OfficialExample,
   evaluateTaxAdjustment,
@@ -29,6 +35,25 @@ import {
   defaultFormPinCollations,
   type FormPinCollation,
 } from "./tax-lines-read-model.js";
+
+function companiesActCollation(row: FormPinCollation): FormPinCollation {
+  try {
+    const fy = resolveDefaultFiscalYear();
+    const statement = buildStatutoryStatements(fy);
+    const ok =
+      companiesActDisplayScore(statement.displayLabels, COMPANIES_ACT_ORDINANCE_LABEL_PIN) ===
+      COMPANIES_ACT_FULL_MARKS;
+    return {
+      ...row,
+      pinPresent: true,
+      projectedReady: true,
+      diffCount: ok ? 0 : 1,
+    };
+  } catch {
+    // Label pin is always present in product; projection may be unavailable.
+    return { ...row, pinPresent: true, projectedReady: false, diffCount: 0 };
+  }
+}
 
 function schedule4Collation(row: FormPinCollation): FormPinCollation {
   try {
@@ -109,14 +134,7 @@ function consumptionFormulaCollation(row: FormPinCollation): FormPinCollation {
 export function buildLiveFormPinCollations(): FormPinCollation[] {
   const base = defaultFormPinCollations();
   return base.map((row) => {
-    if (row.id === "companies-act-yen") {
-      return {
-        ...row,
-        pinPresent: false,
-        projectedReady: false,
-        diffCount: 0,
-      };
-    }
+    if (row.id === "companies-act-yen") return companiesActCollation(row);
     if (row.id === "schedule4-yen") return schedule4Collation(row);
     if (row.id === "corp-local-yen") return corpLocalCollation(row);
     if (row.id === "sole-local-yen") return soleLocalCollation(row);

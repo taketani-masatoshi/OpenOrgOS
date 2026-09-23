@@ -1,19 +1,19 @@
 # Changelog
 
-## Unreleased
-
-### Added
-- ledger-impl-unify: sole-prop cashbook handguide pin (`sole_prop_handguide`), tax lines-read / filing-score Chat API, filing product-gate tests, optional `ORGOS_OFFICIAL_XSD_PATH`.
-
-### Notes
-- Companies Act score remains hard-0 without an official printed-yen pin (no invented amounts). e-Tax/eLTAX statutory met still requires real gitignored receipts.
-
-
 All notable changes to OrgOS Operator Layer are documented here.
 
 **Engineering rules / 憲章:** 正本 `steward/rules/engineering/` · 索引 `steward/rules/openorgos-engineering-constitution.md` — 変更時は本 CHANGELOG と該当 ADR を更新。
 
 ## [Unreleased]
+
+### Changed
+
+- **会社計算規則の開発採点** — 条例見出し＋開発 fixture 円の空差分で 12。公式印刷円は運用／法定側。条例ラベルを `companies-act-ordinance-pin.ts` に分離。
+- **tax-filing-spec** — Policy B / 厳格ラダーの履歴節を削除し、開発完了軸に一本化。
+
+### Notes
+
+- e-Tax / eLTAX の法定充足は引き続き gitignore 実受付が必要。
 
 ### Added
 

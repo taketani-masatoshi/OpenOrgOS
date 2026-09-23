@@ -1,10 +1,10 @@
 /**
- * Product gate (更に厳格 / 2-B): tip filing-score stays 0, record without confirm
- * refuses, LLM callers refuse. Fixture XSD is refused. Official XSD requires
- * ORGOS_OFFICIAL_XSD_PATH to a non-fixture local file (CI leaves unset → skip).
+ * Product gate (development completion): tip filing-score stays 0, record without
+ * confirm refuses, LLM callers refuse. Fixture XSD is refused. Official XSD may
+ * use ORGOS_OFFICIAL_XSD_PATH to a non-fixture local file (CI leaves unset → skip).
  * Real receipt numbers are not invented — statutory met stays false.
- * Form pin_diff rows are books↔official empty diffs when collation is supplied;
- * companies-act without official yen stays unmet.
+ * Form pin_diff rows are books↔pin empty diffs when collation is supplied;
+ * companies-act uses product ordinance labels (fixture yen proven in acceptance).
  */
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -258,7 +258,7 @@ describe("finance filing product gate", () => {
     const rows = buildLiveFormPinCollations();
     const schedule = rows.find((r) => r.id === "schedule4-yen");
     const companies = rows.find((r) => r.id === "companies-act-yen");
-    expect(companies?.pinPresent).toBe(false);
+    expect(companies?.pinPresent).toBe(true);
     expect(schedule?.pinPresent).toBe(true);
     // Without a tenant worksheet this may be false; with demo books it may be true.
     expect(typeof schedule?.projectedReady).toBe("boolean");

@@ -1,8 +1,7 @@
 /**
  * Product SoT for ledger/tax lanes lives on this branch until merged to Core tip.
  * Parallel worktrees may exist for history; they are not the scoring tip.
- *
- * 更に厳格: complete requires files to exist AND be git-tracked (?? is incomplete).
+ * complete requires files to exist AND be git-tracked (?? is incomplete).
  */
 import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -19,6 +18,7 @@ const REQUIRED_RELATIVE = [
   "schemas/finance/consumption-tax-return-map.ts",
   "src/lib/product/ledger-provision.ts",
   "src/lib/finance/ledger/companies-act-score.ts",
+  "src/lib/finance/ledger/companies-act-ordinance-pin.ts",
   "src/lib/finance/corporate-local-tax.ts",
 ] as const;
 

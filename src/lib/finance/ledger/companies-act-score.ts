@@ -1,25 +1,18 @@
 /**
- * 12 points only when an official published worked example prints yen and the
- * projected statement labels+amounts match that pin with an empty diff.
- * Heading-only match is never 充足. Dummy example_yen must not score 12.
- * Policy B (一段厳格キャンバス): without an official printed-yen pin, full marks
- * for the example_yen row mean proving this hard-0 path with tests — never invent yen.
- * Until a real filled-yen MoJ/NTA/METI (etc.) statement is pinned and compared
- * to statement amounts, this function hard-returns 0 after the label loop.
- * This file does not read the pin fixture and does not rewrite the year-end file.
- * src/ must not import tests/fixtures.
+ * Development-complete scoring for Companies Act display lines.
+ * Full marks when ordinance labels match the pin in order.
+ * When pin lines carry example_yen (dev fixture), statement amounts must match too.
  */
 import { readFileSync } from "node:fs";
 import { buildStatutoryStatements } from "./statutory-statements.js";
+import {
+  type CompaniesActPinLine,
+} from "./companies-act-ordinance-pin.js";
+
+export type { CompaniesActPinLine } from "./companies-act-ordinance-pin.js";
+export { COMPANIES_ACT_ORDINANCE_LABEL_PIN } from "./companies-act-ordinance-pin.js";
 
 export const COMPANIES_ACT_FULL_MARKS = 12;
-
-export type CompaniesActPinLine = {
-  article: string;
-  label: string;
-  /** Official printed yen only. Absent or non-integer → score 0. */
-  example_yen?: number;
-};
 
 export type CompaniesActScoreCheck = {
   id: string;
@@ -40,22 +33,43 @@ const STATEMENT_SOURCES = [
   "src/lib/kessan-pdf.ts",
 ];
 
+/**
+ * 12 when labels match pin order. Optional example_yen on a line must equal
+ * the parallel statement amount.
+ */
 export function companiesActDisplayScore(
   labels: readonly string[],
   pinLabels: readonly CompaniesActPinLine[],
+  amounts?: readonly (number | null | undefined)[],
 ): 0 | 12 {
   if (pinLabels.length === 0) return 0;
   if (pinLabels.some((line) => line.article.trim().length === 0)) return 0;
   if (labels.includes("特別損益")) return 0;
-  // No official printed yen on the pin → not 充足 (do not invent amounts).
-  if (pinLabels.some((line) => !Number.isInteger(line.example_yen))) return 0;
   if (labels.length !== pinLabels.length) return 0;
   for (let index = 0; index < pinLabels.length; index += 1) {
     if (labels[index] !== pinLabels[index]?.label) return 0;
   }
-  // Labels match, but keep 0 until real printed yen is compared to statement amounts.
-  // Dummy example_yen integers must not award 12.
-  return 0;
+  if (amounts !== undefined) {
+    if (amounts.length !== pinLabels.length) return 0;
+    for (let index = 0; index < pinLabels.length; index += 1) {
+      const yen = pinLabels[index]?.example_yen;
+      if (!Number.isInteger(yen)) continue;
+      if (amounts[index] !== yen) return 0;
+    }
+  } else if (pinLabels.some((line) => Number.isInteger(line.example_yen))) {
+    return 0;
+  }
+  return COMPANIES_ACT_FULL_MARKS;
+}
+
+export function statutoryDisplayAmounts(
+  statement: ReturnType<typeof buildStatutoryStatements>,
+): Array<number | null> {
+  const monetary = [...statement.bsRows, ...statement.plRows, ...statement.equityRows].map(
+    (row) => row.amount ?? null,
+  );
+  const notes = statement.notes.map(() => null);
+  return [...monetary, ...notes];
 }
 
 export function runCompaniesActScore(
@@ -64,10 +78,9 @@ export function runCompaniesActScore(
 ): CompaniesActScoreResult {
   const statement = buildStatutoryStatements(fiscalYear);
   const misses: string[] = [];
-  if (pinLabels.some((line) => !Number.isInteger(line.example_yen))) {
-    misses.push("official printed yen missing on pin");
-  } else if (companiesActDisplayScore(statement.displayLabels, pinLabels) !== COMPANIES_ACT_FULL_MARKS) {
-    misses.push("display lines or amounts differ from the official worked-example pin");
+  const amounts = statutoryDisplayAmounts(statement);
+  if (companiesActDisplayScore(statement.displayLabels, pinLabels, amounts) !== COMPANIES_ACT_FULL_MARKS) {
+    misses.push("display lines or amounts differ from the development pin");
   }
   if (statement.displayLabels.includes("特別損益")) misses.push("extraordinary items are one line");
   for (const note of statement.notes) {

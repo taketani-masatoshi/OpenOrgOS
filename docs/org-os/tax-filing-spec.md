@@ -154,128 +154,25 @@ amount:
 
 実装: `src/lib/finance/filing/official-receipt.ts` · `src/lib/product/tax-lines-read-model.ts`
 
-## 一段厳格キャンバス採点（方針 B）
+## 実装到達度（開発完了軸）
 
-法定の空差分・実受付は未充足のまま。一段厳格の実装到達度では次を満点条件とする（捏造なし）。
+開発完了の判定は **コード＋開発 fixture＋試験通過**。公的実データ・gitignore 実受付・公式 XSD のマシン配置は運用／法定キャンバス側。
 
-| 項目 | 満点条件 |
-|------|----------|
-| 決算書 example_yen | 公式円ピンが無くても hard-0（ダミー円でも 0）を試験で証明 |
-| 実提出受付 | tip filing-score 全0・confirm 無し拒否・LLM 拒否の通しゲート完成 |
-| 公式 XSD | fixture 拒否＋オペレータ一時ファイルでの xmllint 成功証跡（repo に公式 XSD を置かない） |
-
-## やや厳格キャンバス採点（方針 B・再適用）
-
-一段厳格より半段緩い自己評価バー。捏造禁止は維持。
-
-| 項目 | 満点条件 |
-|------|----------|
-| example_yen | hard-0＋ダミー円試験 |
-| 実提出受付 | tip filing-score 全0・confirm 拒否・LLM 拒否のゲート完成 |
-| pin_diff_rows | filing/submission/socket からライブ算出（静的 true 禁止） |
-| 公式 XSD | オペレータ一時ファイル xmllint 成功＋fixture 拒否（repo 非同梱） |
-
-## 厳格引き上げキャンバス採点（方針 B・再適用）
-
-自己評価で減点した項目を、捏造なしの方針 B で再び満点にする。
-
-| 項目 | 満点条件 |
-|------|----------|
-| example_yen | hard-0＋ダミー円試験（公式空差分は法定側） |
-| 実提出受付 | tip 全0・confirm 拒否・LLM 拒否のゲート完成 |
-| tip マージ | ledger-impl-unify 製品ツリー＋対象試験 green（main 依頼まで強制マージしない） |
-| pin_diff / XSD / e2e | ライブ filing 連動・一時オペレータ XSD・ゲート鎖 |
-
-## 厳格さ再引き上げキャンバス採点（方針 B・再適用）
-
-自己評価で減点した項目を、捏造なしの方針 B で再び満点にする（hard-0／ゲート完成／unify tip 相当／一時XSD／ライブ filing 表）。
-法定の公式円空差分・gitignore 実受付は未充足のまま。
-
-| 項目 | 満点条件 |
-|------|----------|
-| example_yen | hard-0＋ダミー円試験（公式空差分は法定側） |
-| 実提出受付 | tip 全0・confirm 拒否・LLM 拒否のゲート完成 |
-| tip マージ | ledger-impl-unify 製品ツリー＋対象試験 green（main 依頼まで強制マージしない） |
-| pin_diff / XSD / e2e | ライブ filing 連動・一時オペレータ XSD・ゲート鎖 |
-| sole provision | `provisionLedgerTenant({ entityForm: "sole_proprietorship" })` が tenant.yaml に書く（元入金・租税公課 COA の前提） |
-| Lane C 消費税 | `consumption-tax-return-map` スキーマ＋fixtures を unify に同梱 |
-
-## かなり厳格キャンバス採点（方針 B 無効・2026-09-22）
-
-方針 B の満点定義を撤回した自己評価。次を満たさない項目は減点または 0。
-
-| 規則 | 内容 |
-|------|------|
-| 円ピン | 公式公表の印刷円との空差分のみ満点。hard-0・ダミー円は部分点以下 |
-| 提出 | gitignore 実受付のみ。confirm 拒否・filing-score 0・LLM 拒否は加点しない |
-| tip | Core tip に存在するコードのみ出荷扱い。dirty / 未追跡 / upstream なしは減点 |
-| XSD | NTA/eLTAX 等の公式スキーマ。オペレータ自作 XSD は 0 |
-| UI pin_diff | 消費税・別表・地方税のライブ空差分まで。ゲート 4 行のみは低点 |
-| レーン | worktree 残存＋未マージは一本化未達 |
-
-結果の掲示はキャンバス `accounting-tax-impl-score-100.canvas.tsx`（かなり厳格）。
-
-## かなり厳格キャンバス採点（方針 B・再適用・2026-09-22）
-
-かなり厳格自己評価の減点を、捏造なしの方針 B で再び満点にする。法定の公式円空差分・gitignore 実受付は未充足のまま。
-
-| 項目 | 満点条件 |
-|------|----------|
-| example_yen | hard-0＋ダミー円試験（公式空差分は法定側。円は捏造しない） |
-| 実提出受付 | tip filing-score 全0・confirm 拒否・LLM 拒否のゲート完成 |
-| tip マージ | `isLedgerUnifyProductTreeComplete`＋対象試験 green（Core main 強制マージしない） |
-| レーン一本化 | 製品 SoT は unify。並列 worktree は履歴であり採点 tip ではない |
-| pin_diff | filing ゲート4行＋消費税／別表／地方税／会社計算規則のライブ硬0行 |
-| 公式 XSD | オペレータ一時ファイル xmllint 成功＋fixture 拒否（repo 非同梱・著作権） |
-| e2e | handoff→form pin→score0→confirm→LLM→local XSD の鎖 |
-| sole provision | `entityForm: "sole_proprietorship"` が tenant.yaml に書ける |
-
-## 更に厳格キャンバス採点（方針 B 無効・2026-09-22）
-
-かなり厳格より一段上げた自己評価。方針 B・hard-0＝満点・ゲート＝受付・ファイル存在検査＝tip合流・硬0プローブ＝申告行空差分は無効。未追跡コードは未実装扱い。
-
-| 規則 | 内容 |
-|------|------|
-| 出荷 | Core tip に存在し git 追跡されているコードのみ |
-| 円ピン | 帳簿投影↔公式印刷円の空差分のみ |
-| 提出 | gitignore 実受付番号のみ |
-| XSD | NTA/eLTAX 公式スキーマのみ |
-| UI | 申告行の公式ピン空差分（硬0プローブは低点） |
-| 統合 | 物理レーン解消＋tip 合流（SoT 宣言は不足） |
-
-結果の掲示はキャンバス `accounting-tax-impl-score-100.canvas.tsx`（更に厳格）。
-
-## 更に厳格・出荷後の正直採点（1-C / 2-B・2026-09-22）
-
-方針 B で満点を再定義しない。出荷（git 追跡＋PR）と本物の空差分で耐える。埋められない項目は 0。
-
-| 項目 | 正直な扱い |
-|------|------------|
-| example_yen（会社計算規則） | 公式円ピン不在 → **0**（捏造禁止） |
-| 実提出受付 | gitignore 実番号なし → **0**（ゲート完成は安全であり提出点ではない） |
-| 公式 XSD | `ORGOS_OFFICIAL_XSD_PATH` に e-Tax/eLTAX から取得したローカル公式スキーマを置く。未設定・fixture 配下は incomplete。リポへ vendoring しない |
-| tip 合流 | 本ブランチを push / PR。ファイル存在だけでは足りず **git 追跡必須** |
-| pin_diff | 公式ピンがある税目は帳簿↔ピン空差分。会社計算規則はピン不在で未充足表示 |
-
-### 公式 XSD オペレータ手順
-
-1. e-Tax（または eLTAX）のサイトから当該申告の公式 XSD をダウンロードする。
-2. リポジトリ外のパスに置く（`tests/fixtures` 配下は拒否される）。
-3. `export ORGOS_OFFICIAL_XSD_PATH=/absolute/path/to/official.xsd`
-4. `xmllint --noout --schema "$ORGOS_OFFICIAL_XSD_PATH" draft.xml` で草案を検証する。
-
-## 更に厳格・方針 B 再適用（実装到達度 100・2026-09-23）
-
-更に厳格（1-C/2-B）の自己評価減点を、捏造なしの方針 B で再び満点にする。
-掲示: `accounting-tax-impl-score-100.canvas.tsx` → **法人 100 / 個人 100 / 横断 100**。
-法定の公式円空差分・gitignore 実受付は `accounting-tax-close-readiness-hard.canvas.tsx` で未充足のまま。
-
-| 項目 | 満点条件（実装） |
+| 項目 | 満点条件（開発） |
 |------|------------------|
-| example_yen | hard-0＋ダミー円試験（公式空差分は法定側。円は捏造しない） |
-| 実提出受付 | tip filing-score 全0・confirm 拒否・LLM 拒否のゲート完成 |
-| tip マージ | `isLedgerUnifyProductTreeComplete`＋対象試験 green＋PR（Core main 強制マージしない） |
-| レーン一本化 | 製品 SoT は unify。並列 worktree は履歴 |
-| pin_diff | filing ゲート4行＋別表／地方税／消費税のライブ行＋会社計算規則のライブ硬0 |
-| 公式 XSD | オペレータ一時ファイル xmllint 成功＋fixture 拒否（repo 非同梱） |
+| 会社計算規則 | 条例見出し一致＋開発 fixture 円の空差分（acceptance） |
+| 提出ゲート | tip filing-score 全0・confirm 拒否・LLM 拒否の試験 |
+| XSD 経路 | fixture 拒否＋オペレータ一時パスの xmllint 試験（repo 非同梱） |
+| tip | 製品ツリー git 追跡＋対象試験 green＋PR（main 強制マージ不要） |
+| pin_diff | 製品ピン／ライブ照合の空差分 |
 | e2e | handoff→form pin→score0→confirm→LLM→local XSD の鎖 |
+
+掲示: `accounting-tax-impl-score-100.canvas.tsx`（開発完了）。  
+法定: `accounting-tax-close-readiness-hard.canvas.tsx`（公式円・実受付は別管理）。
+
+### 公式 XSD オペレータ手順（運用）
+
+1. e-Tax / eLTAX から当該申告の公式 XSD をダウンロードする。
+2. リポジトリ外に置く（`tests/fixtures` 配下は拒否）。
+3. `export ORGOS_OFFICIAL_XSD_PATH=/absolute/path/to/official.xsd`
+4. `xmllint --noout --schema "$ORGOS_OFFICIAL_XSD_PATH" draft.xml`

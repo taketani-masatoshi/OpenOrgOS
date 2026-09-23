@@ -205,6 +205,6 @@ export function buildAccountingReadinessReport() {
         "税理士または代表者による最終確認・署名",
       ],
     },
-    note: "スコープ限定会計readiness。official-filing-gate は製品拒否ゲートの有無（方針 B）。100点は法定申告や電子提出の完了を意味しません（fleet/pilot 必須ではない）。",
+    note: "スコープ限定会計readiness。official-filing-gate は製品拒否ゲートの有無。100点は法定申告や電子提出の完了を意味しません（fleet/pilot 必須ではない）。",
   };
 }

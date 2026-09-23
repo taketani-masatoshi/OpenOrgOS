@@ -332,10 +332,8 @@ export function isAllowedOfficialXsdPath(xsdPath: string | undefined): boolean {
  * Optional local XSD for operator machines. CI must not set this.
  * Returns undefined when unset or when the path fails isAllowedOfficialXsdPath.
  * Official XSD files must never be committed to the repo.
- *
- * 更に厳格 (2-B): download the official schema from e-Tax / eLTAX onto the
- * operator machine, set ORGOS_OFFICIAL_XSD_PATH, then xmllint. Toy/minimal
- * schemas written only for tests do not count as official XSD marks.
+ * Operator: download from e-Tax / eLTAX, set ORGOS_OFFICIAL_XSD_PATH, then xmllint.
+ * Toy schemas written only for tests do not satisfy the ops path.
  */
 export function resolveOptionalLocalOfficialXsdPath(
   env: NodeJS.ProcessEnv = process.env,

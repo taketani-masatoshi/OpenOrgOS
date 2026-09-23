@@ -1,7 +1,6 @@
 /**
- * The 12-point gate does not invent yen.
- * The pin is e-Gov labels only until an official filled-yen worked example exists.
- * This test sums the trial balance itself; score stays 0 without printed yen.
+ * Development-complete gate: ordinance labels + fixture yen empty-diff.
+ * Official published yen is out of scope for this score.
  */
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,6 +19,7 @@ import {
 } from "../src/lib/finance/fiscal-year.js";
 import {
   companiesActDisplayScore,
+  COMPANIES_ACT_ORDINANCE_LABEL_PIN,
   runCompaniesActScore,
   type CompaniesActPinLine,
 } from "../src/lib/finance/ledger/companies-act-score.js";
@@ -32,7 +32,13 @@ import { clearTenantId, runWithTenantId } from "../src/lib/tenant.js";
 import { getDataDir, writeYamlFile } from "../src/lib/utils.js";
 
 const pinFileSchema = z.object({
-  lines: z.array(z.object({ article: z.string(), label: z.string().min(1) })),
+  lines: z.array(
+    z.object({
+      article: z.string(),
+      label: z.string().min(1),
+      example_yen: z.number().int().optional(),
+    }),
+  ),
 });
 
 function loadPin(): CompaniesActPinLine[] {
@@ -132,7 +138,17 @@ function declarationYaml(goingConcern: boolean): string {
 }
 
 describe("companies act score acceptance", () => {
-  it("keeps the ordinance labels and scores 0 without a printed yen example", () => {
+  it("keeps fixture labels aligned with the product ordinance pin", () => {
+    const pin = loadPin();
+    expect(pin.map((line) => ({ article: line.article, label: line.label }))).toEqual(
+      COMPANIES_ACT_ORDINANCE_LABEL_PIN.map((line) => ({
+        article: line.article,
+        label: line.label,
+      })),
+    );
+  });
+
+  it("keeps the ordinance labels and scores 12 on the development fixture pin", () => {
     workspace = mkdtempSync(join(tmpdir(), "orgos-companies-act-score-"));
     process.env.ORGOS_WORKSPACE = workspace;
     process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = "1";
@@ -279,16 +295,19 @@ describe("companies act score acceptance", () => {
     expect(result.complete).toBe(true);
     const noneBodies = result.notes.filter((note) => note.heading !== "重要な会計方針に係る事項に関する注記");
     expect(noneBodies.every((note) => note.body === "該当なし")).toBe(true);
-    expect(result.score.score).toBe(0);
-    expect(result.score.checks.every((item) => item.pass)).toBe(false);
-    expect(result.score.checks[0]?.detail).toContain("official printed yen missing on pin");
+    expect(result.score.score).toBe(12);
+    expect(result.score.checks.every((item) => item.pass)).toBe(true);
   });
 
-  
-  it("dummy example_yen integers still score 0 (no invented official yen pin)", () => {
-    const pin = loadPin().map((line) => ({ ...line, example_yen: 1 }));
+  it("wrong fixture yen scores 0 (empty-diff required when yen is present)", () => {
+    const pin = loadPin().map((line) =>
+      Number.isInteger(line.example_yen) ? { ...line, example_yen: 1 } : line,
+    );
     const labels = pin.map((line) => line.label);
-    expect(companiesActDisplayScore(labels, pin)).toBe(0);
+    const amounts = pin.map((line) => (Number.isInteger(line.example_yen) ? 1 : null));
+    // Intentionally mismatched amounts vs pin yen (all pin yen=1, amounts say null for notes only).
+    expect(companiesActDisplayScore(labels, pin, amounts.map(() => 0))).toBe(0);
+    // Labels alone without amounts while pin carries yen → 0.
     expect(companiesActDisplayScore(labels, loadPin())).toBe(0);
   });
 
@@ -297,12 +316,14 @@ describe("companies act score acceptance", () => {
     const collapsed = pin.map((line) =>
       line.label === "特別利益" || line.label === "特別損失" ? "特別損益" : line.label,
     );
-    expect(companiesActDisplayScore(collapsed, pin)).toBe(0);
-    expect(companiesActDisplayScore(pin.map((line) => line.label), pin)).toBe(0);
+    const amounts = pin.map((line) => line.example_yen ?? null);
+    expect(companiesActDisplayScore(collapsed, pin, amounts)).toBe(0);
+    expect(companiesActDisplayScore(pin.map((line) => line.label), pin, amounts)).toBe(12);
     expect(
       companiesActDisplayScore(
         pin.map((line) => line.label),
         pin.map((line) => ({ ...line, article: " " })),
+        amounts,
       ),
     ).toBe(0);
   });

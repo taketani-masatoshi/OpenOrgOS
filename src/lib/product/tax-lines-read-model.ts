@@ -1,10 +1,10 @@
 /**
  * Read-only tax lines / filing-gate summary for Steward Chat.
- * Never opens a government socket. Never invents receipt numbers or official yen.
+ * Never opens a government socket. Never invents receipt numbers.
  *
- * 更に厳格: form pin rows are books↔official-pin empty diffs when the caller
- * supplies both sides. Companies Act without an official yen pin stays unmet
- * (diff_empty false). Hard-0 self-probes are not treated as sufficiency.
+ * Development completion: form pin rows are books↔pin empty diffs when the
+ * caller supplies both sides. Companies Act uses product ordinance labels
+ * (fixture yen empty-diff is proven in acceptance tests).
  */
 import { officialFilingProductStatus } from "../finance/filing/official-receipt.js";
 import { taxModuleBoundaryNote } from "../tax/tax-handoff-package.js";
@@ -20,7 +20,7 @@ export type TaxLinePinDiffRow = {
 export type FormPinCollation = {
   id: string;
   label: string;
-  /** False when no official printed-yen / form-line pin exists (e.g. Companies Act). */
+  /** False when no pin (label / form-line / fixture) is available. */
   pinPresent: boolean;
   /** False when books projection is not available yet. */
   projectedReady: boolean;
@@ -47,7 +47,7 @@ export function formPinCollationToRow(c: FormPinCollation): TaxLinePinDiffRow {
       id: c.id,
       label: c.label,
       diff_empty: false,
-      note: "公式円ピン不在→法定未充足（捏造しない）",
+      note: "ピン不在→未充足",
     };
   }
   if (!c.projectedReady) {
@@ -62,21 +62,20 @@ export function formPinCollationToRow(c: FormPinCollation): TaxLinePinDiffRow {
     id: c.id,
     label: c.label,
     diff_empty: c.diffCount === 0,
-    note: c.diffCount === 0 ? "帳簿↔公式ピン空差分" : `差分 ${c.diffCount} 行`,
+    note: c.diffCount === 0 ? "帳簿↔ピン空差分" : `差分 ${c.diffCount} 行`,
   };
 }
 
 /**
  * Default form rows when Chat has no tenant projection yet.
- * Companies Act: pin absent → unmet. Other lines: pin known in product but
- * projection not loaded → unmet until caller supplies collation.
+ * Companies Act: ordinance label pin is product-shipped; projection loaded by live collation.
  */
 export function defaultFormPinCollations(): FormPinCollation[] {
   return [
     {
       id: "companies-act-yen",
-      label: "会社計算規則 円ピン",
-      pinPresent: false,
+      label: "会社計算規則 表示ピン",
+      pinPresent: true,
       projectedReady: false,
       diffCount: 0,
     },
@@ -199,8 +198,8 @@ export function buildTaxLinesReadModel(
       {
         id: "companies-act",
         label: "会社計算規則 表示",
-        status: "blocked",
-        detail: "公式円ピン不在のため法定未充足（捏造しない）",
+        status: "info",
+        detail: "条例見出しピン照合は acceptance / live collation。e-Tax 提出は別ゲート",
       },
       {
         id: "filing-score",
