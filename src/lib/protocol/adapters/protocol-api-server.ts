@@ -3,12 +3,12 @@ import { createServer as createHttpsServer, type ServerOptions } from "node:http
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { TLSSocket } from "node:tls";
-import { exportInboxEntries, exportOutboxEntries } from "./inbox-export.js";
+import { exportInboxEntries, exportOutboxEntries } from "../transport/inbox-export.js";
 import { listWireRelayPending, markWireRelayDelivered, enqueueWireRelay } from "../distribution/wire-relay-store.js";
 import { getWitnessTrustBundlePath, getProtocolRelayStoreDir } from "../core/paths.js";
 import { loadTransactionsRegistry } from "../core/transactions.js";
-import { loadRelayState } from "./relay-state.js";
-import { listWirePending } from "./wire-queue.js";
+import { loadRelayState } from "../transport/relay-state.js";
+import { listWirePending } from "../transport/wire-queue.js";
 import { listWitnessPending } from "../distribution/witness-queue.js";
 import { countOpenReconcileAlerts } from "../distribution/reconcile-alerts-store.js";
 import { getTenantId, setTenantId } from "../../tenant.js";
@@ -21,7 +21,7 @@ import {
   routeRequiresMtls,
   trustBundleRoutePublic,
   verifyMtlsClient,
-} from "./protocol-tls.js";
+} from "../transport/protocol-tls.js";
 
 export interface ProtocolApiServerOptions {
   host?: string;

@@ -29,3 +29,4 @@ export * from "./witness-trust.js";
 export * from "./notice-transmit.js";
 export * from "./resilience-sla.js";
 export * from "./transaction-orphans.js";
+export * from "./peer-discovery.js";

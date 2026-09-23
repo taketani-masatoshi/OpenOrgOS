@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
 import { protocolFetch } from "../src/lib/protocol/transport/protocol-tls.js";
 

@@ -4,7 +4,7 @@ import { applyProtocolTenant } from "./shared.js";
 import {
   listDiscoverablePeers,
   listPeerRegistrationSuggestions,
-} from "../../lib/protocol/transport/peer-discovery.js";
+} from "../../lib/protocol/distribution/peer-discovery.js";
 import {
   registerPeer,
   nextPeerId,

@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
 import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/core/signing.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
 import {
   deliverViaRelayStore,

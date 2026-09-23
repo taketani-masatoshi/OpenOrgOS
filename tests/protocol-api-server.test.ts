@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 
 describe("protocol API server", () => {
   let close: (() => void) | undefined;

@@ -1,6 +1,6 @@
 import { loadTenantConfig } from "../../tenant.js";
-import { findTrustedHubsForJurisdiction, loadTrustedHubsRegistry } from "../distribution/trusted-hubs.js";
-import { loadPeersRegistry } from "./peers.js";
+import { findTrustedHubsForJurisdiction, loadTrustedHubsRegistry } from "./trusted-hubs.js";
+import { loadPeersRegistry } from "../transport/peers.js";
 
 export interface DiscoverablePeerEntry {
   source: "local-registry" | "trusted-hub-catalog";

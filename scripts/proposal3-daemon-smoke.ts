@@ -11,7 +11,7 @@ import {
   writePartyProtocolClientConfig,
 } from "../src/lib/protocol/transport/tls-pki.js";
 import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { getWitnessTrustBundlePath } from "../src/lib/protocol/core/paths.js";
 import { protocolFetch } from "../src/lib/protocol/transport/protocol-tls.js";
 import { runProtocolRelayOnce } from "../src/commands/protocol/relay.js";

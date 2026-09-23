@@ -21,7 +21,7 @@ import {
   publishWitnessTrustBundle,
   verifyWitnessTrustBundle,
 } from "../src/lib/protocol/distribution/witness-trust.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { initWitnessPoolFromTrustBundle } from "../src/lib/protocol/distribution/contract-witness-pool.js";
 import { runRelayCycle } from "../src/lib/protocol/distribution/relay-worker.js";
 import { getWitnessTrustBundlePath } from "../src/lib/protocol/core/paths.js";

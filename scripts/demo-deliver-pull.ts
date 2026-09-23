@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { registerPeer, resolvePeerOutboxBaseUrl, findPeer } from "../src/lib/protocol/transport/peers.js";
 import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/core/signing.js";
 import { pullDeliverFromPeerOutbox } from "../src/lib/protocol/transport/transport.js";

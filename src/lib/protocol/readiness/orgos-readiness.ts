@@ -95,7 +95,7 @@ function computeWireEvidenceChecks(): ReadinessCheck[] {
     fileOk("tests/protocol-deliver-pull.test.ts", "deliver-pull E2E"),
     fileOk("scripts/demo-mesh-deliver.ts", "mesh deliver demo"),
     fileOk("scripts/seed-inter-org-demo.ts", "inter-org demo"),
-    fileOk("src/lib/protocol/transport/protocol-api-server.ts", "peer outbox/inbox export API"),
+    fileOk("src/lib/protocol/adapters/protocol-api-server.ts", "peer outbox/inbox export API"),
     fileOk("src/lib/protocol/distribution/witness-reconcile.ts", "witness reconcile + remote ledger"),
     fileOk("src/lib/protocol/transport/peer-protocol-policy.ts", "contract peer whitelist"),
     fileOk("tests/protocol-peer-policy.test.ts", "peer policy tests"),

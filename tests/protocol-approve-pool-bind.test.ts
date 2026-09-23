@@ -9,7 +9,7 @@ import {
   publishWitnessTrustBundle,
 } from "../src/lib/protocol/distribution/witness-trust.js";
 import { generateHubKeyPair } from "../src/lib/hub/signing.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
 import { maybeBindWitnessPoolFromContract } from "../src/lib/protocol/distribution/contract-witness-pool.js";
 import { getWitnessPoolYamlPath } from "../src/lib/protocol/core/paths.js";

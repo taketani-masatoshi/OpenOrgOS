@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import { setTenantId } from "../src/lib/tenant.js";
-import { listDiscoverablePeers } from "../src/lib/protocol/transport/peer-discovery.js";
+import { listDiscoverablePeers } from "../src/lib/protocol/distribution/peer-discovery.js";
 import {
   rotateProtocolSigningKey,
   exportProtocolPublicKeyBase64,

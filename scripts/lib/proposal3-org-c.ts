@@ -16,7 +16,7 @@ import {
   publishWitnessTrustBundle,
   verifyWitnessTrustBundle,
 } from "../../src/lib/protocol/distribution/witness-trust.js";
-import { startProtocolApiServer } from "../../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../../src/lib/protocol/adapters/protocol-api-server.js";
 import { buildProtocolApiServerConfig } from "../../src/lib/protocol/transport/protocol-api-config.js";
 import { protocolFetch } from "../../src/lib/protocol/transport/protocol-tls.js";
 import { initWitnessPoolFromTrustBundle } from "../../src/lib/protocol/distribution/contract-witness-pool.js";

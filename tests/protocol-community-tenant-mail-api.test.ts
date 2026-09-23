@@ -17,7 +17,7 @@ import {
   handleCommunityTenantMailGmailToken,
 } from "../src/lib/protocol/adapters/community-tenant-mail-api.js";
 import { verifyCommunityGovernanceAuth } from "../src/lib/protocol/adapters/community-wire-node-api.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { loadGmailOAuthToken, saveGmailOAuthClientConfig } from "../src/lib/correspondence/gmail-oauth.js";
 import { gmailOAuthTokenSchema } from "../schemas/correspondence/gmail-oauth.js";
 

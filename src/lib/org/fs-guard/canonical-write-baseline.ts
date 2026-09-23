@@ -107,7 +107,7 @@ export const CANONICAL_WRITE_BASELINE: CanonicalWriteBaselineEntry[] = [
   { file: "src/lib/protocol/adapters/email-wire-deliver.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/protocol/distribution/org-cert-witness.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/protocol/core/outbox-provenance.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
-  { file: "src/lib/protocol/transport/protocol-api-server.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
+  { file: "src/lib/protocol/adapters/protocol-api-server.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/protocol/core/signing.ts", symbol: "writeFileSync", count: 3, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/protocol/readiness/test-suite-status.ts", symbol: "writeFileSync", count: 2, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/protocol/transport/tls-pki.ts", symbol: "writeFileSync", count: 4, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },

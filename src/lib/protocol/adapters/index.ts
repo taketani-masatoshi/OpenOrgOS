@@ -10,3 +10,4 @@ export * from "./email-wire-deliver.js";
 export * from "./email-wire-ingest.js";
 export * from "./map-internal.js";
 export * from "./webhook-bridge.js";
+export * from "./protocol-api-server.js";

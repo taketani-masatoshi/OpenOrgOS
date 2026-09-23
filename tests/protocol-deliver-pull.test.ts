@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTenantId, getDocsDir, getDataDir } from "../src/lib/utils.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/core/signing.js";
 import { pullDeliverFromPeerOutbox } from "../src/lib/protocol/transport/transport.js";

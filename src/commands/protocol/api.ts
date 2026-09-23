@@ -16,7 +16,7 @@ export interface ProtocolApiServeOptions {
 
 export async function runProtocolApiServe(opts: ProtocolApiServeOptions): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const { startProtocolApiServer } = await import("../../lib/protocol/transport/protocol-api-server.js");
+  const { startProtocolApiServer } = await import("../../lib/protocol/adapters/protocol-api-server.js");
   const { buildProtocolApiServerConfig } = await import("../../lib/protocol/transport/protocol-api-config.js");
   const config = buildProtocolApiServerConfig({
     host: opts.host,

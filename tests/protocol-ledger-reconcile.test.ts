@@ -5,7 +5,7 @@ import { setTenantId, getDataDir } from "../src/lib/utils.js";
 import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
-import { startProtocolApiServer } from "../src/lib/protocol/transport/protocol-api-server.js";
+import { startProtocolApiServer } from "../src/lib/protocol/adapters/protocol-api-server.js";
 import { buildProtocolApiServerConfig } from "../src/lib/protocol/transport/protocol-api-config.js";
 import {
   comparePeerLedgers,
