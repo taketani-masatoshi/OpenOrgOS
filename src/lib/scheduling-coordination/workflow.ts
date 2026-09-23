@@ -89,25 +89,18 @@ export function markSchedulingReminderDrafted(
  * Persists the pure state-machine result first, then performs the required
  * side effect. This ordering keeps retries observable and removes side effects
  * from next-action.ts.
- *
- * Persist compare includes exception_reason (same as persistSchedulingNextAction)
- * so venue/CEO gate flips are not dropped when next_action is unchanged.
- * Side effects (clarify draft / CEO question) run only after that save.
  */
 export function advanceSchedulingWorkflow(caseId: string, now = new Date()): SchedulingCase {
   const current = refreshSchedulingReminder(caseId, now);
   if (!current) throw new Error(`Scheduling case ${caseId} not found`);
   const next = applyNextAction(current);
-  const unchanged =
-    next.status === current.status &&
-    next.next_action === current.next_action &&
-    next.exception_reason === current.exception_reason;
-  const persisted = unchanged
-    ? current
-    : updateSchedulingCase(current.id, current.revision, () => ({
-        ...next,
-        updated_at: now.toISOString(),
-      }));
+  const persisted =
+    next.status === current.status && next.next_action === current.next_action
+      ? current
+      : updateSchedulingCase(current.id, current.revision, () => ({
+          ...next,
+          updated_at: new Date().toISOString(),
+        }));
 
   if (persisted.next_action === "send_clarify") {
     // The venue question goes out before any date is offered, so nothing else
