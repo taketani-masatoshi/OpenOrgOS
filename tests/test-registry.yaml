@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 610
-  static_test_cases: 2818
-  tiered_execution_total: 610
+  vitest_total: 611
+  static_test_cases: 2828
+  tiered_execution_total: 611
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -2313,6 +2313,10 @@ tests:
     kind: unit
     domain: P01_kernel
   scheduling-reminder-poller.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-safety-net.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
