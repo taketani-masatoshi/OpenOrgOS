@@ -108,10 +108,7 @@ const ALLOW_R2_DYNAMIC_IMPORTS = [].sort();
 
 const ALLOW_R3_REEXPORT_FACADES = [].sort();
 
-const ALLOW_R4_CORE_IO = [
-  "src/lib/scheduling-coordination/chat-parse.ts:../secretary/",
-  "src/lib/scheduling-coordination/slots.ts:./store",
-].sort();
+const ALLOW_R4_CORE_IO = [].sort();
 
 const ALLOW_R5_MISSING_REGISTER = [].sort();
 

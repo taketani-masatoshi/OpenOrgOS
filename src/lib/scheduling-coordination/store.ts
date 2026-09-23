@@ -5,7 +5,6 @@ import {
   type SchedulingCase,
   type SchedulingCasesFile,
   type SchedulingParticipant,
-  type SchedulingProposedSlot,
 } from "../../../schemas/executive/scheduling-cases.js";
 import { loadRegistryFile, writeYamlFile } from "../utils.js";
 import { getSchedulingCasesPath } from "./paths.js";
@@ -129,14 +128,8 @@ export function nextParticipantId(participants: SchedulingParticipant[]): string
   return `PART-${String(max + 1).padStart(3, "0")}`;
 }
 
-export function nextSlotId(slots: SchedulingProposedSlot[]): string {
-  let max = 0;
-  for (const s of slots) {
-    const m = s.id.match(/^SLOT-(\d{3})$/);
-    if (m) max = Math.max(max, parseInt(m[1]!, 10));
-  }
-  return `SLOT-${String(max + 1).padStart(3, "0")}`;
-}
+/** @deprecated Prefer importing from `./slots.js` — re-export for existing callers. */
+export { nextSlotId } from "./slots.js";
 
 export function ensureSchedulingCasesFile(): boolean {
   return existsSync(getSchedulingCasesPath());

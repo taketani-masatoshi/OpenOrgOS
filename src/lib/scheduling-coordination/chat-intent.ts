@@ -1,4 +1,5 @@
 import type { SchedulingCase, SchedulingParticipant } from "../../../schemas/executive/scheduling-cases.js";
+import { resolveContactRegistry } from "../secretary/contact-registry.js";
 import { resolveNextAction } from "./judgment-context.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import {
@@ -128,7 +129,7 @@ export function handleSchedulingChatMessage(threadId: string, message: string): 
           created_at: now,
           updated_at: now,
         };
-  const participants = extractSchedulingChatParticipants(message);
+  const participants = extractSchedulingChatParticipants(message, resolveContactRegistry);
   const draft = schedulingChatDraftSchema.parse({
     ...base,
     status: "collecting",

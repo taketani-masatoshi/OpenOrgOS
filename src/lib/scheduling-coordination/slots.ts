@@ -2,7 +2,6 @@ import type { CalendarEvent } from "../../../schemas/executive.js";
 import type { SchedulingProposedSlot } from "../../../schemas/executive/scheduling-cases.js";
 import { loadExecutiveCalendar } from "../data.js";
 import { currentDate } from "../utils.js";
-import { nextSlotId } from "./store.js";
 import {
   detectCalendarConflicts,
   filterEventsInRange,
@@ -24,6 +23,16 @@ export interface ProposeSlotsOptions {
   existingSlots?: SchedulingProposedSlot[];
   /** Default business_hours; meal / in_person celebration → evening */
   timePreference?: SlotTimePreference;
+}
+
+/** Pure id allocator — kept out of store so core slot logic stays free of I/O imports. */
+export function nextSlotId(slots: SchedulingProposedSlot[]): string {
+  let max = 0;
+  for (const s of slots) {
+    const m = s.id.match(/^SLOT-(\d{3})$/);
+    if (m) max = Math.max(max, parseInt(m[1]!, 10));
+  }
+  return `SLOT-${String(max + 1).padStart(3, "0")}`;
 }
 
 function formatSlotLabel(start: string, end: string): string {

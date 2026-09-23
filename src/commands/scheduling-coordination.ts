@@ -44,14 +44,6 @@ import {
 } from "./scheduling-coordination-render.js";
 
 export type { SchedulingParticipantInput } from "../lib/scheduling-coordination/case-mutations.js";
-import { SchedulingCaseNotFoundError } from "../lib/scheduling-coordination/errors.js";
-import {
-  formatSchedulingEmptyList,
-  formatSchedulingListLine,
-  formatSchedulingNewResult,
-  formatSchedulingProposeResult,
-  formatSchedulingRespondResult,
-} from "./scheduling-coordination-render.js";
 
 function requireSchedulingCase(id: string): SchedulingCase {
   const caseRow = findSchedulingCase(id);

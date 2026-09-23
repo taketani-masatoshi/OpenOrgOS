@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { resolveContactRegistry } from "../secretary/contact-registry.js";
+
+/** Injected contact lookup — shell supplies secretary registry; core stays I/O-free. */
+export type SchedulingChatContactLookup = (query: {
+  extId?: string;
+  stakeholderId?: string;
+}) => { matches: Array<{ email?: string; ref: string }> };
 
 const SCHEDULE_INTENT =
   /(?:日程|スケジュール).{0,8}(?:調整|合わせ)|(?:\d+)\s*名.{0,12}(?:日程|調整|会議|MTG|打合せ)|(?:会議|MTG|打合せ).{0,8}(?:調整|設定)/i;
@@ -91,7 +96,8 @@ function cleanParticipantName(raw: string): string {
 }
 
 export function extractSchedulingChatParticipants(
-  message: string
+  message: string,
+  resolveContact: SchedulingChatContactLookup = () => ({ matches: [] })
 ): Array<z.output<typeof schedulingChatParticipantSchema>> {
   const found: Array<z.output<typeof schedulingChatParticipantSchema>> = [];
   const segments = message.split(/[\n,、;；]+/u);
@@ -108,8 +114,8 @@ export function extractSchedulingChatParticipants(
     let resolvedRef = contactRef;
     if (contactRef) {
       const lookup = contactRef.startsWith("EXT-")
-        ? resolveContactRegistry({ extId: contactRef })
-        : resolveContactRegistry({ stakeholderId: contactRef });
+        ? resolveContact({ extId: contactRef })
+        : resolveContact({ stakeholderId: contactRef });
       if (lookup.matches.length === 1) {
         resolvedEmail ??= lookup.matches[0]!.email;
         resolvedRef = lookup.matches[0]!.ref;
