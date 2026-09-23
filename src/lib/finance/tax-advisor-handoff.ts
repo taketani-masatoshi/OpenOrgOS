@@ -11,12 +11,12 @@ import { getCliOperatorContext } from "../console-auth/cli-operator.js";
 import { DEFAULT_CORRESPONDENCE_AGENT_ID } from "../correspondence/cli-labels.js";
 import {
   fiscalYearEndDate,
+  fiscalYearNumber,
   fiscalYearStartDate,
   lastDayOfMonth,
   resolveCompanyFiscalYearEndMonth,
   resolveDefaultFiscalYear,
 } from "./fiscal-year.js";
-import { fiscalYearNumber } from "../pdf.js";
 import { unpostedMonthlyPlIssues } from "./ledger/unposted-months.js";
 import { buildTaxCalendarPortfolio } from "./tax-calendar-portfolio.js";
 import { remittanceObligationFromCashflowCategory } from "./remittance-from-calendar.js";

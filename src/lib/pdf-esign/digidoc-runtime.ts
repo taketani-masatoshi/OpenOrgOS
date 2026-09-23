@@ -6,7 +6,7 @@ import {
   sivaModeSchema,
 } from "../../../schemas/pdf-esign.js";
 import { readYamlFile } from "../utils.js";
-import { hydrateEsignEnvFromStore } from "./esign-secrets-store.js";
+import { hydrateEsignEnvFromStore, parseEnvFlag } from "./esign-secrets-store.js";
 import { loadNationalEidConfig } from "./national-eid.js";
 import {
   getDigidocRuntimeConfigPath,
@@ -30,6 +30,8 @@ export type ResolvedDigidocRuntime = {
   sidecar_token?: string;
 };
 
+export type EsignEndpointKind = "siva" | "sidecar";
+
 function loadDigidocYaml(): DigidocRuntimeConfig {
   const path = getDigidocRuntimeConfigPath();
   if (existsSync(path)) {
@@ -42,8 +44,9 @@ function loadDigidocYaml(): DigidocRuntimeConfig {
   return digidocRuntimeConfigSchema.parse({ version: 1 });
 }
 
-function mergeRuntime(): DigidocRuntimeConfig {
-  return loadDigidocYaml();
+function normalizeBaseUrl(raw: string | undefined): string | undefined {
+  const trimmed = raw?.trim();
+  return trimmed ? trimmed.replace(/\/$/, "") : undefined;
 }
 
 /**
@@ -59,41 +62,31 @@ export function resolveSivaMode(override?: SivaMode): SivaMode {
   return "live";
 }
 
-function resolveSivaBaseUrlIgnoringMode(): string | undefined {
-  const fromEnv = process.env.ORGOS_SIVA_BASE_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  const digi = mergeRuntime();
-  if (digi.siva_base_url?.trim()) return digi.siva_base_url.trim().replace(/\/$/, "");
-  const national = loadNationalEidConfig();
-  if (national.siva_base_url?.trim()) {
-    return national.siva_base_url.trim().replace(/\/$/, "");
-  }
-  return undefined;
+function resolveSivaBaseUrl(cfg: DigidocRuntimeConfig): string | undefined {
+  return (
+    normalizeBaseUrl(process.env.ORGOS_SIVA_BASE_URL) ??
+    normalizeBaseUrl(cfg.siva_base_url) ??
+    normalizeBaseUrl(loadNationalEidConfig().siva_base_url)
+  );
 }
 
-export function resolveSivaBaseUrl(): string | undefined {
-  return resolveSivaBaseUrlIgnoringMode();
+export function resolveDigidocSidecarUrl(
+  cfg: DigidocRuntimeConfig = loadDigidocYaml(),
+): string | undefined {
+  return (
+    normalizeBaseUrl(process.env.ORGOS_DIGIDOC_SIDECAR_URL) ??
+    normalizeBaseUrl(cfg.digidoc_sidecar_url) ??
+    normalizeBaseUrl(loadNationalEidConfig().digidoc_sidecar_url)
+  );
 }
 
-export function resolveDigidocSidecarUrl(): string | undefined {
-  const fromEnv = process.env.ORGOS_DIGIDOC_SIDECAR_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  const digi = mergeRuntime();
-  if (digi.digidoc_sidecar_url?.trim()) {
-    return digi.digidoc_sidecar_url.trim().replace(/\/$/, "");
-  }
-  const national = loadNationalEidConfig();
-  if (national.digidoc_sidecar_url?.trim()) {
-    return national.digidoc_sidecar_url.trim().replace(/\/$/, "");
-  }
-  return undefined;
-}
-
-export function resolveAllowHttpLoopback(): boolean {
-  const env = process.env.ORGOS_DIGIDOC_ALLOW_HTTP_LOOPBACK?.trim().toLowerCase();
-  if (env === "1" || env === "true" || env === "yes") return true;
-  if (env === "0" || env === "false" || env === "no") return false;
-  return Boolean(mergeRuntime().allow_http_loopback);
+export function resolveAllowHttpLoopback(
+  cfg: DigidocRuntimeConfig = loadDigidocYaml(),
+): boolean {
+  return (
+    parseEnvFlag(process.env.ORGOS_DIGIDOC_ALLOW_HTTP_LOOPBACK) ??
+    Boolean(cfg.allow_http_loopback)
+  );
 }
 
 export function resolveDigidocSidecarToken(): string | undefined {
@@ -110,12 +103,12 @@ export function resolveDigidocRuntime(opts?: {
   sivaMode?: SivaMode;
 }): ResolvedDigidocRuntime {
   hydrateEsignEnvFromStore();
-  const cfg = mergeRuntime();
+  const cfg = loadDigidocYaml();
   return {
-    siva_base_url: resolveSivaBaseUrl(),
-    digidoc_sidecar_url: resolveDigidocSidecarUrl(),
+    siva_base_url: resolveSivaBaseUrl(cfg),
+    digidoc_sidecar_url: resolveDigidocSidecarUrl(cfg),
     siva_mode: resolveSivaMode(opts?.sivaMode),
-    allow_http_loopback: resolveAllowHttpLoopback(),
+    allow_http_loopback: resolveAllowHttpLoopback(cfg),
     siva_timeout_ms: cfg.siva_timeout_ms,
     sidecar_timeout_ms: cfg.sidecar_timeout_ms,
     max_pdf_bytes: cfg.max_pdf_bytes,
@@ -128,13 +121,18 @@ export type EndpointPolicyResult =
   | { ok: true; url: string }
   | { ok: false; reason: string };
 
+const MISSING_ENDPOINT_REASON: Record<EsignEndpointKind, string> = {
+  siva: "siva_base_url_missing",
+  sidecar: "digidoc_sidecar_url_missing",
+};
+
 /**
  * Production endpoints must be HTTPS.
  * http://127.0.0.1 and http://localhost allowed only when allow_http_loopback.
  */
 export function assertTrustedEndpoint(
   rawUrl: string,
-  opts: { allowHttpLoopback: boolean; kind: "siva" | "sidecar" }
+  opts: { allowHttpLoopback: boolean; kind: EsignEndpointKind }
 ): EndpointPolicyResult {
   let parsed: URL;
   try {
@@ -160,4 +158,14 @@ export function assertTrustedEndpoint(
     };
   }
   return { ok: false, reason: `${opts.kind}_url_scheme_unsupported` };
+}
+
+/** Missing base URL is reported per kind; present URLs go through {@link assertTrustedEndpoint}. */
+export function resolveTrustedEndpoint(
+  rawUrl: string | undefined,
+  opts: { allowHttpLoopback: boolean; kind: EsignEndpointKind },
+): EndpointPolicyResult {
+  const base = rawUrl?.replace(/\/$/, "");
+  if (!base) return { ok: false, reason: MISSING_ENDPOINT_REASON[opts.kind] };
+  return assertTrustedEndpoint(base, opts);
 }

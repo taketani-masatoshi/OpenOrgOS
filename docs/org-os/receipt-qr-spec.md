@@ -90,4 +90,4 @@ orgos receipt verify '<link-or-file>'
 
 - [ADR 0032](../adr/0032-amount-free-receipt-wire-claim.md)
 - [expense-claim-spec.md](expense-claim-spec.md)
-- `schemas/receipt-qr.ts` · `src/lib/receipt-qr.ts` · `src/lib/receipt-pdf.ts`
+- `schemas/receipt-qr.ts` · `src/lib/receipt-qr.ts`（公開入口）· `src/lib/receipt-qr/`（発行・台帳・請求・リンク符号化）· `src/lib/receipt-pdf.ts`

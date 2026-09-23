@@ -35,6 +35,12 @@ export function findPdfEsignCase(id: string): PdfEsignCase | undefined {
   return loadPdfEsignCases().cases.find((c) => c.id === id);
 }
 
+export function requirePdfEsignCase(id: string): PdfEsignCase {
+  const record = findPdfEsignCase(id);
+  if (!record) throw new Error(`esign case not found: ${id}`);
+  return record;
+}
+
 /** `ES-YYYY-NNN` — sequence is per calendar year. */
 export function nextPdfEsignCaseId(now = new Date()): string {
   const year = now.getUTCFullYear();

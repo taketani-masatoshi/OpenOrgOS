@@ -7,7 +7,7 @@ import {
 import { analyzeProperty } from "../src/lib/analyze.js";
 import { scanContractAlerts } from "../src/lib/alerts.js";
 import { runScenario } from "../src/lib/scenario.js";
-import { fiscalYearNumber } from "../src/lib/pdf.js";
+import { fiscalYearNumber } from "../src/lib/finance/fiscal-year.js";
 import { buildKessanPlRows } from "../src/lib/kessan-pdf.js";
 import { loadYojitsuFyPlan } from "../src/lib/data.js";
 import type { PropertyRevenuePlan, Property, MonthlyFinance, FixedCosts, Loans, Contract } from "../schemas/index.js";

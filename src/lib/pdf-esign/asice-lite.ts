@@ -14,6 +14,19 @@ const DEFAULT_MAX_UNCOMPRESSED_MEMBER = 50 * 1024 * 1024;
 const DEFAULT_MAX_ENTRIES = 256;
 const ASICE_MIMETYPE = "application/vnd.etsi.asic-e+zip";
 
+const ZIP_LOCAL_HEADER_SIGNATURE = 0x04034b50;
+const ZIP_CENTRAL_HEADER_SIGNATURE = 0x02014b50;
+const ZIP_EOCD_SIGNATURE = 0x06054b50;
+const ZIP_LOCAL_HEADER_BYTES = 30;
+const ZIP_CENTRAL_HEADER_BYTES = 46;
+const ZIP_EOCD_BYTES = 22;
+/** EOCD sits within the last 64 KiB comment window plus its own fixed header. */
+const ZIP_EOCD_SCAN_WINDOW = 66 * 1024;
+const ZIP_FLAG_DATA_DESCRIPTOR = 0x8;
+const ZIP_METHOD_STORE = 0;
+const ZIP_METHOD_DEFLATE = 8;
+const MAX_ENTRY_NAME_LENGTH = 512;
+
 export type AsiceLiteResult = {
   ok: boolean;
   reason?: string;
@@ -27,14 +40,6 @@ export type AsiceLiteResult = {
   had_deflated_pdf?: boolean;
 };
 
-function isUnsafeName(name: string): boolean {
-  if (!name || name.length > 512) return true;
-  if (name.includes("\0")) return true;
-  if (name.startsWith("/") || name.startsWith("\\")) return true;
-  if (name.includes("..")) return true;
-  return false;
-}
-
 type ZipEntry = {
   name: string;
   method: number;
@@ -45,18 +50,44 @@ type ZipEntry = {
   payload: Buffer;
 };
 
+type ZipLimits = { maxEntries: number; maxUncompressed: number };
+
+type ZipParseResult =
+  | { ok: true; entries: ZipEntry[] }
+  | { ok: false; reason: string; entries: ZipEntry[] };
+
+function isUnsafeName(name: string): boolean {
+  if (!name || name.length > MAX_ENTRY_NAME_LENGTH) return true;
+  if (name.includes("\0")) return true;
+  if (name.startsWith("/") || name.startsWith("\\")) return true;
+  if (name.includes("..")) return true;
+  return false;
+}
+
+/** Size cap → compression method → name safety; shared by local and central headers. */
+function entryHeaderRejection(
+  entry: { method: number; compSize: number; uncompSize: number; name: string },
+  limits: ZipLimits,
+): string | null {
+  if (entry.uncompSize > limits.maxUncompressed || entry.compSize > limits.maxUncompressed) {
+    return "zip_member_too_large";
+  }
+  if (entry.method !== ZIP_METHOD_STORE && entry.method !== ZIP_METHOD_DEFLATE) {
+    return `unsupported_zip_method_${entry.method}`;
+  }
+  if (isUnsafeName(entry.name)) return "unsafe_zip_entry_name";
+  return null;
+}
+
 /**
  * Parse local file headers only, with size caps. Rejects path traversal and compressed bombs.
  */
-function parseLocalFileHeaders(
-  buf: Buffer,
-  opts: { maxEntries: number; maxUncompressed: number }
-): { ok: true; entries: ZipEntry[] } | { ok: false; reason: string; entries: ZipEntry[] } {
+function parseLocalFileHeaders(buf: Buffer, limits: ZipLimits): ZipParseResult {
   const out: ZipEntry[] = [];
   let offset = 0;
-  while (offset + 30 <= buf.length) {
-    if (buf.readUInt32LE(offset) !== 0x04034b50) break;
-    if (out.length >= opts.maxEntries) {
+  while (offset + ZIP_LOCAL_HEADER_BYTES <= buf.length) {
+    if (buf.readUInt32LE(offset) !== ZIP_LOCAL_HEADER_SIGNATURE) break;
+    if (out.length >= limits.maxEntries) {
       return { ok: false, reason: "too_many_zip_entries", entries: out };
     }
     const flags = buf.readUInt16LE(offset + 6);
@@ -69,23 +100,16 @@ function parseLocalFileHeaders(
       return { ok: false, reason: "empty_zip_entry_name", entries: out };
     }
     // Data descriptor (bit 3): sizes absent in local header — reject for deterministic lite parse
-    if ((flags & 0x8) !== 0 && (compSize === 0 || uncompSize === 0)) {
+    if ((flags & ZIP_FLAG_DATA_DESCRIPTOR) !== 0 && (compSize === 0 || uncompSize === 0)) {
       return { ok: false, reason: "zip_data_descriptor_unsupported", entries: out };
     }
-    if (offset + 30 + nameLen + extraLen + compSize > buf.length) {
+    if (offset + ZIP_LOCAL_HEADER_BYTES + nameLen + extraLen + compSize > buf.length) {
       return { ok: false, reason: "zip_truncated", entries: out };
     }
-    if (uncompSize > opts.maxUncompressed || compSize > opts.maxUncompressed) {
-      return { ok: false, reason: "zip_member_too_large", entries: out };
-    }
-    if (method !== 0 && method !== 8) {
-      return { ok: false, reason: `unsupported_zip_method_${method}`, entries: out };
-    }
-    const nameStart = offset + 30;
+    const nameStart = offset + ZIP_LOCAL_HEADER_BYTES;
     const name = buf.subarray(nameStart, nameStart + nameLen).toString("utf-8");
-    if (isUnsafeName(name)) {
-      return { ok: false, reason: "unsafe_zip_entry_name", entries: out };
-    }
+    const rejection = entryHeaderRejection({ method, compSize, uncompSize, name }, limits);
+    if (rejection) return { ok: false, reason: rejection, entries: out };
     const dataStart = nameStart + nameLen + extraLen;
     const payload = Buffer.from(buf.subarray(dataStart, dataStart + compSize));
     out.push({ name, method, flags, compSize, uncompSize, payload });
@@ -94,33 +118,34 @@ function parseLocalFileHeaders(
   return { ok: true, entries: out };
 }
 
+function findEndOfCentralDirectory(buf: Buffer): number {
+  const scanFrom = Math.max(0, buf.length - ZIP_EOCD_SCAN_WINDOW);
+  for (let i = buf.length - ZIP_EOCD_BYTES; i >= scanFrom; i -= 1) {
+    if (buf.readUInt32LE(i) === ZIP_EOCD_SIGNATURE) return i;
+  }
+  return -1;
+}
+
 /**
  * Parse the central directory, which carries authoritative sizes even when the
  * writer streams entries with data descriptors (digidoc4j does).
  */
-function parseCentralDirectory(
-  buf: Buffer,
-  opts: { maxEntries: number; maxUncompressed: number }
-): { ok: true; entries: ZipEntry[] } | { ok: false; reason: string; entries: ZipEntry[] } {
+function parseCentralDirectory(buf: Buffer, limits: ZipLimits): ZipParseResult {
   const out: ZipEntry[] = [];
-  const scanFrom = Math.max(0, buf.length - 66 * 1024);
-  let eocd = -1;
-  for (let i = buf.length - 22; i >= scanFrom; i -= 1) {
-    if (buf.readUInt32LE(i) === 0x06054b50) {
-      eocd = i;
-      break;
-    }
-  }
+  const eocd = findEndOfCentralDirectory(buf);
   if (eocd < 0) return { ok: false, reason: "zip_eocd_not_found", entries: out };
 
   const count = buf.readUInt16LE(eocd + 10);
   let offset = buf.readUInt32LE(eocd + 16);
-  if (count > opts.maxEntries) {
+  if (count > limits.maxEntries) {
     return { ok: false, reason: "too_many_zip_entries", entries: out };
   }
 
   for (let i = 0; i < count; i += 1) {
-    if (offset + 46 > buf.length || buf.readUInt32LE(offset) !== 0x02014b50) {
+    if (
+      offset + ZIP_CENTRAL_HEADER_BYTES > buf.length ||
+      buf.readUInt32LE(offset) !== ZIP_CENTRAL_HEADER_SIGNATURE
+    ) {
       return { ok: false, reason: "zip_central_directory_corrupt", entries: out };
     }
     const flags = buf.readUInt16LE(offset + 8);
@@ -134,22 +159,19 @@ function parseCentralDirectory(
     if (nameLen === 0) {
       return { ok: false, reason: "empty_zip_entry_name", entries: out };
     }
-    if (uncompSize > opts.maxUncompressed || compSize > opts.maxUncompressed) {
-      return { ok: false, reason: "zip_member_too_large", entries: out };
-    }
-    if (method !== 0 && method !== 8) {
-      return { ok: false, reason: `unsupported_zip_method_${method}`, entries: out };
-    }
-    const name = buf.subarray(offset + 46, offset + 46 + nameLen).toString("utf-8");
-    if (isUnsafeName(name)) {
-      return { ok: false, reason: "unsafe_zip_entry_name", entries: out };
-    }
-    if (localOffset + 30 > buf.length || buf.readUInt32LE(localOffset) !== 0x04034b50) {
+    const nameStart = offset + ZIP_CENTRAL_HEADER_BYTES;
+    const name = buf.subarray(nameStart, nameStart + nameLen).toString("utf-8");
+    const rejection = entryHeaderRejection({ method, compSize, uncompSize, name }, limits);
+    if (rejection) return { ok: false, reason: rejection, entries: out };
+    if (
+      localOffset + ZIP_LOCAL_HEADER_BYTES > buf.length ||
+      buf.readUInt32LE(localOffset) !== ZIP_LOCAL_HEADER_SIGNATURE
+    ) {
       return { ok: false, reason: "zip_local_header_missing", entries: out };
     }
     const localNameLen = buf.readUInt16LE(localOffset + 26);
     const localExtraLen = buf.readUInt16LE(localOffset + 28);
-    const dataStart = localOffset + 30 + localNameLen + localExtraLen;
+    const dataStart = localOffset + ZIP_LOCAL_HEADER_BYTES + localNameLen + localExtraLen;
     if (dataStart + compSize > buf.length) {
       return { ok: false, reason: "zip_truncated", entries: out };
     }
@@ -161,7 +183,7 @@ function parseCentralDirectory(
       uncompSize,
       payload: Buffer.from(buf.subarray(dataStart, dataStart + compSize)),
     });
-    offset += 46 + nameLen + extraLen + commentLen;
+    offset += ZIP_CENTRAL_HEADER_BYTES + nameLen + extraLen + commentLen;
   }
   return { ok: true, entries: out };
 }
@@ -170,7 +192,7 @@ function inflateMember(
   e: ZipEntry,
   maxUncompressed: number
 ): { ok: true; data: Buffer } | { ok: false; reason: string } {
-  if (e.method === 0) {
+  if (e.method === ZIP_METHOD_STORE) {
     return { ok: true, data: e.payload };
   }
   try {
@@ -194,6 +216,67 @@ function inflateMember(
   }
 }
 
+function rejectedContainer(
+  reason: string,
+  facts: {
+    container_digest: string;
+    byte_length: number;
+    entry_names?: string[];
+    pdf_member_digests?: string[];
+    had_deflated_pdf?: boolean;
+  },
+): AsiceLiteResult {
+  return {
+    ok: false,
+    reason,
+    container_digest: facts.container_digest,
+    byte_length: facts.byte_length,
+    entry_names: facts.entry_names ?? [],
+    pdf_member_digests: facts.pdf_member_digests ?? [],
+    ...(facts.had_deflated_pdf === undefined
+      ? {}
+      : { had_deflated_pdf: facts.had_deflated_pdf }),
+  };
+}
+
+function asiceMimetypeRejection(entries: ZipEntry[]): string | null {
+  const mimeEntry = entries.find((e) => e.name === "mimetype");
+  if (!mimeEntry || mimeEntry.method !== ZIP_METHOD_STORE) {
+    return "missing_or_compressed_mimetype";
+  }
+  const mime = mimeEntry.payload.toString("utf-8").trim();
+  return mime === ASICE_MIMETYPE ? null : "invalid_asice_mimetype";
+}
+
+type PdfMemberDigests =
+  | { ok: true; digests: string[]; had_deflated_pdf: boolean }
+  | { ok: false; reason: string; digests: string[]; had_deflated_pdf: boolean };
+
+function digestPdfMembers(entries: ZipEntry[], maxUncompressed: number): PdfMemberDigests {
+  const digests: string[] = [];
+  let had_deflated_pdf = false;
+  for (const e of entries) {
+    if (!/\.pdf$/i.test(e.name)) continue;
+    if (e.method === ZIP_METHOD_DEFLATE) had_deflated_pdf = true;
+    const inflated = inflateMember(e, maxUncompressed);
+    if (!inflated.ok) {
+      return { ok: false, reason: inflated.reason, digests, had_deflated_pdf };
+    }
+    if (inflated.data.length > 0) {
+      digests.push(digestBytes(inflated.data).content_digest);
+    }
+  }
+  return { ok: true, digests, had_deflated_pdf };
+}
+
+function hasSignatureMeta(entryNames: string[]): boolean {
+  return entryNames.some(
+    (n) =>
+      /^META-INF\/.*signatures.*\.xml$/i.test(n) ||
+      /^META-INF\/signature.*\.xml$/i.test(n)
+  );
+}
+
 export function inspectAsiceContainer(
   path: string,
   opts?: {
@@ -205,29 +288,14 @@ export function inspectAsiceContainer(
 ): AsiceLiteResult {
   const maxBytes = opts?.maxAsiceBytes ?? DEFAULT_MAX_ASICE_BYTES;
   const maxUncompressed = opts?.maxUncompressedMember ?? DEFAULT_MAX_UNCOMPRESSED_MEMBER;
-  const st = statSync(path);
-  const byte_length = st.size;
+  const byte_length = statSync(path).size;
   if (byte_length > maxBytes) {
-    return {
-      ok: false,
-      reason: "asice_too_large",
-      container_digest: "",
-      byte_length,
-      entry_names: [],
-      pdf_member_digests: [],
-    };
+    return rejectedContainer("asice_too_large", { container_digest: "", byte_length });
   }
   const buf = readFileSync(path);
   const container_digest = createHash("sha256").update(buf).digest("hex");
-  if (buf.length < 4 || buf.readUInt32LE(0) !== 0x04034b50) {
-    return {
-      ok: false,
-      reason: "not_zip_local_header",
-      container_digest,
-      byte_length,
-      entry_names: [],
-      pdf_member_digests: [],
-    };
+  if (buf.length < 4 || buf.readUInt32LE(0) !== ZIP_LOCAL_HEADER_SIGNATURE) {
+    return rejectedContainer("not_zip_local_header", { container_digest, byte_length });
   }
   const limits = {
     maxEntries: opts?.maxEntries ?? DEFAULT_MAX_ENTRIES,
@@ -237,99 +305,42 @@ export function inspectAsiceContainer(
   const central = parseCentralDirectory(buf, limits);
   const parsed = central.ok ? central : parseLocalFileHeaders(buf, limits);
   if (!parsed.ok) {
-    return {
-      ok: false,
-      reason: parsed.reason,
+    return rejectedContainer(parsed.reason, {
       container_digest,
       byte_length,
       entry_names: parsed.entries.map((e) => e.name),
-      pdf_member_digests: [],
-    };
+    });
   }
   const entries = parsed.entries;
   const entry_names = entries.map((e) => e.name);
+  const facts = { container_digest, byte_length, entry_names };
   if (entry_names.length === 0) {
-    return {
-      ok: false,
-      reason: "no_zip_entries",
-      container_digest,
-      byte_length,
-      entry_names,
-      pdf_member_digests: [],
-    };
+    return rejectedContainer("no_zip_entries", facts);
   }
-  const hasMeta = entry_names.some((n) => n.startsWith("META-INF/"));
-  if (!hasMeta) {
-    return {
-      ok: false,
-      reason: "missing_meta_inf",
-      container_digest,
-      byte_length,
-      entry_names,
-      pdf_member_digests: [],
-    };
+  if (!entry_names.some((n) => n.startsWith("META-INF/"))) {
+    return rejectedContainer("missing_meta_inf", facts);
+  }
+  if (opts?.requireMimetype !== false) {
+    const mimeRejection = asiceMimetypeRejection(entries);
+    if (mimeRejection) return rejectedContainer(mimeRejection, facts);
   }
 
-  const requireMime = opts?.requireMimetype !== false;
-  if (requireMime) {
-    const mimeEntry = entries.find((e) => e.name === "mimetype");
-    if (!mimeEntry || mimeEntry.method !== 0) {
-      return {
-        ok: false,
-        reason: "missing_or_compressed_mimetype",
-        container_digest,
-        byte_length,
-        entry_names,
-        pdf_member_digests: [],
-      };
-    }
-    const mime = mimeEntry.payload.toString("utf-8").trim();
-    if (mime !== ASICE_MIMETYPE) {
-      return {
-        ok: false,
-        reason: "invalid_asice_mimetype",
-        container_digest,
-        byte_length,
-        entry_names,
-        pdf_member_digests: [],
-      };
-    }
+  const pdfMembers = digestPdfMembers(entries, maxUncompressed);
+  if (!pdfMembers.ok) {
+    return rejectedContainer(pdfMembers.reason, {
+      ...facts,
+      pdf_member_digests: pdfMembers.digests,
+      had_deflated_pdf: pdfMembers.had_deflated_pdf,
+    });
   }
-
-  const pdf_member_digests: string[] = [];
-  let had_deflated_pdf = false;
-  for (const e of entries) {
-    if (!/\.pdf$/i.test(e.name)) continue;
-    if (e.method === 8) had_deflated_pdf = true;
-    const inflated = inflateMember(e, maxUncompressed);
-    if (!inflated.ok) {
-      return {
-        ok: false,
-        reason: inflated.reason,
-        container_digest,
-        byte_length,
-        entry_names,
-        pdf_member_digests,
-        had_deflated_pdf,
-      };
-    }
-    if (inflated.data.length > 0) {
-      pdf_member_digests.push(digestBytes(inflated.data).content_digest);
-    }
-  }
-  const has_signature_meta = entry_names.some(
-    (n) =>
-      /^META-INF\/.*signatures.*\.xml$/i.test(n) ||
-      /^META-INF\/signature.*\.xml$/i.test(n)
-  );
   return {
     ok: true,
     container_digest,
     byte_length,
     entry_names,
-    pdf_member_digests,
-    has_signature_meta,
-    had_deflated_pdf,
+    pdf_member_digests: pdfMembers.digests,
+    has_signature_meta: hasSignatureMeta(entry_names),
+    had_deflated_pdf: pdfMembers.had_deflated_pdf,
   };
 }
 
