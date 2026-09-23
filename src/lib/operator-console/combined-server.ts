@@ -3,6 +3,7 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { createGzip } from "node:zlib";
+import { registerDomainAdapters } from "../bootstrap/domain-adapters.js";
 import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
 import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
@@ -163,6 +164,7 @@ async function readBody(req: IncomingMessage): Promise<string> {
 export async function startOperatorConsoleServer(
   opts: OperatorConsoleServerOptions = {}
 ): Promise<OperatorConsoleServerHandle> {
+  registerDomainAdapters();
   assertProdAuthReady("all");
   logDemoSecurityBanner();
   await preloadOidcJwks();

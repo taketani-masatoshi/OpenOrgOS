@@ -6,11 +6,7 @@ import {
   resolveCorrespondenceLocale,
   type CorrespondenceStyle,
 } from "./style-resolve.js";
-import {
-  schedulingCaseHasCostLine,
-  schedulingCaseLooksLikeMeal,
-} from "../scheduling-coordination/meal-cost.js";
-import { findSchedulingCase } from "../scheduling-coordination/store.js";
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
 
 export type StyleLintSeverity = "error" | "warning";
 
@@ -319,18 +315,13 @@ export function lintCorrespondenceDraft(
   let meetingFormat = opts?.meetingFormat;
   let isMeal: boolean | undefined;
   let hasCostLine: boolean | undefined;
-  const caseId = draft.notes?.match(/scheduling-case:(SCH-\d{4}-\d{3})/)?.[1];
-  if (caseId) {
-    try {
-      const sch = findSchedulingCase(caseId);
-      meetingFormat = meetingFormat ?? sch?.meeting_format;
-      if (sch) {
-        isMeal = schedulingCaseLooksLikeMeal(sch);
-        hasCostLine = schedulingCaseHasCostLine(sch);
-      }
-    } catch {
-      /* optional when not in tenant fixture */
-    }
+  try {
+    const ctx = requireCorrespondenceDomainAdapters().styleLintContext(draft);
+    meetingFormat = meetingFormat ?? ctx.meetingFormat;
+    isMeal = ctx.isMeal;
+    hasCostLine = ctx.hasCostLine;
+  } catch {
+    /* optional when adapters not registered in isolated unit fixtures */
   }
   if (isMeal && /費用\s*[:：]|お一人さま|税込|Cost\s*:/i.test(draft.body)) {
     hasCostLine = true;

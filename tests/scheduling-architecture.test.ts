@@ -102,21 +102,9 @@ function isReexportOnlyModule(source: string): boolean {
 }
 
 /** Current known violations — shrink toward empty. Sorted for stable diffs. */
-const ALLOW_R1_CORRESPONDENCE_TO_SCHEDULING = [
-  "src/lib/correspondence/case-status.ts",
-  "src/lib/correspondence/ceo-inline-question.ts",
-  "src/lib/correspondence/draft.ts",
-  "src/lib/correspondence/mail-handoff.ts",
-  "src/lib/correspondence/mail-receive-poller.ts",
-  "src/lib/correspondence/send-gate.ts",
-  "src/lib/correspondence/style-lint.ts",
-].sort();
+const ALLOW_R1_CORRESPONDENCE_TO_SCHEDULING = [].sort();
 
-const ALLOW_R2_DYNAMIC_IMPORTS = [
-  "src/lib/correspondence/ceo-inline-question.ts",
-  "src/lib/correspondence/send-gate.ts",
-  "src/lib/scheduling-coordination/delegated-send.ts",
-].sort();
+const ALLOW_R2_DYNAMIC_IMPORTS = [].sort();
 
 const ALLOW_R3_REEXPORT_FACADES = [].sort();
 
@@ -126,13 +114,7 @@ const ALLOW_R4_CORE_IO = [
   "src/lib/scheduling-coordination/slots.ts:./store",
 ].sort();
 
-const ALLOW_R5_MISSING_REGISTER = [
-  "src/cli.ts",
-  "src/lib/operator-console/combined-server.ts",
-  "src/lib/steward-chat/server.ts",
-  "src/lib/wire-console/server.ts",
-  "tests/setup-tenant.ts",
-].sort();
+const ALLOW_R5_MISSING_REGISTER = [].sort();
 
 function expectExactAllowlist(actual: string[], allowed: string[], label: string): void {
   const a = [...new Set(actual)].sort();

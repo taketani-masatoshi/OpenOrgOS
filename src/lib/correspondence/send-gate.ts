@@ -13,6 +13,7 @@ import { repairMissingApprovalForDraft } from "./approval-registry-repair.js";
 import { assertHumanCorrespondenceApproval, isHumanApproverOperatorId } from "./human-approval.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
 import { currentDate } from "../utils.js";
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
 
 export class CorrespondenceApprovalGateError extends Error {
   constructor(message: string) {
@@ -92,6 +93,8 @@ export async function sendApprovedCorrespondence(opts: {
   operatorId: string;
   dryRun?: boolean;
 }): Promise<SendApprovedCorrespondenceResult> {
+  // Fail closed before any SMTP / side effects if bootstrap forgot adapters.
+  const adapters = requireCorrespondenceDomainAdapters();
   let draft = syncDraftApprovedFromRegistry(opts.draftId);
   assertCorrespondenceApproved(draft);
 
@@ -137,14 +140,11 @@ export async function sendApprovedCorrespondence(opts: {
   }
 
   if (opts.dryRun) {
-    if (draft.notes?.includes("scheduling-case:")) {
+    if (adapters.notesMentionDomainCase(draft.notes)) {
       draft = markCorrespondenceDraftSent(draft.draft_id, {
         sentBy: opts.operatorId,
       });
-      const { handleSchedulingCorrespondenceSent } = await import(
-        "../scheduling-coordination/correspondence-sent.js"
-      );
-      handleSchedulingCorrespondenceSent(draft);
+      adapters.onDraftSent(draft, { dryRun: true });
     }
     return { draft, sendResult };
   }
@@ -178,11 +178,8 @@ export async function sendApprovedCorrespondence(opts: {
     sentBy: opts.operatorId,
     companyEventId: event.id,
   });
-  if (draft.notes?.includes("scheduling-case:")) {
-    const { handleSchedulingCorrespondenceSent } = await import(
-      "../scheduling-coordination/correspondence-sent.js"
-    );
-    handleSchedulingCorrespondenceSent(draft);
+  if (adapters.notesMentionDomainCase(draft.notes)) {
+    adapters.onDraftSent(draft, { dryRun: false });
   }
 
   const { handleCorrespondenceCaseSent } = await import("./case-status.js");

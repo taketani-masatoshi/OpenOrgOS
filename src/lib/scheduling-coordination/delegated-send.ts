@@ -1,5 +1,7 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
+import { humanApproveOrgApproval } from "../org/approval/index.js";
 import { loadCorrespondenceDraft } from "../correspondence/draft.js";
+import { sendApprovedCorrespondence } from "../correspondence/send-gate.js";
 import {
   assertDelegatableProposalSend,
   getDelegatableProposalSendAuthority,
@@ -19,9 +21,6 @@ export async function sendSchedulingConfirmationsAuthorizedByCeo(
     (record) => record.kind === "confirm" && !record.sent_at
   );
   if (!pendingConfirmRecords.length) return persistSchedulingNextAction(current);
-
-  const { humanApproveOrgApproval } = await import("../org/approval/index.js");
-  const { sendApprovedCorrespondence } = await import("../correspondence/send-gate.js");
 
   const approvalIds = new Set<string>();
   for (const record of pendingConfirmRecords) {
@@ -71,9 +70,6 @@ export async function sendSchedulingProposalsUnderStoredAuthority(
       record.proposal_revision > authority.covers_up_to_revision
   );
   if (!pendingProposalRecords.length) return current;
-
-  const { humanApproveOrgApproval } = await import("../org/approval/index.js");
-  const { sendApprovedCorrespondence } = await import("../correspondence/send-gate.js");
 
   const approvalIds = new Set<string>();
   for (const record of pendingProposalRecords) {

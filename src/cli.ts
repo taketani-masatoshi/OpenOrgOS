@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import "./bootstrap-tenant.js";
 import { refreshOrgOsPaths } from "./lib/orgos-paths.js";
+import { registerDomainAdapters } from "./lib/bootstrap/domain-adapters.js";
 
 refreshOrgOsPaths();
+registerDomainAdapters();
 import { Command } from "commander";
 import { registerPlatformCommands } from "./cli/registrars/platform.js";
 import { registerOrchestrationCommands } from "./cli/registrars/orchestration.js";

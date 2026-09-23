@@ -108,30 +108,16 @@ export function answerCeoInline(
   return updated;
 }
 
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
+
 /** CEO 回答後の副作用 — sender identification 等へ反映 */
 export async function applyCeoInlineAnswerSideEffects(
   question: CeoInlineQuestion
 ): Promise<void> {
   if (question.status !== "answered" || !question.answers) return;
 
-  if (
-    question.mail_id.startsWith("schedule-intake:") ||
-    question.mail_id.startsWith("schedule-intake-case:")
-  ) {
-    const { applyScheduleIntakeAnswer } = await import(
-      "../scheduling-coordination/process-mail.js"
-    );
-    await applyScheduleIntakeAnswer(question);
-    return;
-  }
-
-  if (question.scheduling_case_id || question.mail_id.startsWith("scheduling:")) {
-    const { applySchedulingCeoAnswer } = await import(
-      "../scheduling-coordination/ceo-confirm.js"
-    );
-    await applySchedulingCeoAnswer(question);
-    return;
-  }
+  const handled = await requireCorrespondenceDomainAdapters().onCeoAnswer(question);
+  if (handled) return;
 
   const idEntry = findSenderIdentification(question.mail_id);
   if (!idEntry || (idEntry.status !== "pending_ceo" && idEntry.status !== "pending_enrichment")) {

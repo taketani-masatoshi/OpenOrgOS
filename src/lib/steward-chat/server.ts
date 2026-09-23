@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { existsSync, createReadStream, statSync } from "node:fs";
 import { extname, join } from "node:path";
+import { registerDomainAdapters } from "../bootstrap/domain-adapters.js";
 import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
 import { hydrateStripeEnvFromStore } from "../product/stripe-secrets-store.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
@@ -64,6 +65,7 @@ async function readBody(req: IncomingMessage): Promise<string> {
 }
 
 function createStewardChatHttpServer(host: string, fallbackPort: number) {
+  registerDomainAdapters();
   return createServer((req, res) => {
     // A throw inside an async request handler is an unhandled rejection, which
     // takes the whole console down. One bad tenant file must not do that.
