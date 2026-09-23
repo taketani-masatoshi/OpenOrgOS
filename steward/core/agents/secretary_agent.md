@@ -182,8 +182,9 @@ npm run orgos -- mail outbound correspondence show --id DRAFT-...
 npm run orgos -- org approval approve --id APR-... --approver "CEO" --reviewed
 npm run orgos -- mail outbound correspondence send --id DRAFT-...
 
-# 後方互換
+# 後方互換エイリアス（同一実装）
 npm run orgos -- secretary correspondence draft ...
+npm run orgos -- secretary mail setup-guide
 ```
 
 ---

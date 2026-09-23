@@ -14,7 +14,8 @@ import {
 } from "../../http/read-json-limited.js";
 import { listCorrespondenceDrafts } from "../../correspondence/draft.js";
 import { sendApprovedCorrespondence } from "../../correspondence/send-gate.js";
-import { ensureSchedulingCorrespondenceHooks } from "../../scheduling-coordination/bind-correspondence-hooks.js";
+/** Side-effect: scheduling binders for correspondence send hooks. */
+import "../../scheduling-coordination/bind-correspondence-hooks.js";
 import { formatCorrespondenceDraftReview } from "../../correspondence/review.js";
 import {
   disconnectTenantGmail,
@@ -257,7 +258,6 @@ export async function handleCorrespondenceApi(
     try {
       const raw = await readJsonLimited(req);
       const body = sendBodySchema.parse(raw ?? {});
-      ensureSchedulingCorrespondenceHooks();
       const result = await sendApprovedCorrespondence({
         draftId,
         operatorId: user.operator_id,

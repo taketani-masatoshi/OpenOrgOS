@@ -56,7 +56,8 @@ import {
   answerCeoInline,
 } from "../../correspondence/ceo-inline-question.js";
 import { applyCeoInlineAnswerSideEffects } from "../../correspondence/ceo-inline-answer.js";
-import { ensureSchedulingCorrespondenceHooks } from "../../scheduling-coordination/bind-correspondence-hooks.js";
+/** Side-effect: scheduling binders for CEO answer / send hooks. */
+import "../../scheduling-coordination/bind-correspondence-hooks.js";
 import {
   flushWitnessPendingFromChat,
   registerWitnessFromChat,
@@ -1233,7 +1234,6 @@ export async function handleChatApi(
         parsed.fields,
         ctx.user.approver_id ?? ctx.user.operator_id
       );
-      ensureSchedulingCorrespondenceHooks();
       await applyCeoInlineAnswerSideEffects(answered);
       appendChatAudit({
         action: "ceo_answer",

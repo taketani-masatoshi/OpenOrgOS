@@ -8,7 +8,8 @@ import { assertCorrespondenceReviewAcknowledged } from "../correspondence/review
 import { humanApproveOrgApproval } from "../org/approval/approve.js";
 import { findOrgApproval } from "../org/approval/index.js";
 import { findSchedulingCase } from "./store.js";
-import { ensureSchedulingCorrespondenceHooks } from "./bind-correspondence-hooks.js";
+/** Side-effect: scheduling binders for send after approve. */
+import "./bind-correspondence-hooks.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 
 export interface ApproveSendSchedulingProposalsOptions {
@@ -29,7 +30,6 @@ function listPendingProposalDraftIds(caseRow: SchedulingCase): string[] {
 export async function approveAndSendSchedulingProposals(
   opts: ApproveSendSchedulingProposalsOptions
 ): Promise<string[]> {
-  ensureSchedulingCorrespondenceHooks();
   const caseRow = findSchedulingCase(opts.caseId);
   if (!caseRow) throw new Error(`Scheduling case ${opts.caseId} not found`);
 

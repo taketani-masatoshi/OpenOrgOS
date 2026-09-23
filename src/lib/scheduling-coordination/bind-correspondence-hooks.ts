@@ -1,21 +1,21 @@
 /**
  * Registers scheduling handlers on correspondence hooks.
- * Composition root (CLI · fixtures · commands) must call ensure once.
+ * Import this module once from composition roots (CLI · Chat · fixtures).
+ * Hooks auto-bind on getCorrespondenceHooks() — do not scatter ensure() calls.
  */
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
 import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triage.js";
 import {
   registerCorrespondenceHooks,
+  registerCorrespondenceHooksBinder,
+  setCorrespondenceHooksResetHook,
   type SchedulingCaseContext,
 } from "../correspondence/hooks.js";
 import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
 import { runScheduleCoordinationAutoProcess } from "./auto-process.js";
 import { applySchedulingCeoAnswer } from "./ceo-confirm.js";
-import {
-  schedulingCaseHasCostLine,
-  schedulingCaseLooksLikeMeal,
-} from "./draft-text.js";
+import { schedulingCaseHasCostLine, schedulingCaseLooksLikeMeal } from "./draft-text.js";
 import { handleSchedulingCorrespondenceSent } from "./lifecycle.js";
 import { nextActionLabel } from "./next-action.js";
 import { applyScheduleIntakeAnswer } from "./process-mail.js";
@@ -137,3 +137,6 @@ export function ensureSchedulingCorrespondenceHooks(): void {
 export function resetSchedulingCorrespondenceHooksBindingForTests(): void {
   bound = false;
 }
+
+registerCorrespondenceHooksBinder(ensureSchedulingCorrespondenceHooks);
+setCorrespondenceHooksResetHook(resetSchedulingCorrespondenceHooksBindingForTests);

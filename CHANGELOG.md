@@ -6,6 +6,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **Correspondence / Secretary 境界** — CLI 正本は `mail outbound`（`secretary correspondence` / `secretary mail` は互換エイリアス）。`lib/correspondence` は scheduling を静的 import せず hooks で接続。承認 subject 判定を葉モジュール化。
+
 ### Added
 
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)

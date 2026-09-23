@@ -8,7 +8,8 @@ import {
   requireCliSchedulingApproval,
 } from "../lib/console-auth/cli-operator.js";
 import { getCliOperatorContext } from "../lib/console-auth/cli-operator.js";
-import { ensureSchedulingCorrespondenceHooks } from "../lib/scheduling-coordination/bind-correspondence-hooks.js";
+/** Side-effect: scheduling binders for correspondence hooks. */
+import "../lib/scheduling-coordination/bind-correspondence-hooks.js";
 import { confirmSchedulingCaseFromCeo } from "../lib/scheduling-coordination/ceo-confirm.js";
 import { applyNextAction, nextActionLabel } from "../lib/scheduling-coordination/next-action.js";
 import { proposeExecutiveSlots } from "../lib/scheduling-coordination/slots.js";
@@ -46,7 +47,6 @@ import {
   recordSchedulingLifecycleEvent,
 } from "../lib/scheduling-coordination/lifecycle.js";
 
-ensureSchedulingCorrespondenceHooks();
 
 export interface SchedulingParticipantInput {
   name: string;

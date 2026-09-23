@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · mail_outbound
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-28 · **Tenant:** mal
+> **Generated:** 2026-09-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent mail_outbound`
 
 ---
@@ -264,7 +264,7 @@ orgos mail outbound mail setup-guide
 orgos integrations asana status|link|push|pull
 ```
 
-後方互換: `orgos secretary correspondence *` は同一実装のエイリアス。
+後方互換: `orgos secretary correspondence *` / `orgos secretary mail *` は同一実装のエイリアス。
 
 **Path:** `steward/core/agents/mail_outbound_agent.md`
 

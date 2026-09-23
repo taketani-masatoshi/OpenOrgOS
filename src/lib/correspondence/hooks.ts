@@ -1,6 +1,7 @@
 /**
  * Extension points for optional consumers (scheduling-coordination, etc.).
- * Correspondence must not import those consumers; they register here instead.
+ * Correspondence must not import those consumers; they register binders instead.
+ * Composition roots import the binder module once; getCorrespondenceHooks() runs binders.
  */
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
@@ -35,17 +36,33 @@ export interface CorrespondenceHooks {
   }) => Promise<void>;
 }
 
+type HooksBinder = () => void;
+
 let hooks: CorrespondenceHooks = {};
+const binders: HooksBinder[] = [];
+let onResetForTests: (() => void) | undefined;
+
+/** Called by consumer packages (e.g. scheduling) at module load. */
+export function registerCorrespondenceHooksBinder(binder: HooksBinder): void {
+  if (!binders.includes(binder)) binders.push(binder);
+}
 
 export function registerCorrespondenceHooks(partial: CorrespondenceHooks): void {
   hooks = { ...hooks, ...partial };
 }
 
 export function getCorrespondenceHooks(): CorrespondenceHooks {
+  for (const binder of binders) binder();
   return hooks;
 }
 
-/** Test / isolation only. */
+/** Test isolation — clears hooks and notifies binders to allow re-bind. */
 export function resetCorrespondenceHooksForTests(): void {
   hooks = {};
+  onResetForTests?.();
+}
+
+/** Binders register this so reset clears their "already bound" flag. */
+export function setCorrespondenceHooksResetHook(fn: () => void): void {
+  onResetForTests = fn;
 }

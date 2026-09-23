@@ -29,6 +29,8 @@ orgos integrations asana link --case INQ-... --task-gid <gid>
 orgos integrations asana push --case INQ-...
 ```
 
+後方互換: `orgos secretary correspondence *` / `orgos secretary mail *` は同一実装のエイリアス（正本は `mail outbound`）。
+
 ## 禁止
 
 - 未検証の金額・納期・在庫を本文に書く
