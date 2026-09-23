@@ -31,15 +31,15 @@ export type IndirectTaxCloseResult = {
 };
 
 export function assertJpTaxProfile(): void {
-  const { pack } = getResolvedJurisdiction();
-  if (pack.tax_profile_schema !== "jp") {
+  const { code, pack } = getResolvedJurisdiction();
+  if (code !== "JP" || pack.tax_profile_schema !== "jp") {
     throw new Error(JP_TAX_PROFILE_REQUIRED);
   }
 }
 
 export function missingLineTaxCodes(month: string): string[] {
   const types = new Map(
-    loadChartOfAccounts().accounts.map((account) => [account.code, account.type]),
+    loadChartOfAccounts().accounts.map((account) => [account.code, account.type])
   );
   const missing: string[] = [];
   for (const entry of loadJournalEntries().entries) {
@@ -58,7 +58,11 @@ export function missingLineTaxCodes(month: string): string[] {
 function defaultJpEngine(): JpIndirectTaxEngine {
   return {
     missingLineTaxCodes,
-    summarize: (month) => buildConsumptionTaxSummary({ period: month }),
+    summarize: (month) => {
+      // The summary reports invalid input by throwing; it has no issues field.
+      buildConsumptionTaxSummary({ period: month });
+      return {};
+    },
     profileBlocking: () =>
       runConsumptionTaxCheck().issues.filter((issue) => issue.severity === "blocking"),
   };
@@ -81,7 +85,7 @@ function evaluateJpClose(month: string, engine: JpIndirectTaxEngine): IndirectTa
   }
   try {
     const summaryErrors = (engine.summarize(month).issues ?? []).filter(
-      (issue) => issue.severity === "error",
+      (issue) => issue.severity === "error"
     );
     const profileErrors = engine.profileBlocking();
     if (summaryErrors.length > 0 || profileErrors.length > 0) {
@@ -105,13 +109,13 @@ function evaluateJpClose(month: string, engine: JpIndirectTaxEngine): IndirectTa
 
 export function evaluateIndirectTaxClose(
   month: string,
-  engine: JpIndirectTaxEngine = defaultJpEngine(),
+  engine: JpIndirectTaxEngine = defaultJpEngine()
 ): IndirectTaxCloseResult {
   const resolved = getResolvedJurisdiction();
   const family = resolved.pack.indirect_tax_family;
   if (!jpIndirectTaxEngineInstalled()) {
     return {
-      pass: true,
+      pass: family === "none",
       detail: idleDetail(family),
       label: "間接税",
       engine: "uninstalled",

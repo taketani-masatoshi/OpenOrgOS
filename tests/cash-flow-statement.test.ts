@@ -32,7 +32,13 @@ describe("cash flow statement", () => {
       source: { kind: "manual", authorized_by: "OP-TEST" },
       evidence_refs: ["test:cf"],
       lines: [
-        { account_code: "1150", debit_yen: 20, credit_yen: 0, tax_category: "out_of_scope" },
+        {
+          account_code: "1150",
+          debit_yen: 20,
+          credit_yen: 0,
+          tax_category: "out_of_scope",
+          counterparty_id: "CF-SYNTHETIC",
+        },
         { account_code: "4100", debit_yen: 0, credit_yen: 20, tax_category: "non_taxable" },
       ],
     });

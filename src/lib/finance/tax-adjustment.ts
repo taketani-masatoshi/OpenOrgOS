@@ -242,7 +242,8 @@ function nationalCorporateTax(
   taxableIncomeYen: number,
   reducedRate: boolean | null,
   bracketYen: number,
-  excluded: boolean
+  excluded: boolean,
+  periodStart: string
 ): NationalCorporateTax {
   const base = truncateYen(Math.max(0, taxableIncomeYen), THOUSAND_YEN);
   if (base === 0) {
@@ -258,7 +259,11 @@ function nationalCorporateTax(
   if (excluded || reducedRate == null) return emptyNationalTax();
   const reducedBase = reducedRate ? Math.min(base, bracketYen) : 0;
   const residualBase = base - reducedBase;
-  const reducedRateBps = reducedRate ? REDUCED_RATE_BPS : STANDARD_RATE_BPS;
+  const reducedRateBps = reducedRate
+    ? periodStart >= "2025-04-01" && taxableIncomeYen > 1_000_000_000
+      ? 1700
+      : REDUCED_RATE_BPS
+    : STANDARD_RATE_BPS;
   let reducedTax = reducedRate ? taxAtRate(reducedBase, reducedRateBps) : 0;
   let residualTax = taxAtRate(residualBase, STANDARD_RATE_BPS);
   const corporateTax = truncateYen(reducedTax + residualTax, HUNDRED_YEN);
@@ -561,7 +566,8 @@ export function evaluateTaxAdjustment(fiscalYear: string): TaxAdjustmentWorkshee
           taxableIncome,
           excluded ? null : reducedRateApplies(corporate),
           reducedBracketYen(profile.fiscal_year, start, asOf),
-          excluded
+          excluded,
+          start
         );
   const officialPending: string[] = [];
   if (!totalsReady) officialPending.push("unmapped_explicit_line");

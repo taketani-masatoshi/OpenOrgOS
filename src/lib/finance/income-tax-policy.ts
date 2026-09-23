@@ -48,8 +48,7 @@ export type IncomeTaxAmounts = {
 };
 
 export type IncomeTaxAmountResult =
-  | { ok: false; errors: string[] }
-  | ({ ok: true } & IncomeTaxAmounts);
+  { ok: false; errors: string[] } | ({ ok: true } & IncomeTaxAmounts);
 
 export function floorTaxableIncomeYen(amountYen: number): number {
   if (amountYen <= 0) return 0;
@@ -66,7 +65,7 @@ export function floorPayableYen(amountYen: number): number {
 function bracketTaxYen(taxableYen: number): number {
   const bracket =
     JP_INCOME_TAX_POLICY.brackets.find(
-      (row) => row.up_to_yen == null || taxableYen <= row.up_to_yen,
+      (row) => row.up_to_yen == null || taxableYen <= row.up_to_yen
     ) ?? JP_INCOME_TAX_POLICY.brackets[JP_INCOME_TAX_POLICY.brackets.length - 1];
   const raw =
     Math.floor((taxableYen * bracket.numerator) / bracket.denominator) - bracket.deduction_yen;
@@ -74,7 +73,7 @@ function bracketTaxYen(taxableYen: number): number {
 }
 
 export function calculateSolePropIncomeTaxAmounts(
-  input: IncomeTaxAmountInput,
+  input: IncomeTaxAmountInput
 ): IncomeTaxAmountResult {
   const errors: string[] = [];
   if (input.otherIncomeYen == null) errors.push("other income missing");
@@ -95,16 +94,16 @@ export function calculateSolePropIncomeTaxAmounts(
 
   const taxableBefore = Math.max(
     0,
-    input.businessIncomeAfterBlueYen + input.otherIncomeYen - input.deductionsYen,
+    input.businessIncomeAfterBlueYen + input.otherIncomeYen - input.deductionsYen
   );
   const taxableYen = floorTaxableIncomeYen(taxableBefore);
   const bracket = bracketTaxYen(taxableYen);
   if (input.creditsYen > bracket) return { ok: false, errors: ["credits exceed income tax"] };
   const beforeFloor = bracket - input.creditsYen;
-  const incomeTaxYen = floorPayableYen(beforeFloor);
+  const incomeTaxYen = beforeFloor;
   const reconstructionYen = Math.floor(
     (incomeTaxYen * JP_INCOME_TAX_POLICY.reconstruction_rate.numerator) /
-      JP_INCOME_TAX_POLICY.reconstruction_rate.denominator,
+      JP_INCOME_TAX_POLICY.reconstruction_rate.denominator
   );
   const remainingYen =
     incomeTaxYen + reconstructionYen - input.withholdingYen - input.prepaymentYen;

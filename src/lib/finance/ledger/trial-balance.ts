@@ -25,11 +25,7 @@ export type TrialBalanceReport = {
   issues: string[];
 };
 
-function signedBalance(
-  normalBalance: "debit" | "credit",
-  debit: number,
-  credit: number,
-): number {
+function signedBalance(normalBalance: "debit" | "credit", debit: number, credit: number): number {
   const delta = debit - credit;
   return normalBalance === "debit" ? delta : -delta;
 }
@@ -39,6 +35,8 @@ export function buildTrialBalance(input?: {
   coa?: ChartOfAccounts;
   /** When false, ignore opening-balances.yaml and sum journals through asOf only. */
   includeOpening?: boolean;
+  excludeAnnualTransfer?: boolean;
+  openingOverride?: ReturnType<typeof loadOpeningBalances>;
 }): TrialBalanceReport {
   const asOf = input?.asOf ?? new Date().toISOString().slice(0, 10);
   const coa = input?.coa ?? loadChartOfAccounts();
@@ -46,7 +44,11 @@ export function buildTrialBalance(input?: {
   const totals = new Map<string, { debit: number; credit: number }>();
 
   const useOpening = input?.includeOpening !== false;
-  const opening = useOpening ? loadOpeningBalances() : null;
+  const opening = useOpening
+    ? input?.openingOverride !== undefined
+      ? input.openingOverride
+      : loadOpeningBalances()
+    : null;
   const openingAsOf = opening?.as_of;
   const includeOpening = Boolean(opening && openingAsOf && asOf >= openingAsOf);
 
@@ -61,6 +63,12 @@ export function buildTrialBalance(input?: {
 
   for (const raw of loadJournalEntries().entries) {
     const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
+    if (
+      input?.excludeAnnualTransfer &&
+      entry.source?.kind === "closing" &&
+      entry.source.adjustment_id === "pl-transfer"
+    )
+      continue;
     const date = entry.occurred_at.slice(0, 10);
     if (date > asOf) continue;
     // Cutover: opening already reflects activity through opening.as_of.
@@ -92,25 +100,17 @@ export function buildTrialBalance(input?: {
       normal_balance: account.normal_balance,
       debit_total_yen: amount.debit,
       credit_total_yen: amount.credit,
-      balance_yen: signedBalance(
-        account.normal_balance,
-        amount.debit,
-        amount.credit,
-      ),
+      balance_yen: signedBalance(account.normal_balance, amount.debit, amount.credit),
     });
   }
 
   rows.sort((a, b) => a.account_code.localeCompare(b.account_code));
-  const debit_total_yen =
-    rows.reduce((sum, row) => sum + row.debit_total_yen, 0) + unknownDebit;
-  const credit_total_yen =
-    rows.reduce((sum, row) => sum + row.credit_total_yen, 0) + unknownCredit;
+  const debit_total_yen = rows.reduce((sum, row) => sum + row.debit_total_yen, 0) + unknownDebit;
+  const credit_total_yen = rows.reduce((sum, row) => sum + row.credit_total_yen, 0) + unknownCredit;
   const hasUnknown = issues.some((issue) => issue.includes("Unknown account"));
   const balanced = debit_total_yen === credit_total_yen && !hasUnknown;
   if (debit_total_yen !== credit_total_yen) {
-    issues.push(
-      `Trial balance not balanced: debit=${debit_total_yen} credit=${credit_total_yen}`,
-    );
+    issues.push(`Trial balance not balanced: debit=${debit_total_yen} credit=${credit_total_yen}`);
   }
 
   return {

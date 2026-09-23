@@ -105,7 +105,7 @@ describe("indirect tax jurisdiction port", () => {
 
     setTenantId("us-demo");
     const unitedStates = evaluateIndirectTaxClose(MONTH, engine);
-    expect(unitedStates.pass).toBe(true);
+    expect(unitedStates.pass).toBe(false);
     expect(unitedStates.engine).toBe("uninstalled");
     expect(unitedStates.detail).toBe(INDIRECT_TAX_ENGINE_UNINSTALLED);
   });
@@ -113,7 +113,7 @@ describe("indirect tax jurisdiction port", () => {
   it("does not run Japanese consumption tax for Singapore GST", () => {
     setTenantId("sg-demo");
     const result = evaluateIndirectTaxClose(MONTH, throwingEngine());
-    expect(result.pass).toBe(true);
+    expect(result.pass).toBe(false);
     expect(result.engine).toBe("uninstalled");
     expect(result.detail).toBe(INDIRECT_TAX_ENGINE_UNINSTALLED);
   });

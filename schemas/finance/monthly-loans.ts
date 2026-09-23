@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { dateString, monthString } from "../common.js";
 
-export const revenueCategory = z.enum([
-  "rent",
-  "hotel_revenue",
-  "other_revenue",
-]);
+export const revenueCategory = z.enum(["rent", "hotel_revenue", "other_revenue"]);
 
 export const expenseCategory = z.enum([
   "repair",
@@ -66,7 +62,7 @@ export const expenseEntry = z
             .optional(),
           amount: z.number().nonnegative(),
           notes: z.string().optional(),
-        }),
+        })
       )
       .optional(),
     notes: z.string().optional(),
@@ -234,13 +230,15 @@ export const payrollSchema = z.object({
           .optional(),
         monthly: z.number().nonnegative().optional(),
         annual: z.number().nonnegative().optional(),
-      }),
+      })
     )
     .optional(),
   /** Active employee cash payroll (excludes unpaid officers). */
   employee_payroll: z
     .object({
       monthly_gross_jpy: z.number().nonnegative(),
+      health_standard_remuneration_yen: z.number().int().positive().optional(),
+      pension_standard_remuneration_yen: z.number().int().positive().optional(),
       has_withholding: z.boolean().default(true),
       has_social_insurance: z.boolean().default(true),
       /** Special-collection resident tax (monthly employer remittance). */
@@ -250,9 +248,7 @@ export const payrollSchema = z.object({
        * Payroll months (YYYY-MM) with known unpaid withholding remittance.
        * Calendar marks these as known_unpaid (warning), not actionable overdue.
        */
-      known_unpaid_withholding_months: z
-        .array(z.string().regex(/^\d{4}-\d{2}$/))
-        .optional(),
+      known_unpaid_withholding_months: z.array(z.string().regex(/^\d{4}-\d{2}$/)).optional(),
     })
     .optional(),
   tax_treatment: z

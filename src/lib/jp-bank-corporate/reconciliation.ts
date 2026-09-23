@@ -16,6 +16,8 @@ export interface DerivedArApState {
 }
 
 export interface DerivedBankStatementState {
+  /** Settled compatibility row without event history: do not propose/apply again. */
+  legacy_snapshot?: boolean;
   entry: BankStatementEntry;
   allocated_amount: number;
   unapplied_amount: number;
@@ -51,10 +53,7 @@ function compatibleDirection(bank: BankStatementEntry, arAp: ArApEntry): boolean
   );
 }
 
-function derivedArApStatus(
-  entry: ArApEntry,
-  settled: number
-): ArApEntry["status"] {
+function derivedArApStatus(entry: ArApEntry, settled: number): ArApEntry["status"] {
   if (entry.status === "cancelled") return "cancelled";
   if (settled <= 0) return "open";
   if (settled < entry.amount) return "partial";
@@ -79,6 +78,17 @@ export function replayReconciliation(
   >();
   const reversed = new Set<string>();
   const voidedBank = new Set<string>();
+  // Use all history to identify event-managed rows, including reversed and
+  // future events. A historical cutoff must not resurrect a stale snapshot.
+  const eventManagedBank = new Set(
+    events.flatMap((event) =>
+      event.type === "reconciliation.applied"
+        ? event.allocations.map((a) => a.bank_statement_id)
+        : event.type === "bank_statement.voided"
+          ? [event.bank_statement_id]
+          : []
+    )
+  );
 
   for (const event of events) {
     if (eventIds.has(event.id)) {
@@ -132,11 +142,7 @@ export function replayReconciliation(
         errors.push(`${eventId}: direction does not match ${bank.id} -> ${arAp.id}`);
         continue;
       }
-      if (
-        bank.account_id &&
-        arAp.account_id &&
-        bank.account_id !== arAp.account_id
-      ) {
+      if (bank.account_id && arAp.account_id && bank.account_id !== arAp.account_id) {
         errors.push(`${eventId}: account does not match ${bank.id} -> ${arAp.id}`);
         continue;
       }
@@ -177,26 +183,31 @@ export function replayReconciliation(
       settled_amount: settled,
       remaining_amount: Math.max(0, entry.amount - settled),
       status: derivedArApStatus(entry, settled),
-      collected_or_paid_date:
-        lastDateByArAp.get(entry.id) ?? entry.collected_or_paid_date,
+      collected_or_paid_date: lastDateByArAp.get(entry.id) ?? entry.collected_or_paid_date,
     });
   }
 
   const bank_statements = new Map<string, DerivedBankStatementState>();
   for (const entry of bankEntries) {
-    const allocated = allocatedByBank.get(entry.id) ?? 0;
+    const legacy =
+      !eventManagedBank.has(entry.id) && (entry.status === "matched" || entry.status === "partial");
+    const allocated =
+      legacy && entry.status === "matched" ? entry.amount : (allocatedByBank.get(entry.id) ?? 0);
     const unapplied = Math.max(0, entry.amount - allocated);
     bank_statements.set(entry.id, {
       entry,
+      legacy_snapshot: legacy,
       allocated_amount: allocated,
       unapplied_amount: unapplied,
-      status: voidedBank.has(entry.id)
-        ? "voided"
-        : allocated === 0
-          ? "unmatched"
-          : unapplied === 0
-            ? "matched"
-            : "partial",
+      status: legacy
+        ? (entry.status as "matched" | "partial")
+        : voidedBank.has(entry.id)
+          ? "voided"
+          : allocated === 0
+            ? "unmatched"
+            : unapplied === 0
+              ? "matched"
+              : "partial",
     });
   }
 
@@ -223,7 +234,12 @@ export function proposeReconciliationMatches(
     a.entry.id.localeCompare(b.entry.id)
   )) {
     if (baselineAsOf && bankState.entry.date <= baselineAsOf) continue;
-    if (bankState.status === "voided" || bankState.unapplied_amount <= 0) continue;
+    if (
+      bankState.legacy_snapshot ||
+      bankState.status === "voided" ||
+      bankState.unapplied_amount <= 0
+    )
+      continue;
     const exact = [...state.ar_ap.values()].filter(
       (candidate) =>
         candidate.remaining_amount > 0 &&
@@ -281,8 +297,7 @@ export function buildReconciliationAppliedEvent(input: {
     effective_date: input.effectiveDate,
     actor_id: input.actorId,
     match_mode: input.matchMode,
-    rule_id:
-      input.matchMode === "exact_auto" ? "exact-reference-v1" : undefined,
+    rule_id: input.matchMode === "exact_auto" ? "exact-reference-v1" : undefined,
     proposal_id: input.proposal.id,
     allocations: [
       {

@@ -38,22 +38,22 @@ export const consumptionTaxPeriodSchema = z.object({
 
 export const consumptionTaxSummarySchema = z.object({
   period: monthString,
-  output_tax_yen: z.number().int().nonnegative(),
-  input_tax_yen: z.number().int().nonnegative(),
+  output_tax_yen: z.number().int(),
+  input_tax_yen: z.number().int(),
   net_tax_yen: z.number().int(),
   refund_candidate_yen: z.number().int().nonnegative(),
   direction: consumptionTaxNetDirectionSchema,
   method: consumptionTaxMethodSchema,
-  exempt_sales_yen: z.number().int().nonnegative().default(0),
-  tax_free_sales_yen: z.number().int().nonnegative().default(0),
+  exempt_sales_yen: z.number().int().default(0),
+  tax_free_sales_yen: z.number().int().default(0),
   deemed_purchase_rate_pct: deemedPurchaseRatePctSchema.optional(),
   lines: z.array(
     z.object({
       tax_category: taxCategorySchema,
-      base_yen: z.number().int().nonnegative(),
-      tax_yen: z.number().int().nonnegative(),
+      base_yen: z.number().int(),
+      tax_yen: z.number().int(),
       direction: z.enum(["sales", "purchase"]),
-    }),
+    })
   ),
 });
 

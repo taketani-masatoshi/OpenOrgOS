@@ -22,8 +22,7 @@ import {
 import { journalEntrySchema } from "../schemas/finance/journal-entry.js";
 
 function summary(
-  overrides: Partial<ConsumptionTaxSummary> &
-    Pick<ConsumptionTaxSummary, "period" | "method">,
+  overrides: Partial<ConsumptionTaxSummary> & Pick<ConsumptionTaxSummary, "period" | "method">
 ): ConsumptionTaxSummary {
   return {
     output_tax_yen: 0,
@@ -44,6 +43,9 @@ describe("consumption tax calc (R0/R1)", () => {
       period: "2026-03",
       method: "standard",
       manual: {
+        taxable_sales_8_yen: 0,
+        exempt_sales_yen: 0,
+        taxable_purchases_8_yen: 0,
         taxable_sales_10_yen: 1_000_000,
         taxable_purchases_10_yen: 2_000_000,
         tax_free_sales_yen: 5_000_000,
@@ -63,6 +65,10 @@ describe("consumption tax calc (R0/R1)", () => {
       method: "simplified",
       deemedPurchaseRatePct: 90,
       manual: {
+        tax_free_sales_yen: 0,
+        taxable_sales_8_yen: 0,
+        exempt_sales_yen: 0,
+        taxable_purchases_8_yen: 0,
         taxable_sales_10_yen: 1_000_000,
         taxable_purchases_10_yen: 2_000_000,
       },
@@ -137,7 +143,7 @@ describe("consumption refund propose / validate", () => {
   it("rejects simplified without exception_basis and allows advisor draft only", () => {
     const blockedSummary = summary({ period: "2026-03", method: "simplified" });
     expect(() =>
-      proposeClaimFromAssessment({ summary: blockedSummary, kind: "simplified" }),
+      proposeClaimFromAssessment({ summary: blockedSummary, kind: "simplified" })
     ).toThrow(/simplified_no_input_credit/);
 
     const draft = proposeClaimFromAssessment({
@@ -204,7 +210,7 @@ describe("consumption refund propose / validate", () => {
         gate: "open",
         gate_reason: "standard_export_refund_candidate",
         evidence_paths: [],
-      }),
+      })
     ).toThrow(/evidence_paths/);
   });
 });
@@ -228,7 +234,7 @@ describe("consumption refund R3 cash / GL", () => {
     expect(filed.amount_yen).toBe(80_000);
     expect(() => applyClaimStatus(filed, "draft")).toThrow(/cannot move/);
     expect(() =>
-      applyClaimStatus(filed, "received", { amount_yen: 1, received_on: "2026-06-01" }),
+      applyClaimStatus(filed, "received", { amount_yen: 1, received_on: "2026-06-01" })
     ).toThrow(/immutable/);
   });
 
@@ -264,7 +270,7 @@ describe("consumption refund R3 cash / GL", () => {
         receivedOn: "2026-06-01",
         bankAccountCode: "1100",
         taxReceivableAccountCode: "2170",
-      }),
+      })
     ).toThrow(/amount_yen/);
   });
 

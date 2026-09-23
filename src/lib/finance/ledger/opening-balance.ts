@@ -4,9 +4,13 @@ import {
   openingBalancesSchema,
   type OpeningBalancesFile,
 } from "../../../../schemas/finance/opening-balances.js";
-import { getDataDir, readYamlFile, writeYamlFile } from "../../utils.js";
+import { getDataDir, readYamlFile } from "../../utils.js";
 import { buildTrialBalance } from "./trial-balance.js";
 import { loadChartOfAccounts } from "../../data.js";
+
+import { loadPeriodLocks } from "../period-lock.js";
+import { withFinanceMutation } from "../reconciliation-transaction.js";
+import { writeYamlFileAtomic } from "../../yaml-atomic.js";
 
 const OPENING_REL = "finance/opening-balances.yaml";
 
@@ -21,8 +25,18 @@ export function loadOpeningBalances(): OpeningBalancesFile | null {
 }
 
 export function saveOpeningBalances(file: OpeningBalancesFile): void {
-  mkdirSync(join(getDataDir(), "finance"), { recursive: true });
-  writeYamlFile(openingBalancesPath(), openingBalancesSchema.parse(file));
+  return withFinanceMutation(() => {
+    const history = loadPeriodLocks().locks;
+    if (history.length > 0)
+      throw new Error(
+        "Opening balances cannot be replaced after period close history; use annual close or controlled correction"
+      );
+    const parsed = openingBalancesSchema.parse(file);
+    if (parsed.lines.reduce((s, l) => s + l.debit_yen - l.credit_yen, 0) !== 0)
+      throw new Error("Opening balances must balance");
+    mkdirSync(join(getDataDir(), "finance"), { recursive: true });
+    writeYamlFileAtomic(openingBalancesPath(), parsed);
+  });
 }
 
 /** Build next-period opening balances from trial balance as-of date. */
@@ -92,9 +106,7 @@ export function openingBalanceIntegrityIssues(): string[] {
   const debit = file.lines.reduce((s, l) => s + l.debit_yen, 0);
   const credit = file.lines.reduce((s, l) => s + l.credit_yen, 0);
   if (debit !== credit) {
-    issues.push(
-      `opening-balances: not balanced (debit=${debit} credit=${credit})`,
-    );
+    issues.push(`opening-balances: not balanced (debit=${debit} credit=${credit})`);
   }
   return issues;
 }
@@ -140,19 +152,19 @@ export function openingBalancesReconcileIssues(): string[] {
     file.lines.map((line) => [
       line.account_code,
       { debit: line.debit_yen, credit: line.credit_yen },
-    ]),
+    ])
   );
   const expected = new Map(
     expectedLines.map((line) => [
       line.account_code,
       { debit: line.debit_yen, credit: line.credit_yen },
-    ]),
+    ])
   );
   for (const [code, want] of expected) {
     const got = actual.get(code) ?? { debit: 0, credit: 0 };
     if (got.debit !== want.debit || got.credit !== want.credit) {
       issues.push(
-        `opening ${code}: books debit=${want.debit}/credit=${want.credit} opening debit=${got.debit}/credit=${got.credit}`,
+        `opening ${code}: books debit=${want.debit}/credit=${want.credit} opening debit=${got.debit}/credit=${got.credit}`
       );
     }
   }

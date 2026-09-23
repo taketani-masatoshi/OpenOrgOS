@@ -31,7 +31,7 @@ describe("commercial readiness", () => {
     expect(report.score).toBeLessThan(100);
     expect(report.checks.find((row) => row.id === "stripe-live")?.pass).toBe(false);
     expect(report.checks.find((row) => row.id === "stripe-live")?.detail).toContain(
-      "STRIPE_SECRET_KEY",
+      "STRIPE_SECRET_KEY"
     );
     expect(report.checks.find((row) => row.id === "legal-signed")?.pass).toBe(false);
   });
@@ -43,6 +43,9 @@ describe("commercial readiness", () => {
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_example";
     refreshOrgOsPaths();
     attestStripeBilling({ note: "temp" });
+    expect(
+      buildCommercialReadinessReport().checks.find((row) => row.id === "stripe-live")?.pass
+    ).toBe(false);
     delete process.env.STRIPE_SECRET_KEY;
     delete process.env.STRIPE_WEBHOOK_SECRET;
     const report = buildCommercialReadinessReport();
@@ -52,7 +55,7 @@ describe("commercial readiness", () => {
   it("passes stripe/legal/mail/restore commercial gates when fully wired", async () => {
     workspace = mkdtempSync(join(tmpdir(), "commercial-ready-"));
     process.env.ORGOS_WORKSPACE = workspace;
-    process.env.STRIPE_SECRET_KEY = "sk_test_example";
+    process.env.STRIPE_SECRET_KEY = "sk_live_synthetic_example";
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_example";
     process.env.ORGOS_MAIL_SMTP_URL = "smtp://user:pass@127.0.0.1:2525";
     process.env.ORGOS_MAIL_SMTP_MOCK = "1";

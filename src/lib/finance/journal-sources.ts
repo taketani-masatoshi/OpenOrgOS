@@ -1,16 +1,11 @@
-import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
+import { appendJournalEntry } from "./expense-claim-journal.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
-import {
-  monthlyPlTaxCategory,
-  splitInclusiveConsumptionTax,
-} from "./consumption-tax.js";
+import { monthlyPlTaxCategory, splitInclusiveConsumptionTax } from "./consumption-tax.js";
 import type { TaxCategory } from "../../../schemas/finance/journal-entry.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
-import {
-  shouldSkipInvoiceJournal,
-} from "./ledger/invoice-mpl-dedupe.js";
+import { shouldSkipInvoiceJournal } from "./ledger/invoice-mpl-dedupe.js";
 
 const SKIP_EXPENSE_CATEGORIES = new Set(["depreciation", "loan_payment", "capex"]);
 const CASH_PL_TYPES = new Set(["revenue", "expense"]);
@@ -21,7 +16,7 @@ function categoryEntrySlug(category: string): string {
 
 function isPlAccountType(
   coa: ReturnType<typeof loadChartOfAccounts>,
-  accountCode: string,
+  accountCode: string
 ): boolean {
   const account = coa.accounts.find((a) => a.code === accountCode);
   return account ? CASH_PL_TYPES.has(account.type) : false;
@@ -40,10 +35,11 @@ type MonthlyBucket = {
   category: string;
   propertyId?: string;
   amount: number;
+  notes?: string;
 };
 
 function groupMonthlyLines(
-  lines: Array<{ category: string; property_id?: string; amount: number }>,
+  lines: Array<{ category: string; property_id?: string; amount: number; notes?: string }>
 ): MonthlyBucket[] {
   const map = new Map<string, MonthlyBucket>();
   for (const line of lines) {
@@ -52,6 +48,7 @@ function groupMonthlyLines(
       category: line.category,
       propertyId: line.property_id,
       amount: 0,
+      notes: line.notes,
     };
     cur.amount += line.amount;
     map.set(key, cur);
@@ -63,7 +60,7 @@ function monthlyPlEntryId(
   period: string,
   kind: "REV" | "EXP",
   bucket: MonthlyBucket,
-  sameCategoryCount: number,
+  sameCategoryCount: number
 ): string {
   const slug = categoryEntrySlug(bucket.category);
   if (sameCategoryCount <= 1 || !bucket.propertyId) {
@@ -182,6 +179,7 @@ function buildMonthlyExpenseLines(input: {
 export function postMonthlyPlJournalEntries(input: {
   period: string;
   authorizedBy: string;
+  skipPayroll?: boolean;
 }): string[] {
   const coa = loadChartOfAccounts();
   const accounts = resolveJournalSourceAccounts();
@@ -192,7 +190,10 @@ export function postMonthlyPlJournalEntries(input: {
   if (!monthRow) return [];
 
   const revenueBuckets = groupMonthlyLines(monthRow.revenue);
-  const expenseBuckets = groupMonthlyLines(monthRow.expenses);
+  const expenseBuckets = groupMonthlyLines(monthRow.expenses).filter(
+    (bucket) =>
+      !(input.skipPayroll && !bucket.propertyId && /給与|payroll/i.test(bucket.notes ?? ""))
+  );
   const posted: string[] = [];
 
   for (const bucket of revenueBuckets) {
@@ -263,16 +264,27 @@ export function postPayrollJournalEntry(input: {
   grossYen?: number;
   withholdingYen?: number;
   socialEmployerYen?: number;
+  socialEmployeeYen?: number;
 }): string | null {
   const accounts = resolveJournalSourceAccounts();
   const payroll = loadPayroll();
-  const gross =
-    input.grossYen ?? payroll.employee_payroll?.monthly_gross_jpy ?? 0;
+  const gross = input.grossYen ?? payroll.employee_payroll?.monthly_gross_jpy ?? 0;
   if (gross <= 0) return null;
 
-  const withholding = input.withholdingYen ?? Math.round(gross * 0.1);
-  const social = input.socialEmployerYen ?? Math.round(gross * 0.15);
-  const net = gross - withholding;
+  const withholding = input.withholdingYen;
+  const social = input.socialEmployerYen;
+  const socialEmployee = input.socialEmployeeYen;
+  if (
+    ![gross, withholding, social, socialEmployee].every(
+      (n) => Number.isSafeInteger(n) && n! >= 0
+    ) ||
+    withholding === undefined ||
+    social === undefined ||
+    socialEmployee === undefined
+  )
+    throw new Error("Explicit payroll withholding and both social insurance amounts required");
+  const net = gross - withholding - socialEmployee;
+  if (net < 0) throw new Error("Payroll deductions exceed gross");
   const entryId = `JE-PAYROLL-${input.period}`;
 
   appendJournalEntry({
@@ -297,7 +309,7 @@ export function postPayrollJournalEntry(input: {
       {
         account_code: accounts.social_insurance_payable,
         debit_yen: 0,
-        credit_yen: social,
+        credit_yen: social + socialEmployee,
         tax_category: "out_of_scope",
       },
       {
@@ -394,6 +406,7 @@ export function postApPaymentJournalEntry(input: {
 
 export function postSalesInvoiceJournalEntry(input: {
   invoiceId: string;
+  counterpartyId?: string;
   amountYen: number;
   revenueAccountCode?: string;
   arAccountCode?: string;
@@ -405,7 +418,6 @@ export function postSalesInvoiceJournalEntry(input: {
   authorizedBy: string;
   propertyId?: string;
 }): string | null {
-  const period = input.occurredAt.slice(0, 7);
   const skip = shouldSkipInvoiceJournal({
     invoiceId: input.invoiceId,
     propertyId: input.propertyId,
@@ -416,17 +428,20 @@ export function postSalesInvoiceJournalEntry(input: {
     return null;
   }
 
+  if (!input.counterpartyId?.trim()) throw new Error("Invoice counterparty_id required");
   const accounts = resolveJournalSourceAccounts();
   const entryId = `JE-INV-${input.invoiceId}`;
   const taxCategory = input.taxCategory ?? "taxable_10";
   const lines: {
     account_code: string;
+    counterparty_id?: string;
     debit_yen: number;
     credit_yen: number;
     tax_category: typeof taxCategory | "out_of_scope";
   }[] = [
     {
       account_code: input.arAccountCode ?? accounts.accounts_receivable,
+      counterparty_id: input.counterpartyId,
       debit_yen: input.amountYen,
       credit_yen: 0,
       tax_category: "out_of_scope",
@@ -464,7 +479,7 @@ export function postSalesInvoiceJournalEntry(input: {
     const credited = input.netRevenueYen! + input.consumptionTaxYen! + lodgingTaxYen;
     if (credited !== input.amountYen) {
       throw new Error(
-        `Invoice journal split mismatch: AR ${input.amountYen} != credits ${credited} (${input.invoiceId})`,
+        `Invoice journal split mismatch: AR ${input.amountYen} != credits ${credited} (${input.invoiceId})`
       );
     }
   } else {
@@ -490,10 +505,7 @@ export function postSalesInvoiceJournalEntry(input: {
   return entryId;
 }
 
-export type RemittanceObligation =
-  | "withholding"
-  | "social_insurance"
-  | "consumption_tax";
+export type RemittanceObligation = "withholding" | "social_insurance" | "consumption_tax";
 
 /** Settle a statutory payable from the trial balance (Dr payable / Cr cash). */
 export function postRemittanceJournalEntry(input: {
@@ -509,9 +521,7 @@ export function postRemittanceJournalEntry(input: {
   const entryId = `JE-REMIT-${input.obligation.replace(/_/g, "-").toUpperCase()}-${input.period}`;
 
   const balanceOf = (code: string | undefined): number =>
-    code
-      ? (trial.rows.find((row) => row.account_code === code)?.balance_yen ?? 0)
-      : 0;
+    code ? (trial.rows.find((row) => row.account_code === code)?.balance_yen ?? 0) : 0;
 
   const lines: JournalLine[] = [];
   if (input.obligation === "withholding") {
@@ -529,7 +539,7 @@ export function postRemittanceJournalEntry(input: {
         debit_yen: 0,
         credit_yen: amount,
         tax_category: "out_of_scope",
-      },
+      }
     );
   } else if (input.obligation === "social_insurance") {
     const amount = balanceOf(accounts.social_insurance_payable);
@@ -546,7 +556,7 @@ export function postRemittanceJournalEntry(input: {
         debit_yen: 0,
         credit_yen: amount,
         tax_category: "out_of_scope",
-      },
+      }
     );
   } else {
     const payable = balanceOf(accounts.consumption_tax_payable);
@@ -612,8 +622,7 @@ export function postPayrollPaymentJournalEntry(input: {
   const occurredAt = `${asOf}T16:00:00.000Z`;
   const trial = buildTrialBalance({ asOf });
   const payable =
-    trial.rows.find((row) => row.account_code === accounts.payroll_payable)
-      ?.balance_yen ?? 0;
+    trial.rows.find((row) => row.account_code === accounts.payroll_payable)?.balance_yen ?? 0;
   const amount = input.amountYen ?? payable;
   if (amount <= 0) return null;
   const entryId = `JE-PAYROLL-PAY-${input.period}`;

@@ -2,7 +2,12 @@ import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runValidateReport } from "../src/commands/validate.js";
-import { appendJournalEntry, loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
+import {
+  appendJournalEntry,
+  loadJournalEntries,
+  saveJournalEntries,
+} from "../src/lib/finance/expense-claim-journal.js";
+import { journalEntrySchema } from "../schemas/finance/journal-entry.js";
 import { lastDayOfMonth } from "../src/lib/finance/fiscal-year.js";
 import { reverseJournalEntry } from "../src/lib/finance/journal-reverse.js";
 import { buildBalanceSheet } from "../src/lib/finance/ledger/balance-sheet.js";
@@ -13,7 +18,12 @@ import {
   evaluateMonthlyCloseGates,
 } from "../src/lib/finance/monthly-close.js";
 import { buildConsumptionTaxSummary } from "../src/lib/finance/consumption-tax.js";
-import { isMonthLocked, loadPeriodLocks, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
+import {
+  isMonthLocked,
+  loadPeriodLocks,
+  lockMonth,
+  unlockMonth,
+} from "../src/lib/finance/period-lock.js";
 import { buildMonthCloseChecklist } from "../src/lib/product/ledger-month-close-checklist.js";
 import { getDataDir } from "../src/lib/utils.js";
 import {
@@ -42,6 +52,7 @@ function lockPrior(): void {
 }
 
 function manualEntry(input: {
+  rejectedFixture?: boolean;
   entryId: string;
   occurredAt: string;
   lines: Array<{
@@ -52,14 +63,23 @@ function manualEntry(input: {
     counterparty_id?: string;
   }>;
 }): void {
-  appendJournalEntry({
+  const entry = {
     entry_id: input.entryId,
     occurred_at: input.occurredAt,
     description: input.entryId,
-    source: { kind: "manual", authorized_by: OPERATOR },
+    source: { kind: "manual" as const, authorized_by: OPERATOR },
     evidence_refs: [`test:${input.entryId}`],
     lines: input.lines,
-  });
+  };
+  if (input.rejectedFixture) seedRejectedJournal(entry);
+  else appendJournalEntry(entry);
+}
+
+function seedRejectedJournal(entry: Parameters<typeof appendJournalEntry>[0]): void {
+  // Check the posting guard, then simulate a legacy corrupt record in the empty fixture.
+  expect(() => appendJournalEntry(entry)).toThrow();
+  expect(loadJournalEntries().entries).toHaveLength(0);
+  saveJournalEntries({ version: 1, entries: [journalEntrySchema.parse(entry)] });
 }
 
 describe("monthly close acceptance", () => {
@@ -99,9 +119,7 @@ entries:
     expect(buildTrialBalance({ asOf }).balanced).toBe(true);
     expect(buildBalanceSheet({ asOf, fiscalYear: "FY2026" }).balanced).toBe(true);
     expect(subsidiaryLedgerIntegrityIssues(asOf)).toEqual([]);
-    expect(first.evaluation.items.find((item) => item.id === "bank-unmatched")?.pass).toBe(
-      true,
-    );
+    expect(first.evaluation.items.find((item) => item.id === "bank-unmatched")?.pass).toBe(true);
     expect(() => buildConsumptionTaxSummary({ period: MONTH })).not.toThrow();
     expect(() =>
       manualEntry({
@@ -111,13 +129,12 @@ entries:
           { account_code: "1100", debit_yen: 1, credit_yen: 0, tax_category: "out_of_scope" },
           { account_code: "4100", debit_yen: 0, credit_yen: 1, tax_category: "non_taxable" },
         ],
-      }),
+      })
     ).toThrow(/locked/);
 
     const validate = runValidateReport({ warnings: true });
     const glErrors = validate.issues.filter(
-      (issue) =>
-        issue.severity === "error" && issue.path.includes("data/finance/"),
+      (issue) => issue.severity === "error" && issue.path.includes("data/finance/")
     );
     expect(glErrors).toEqual([]);
 
@@ -138,6 +155,7 @@ entries:
     useFinanceFixtureTenant();
     manualEntry({
       entryId: "JE-UNKNOWN-ACCOUNT",
+      rejectedFixture: true,
       occurredAt: "2026-09-15T00:00:00.000Z",
       lines: [
         { account_code: "9999", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
@@ -147,9 +165,7 @@ entries:
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(false);
     expect(closed.ok).toBe(false);
-    expect(closed.evaluation.errors.some((error) => error.startsWith("trial-balance"))).toBe(
-      true,
-    );
+    expect(closed.evaluation.errors.some((error) => error.startsWith("trial-balance"))).toBe(true);
   });
 
   it("does not lock when the close month has unmatched bank rows", () => {
@@ -164,9 +180,7 @@ entries:
 `);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(false);
-    expect(closed.evaluation.errors.some((error) => error.startsWith("bank-unmatched"))).toBe(
-      true,
-    );
+    expect(closed.evaluation.errors.some((error) => error.startsWith("bank-unmatched"))).toBe(true);
   });
 
   it("skips bank reconciliation and locks when no bank file exists", () => {
@@ -214,7 +228,7 @@ entries:
 `);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.evaluation.errors.some((error) => error.startsWith("bank-unmatched"))).toBe(
-      false,
+      false
     );
     expect(closed.locked).toBe(true);
   });
@@ -239,10 +253,12 @@ entries:
       ],
     });
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
-    expect(closed.evaluation.warnings.some((warning) => warning.startsWith("monthly-reconcile"))).toBe(
-      true,
+    expect(
+      closed.evaluation.warnings.some((warning) => warning.startsWith("monthly-reconcile"))
+    ).toBe(true);
+    expect(closed.evaluation.errors.some((error) => error.startsWith("monthly-reconcile"))).toBe(
+      false
     );
-    expect(closed.evaluation.errors.some((error) => error.startsWith("monthly-reconcile"))).toBe(false);
     expect(closed.locked).toBe(true);
   });
 
@@ -250,6 +266,7 @@ entries:
     useFinanceFixtureTenant();
     manualEntry({
       entryId: "JE-UNASSIGNED-AR",
+      rejectedFixture: true,
       occurredAt: "2026-09-11T00:00:00.000Z",
       lines: [
         { account_code: "1150", debit_yen: 500, credit_yen: 0, tax_category: "out_of_scope" },
@@ -297,10 +314,10 @@ entries:
           { account_code: "1100", debit_yen: 2, credit_yen: 0, tax_category: "out_of_scope" },
           { account_code: "4100", debit_yen: 0, credit_yen: 2, tax_category: "non_taxable" },
         ],
-      }),
+      })
     ).toThrow(/locked/);
     expect(() => unlockMonth({ month: MONTH, unlockedBy: OPERATOR, reason: " " })).toThrow(
-      /reason/,
+      /reason/
     );
 
     unlockMonth({
@@ -321,7 +338,7 @@ entries:
           { account_code: "1100", debit_yen: 3, credit_yen: 0, tax_category: "out_of_scope" },
           { account_code: "4100", debit_yen: 0, credit_yen: 3, tax_category: "non_taxable" },
         ],
-      }),
+      })
     ).toThrow(/locked/);
 
     const locks = loadPeriodLocks().locks.filter((row) => row.month === MONTH);
@@ -372,7 +389,7 @@ entries:
 `);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.evaluation.errors.some((error) => error.startsWith("prior-month-locked"))).toBe(
-      true,
+      true
     );
     expect(closed.locked).toBe(false);
   });
@@ -388,7 +405,7 @@ entries:
     amount: 1000
     status: matched
 `);
-    appendJournalEntry({
+    seedRejectedJournal({
       entry_id: "JE-NO-TAX",
       occurred_at: "2026-09-12T00:00:00.000Z",
       description: "missing category",
@@ -402,7 +419,7 @@ entries:
     });
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.evaluation.errors.some((error) => error.startsWith("consumption-tax"))).toBe(
-      true,
+      true
     );
     expect(closed.locked).toBe(false);
   });
@@ -422,7 +439,7 @@ entries:
     const original = readFileSync(chartPath, "utf-8");
     writeFileSync(
       chartPath,
-      `${original}\nmonthly_close_adjustments:\n  - trigger: accrual\n    debit: "5900"\n    credit: "2140"\n    amount_source: "accrual 4000"\n  - trigger: ignored\n    debit: "5900"\n    credit: "2140"\n    amount_source: "accrual 0"\n`,
+      `${original}\nmonthly_close_adjustments:\n  - trigger: accrual\n    debit: "5900"\n    credit: "2140"\n    amount_source: "accrual 4000"\n  - trigger: ignored\n    debit: "5900"\n    credit: "2140"\n    amount_source: "accrual 0"\n`
     );
     try {
       const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
@@ -449,12 +466,12 @@ entries:
     const inventoryPath = join(getDataDir(), "finance", "inventory.yaml");
     writeFileSync(
       inventoryPath,
-      `months:\n  - month: "2026-09"\n    account_code: "1100"\n    ending_inventory_yen: 1\n    cogs_account_code: "5100"\n    cogs_yen: 999999\n`,
+      `months:\n  - month: "2026-09"\n    account_code: "1100"\n    ending_inventory_yen: 1\n    cogs_account_code: "5100"\n    cogs_yen: 999999\n`
     );
     try {
       const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
       expect(closed.evaluation.errors.some((error) => error.startsWith("inventory-cogs"))).toBe(
-        true,
+        true
       );
       expect(closed.locked).toBe(false);
     } finally {
@@ -475,11 +492,14 @@ entries:
 `);
     const assetPath = join(getDataDir(), "finance", "fixed-assets.yaml");
     const original = readFileSync(assetPath, "utf-8");
-    writeFileSync(assetPath, original.replace("id: ASSET-001\n", "id: ASSET-001\n    small_amount: true\n"));
+    writeFileSync(
+      assetPath,
+      original.replace("id: ASSET-001\n", "id: ASSET-001\n    small_amount: true\n")
+    );
     try {
       closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
       expect(
-        loadJournalEntries().entries.some((entry) => entry.entry_id.includes("ASSET-001")),
+        loadJournalEntries().entries.some((entry) => entry.entry_id.includes("ASSET-001"))
       ).toBe(false);
     } finally {
       writeFileSync(assetPath, original);
@@ -505,10 +525,12 @@ entries:
     const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(september.locked).toBe(true);
     const october = closeAccountingMonth({ month: "2026-10", operatorId: OPERATOR });
-    expect(october.evaluation.warnings.some((warning) => warning.includes("monthly plan not imported"))).toBe(
-      true,
-    );
-    expect(october.evaluation.errors.some((error) => error.includes("monthly plan not imported"))).toBe(false);
+    expect(
+      october.evaluation.warnings.some((warning) => warning.includes("monthly plan not imported"))
+    ).toBe(true);
+    expect(
+      october.evaluation.errors.some((error) => error.includes("monthly plan not imported"))
+    ).toBe(false);
     expect(october.locked).toBe(true);
   });
 
@@ -526,8 +548,9 @@ entries:
     const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(september.locked).toBe(true);
     const asOf = lastDayOfMonth(MONTH);
-    const before = buildTrialBalance({ asOf }).rows.find((row) => row.account_code === "1100")
-      ?.balance_yen;
+    const before = buildTrialBalance({ asOf }).rows.find(
+      (row) => row.account_code === "1100"
+    )?.balance_yen;
     appendJournalEntry({
       entry_id: "JE-OCT-CASH",
       occurred_at: "2026-10-04T00:00:00.000Z",
@@ -540,12 +563,12 @@ entries:
       ],
     });
     const after = buildTrialBalance({ asOf: "2026-10-31" }).rows.find(
-      (row) => row.account_code === "1100",
+      (row) => row.account_code === "1100"
     )?.balance_yen;
     expect(before).toBeTypeOf("number");
     expect(after).toBe((before ?? 0) + 7);
     expect(
-      buildTrialBalance({ asOf }).rows.find((row) => row.account_code === "1100")?.balance_yen,
+      buildTrialBalance({ asOf }).rows.find((row) => row.account_code === "1100")?.balance_yen
     ).toBe(before);
   });
 });

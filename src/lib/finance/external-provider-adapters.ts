@@ -100,5 +100,8 @@ export function mapStripePaymentEvent(payload: any, tenant_id: string): External
 export function mapPayPalCaptureEvent(payload: any, tenant_id: string): ExternalFinanceTransaction[] {
   const resource = payload?.resource;
   if (payload?.event_type !== "PAYMENT.CAPTURE.COMPLETED" || !resource?.id || !resource?.amount?.value) return [];
-  return [{ tenant_id, transaction_id: String(resource.id), source: "paypal", type: "INCOME", amount: String(resource.amount.value), currency: String(resource.amount.currency_code).toUpperCase(), payer_or_payee: String(resource.payer?.email_address ?? resource.seller_protection?.status ?? "UNKNOWN"), transaction_date: String(payload.create_time ?? new Date().toISOString()), direction: "CREDIT", raw_event_id: String(payload.id ?? resource.id), metadata: { event_type: String(payload.event_type) } }];
+  const currency = String(resource.amount.currency_code ?? "").toUpperCase();
+  const minor_unit = iso4217MinorUnit(currency);
+  if (minor_unit === undefined) return [];
+  return [{ tenant_id, transaction_id: String(resource.id), source: "paypal", type: "INCOME", amount: String(resource.amount.value), currency, minor_unit, payer_or_payee: String(resource.payer?.email_address ?? resource.seller_protection?.status ?? "UNKNOWN"), transaction_date: String(payload.create_time ?? new Date().toISOString()), direction: "CREDIT", raw_event_id: String(payload.id ?? resource.id), metadata: { event_type: String(payload.event_type) } }];
 }

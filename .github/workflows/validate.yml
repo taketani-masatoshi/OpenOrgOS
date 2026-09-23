@@ -43,6 +43,23 @@ jobs:
       - run: npm ci
       - run: npm run steward-chat:typecheck
       - run: npm run steward-chat:build
+  customer-journey:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:customer-journey
+      - run: npm run test:customer-pilot
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: customer-journey-evidence
+          path: test-results/customer-journey/
+          if-no-files-found: error
   security-rbac:
     runs-on: ubuntu-latest
     needs: validate

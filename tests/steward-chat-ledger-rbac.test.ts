@@ -137,7 +137,7 @@ describe("steward chat ledger workbench api", () => {
     await start();
     const res = await fetch(
       `${baseUrl}/chat/v1/ledger/export?template=journal-csv&as_of=2026-09-30`,
-      { headers: { Cookie: cookieFor("OP-READONLY") } },
+      { headers: { Cookie: cookieFor("OP-READONLY") } }
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("text/csv");
@@ -162,7 +162,7 @@ describe("steward chat ledger workbench api", () => {
     });
     const res = await fetch(
       `${baseUrl}/chat/v1/ledger/dencho/search?from=2026-09-01&to=2026-09-30&description=http`,
-      { headers: { Cookie: cookieFor("OP-READONLY") } },
+      { headers: { Cookie: cookieFor("OP-READONLY") } }
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as { count: number; hits: Array<{ entry_id: string }> };
@@ -226,6 +226,7 @@ describe("steward chat ledger workbench api", () => {
       authorizedBy: "OP-001",
       grossYen: 50000,
       withholdingYen: 5000,
+      socialEmployeeYen: 7000,
       socialEmployerYen: 7500,
     });
 

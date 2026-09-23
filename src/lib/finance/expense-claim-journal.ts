@@ -14,6 +14,7 @@ import { assertJournalWriteAllowed } from "./journal-write-guard.js";
 import { assertMonthUnlockedForDate } from "./period-lock.js";
 import { assertJournalPostGuards } from "./journal-post-guards.js";
 import { getClock } from "../runtime-context.js";
+import { assertReconciliationReadable, withFinanceMutation } from "./reconciliation-transaction.js";
 
 const JOURNAL_REL = "finance/journal-entries.yaml";
 const ACCOUNTING_REL = "finance/expense-claim-accounting.yaml";
@@ -23,6 +24,7 @@ export function journalEntriesPath(): string {
 }
 
 export function loadJournalEntries(): JournalEntriesFile {
+  assertReconciliationReadable();
   const path = journalEntriesPath();
   return existsSync(path)
     ? readYamlFile(path, journalEntriesFileSchema)
@@ -32,28 +34,25 @@ export function loadJournalEntries(): JournalEntriesFile {
 export function loadExpenseClaimAccounting(): ExpenseClaimAccounting {
   const path = join(getDataDir(), ACCOUNTING_REL);
   if (!existsSync(path)) {
-    throw new Error(
-      `Expense claim accounting mapping is required: data/${ACCOUNTING_REL}`,
-    );
+    throw new Error(`Expense claim accounting mapping is required: data/${ACCOUNTING_REL}`);
   }
   return readYamlFile(path, expenseClaimAccountingSchema);
 }
 
-export function saveJournalEntries(
-  file: JournalEntriesFile,
-  opts?: { mode?: "migration" },
-): void {
+export function saveJournalEntries(file: JournalEntriesFile, opts?: { mode?: "migration" }): void {
+  return withFinanceMutation(() => saveJournalEntriesInner(file, opts));
+}
+
+function saveJournalEntriesInner(file: JournalEntriesFile, opts?: { mode?: "migration" }): void {
   assertJournalWriteAllowed();
   if (opts?.mode === "migration" && process.env.ORGOS_ALLOW_JOURNAL_MIGRATION !== "1") {
-    throw new Error(
-      "journal migration rewrite requires ORGOS_ALLOW_JOURNAL_MIGRATION=1",
-    );
+    throw new Error("journal migration rewrite requires ORGOS_ALLOW_JOURNAL_MIGRATION=1");
   }
   if (opts?.mode !== "migration") {
     const existing = loadJournalEntries();
     if (existing.entries.length > 0) {
       throw new Error(
-        "saveJournalEntries is append-only; use appendJournalEntry or migration backfill (mode: migration)",
+        "saveJournalEntries is append-only; use appendJournalEntry or migration backfill (mode: migration)"
       );
     }
   }
@@ -72,7 +71,14 @@ function isAnnualPlTransfer(entry: JournalEntry): boolean {
 
 export function appendJournalEntry(
   entry: JournalEntry,
-  meta?: { postedBy?: string; postedAt?: string; allowAnnualPlTransfer?: boolean },
+  meta?: { postedBy?: string; postedAt?: string; allowAnnualPlTransfer?: boolean }
+): JournalEntry {
+  return withFinanceMutation(() => appendJournalEntryInner(entry, meta));
+}
+
+function appendJournalEntryInner(
+  entry: JournalEntry,
+  meta?: { postedBy?: string; postedAt?: string; allowAnnualPlTransfer?: boolean }
 ): JournalEntry {
   assertJournalWriteAllowed();
   if (!(meta?.allowAnnualPlTransfer && isAnnualPlTransfer(entry))) {
@@ -147,13 +153,10 @@ export function postExpenseClaimJournal(input: {
         {
           account_code: accounting.payable_account_code,
           debit_yen: 0,
-          credit_yen: input.allocations.reduce(
-            (sum, allocation) => sum + allocation.amount_yen,
-            0,
-          ),
+          credit_yen: input.allocations.reduce((sum, allocation) => sum + allocation.amount_yen, 0),
         },
       ],
-    }),
+    })
   );
 }
 
@@ -165,12 +168,9 @@ export function reimburseExpenseClaimJournal(input: {
   evidenceRefs: string[];
 }): JournalEntry {
   const accounting = loadExpenseClaimAccounting();
-  const bankAccountCode =
-    accounting.bank_control_accounts[input.sourceBankAccountId];
+  const bankAccountCode = accounting.bank_control_accounts[input.sourceBankAccountId];
   if (!bankAccountCode) {
-    throw new Error(
-      `No bank control account mapping for ${input.sourceBankAccountId}`,
-    );
+    throw new Error(`No bank control account mapping for ${input.sourceBankAccountId}`);
   }
   return appendJournalEntry(
     journalEntrySchema.parse({
@@ -193,7 +193,7 @@ export function reimburseExpenseClaimJournal(input: {
           source_bank_account_id: input.sourceBankAccountId,
         },
       ],
-    }),
+    })
   );
 }
 

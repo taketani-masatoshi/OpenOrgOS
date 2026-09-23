@@ -2414,6 +2414,7 @@ export function registerDomainCommands(program: Command): void {
     .option("--dry-run", "Print output paths only (no PDF/email files)")
     .option("--tenant-name <name>", "Tenant name (default: modules.yaml or template)")
     .option("--tenant-email <email>", "Tenant email")
+    .option("--counterparty-id <id>", "Receivable counterparty ID")
     .option("--bank-account <text>", "Bank transfer details")
     .option("--sender-email <email>", "Sender From address")
     .action((opts) =>
@@ -2424,6 +2425,7 @@ export function registerDomainCommands(program: Command): void {
         to: opts.to,
         fy: opts.fy,
         tenantName: opts.tenantName,
+        counterpartyId: opts.counterpartyId,
         tenantEmail: opts.tenantEmail,
         bankAccount: opts.bankAccount,
         senderEmail: opts.senderEmail,
