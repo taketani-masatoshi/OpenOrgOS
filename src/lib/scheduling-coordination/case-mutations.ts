@@ -15,6 +15,7 @@ import {
 } from "./store.js";
 import { applySchedulingTransition } from "./transitions.js";
 import { advanceSchedulingWorkflow } from "./workflow.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 export interface SchedulingParticipantInput {
   name: string;
@@ -168,6 +169,6 @@ export function rescheduleSchedulingCase(id: string, now?: Date): SchedulingCase
   const updated = mutateSchedulingCase(id, { type: "reschedule" }, { now });
   recordSchedulingLifecycleEvent(updated.id, "rescheduled", "cli");
   const persisted = findSchedulingCase(updated.id);
-  if (!persisted) throw new Error(`Case ${id} not found`);
+  if (!persisted) throw new SchedulingCaseNotFoundError(id);
   return persisted;
 }

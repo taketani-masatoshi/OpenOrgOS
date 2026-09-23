@@ -10,6 +10,7 @@ import {
 import { getExecutiveDir, writeYamlFile } from "../utils.js";
 import { resolveNextAction } from "./judgment-context.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 function nextCalendarEventId(events: CalendarEvent[]): string {
   const max = events.reduce((current, event) => {
@@ -90,7 +91,7 @@ export async function syncSchedulingCaseCalendar(
   opts?: { pushGoogle?: boolean }
 ): Promise<SchedulingCase> {
   const initial = findSchedulingCase(caseId);
-  if (!initial) throw new Error(`Case ${caseId} not found`);
+  if (!initial) throw new SchedulingCaseNotFoundError(caseId);
   const ensured = ensureCalendarEventForCase(initial, slotId);
   if (opts?.pushGoogle === false) return ensured.caseRow;
 

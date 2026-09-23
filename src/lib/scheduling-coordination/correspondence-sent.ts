@@ -9,6 +9,7 @@ import { type SchedulingDraftKind } from "./draft-text.js";
 import { resolveNextAction } from "./judgment-context.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 function allExternalSent(caseRow: SchedulingCase, kind: SchedulingDraftKind): boolean {
   const targetIds = externalTargets(caseRow, kind).map((participant) => participant.id);
@@ -124,7 +125,7 @@ export function handleSchedulingCorrespondenceSent(
 
 export function reconcileSchedulingCorrespondence(caseId: string): SchedulingCase {
   let current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   for (const record of current.correspondence) {
     try {
       const draft = loadCorrespondenceDraft(record.draft_id);

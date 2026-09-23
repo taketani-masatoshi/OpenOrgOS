@@ -7,6 +7,7 @@ import {
 import { currentDate } from "../utils.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { syncSalesDemoDealOnConfirm } from "../sales-demo-confirm.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 export type SchedulingLifecycleStage =
   | "created"
@@ -34,7 +35,7 @@ export function recordSchedulingLifecycleEvent(
   actor = "secretary"
 ): SchedulingCase {
   let current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const stageRevision =
     stage === "created" || stage === "cancelled" ? 0 : current.proposal_revision;
   if (

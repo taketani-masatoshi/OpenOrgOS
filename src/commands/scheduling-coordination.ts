@@ -34,6 +34,7 @@ import {
   recordSchedulingParticipantResponse,
   rescheduleSchedulingCase,
 } from "../lib/scheduling-coordination/case-mutations.js";
+import { SchedulingCaseNotFoundError } from "../lib/scheduling-coordination/errors.js";
 import {
   formatSchedulingEmptyList,
   formatSchedulingListLine,
@@ -43,6 +44,7 @@ import {
 } from "./scheduling-coordination-render.js";
 
 export type { SchedulingParticipantInput } from "../lib/scheduling-coordination/case-mutations.js";
+import { SchedulingCaseNotFoundError } from "../lib/scheduling-coordination/errors.js";
 import {
   formatSchedulingEmptyList,
   formatSchedulingListLine,
@@ -54,7 +56,7 @@ import {
 function requireSchedulingCase(id: string): SchedulingCase {
   const caseRow = findSchedulingCase(id);
   if (!caseRow) {
-    console.error(`Case ${id} not found`);
+    console.error(new SchedulingCaseNotFoundError(id).message);
     process.exit(1);
   }
   return caseRow;

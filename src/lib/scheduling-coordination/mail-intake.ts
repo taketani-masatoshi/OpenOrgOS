@@ -9,6 +9,7 @@ import { extractEmailAddress } from "./reply-parse.js";
 import { resolveNextAction } from "./judgment-context.js";
 import { normalizeScheduleMailSubject } from "./mail-match.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 import {
   findSchedulingCase,
   loadSchedulingCases,
@@ -95,7 +96,7 @@ export function createSafeScheduleIntake(entry: MailTriageEntry): SchedulingCase
 
 export function linkMailToCase(caseId: string, mailId: string): SchedulingCase {
   const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(caseId);
 
   const entry = findTriageEntry(mailId);
   if (!entry) throw new Error(`Mail triage entry ${mailId} not found`);

@@ -5,6 +5,7 @@ import { proposeExecutiveSlots, type SlotTimePreference } from "./slots.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { schedulingCaseLooksLikeMeal } from "./meal-cost.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 /**
  * Generate calendar slots onto a scheduling case after venue clarify is sent.
@@ -21,7 +22,7 @@ export function proposeSlotsOntoSchedulingCase(
   }
 ): SchedulingCase {
   const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(caseId);
   if (!caseRow.ceo_intake_confirmed || caseRow.exception_reason === "schedule_intake_pending") {
     throw new Error(
       `Cannot propose ${caseId}: CEO intake pending (purpose / meeting format)`

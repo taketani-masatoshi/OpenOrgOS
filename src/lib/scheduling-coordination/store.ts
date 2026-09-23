@@ -9,6 +9,7 @@ import {
 } from "../../../schemas/executive/scheduling-cases.js";
 import { loadRegistryFile, writeYamlFile } from "../utils.js";
 import { getSchedulingCasesPath } from "./paths.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 export function loadSchedulingCases(): SchedulingCasesFile {
   return loadRegistryFile(getSchedulingCasesPath(), schedulingCasesFileSchema, () =>
@@ -74,7 +75,7 @@ export function updateSchedulingCase(
 ): SchedulingCase {
   const file = loadSchedulingCases();
   const idx = file.cases.findIndex((c) => c.id === id);
-  if (idx < 0) throw new Error(`Scheduling case ${id} not found`);
+  if (idx < 0) throw new SchedulingCaseNotFoundError(id);
   const current = file.cases[idx]!;
   if (current.revision !== expectedRevision) {
     throw new SchedulingRevisionConflictError(id, expectedRevision, current.revision);

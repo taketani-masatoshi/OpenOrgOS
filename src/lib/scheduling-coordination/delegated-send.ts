@@ -9,13 +9,14 @@ import {
 } from "./proposal-send-authority.js";
 import { persistSchedulingNextAction } from "./persist-next-action.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 export async function sendSchedulingConfirmationsAuthorizedByCeo(
   caseId: string,
   opts: { approverName: string; operatorId: string; dryRun?: boolean }
 ): Promise<SchedulingCase> {
   let current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
 
   const pendingConfirmRecords = current.correspondence.filter(
     (record) => record.kind === "confirm" && !record.sent_at
@@ -55,7 +56,7 @@ export async function sendSchedulingProposalsUnderStoredAuthority(
   opts?: { dryRun?: boolean }
 ): Promise<SchedulingCase> {
   let current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   current = assertDelegatableProposalSend(current);
   const authority = getDelegatableProposalSendAuthority(caseId);
   if (!authority) {

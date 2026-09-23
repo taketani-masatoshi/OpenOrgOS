@@ -7,6 +7,7 @@ import type {
 } from "../../../schemas/executive/scheduling-cases.js";
 import { hashCorrespondenceBody } from "./clarify-text.js";
 import { findSchedulingCase, listSchedulingCases, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 /**
  * Secretary Agent 文案品格 KPI のみ。
@@ -27,7 +28,7 @@ export function recordSecretaryDraftEditIfBodyChanged(
 
 export function recordSecretaryDraftEdit(caseId: string, note?: string): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const prev = current.quality_signals ?? { ceo_draft_edits: 0, ceo_tone_corrections: 0, style_lint_pass_count: 0, notes: [] };
   return updateSchedulingCase(caseId, current.revision, (row) => ({
     ...row,
@@ -42,7 +43,7 @@ export function recordSecretaryDraftEdit(caseId: string, note?: string): Schedul
 
 export function recordSecretaryToneCorrection(caseId: string, note: string): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const prev = current.quality_signals ?? { ceo_draft_edits: 0, ceo_tone_corrections: 0, style_lint_pass_count: 0, notes: [] };
   return updateSchedulingCase(caseId, current.revision, (row) => ({
     ...row,
@@ -58,7 +59,7 @@ export function recordSecretaryToneCorrection(caseId: string, note: string): Sch
 /** 観測メモのみ（KPI カウントを増やさない） */
 export function recordSecretaryQualityObservation(caseId: string, note: string): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const prev = current.quality_signals ?? { ceo_draft_edits: 0, ceo_tone_corrections: 0, style_lint_pass_count: 0, notes: [] };
   return updateSchedulingCase(caseId, current.revision, (row) => ({
     ...row,
@@ -76,7 +77,7 @@ export function recordSecretaryLiveProof(
   proof: SchedulingLiveProof
 ): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const prev = current.quality_signals ?? { ceo_draft_edits: 0, ceo_tone_corrections: 0, style_lint_pass_count: 0, notes: [] };
   const at = proof.recorded_at ?? new Date().toISOString();
   const live_proof: SchedulingLiveProof = { ...proof, recorded_at: at };
@@ -98,7 +99,7 @@ export function recordSecretaryStyleLintPass(
   opts: { draftId: string; warningCount: number; at?: string }
 ): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const prev = current.quality_signals ?? {
     ceo_draft_edits: 0,
     ceo_tone_corrections: 0,

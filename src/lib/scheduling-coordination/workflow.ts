@@ -5,6 +5,7 @@ import { ensureSchedulingCeoConfirmQuestion } from "./ceo-confirm.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 import { resolveNextAction } from "./judgment-context.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 function reminderDelayMs(): number {
   return resolveMailConfig().receive.scheduling_reminder_after_hours * 60 * 60 * 1000;
@@ -15,7 +16,7 @@ export function refreshSchedulingReminder(
   now = new Date()
 ): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   if (
     current.status !== "awaiting_responses" ||
     !current.participants.some((p) => p.response === "pending")
@@ -47,7 +48,7 @@ export function refreshSchedulingReminder(
   return mutateSchedulingCase(
     caseId,
     { type: "reminderRefresh", dueAt, targets },
-    { now, notFoundMessage: "scheduling" }
+    { now }
   );
 }
 
@@ -58,7 +59,7 @@ export function markSchedulingReminderDrafted(
   now = new Date()
 ): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const duplicate = current.reminder_history.some(
     (r) =>
       r.proposal_revision === current.proposal_revision &&
@@ -68,7 +69,7 @@ export function markSchedulingReminderDrafted(
   return mutateSchedulingCase(
     caseId,
     { type: "reminderDrafted", participantId, draftId },
-    { now, notFoundMessage: "scheduling" }
+    { now }
   );
 }
 
@@ -79,7 +80,7 @@ export function markSchedulingReminderDrafted(
  */
 export function advanceSchedulingWorkflow(caseId: string, now = new Date()): SchedulingCase {
   const current = refreshSchedulingReminder(caseId, now);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const next = resolveNextAction(current);
   const persisted =
     next.status === current.status &&

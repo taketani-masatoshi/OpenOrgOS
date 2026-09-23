@@ -19,6 +19,7 @@ import {
 import { persistSchedulingNextAction } from "./persist-next-action.js";
 import { resolveSchedulingRecipients } from "./recipients.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 function contactRefId(contactRef: string): { extId?: string; stakeholderId?: string } {
   const extId = contactRef.match(/\bEXT-\d+\b/i)?.[0]?.toUpperCase();
@@ -91,7 +92,7 @@ export function ensureSchedulingCorrespondenceDrafts(
   createdBy = "secretary"
 ): SchedulingCase {
   let current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   assertMealCostForOutboundDraft(current, kind);
   const resolved = resolveSchedulingCaseContacts(current);
   const targets = externalTargets(resolved, kind);

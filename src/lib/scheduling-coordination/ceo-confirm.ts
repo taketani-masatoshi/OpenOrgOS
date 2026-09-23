@@ -18,6 +18,7 @@ import {
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
 import { sendSchedulingConfirmationsAuthorizedByCeo } from "./delegated-send.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 export const SCHEDULING_MAIL_PREFIX = "scheduling:";
 
@@ -151,7 +152,7 @@ export async function confirmSchedulingCaseFromCeo(
   }
 ): Promise<SchedulingCase> {
   const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Case ${caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(caseId);
   const synced = await syncSchedulingCaseCalendar(caseId, slotId, {
     pushGoogle: opts?.pushCalendar !== false,
   });
@@ -175,7 +176,7 @@ export async function applySchedulingCeoAnswer(
   if (!caseId || question.status !== "answered" || !question.answers) return undefined;
 
   const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Case ${caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(caseId);
 
   const choice = resolveSchedulingCeoChoice(question, caseRow);
   const authorize = resolveCeoAuthorizeFromAnswer(question.answered_by);

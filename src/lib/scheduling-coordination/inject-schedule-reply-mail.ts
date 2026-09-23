@@ -7,6 +7,7 @@ import { getMailReceivedDir } from "../correspondence/paths.js";
 import { processScheduleMailEntry } from "./process-mail.js";
 import type { ProcessScheduleMailResult } from "./mail-reply.js";
 import { findSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 function formatSlotAcceptLine(slot: SchedulingProposedSlot): string {
   if (slot.label) return `${slot.label} で問題ありません。`;
@@ -51,7 +52,7 @@ export function injectScheduleAcceptReplyMail(opts: {
   subject?: string;
 }): MailTriageEntry {
   const caseRow = findSchedulingCase(opts.caseId);
-  if (!caseRow) throw new Error(`Scheduling case ${opts.caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(opts.caseId);
 
   const slot =
     caseRow.proposed_slots.find((s) => s.id === (opts.slotId ?? "SLOT-001")) ??
