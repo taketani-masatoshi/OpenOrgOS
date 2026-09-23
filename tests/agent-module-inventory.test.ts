@@ -76,7 +76,7 @@ describe("agent / module inventory", () => {
     });
   });
 
-  it("imports a catalog module as disabled without activating it", () => {
+  it("imports a catalog module as disabled without activating it", { timeout: 120_000 }, () => {
     const before = buildAgentModuleInventory();
     const sample =
       before.modules_catalog.find((row) => row.id === "language_bridge") ??

@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { isoDate } from "./iso-date.js";
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD");
 const yearMonth = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be YYYY-MM");
 const employeeId = z.string().regex(/^EMP-\d{3,}$/);
 const workplaceId = z.string().regex(/^WP-[A-Z0-9-]+$/);

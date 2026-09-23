@@ -1,14 +1,5 @@
 import { z } from "zod";
-
-function isCalendarDate(value: string): boolean {
-  const parsed = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-}
-
-const isoDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine(isCalendarDate, { message: "not a calendar date" });
+import { isoDate } from "./iso-date.js";
 
 export const breachAsOfDate = isoDate;
 

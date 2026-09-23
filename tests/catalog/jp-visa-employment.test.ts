@@ -419,6 +419,45 @@ describe("jp_visa_employment validation", () => {
     expect(issues.some((issue) => issue.includes("EMP-901: period_expires_on required"))).toBe(true);
     expect(issues.some((issue) => issue.includes("weekly-hours: unknown employee_id EMP-102"))).toBe(true);
   });
+
+  it("rejects restricted statuses with empty job-category maps and no notes", () => {
+    const dataset = loadSeedDataset();
+    const catalog = {
+      ...dataset.catalog,
+      statuses: dataset.catalog.statuses.map((entry) =>
+        entry.code === "professor"
+          ? { ...entry, permitted_job_categories: [], excluded_job_categories: [], notes: undefined }
+          : entry
+      ),
+    };
+    const catalogIssues = collectValidationIssues({ ...dataset, catalog });
+    expect(
+      catalogIssues.some((issue) =>
+        issue.includes("professor is restricted_to_activity with empty permitted/excluded")
+      )
+    ).toBe(true);
+
+    const unmappedCatalog = {
+      ...dataset.catalog,
+      statuses: dataset.catalog.statuses.map((entry) =>
+        entry.code === "designated_activities"
+          ? { ...entry, permitted_job_categories: [], excluded_job_categories: [], notes: undefined }
+          : entry
+      ),
+    };
+    const workerIssues = collectValidationIssues({
+      workers: {
+        workers: [worker({ status_of_residence: "designated_activities", job_category: "software_engineering" })],
+      },
+      weeks: dataset.weeks,
+      catalog: unmappedCatalog,
+    });
+    expect(
+      workerIssues.some((issue) =>
+        issue.includes("designated_activities has empty permitted/excluded job categories")
+      )
+    ).toBe(true);
+  });
 });
 
 describe("jp_visa_employment CLI on demo seed", () => {

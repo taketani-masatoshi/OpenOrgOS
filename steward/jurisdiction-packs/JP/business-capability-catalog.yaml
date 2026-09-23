@@ -1359,14 +1359,14 @@ summary:
     total: 17
   modules:
     implemented: 21
-    partial: 25
+    partial: 24
     planned: 1
-    total: 47
+    total: 46
   skills:
     implemented: 17
-    partial: 32
+    partial: 31
     planned: 10
-    total: 59
+    total: 58
   p0_gaps:
     - jp_social_insurance · jp_payroll は集計 CLI まで実装（算定基礎届・年末調整の提出は未実装）
     - 税務モジュールは申告書 XML ドラフトまで — e-Tax 提出は未実装（tax-filing-spec 参照）

@@ -14,6 +14,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 - **月次締め消費税ゲート** — `buildConsumptionTaxSummary` に存在しない `issues` を参照していた tsc エラーを修正（`runConsumptionTaxCheck` の blocking のみ判定）。
 - **Correspondence hooks 黙殺** — binder 未登録時に warn（`ORGOS_REQUIRE_CORRESPONDENCE_HOOKS=1` で throw）。契約テストで composition root を固定。
+- **JP モジュール日付スキーマ** — 暦日検証を `schemas/iso-date.ts` に集約。8 モジュールの Zod スキーマが共有する。
+- **在留資格カタログ検証** — `restricted_to_activity` で permitted/excluded が空かつ notes なしを拒否。台帳が空マップの在留資格を参照する場合も拒否。
 
 ### Added
 

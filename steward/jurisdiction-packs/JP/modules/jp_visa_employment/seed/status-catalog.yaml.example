@@ -68,18 +68,22 @@ statuses:
     name_ja: 教授
     legal_basis: 入管法 別表第一の一
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: artist
     name_ja: 芸術
     legal_basis: 入管法 別表第一の一
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: religious_activities
     name_ja: 宗教
     legal_basis: 入管法 別表第一の一
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: journalist
     name_ja: 報道
     legal_basis: 入管法 別表第一の一
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
 
   # 別表第一の二の表
   - code: highly_skilled_professional
@@ -92,22 +96,27 @@ statuses:
     name_ja: 経営・管理
     legal_basis: 入管法 別表第一の二
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: legal_accounting_services
     name_ja: 法律・会計業務
     legal_basis: 入管法 別表第一の二
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: medical_services
     name_ja: 医療
     legal_basis: 入管法 別表第一の二
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: researcher
     name_ja: 研究
     legal_basis: 入管法 別表第一の二
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: instructor
     name_ja: 教育
     legal_basis: 入管法 別表第一の二
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: engineer_humanities_international_services
     name_ja: 技術・人文知識・国際業務
     legal_basis: 入管法 別表第一の二
@@ -130,6 +139,7 @@ statuses:
     name_ja: 興行
     legal_basis: 入管法 別表第一の二
     work_allowed: restricted_to_activity
+    notes: テナントで業務区分をマップすること。未マップは needs_review（指定書・活動内容を人間が確認）。
   - code: skilled_labor
     name_ja: 技能
     legal_basis: 入管法 別表第一の二

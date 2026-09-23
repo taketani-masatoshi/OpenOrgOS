@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { isoDate } from "./iso-date.js";
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const yenAmount = z.number().int().nonnegative();
 
 export const takkenLicensorKind = z.enum(["governor", "minister"]);

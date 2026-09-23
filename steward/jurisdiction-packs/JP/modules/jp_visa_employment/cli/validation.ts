@@ -56,6 +56,18 @@ export function validateCatalogJobCategories(catalog: StatusCatalogFile): string
     for (const id of entry.permitted_job_categories.filter((jobId) => entry.excluded_job_categories.includes(jobId))) {
       issues.push(`status-catalog: ${entry.code} lists ${id} as both permitted and excluded`);
     }
+    // 活動範囲制限の在留資格は、業務区分マップか「指定書等で個別確認」の notes が必要。
+    // 空のままだと就労可否が常に needs_review になり、カタログが実質使えない。
+    if (
+      entry.work_allowed === "restricted_to_activity" &&
+      entry.permitted_job_categories.length === 0 &&
+      entry.excluded_job_categories.length === 0 &&
+      !entry.notes?.trim()
+    ) {
+      issues.push(
+        `status-catalog: ${entry.code} is restricted_to_activity with empty permitted/excluded job categories — add mappings or notes`
+      );
+    }
   }
   return issues;
 }
@@ -73,8 +85,18 @@ function validatePeriodOfStay(worker: ForeignWorker): string[] {
 
 function validateWorkerRecord(worker: ForeignWorker, catalog: StatusCatalogFile): string[] {
   const issues = validatePeriodOfStay(worker);
-  if (!catalog.statuses.some((entry) => entry.code === worker.status_of_residence)) {
+  const status = catalog.statuses.find((entry) => entry.code === worker.status_of_residence);
+  if (!status) {
     issues.push(`${worker.employee_id}: unknown status_of_residence ${worker.status_of_residence}`);
+  } else if (
+    status.work_allowed === "restricted_to_activity" &&
+    status.permitted_job_categories.length === 0 &&
+    status.excluded_job_categories.length === 0 &&
+    !status.notes?.trim()
+  ) {
+    issues.push(
+      `${worker.employee_id}: status ${status.code} has empty permitted/excluded job categories — map activity scope before employment checks`
+    );
   }
   if (!catalog.job_categories.some((category) => category.id === worker.job_category)) {
     issues.push(`${worker.employee_id}: unknown job_category ${worker.job_category}`);
