@@ -18,6 +18,7 @@ import {
   isRegulationRiskModuleId,
   REGULATION_FAMILIES,
 } from "./regulation-module-contract.js";
+import { scaffoldRegulationDraftFiles } from "./regulation-draft-scaffold.js";
 import { getCatalogRegulation, loadRegulationsCatalog } from "./regulations.js";
 import { getTenantId } from "./tenant.js";
 
@@ -314,7 +315,10 @@ export function formatRegulationModulePlan(plan: RegulationModulePlan): string {
   return lines.join("\n");
 }
 
-function buildWorkOrderText(plan: RegulationModulePlan): {
+function buildWorkOrderText(
+  plan: RegulationModulePlan,
+  draftPaths: string[] = []
+): {
   subject: string;
   background: string;
   requirements: string;
@@ -334,7 +338,7 @@ function buildWorkOrderText(plan: RegulationModulePlan): {
       md,
       "",
       "## LLM constraints",
-      "- Draft only: pack `template.md` proposals or tenant draft under docs/company/regulations/ with 草案 header",
+      "- Draft only: fill scaffold paths under docs/company/regulations/drafts/ (草案 header)",
       "- Never enable regulations.yaml or claim board approval",
       "- Never merge fork_family sources into one REG without an explicit new id / annex",
       plan.doNotMutateRegulationIds.length
@@ -342,6 +346,15 @@ function buildWorkOrderText(plan: RegulationModulePlan): {
         : "",
       scaffolds.length
         ? `- Start from scaffold(s): ${scaffolds.map((s) => `\`${s}\``).join(", ")}`
+        : "",
+      draftPaths.length
+        ? [
+            "",
+            "## Draft output paths",
+            ...draftPaths.map((p) => `- \`${p}\``),
+            "",
+            "After editing drafts: `orgos agent implement --id <this-WO>` (optional) · human `escalate complete`.",
+          ].join("\n")
         : "",
       "",
       "## Human steps after draft",
@@ -353,11 +366,14 @@ function buildWorkOrderText(plan: RegulationModulePlan): {
       .join("\n"),
     deliverables: [
       "Classification table (reuse/thicken/fork_family/new/none)",
-      "Draft template or 草案 MD (if llmDraftAllowed)",
+      "Draft template or 草案 MD under docs/company/regulations/drafts/ (if llmDraftAllowed)",
       "Checklist for human approval — no silent apply",
     ],
     acceptance_criteria: [
       "No mutation of doNotMutateRegulationIds 施行文",
+      draftPaths.length
+        ? `Draft path(s) filled beyond scaffold stub: ${draftPaths.join(", ")}`
+        : "No LLM draft required (reuse/none only) or draft deferred with human note",
       "required_regulations satisfied or explicitly deferred with human note",
       "orgos validate clean after human enable+seed",
     ],
@@ -370,6 +386,8 @@ export interface FileRegulationWorkflowWoOptions {
   toAgent?: AgentId;
   /** When true (default), reuse pending WO with the same subject instead of filing again. */
   dedupe?: boolean;
+  /** When false, skip creating docs/company/regulations/drafts/* 草案 files. Default true. */
+  scaffoldDrafts?: boolean;
 }
 
 export interface FileRegulationWorkflowWoResult {
@@ -381,6 +399,8 @@ export interface FileRegulationWorkflowWoResult {
   skipped?: boolean;
   /** true when an existing pending WO was reused */
   deduped?: boolean;
+  draftPaths?: string[];
+  draftsCreated?: string[];
 }
 
 function findPendingRegulationWorkflowWo(moduleId: string) {
@@ -396,11 +416,22 @@ export function fileRegulationWorkflowWorkOrder(
   opts: FileRegulationWorkflowWoOptions = {}
 ): FileRegulationWorkflowWoResult {
   const plan = planRegulationForModule(moduleId);
-  const text = buildWorkOrderText(plan);
+  const scaffoldDrafts = opts.scaffoldDrafts !== false;
+  const draftScaffold =
+    !opts.dryRun && scaffoldDrafts
+      ? scaffoldRegulationDraftFiles(plan)
+      : scaffoldRegulationDraftFiles(plan, { dryRun: true });
+  const draftPaths = draftScaffold.targets.map((t) => t.relativePath);
+  const text = buildWorkOrderText(plan, draftPaths);
   const dedupe = opts.dedupe !== false;
 
   if (opts.dryRun) {
-    return { plan, skipped: true };
+    return {
+      plan,
+      skipped: true,
+      draftPaths,
+      draftsCreated: [],
+    };
   }
 
   if (dedupe) {
@@ -411,23 +442,29 @@ export function fileRegulationWorkflowWorkOrder(
         workOrderId: existing.id,
         skipped: true,
         deduped: true,
+        draftPaths,
+        draftsCreated: draftScaffold.created,
       };
     }
   }
 
   const id = generateWorkOrderId();
   const toAgent = (opts.toAgent ?? "compliance") as AgentId;
+  const contextPath =
+    draftScaffold.primaryRelativePath ??
+    `steward/jurisdiction-packs/JP/regulations/00-モジュール連動方針.md`;
   const wo = handoffSchema.parse({
     id,
     created_at: new Date().toISOString(),
     from_agent: opts.fromAgent ?? "executive_steward",
     to_agent: toAgent,
+    skill: draftPaths.length ? "regulation_module_draft" : undefined,
     mode: "implement",
     task_type: "implement",
     access: { allowed: true, reason: "module regulation workflow" },
     context: {
       text: text.requirements,
-      path: `steward/jurisdiction-packs/JP/regulations/00-モジュール連動方針.md`,
+      path: contextPath,
     },
     status: "pending",
     subject: text.subject,
@@ -447,5 +484,7 @@ export function fileRegulationWorkflowWorkOrder(
     yamlPath: files.yamlPath,
     mdPath: files.mdPath,
     promptPath: files.promptPath,
+    draftPaths,
+    draftsCreated: draftScaffold.created,
   };
 }

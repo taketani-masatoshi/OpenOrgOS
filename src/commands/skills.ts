@@ -316,6 +316,12 @@ export const SKILL_COMMANDS = [
     description: "等級付き変更提案（ローカル LLM ゲート）",
   },
   {
+    id: "regulation-module-draft",
+    skill: "regulation_module_draft",
+    agent: "Compliance",
+    description: "モジュール規程の草案 MD scaffold",
+  },
+  {
     id: "change-apply",
     skill: "change_apply",
     agent: "Operations",
@@ -810,6 +816,34 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
         raw = YAML.parse(intentJson);
       }
       runChangePlan({ intentJson: JSON.stringify(raw), json: opts.json, save: true });
+      break;
+    }
+    case "regulation-module-draft": {
+      const { planRegulationForModule } = await import(
+        "../lib/regulation-module-workflow.js"
+      );
+      const { scaffoldRegulationDraftFiles } = await import(
+        "../lib/regulation-draft-scaffold.js"
+      );
+      if (!opts.id) {
+        throw new Error("regulation-module-draft requires --id <moduleId>");
+      }
+      const plan = planRegulationForModule(opts.id);
+      const result = scaffoldRegulationDraftFiles(plan, { force: Boolean(opts.write) });
+      if (opts.json) {
+        console.log(JSON.stringify({ plan, scaffold: result }, null, 2));
+      } else {
+        console.log(`Regulation draft scaffold — ${opts.id}`);
+        if (result.created.length) {
+          console.log(`  created: ${result.created.join(", ")}`);
+        }
+        if (result.skipped.length) {
+          console.log(`  skipped (exists): ${result.skipped.join(", ")}`);
+        }
+        if (!result.targets.length) {
+          console.log("  (no llmDraftAllowed actions — nothing to scaffold)");
+        }
+      }
       break;
     }
     case "change-apply": {

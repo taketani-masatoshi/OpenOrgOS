@@ -1,0 +1,18 @@
+id: jp_cosmetics_mah
+required_seeds: []
+activation_seeds: []
+optional_regulations:
+  - REG-037
+regulation_family:
+  id: qms_gxp
+  role: sibling
+  do_not_mutate:
+    - REG-025
+    - REG-026
+notes: >-
+  skeleton — 化粧品製造販売 · GQP/GVP 相当の規程は qms_gxp fork（REG-025/026 上書き禁止）。
+  許認可手続は REG-037 / jp_permit_registry。新 REG 採番は人間承認後。
+cli_commands: []
+security:
+  limits:
+    concurrent_jobs: 1

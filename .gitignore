@@ -34,6 +34,8 @@ scratch/*
 !scratch/00-README.md
 tenants/*/scratch/tenant-backup-last.txt
 tenants/*/docs/reports/*
+tenants/*/docs/company/regulations/drafts/**
+!tenants/*/docs/company/regulations/drafts/00-このフォルダについて.md
 tenants/*/docs/io/inbox/**
 !tenants/*/docs/io/inbox/00-このフォルダについて.md
 !tenants/*/docs/io/inbox/**/00-このフォルダについて.md
