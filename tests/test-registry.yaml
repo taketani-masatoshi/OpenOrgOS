@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 609
-  static_test_cases: 2810
-  tiered_execution_total: 609
+  vitest_total: 610
+  static_test_cases: 2818
+  tiered_execution_total: 610
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -2251,6 +2251,10 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  scheduling-architecture.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-ceo-choice.test.ts:
     axis: platform
     kind: unit
