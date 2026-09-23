@@ -7,7 +7,6 @@ import {
   pullDeliverFromPeerOutbox,
 } from "../../lib/protocol/transport/transport.js";
 import { deliverEnvelopeViaMesh } from "../../lib/protocol/transport/peer-mesh.js";
-import { join } from "node:path";
 import {
   findPeer,
   resolvePeerOutboxBaseUrl,

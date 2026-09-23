@@ -11,7 +11,6 @@ import {
 import { computeCommunityReadiness } from "../../lib/protocol/readiness/community-readiness.js";
 import { exportCommunityProtocolBundle } from "../../lib/protocol/adapters/community-export.js";
 import { resolveEcoStrictCap } from "../../lib/protocol/readiness/eco-production-evidence.js";
-import { join } from "node:path";
 
 
 export interface ProtocolCommunityOperatorsListOptions {

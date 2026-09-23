@@ -2,7 +2,6 @@
 import { applyProtocolTenant } from "./shared.js";
 import { listTransactions } from "../../lib/protocol/core/transactions.js";
 import { evaluateTransactionSla } from "../../lib/protocol/distribution/resilience-sla.js";
-import { join } from "node:path";
 
 
 export interface ProtocolRelayOnceOptions {

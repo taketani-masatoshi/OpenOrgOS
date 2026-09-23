@@ -11,7 +11,6 @@ import {
 } from "../../lib/protocol/distribution/witness-trust.js";
 import { getWitnessTrustBundlePath } from "../../lib/protocol/core/paths.js";
 import { revokeWitnessHubCertificate } from "../../lib/protocol/distribution/witness-trust.js";
-import { readFileSync } from "node:fs";
 
 
 export interface ProtocolWitnessCacheMissingOptions {

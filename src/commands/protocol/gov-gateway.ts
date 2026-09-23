@@ -1,7 +1,5 @@
 /** Government gateway adapter command handlers. */
 import { applyProtocolTenant } from "./shared.js";
-import { existsSync } from "node:fs";
-import { readFileSync } from "node:fs";
 
 
 export interface ProtocolGovGatewayValidateOptions {

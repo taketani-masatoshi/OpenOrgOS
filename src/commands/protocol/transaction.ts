@@ -7,7 +7,6 @@ import {
 import { recordProtocolTransaction } from "../../lib/protocol/core/record-transaction.js";
 import type { TransactionType } from "../../../schemas/protocol/transaction-record.js";
 import { transactionTypeSchema } from "../../../schemas/protocol/transaction-record.js";
-import { join } from "node:path";
 
 
 export interface ProtocolTransactionRecordOptions {

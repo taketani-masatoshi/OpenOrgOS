@@ -5,7 +5,6 @@ import {
   runProtocolOutboxCheckPermissions,
   runProtocolAuditVerify,
   runProtocolVerifyAuditChain,
-  runProtocolEnvelopeValidate,
 } from "../../../commands/protocol/validate.js";
 import {
   runProtocolIdentityExport,

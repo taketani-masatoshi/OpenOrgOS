@@ -1,6 +1,5 @@
 /** Protocol API server command handlers. */
 import { applyProtocolTenant } from "./shared.js";
-import { join } from "node:path";
 
 
 export interface ProtocolApiServeOptions {

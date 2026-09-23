@@ -16,7 +16,6 @@ import {
   ensureProtocolSigningKey,
   rotateProtocolSigningKey,
 } from "../../lib/protocol/core/signing.js";
-import { join } from "node:path";
 import { findPeer } from "../../lib/protocol/transport/peers.js";
 
 

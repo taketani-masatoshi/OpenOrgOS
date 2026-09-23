@@ -181,7 +181,7 @@ export async function deliverProtocolEnvelope(
     }
 
     let result: { ok: boolean; reason: string; httpStatus?: number };
-    let channel: "wire_v1" | "relay" | "email_wire" | "openorgos_p2p" = "openorgos_p2p";
+    let channel: "wire_v1" | "relay" | "email_wire" | "openorgos_p2p";
 
     if (isGovGatewayEndpoint(ep)) {
       result = await deliverViaGovGatewayEndpoint(envelope, peerId, ep, opts?.deliverGovGateway);
