@@ -16,7 +16,7 @@ import {
   buildSchedulingDraftText,
   type SchedulingDraftKind,
 } from "./draft-text.js";
-import { persistSchedulingNextAction } from "./next-action.js";
+import { persistSchedulingNextAction } from "./persist-next-action.js";
 import { resolveSchedulingRecipients } from "./recipients.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 

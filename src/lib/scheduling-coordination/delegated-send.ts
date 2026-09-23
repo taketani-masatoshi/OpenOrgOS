@@ -5,7 +5,7 @@ import {
   getDelegatableProposalSendAuthority,
   invalidateStaleProposalSendAuthority,
 } from "./proposal-send-authority.js";
-import { persistSchedulingNextAction } from "./next-action.js";
+import { persistSchedulingNextAction } from "./persist-next-action.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 
 export async function sendSchedulingConfirmationsAuthorizedByCeo(

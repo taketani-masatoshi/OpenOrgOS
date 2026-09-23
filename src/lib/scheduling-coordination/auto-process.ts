@@ -4,7 +4,7 @@ import { advanceSchedulingWorkflow, refreshSchedulingReminder } from "./workflow
 import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
 import { listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
-import { reconcileSchedulingCorrespondence } from "./lifecycle.js";
+import { reconcileSchedulingCorrespondence } from "./correspondence-sent.js";
 
 export interface ScheduleAutoProcessResult {
   processed: number;

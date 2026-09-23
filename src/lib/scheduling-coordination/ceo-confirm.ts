@@ -16,10 +16,8 @@ import {
   resolveSchedulingCeoChoice,
 } from "./ceo-choice.js";
 import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
-import {
-  recordSchedulingLifecycleEvent,
-  sendSchedulingConfirmationsAuthorizedByCeo,
-} from "./lifecycle.js";
+import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
+import { sendSchedulingConfirmationsAuthorizedByCeo } from "./delegated-send.js";
 
 export const SCHEDULING_MAIL_PREFIX = "scheduling:";
 
