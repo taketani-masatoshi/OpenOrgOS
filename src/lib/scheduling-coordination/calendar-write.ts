@@ -73,6 +73,17 @@ export function ensureCalendarEventForCase(
   return { caseRow: updated, event };
 }
 
+/**
+ * Local calendar.yaml write, then optional Google Calendar push.
+ *
+ * Ordering (intentional · do not collapse into one transaction):
+ * 1. Ensure EVT-* exists in calendar.yaml and link case → pending/syncing
+ * 2. Push to Google when configured; on success mark synced and keep google_event_id / meet_url
+ * 3. On push failure: case stays confirmed with calendar_sync=failed (local event retained)
+ *
+ * Retries call this again; synced+google_event_id short-circuits. This is not a
+ * cross-process lock — only store.ts revision guards concurrent YAML writers in-process.
+ */
 export async function syncSchedulingCaseCalendar(
   caseId: string,
   slotId: string,

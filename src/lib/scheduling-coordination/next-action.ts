@@ -23,7 +23,6 @@ import {
   needsVenueClarifyInput,
 } from "./venue-clarify.js";
 import { findUnanimousAcceptedSlot } from "./slots.js";
-import { updateSchedulingCase } from "./store.js";
 
 export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction {
   if (
@@ -220,18 +219,6 @@ export function applyNextAction(caseInput: SchedulingCaseInput): SchedulingCase 
 
 function hasCounterResponses(caseRow: SchedulingCase): boolean {
   return caseRow.participants.some((p) => p.response === "counter");
-}
-
-export function persistSchedulingNextAction(caseRow: SchedulingCase): SchedulingCase {
-  const desired = applyNextAction(caseRow);
-  if (
-    desired.status === caseRow.status &&
-    desired.next_action === caseRow.next_action &&
-    desired.exception_reason === caseRow.exception_reason
-  ) {
-    return caseRow;
-  }
-  return updateSchedulingCase(caseRow.id, caseRow.revision, () => desired);
 }
 
 export function nextActionLabel(action: SchedulingNextAction): string {
