@@ -54,7 +54,13 @@ describe("steward chat integrations HTTP", () => {
     ]) {
       if (existsSync(path)) rmSync(path);
     }
-    process.env = { ...env };
+    // process.env reassignment does not reliably drop keys set during the case.
+    for (const key of Object.keys(process.env)) {
+      if (!(key in env)) delete process.env[key];
+    }
+    Object.assign(process.env, env);
+    delete process.env.ORGOS_SLACK_WEBHOOK_URL;
+    delete process.env.ORGOS_ASANA_PAT;
     resetConnectorSecretsHydrationForTest();
   });
 
