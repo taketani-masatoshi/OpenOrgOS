@@ -18,8 +18,11 @@ import {
 import { setTenantId } from "../src/lib/tenant.js";
 import { pushQueueEvent } from "../src/lib/queue-db.js";
 import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
+import { postManualJournalEntry } from "../src/lib/product/ledger-manual-entry.js";
+import { loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
 import { writeFileSync } from "node:fs";
 import { ROOT_DIR } from "../src/lib/tenant.js";
+import { buildOnboardingReport } from "../src/lib/product/ledger-onboarding.js";
 
 /**
  * `bank-accounts.yaml` is L2 and therefore gitignored, so a fresh checkout has
@@ -51,6 +54,23 @@ function ensureDemoBankAccounts(): void {
   if (existsSync(target)) return;
   writeFileSync(target, DEMO_BANK_ACCOUNTS, "utf-8");
   console.log(`seeded demo bank accounts at ${target}`);
+}
+
+/** customer_ready needs company.yaml + at least one journal; demo has the company. */
+function ensureDemoCustomerReady(): void {
+  if (loadJournalEntries().entries.length > 0) return;
+  postManualJournalEntry({
+    description: "E2E seed 初回仕訳",
+    debitAccount: "5100",
+    creditAccount: "1100",
+    amountYen: 1000,
+    authorizedBy: "OP-001",
+    occurredAt: "2026-02-15T00:00:00.000Z",
+  });
+  const report = buildOnboardingReport();
+  console.log(
+    `seeded demo first JE — customer_ready=${report.customer_ready} journals=${loadJournalEntries().entries.length}`,
+  );
 }
 
 async function seedDemo(): Promise<void> {
@@ -91,6 +111,7 @@ async function main(): Promise<void> {
     setTenantId(process.env.ORGOS_TENANT ?? "demo");
     ensureLedgerDemoChartOfAccounts();
     ensureDemoBankAccounts();
+    ensureDemoCustomerReady();
     pushQueueEvent({
       type: "pipeline_daily_complete",
       ref: "daily",
@@ -101,6 +122,7 @@ async function main(): Promise<void> {
     setTenantId(process.env.ORGOS_TENANT ?? "demo");
     ensureLedgerDemoChartOfAccounts();
     ensureDemoBankAccounts();
+    ensureDemoCustomerReady();
   }
 
   let witnessHubs: DemoWitnessHubs | undefined;

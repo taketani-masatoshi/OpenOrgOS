@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
-import { loginConsole } from "./helpers/console-login";
+import { gotoConsole, loginConsole } from "./helpers/console-login";
 import { loginApi } from "./helpers/api-login";
 
 /**
@@ -24,7 +24,7 @@ async function postEntry(request: APIRequestContext, amount: number): Promise<st
 test.describe("steward chat books", () => {
   test("ledger workbench renders for a ready tenant", async ({ page }) => {
     await loginConsole(page);
-    await page.goto("/?ledger=1");
+    await gotoConsole(page, "/?ledger=1");
     await expect(page.getByRole("heading", { name: "帳簿", exact: true })).toBeVisible({
       timeout: 20_000,
     });
@@ -46,7 +46,9 @@ test.describe("steward chat books", () => {
     request,
   }) => {
     await loginApi(request);
-    const month = "2026-03";
+    // FY ends in January for demo → February is the first fiscal month and can
+    // lock without a prior-month lock (monthly-reconcile is warning-only).
+    const month = "2026-02";
 
     const lock = await request.post("/chat/v1/ledger/period", {
       data: { month, action: "lock" },

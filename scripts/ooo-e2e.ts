@@ -8,11 +8,22 @@
  */
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { ROOT_DIR } from "../src/lib/tenant.js";
 
 const REPORT_PATH = join(ROOT_DIR, "tests", ".ooo-e2e-report.json");
 const RESULT_PATH = join(ROOT_DIR, "tests", ".ooo-e2e-green.json");
+
+/** Prefer a stable user cache — Cursor sandbox cache paths change per session. */
+function playwrightEnv(): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    PLAYWRIGHT_BROWSERS_PATH:
+      process.env.PLAYWRIGHT_BROWSERS_PATH?.trim() ||
+      join(homedir(), "Library/Caches/ms-playwright"),
+  };
+}
 
 interface PwSuite {
   title?: string;
@@ -48,7 +59,7 @@ function runConfig(config: string, files: Map<string, boolean>): void {
     ["playwright", "test", `--config=${config}`, "--reporter=json"],
     {
       cwd: ROOT_DIR,
-      env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_NAME: REPORT_PATH },
+      env: { ...playwrightEnv(), PLAYWRIGHT_JSON_OUTPUT_NAME: REPORT_PATH },
       encoding: "utf-8",
       maxBuffer: 64 * 1024 * 1024,
     },
@@ -76,7 +87,7 @@ function rerunFile(config: string, file: string): boolean {
   rmSync(REPORT_PATH, { force: true });
   const run = spawnSync("npx", ["playwright", "test", `--config=${config}`, file, "--reporter=json"], {
     cwd: ROOT_DIR,
-    env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_NAME: REPORT_PATH },
+    env: { ...playwrightEnv(), PLAYWRIGHT_JSON_OUTPUT_NAME: REPORT_PATH },
     encoding: "utf-8",
     maxBuffer: 64 * 1024 * 1024,
   });

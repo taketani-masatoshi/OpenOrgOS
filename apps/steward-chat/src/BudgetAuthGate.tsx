@@ -92,12 +92,18 @@ export function BudgetAuthGate({
 
   useEffect(() => {
     let cancelled = false;
+    // Never leave the Passkey loading shell up if a fetch stalls (Playwright /
+    // flaky disk) or a StrictMode remount cancels the first bootstrap.
+    const safety = window.setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 8_000);
     (async () => {
       try {
-        const [me, config, customers] = await Promise.all([
+        // Gate on session + config only. customers/nav is best-effort and must
+        // not block the password form / OperatorShell chrome.
+        const [me, config] = await Promise.all([
           fetchMe().catch(() => null),
           fetchAuthConfig().catch(() => null),
-          fetchCustomersNav().catch(() => ({ show_tab: false })),
         ]);
         if (cancelled) return;
         if (config) {
@@ -107,18 +113,30 @@ export function BudgetAuthGate({
             setApproverId(config.login_defaults.approver_id);
           }
         }
-        setCustomersNav(customers.show_tab === true);
         setUser(me);
+        setLoading(false);
+        void fetchCustomersNav()
+          .then((customers) => {
+            if (!cancelled) setCustomersNav(customers.show_tab === true);
+          })
+          .catch(() => {
+            if (!cancelled) setCustomersNav(false);
+          });
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : String(e));
+          setLoading(false);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        window.clearTimeout(safety);
+        // Always clear loading even if this effect was cancelled — an unmounted
+        // setState is a no-op, and a stuck "読み込み中…" shell is worse.
+        setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
+      window.clearTimeout(safety);
     };
   }, []);
 

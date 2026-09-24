@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { loginConsole } from "./helpers/console-login";
+import { gotoConsole, loginConsole } from "./helpers/console-login";
 import { loginApi } from "./helpers/api-login";
 
 /** Outbound correspondence: the gate, the ship gate, and secret handling. */
 test.describe("steward chat mail", () => {
   test("mail settings are reachable from company setup", async ({ page }) => {
     await loginConsole(page);
-    await page.goto("/?onboarding=1");
+    await gotoConsole(page, "/?onboarding=1");
     await expect(page.getByRole("heading", { name: "メール" })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("button", { name: "Gmail と連携する" })).toBeVisible();
   });

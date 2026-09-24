@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginConsole } from "./helpers/console-login";
+import { gotoConsole, loginConsole } from "./helpers/console-login";
 import { loginApi } from "./helpers/api-login";
 
 /**
@@ -11,11 +11,7 @@ import { loginApi } from "./helpers/api-login";
 test.describe("steward chat governance", () => {
   test("approvals queue opens for an operator", async ({ page }) => {
     await loginConsole(page);
-    const res = await page.goto("/");
-    expect(res?.status()).toBeLessThan(400);
-    await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
-      timeout: 15_000,
-    });
+    await gotoConsole(page, "/");
   });
 
   test("proposing an approval requires a subject type", async ({ request }) => {
