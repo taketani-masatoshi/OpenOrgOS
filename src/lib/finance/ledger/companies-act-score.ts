@@ -10,7 +10,10 @@ import {
 } from "./companies-act-ordinance-pin.js";
 
 export type { CompaniesActPinLine } from "./companies-act-ordinance-pin.js";
-export { COMPANIES_ACT_ORDINANCE_LABEL_PIN } from "./companies-act-ordinance-pin.js";
+export {
+  COMPANIES_ACT_ORDINANCE_LABEL_PIN,
+  withCompaniesActDevAmounts,
+} from "./companies-act-ordinance-pin.js";
 
 export const COMPANIES_ACT_FULL_MARKS = 12;
 

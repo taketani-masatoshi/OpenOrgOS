@@ -27,6 +27,7 @@ import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
 import {
   applyFixtureStatementRoles,
+  resetFixtureCloseArtifacts,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -86,7 +87,7 @@ describe("monthly close lifecycle integration", () => {
 
   afterEach(() => {
     removeBank();
-    resetFixtureJournalEntries();
+    resetFixtureCloseArtifacts();
     if (originalDefer == null) delete process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE;
     else process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE = originalDefer;
   });

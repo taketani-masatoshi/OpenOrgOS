@@ -19,6 +19,7 @@ import {
   listLedgerSignups,
   withLedgerTenantAllocationLock,
 } from "./ledger-fleet.js";
+import { ensureLedgerDemoChartOfAccounts } from "./ledger-coa-ensure.js";
 
 /** Product-only finance files not covered by tenant-init skeleton. */
 const FINANCE_ENSURE_FILES = ["period-locks.yaml"] as const;
@@ -213,6 +214,9 @@ export function provisionLedgerTenant(input: {
   ensureLedgerFinanceSkeleton(tenantId);
   writeLedgerProductMeta(tenantId);
   setTenantId(tenantId);
+  // Template CoA may be minimal; merge demo accounts + journal_source_accounts
+  // so month-close / cash gates never throw on a freshly provisioned tenant.
+  ensureLedgerDemoChartOfAccounts();
   const ceoOperatorId = ensureCeoOperator({
     adminEmail: input.adminEmail,
   });

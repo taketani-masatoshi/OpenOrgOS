@@ -6,10 +6,10 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import YAML from "yaml";
-import { evaluateAnnualCloseGates, postAnnualPlTransfer } from "../finance/annual-close.js";
-import { appendJournalEntry, loadJournalEntries } from "../finance/expense-claim-journal.js";
-import { assessBlueReturnDeduction, buildSolePropBlueReturn } from "../finance/sole-prop-blue-return.js";
-import { buildSolePropIncomeTaxReturnDraft } from "../finance/sole-prop-income-tax-return.js";
+import { evaluateAnnualCloseGates, postAnnualPlTransfer } from "../annual-close.js";
+import { appendJournalEntry, loadJournalEntries } from "../expense-claim-journal.js";
+import { assessBlueReturnDeduction, buildSolePropBlueReturn } from "../sole-prop-blue-return.js";
+import { buildSolePropIncomeTaxReturnDraft } from "../sole-prop-income-tax-return.js";
 import {
   scoreBlueReturnLines,
   scoreIncomeTaxReturn,
@@ -18,7 +18,7 @@ import {
   type BasicDeductionBand,
   type BlueReturnLinePin,
   type IncomeTaxYenPin,
-} from "../finance/sole-prop-core-score.js";
+} from "../sole-prop-core-score.js";
 import {
   computeSolePropLocalTax,
   projectOfficialSolePropLocalTaxLines,
@@ -26,18 +26,18 @@ import {
   scoreSolePropLocalTax,
   type SolePropLocalRates,
   type SolePropLocalTaxLine,
-} from "../finance/sole-prop-local-tax.js";
+} from "../sole-prop-local-tax.js";
 import {
   evaluateSolePropMonthlyClose,
   monthRevenueExcludingOwnerCapital,
-} from "../finance/sole-prop-monthly-close.js";
-import { buildTrialBalance } from "../finance/ledger/trial-balance.js";
-import { loadChartOfAccounts } from "../data.js";
-import { getDataDir } from "../utils.js";
-import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
-import { getTenantsDir, refreshOrgOsPaths } from "../orgos-paths.js";
-import { provisionLedgerTenant } from "./ledger-provision.js";
-import { ensureLedgerDemoChartOfAccounts } from "./ledger-coa-ensure.js";
+} from "../sole-prop-monthly-close.js";
+import { buildTrialBalance } from "../ledger/trial-balance.js";
+import { loadChartOfAccounts } from "../../data.js";
+import { getDataDir } from "../../utils.js";
+import { clearTenantId, getTenantId, setTenantId } from "../../tenant.js";
+import { getTenantsDir, refreshOrgOsPaths } from "../../orgos-paths.js";
+import { provisionLedgerTenant } from "../../product/ledger-provision.js";
+import { ensureLedgerDemoChartOfAccounts } from "../../product/ledger-coa-ensure.js";
 
 export type SolePropLaneFCheck = {
   id: string;

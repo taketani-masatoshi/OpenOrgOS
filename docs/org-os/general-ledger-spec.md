@@ -58,6 +58,18 @@
 | 月次 YAML 突合 | 計画が無い、または元帳と差がある場合は warning。ロックは妨げない |
 | 直前月 | 決算月の最初の月を除き、直前の月がロック済みでないとロックしない |
 
+### `ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE`
+
+通し受け入れ（`ledger product readiness --accounting` や FY 連続 close の統合試験）では、各月のゲート評価で `orgos validate` を走らせるとコストが大きい。`ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE=1` のとき、月次ゲートの `validate` 項目は skip（`pass: true`）し、詳細は `deferred by ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE` になる。
+
+| 用途 | 扱い |
+|------|------|
+| 本番 / 通常 CLI close | **設定しない**（各月で finance validate を実行） |
+| 通年受け入れ・統合試験 | 1 に設定し、年次完了後に 1 回 `orgos validate` を別途走らせる |
+| preflight 相 | 環境変数に関わらず validate は後段へ延期（既存どおり） |
+
+本番 close で defer したままロックしないこと。受け入れ経路だけが defer し、ロック前の最終検証は呼び出し側の責務である。
+
 期間ロック済みかどうかは checklist の `period_locked` であり、`ready` には含めない。ロック済み月の訂正は、理由付き unlock → 同月の逆仕訳 → 再 close。ロックは解除しないまま失敗ゲートを再評価しても、既存ロックは残す。
 
 ## 年度決算ゲート

@@ -8,24 +8,23 @@
  */
 import { officialFilingProductStatus } from "../finance/filing/official-receipt.js";
 import { taxModuleBoundaryNote } from "../tax/tax-handoff-package.js";
+import {
+  defaultFormPinCollations,
+  type FormPinCollation,
+} from "./tax-form-pin-defaults.js";
+
+export type { FormPinCollation } from "./tax-form-pin-defaults.js";
+export {
+  defaultCorporateFormPinCollations,
+  defaultFormPinCollations,
+  defaultSolePropFormPinCollations,
+} from "./tax-form-pin-defaults.js";
 
 export type TaxLinePinDiffRow = {
   id: string;
   label: string;
   diff_empty: boolean;
   note: string;
-};
-
-/** Caller-supplied collation — product code does not read tests/fixtures. */
-export type FormPinCollation = {
-  id: string;
-  label: string;
-  /** False when no pin (label / form-line / fixture) is available. */
-  pinPresent: boolean;
-  /** False when books projection is not available yet. */
-  projectedReady: boolean;
-  /** Number of mismatched rows; 0 means empty diff when pin+projection ready. */
-  diffCount: number;
 };
 
 export type TaxLinesReadModel = {
@@ -64,64 +63,6 @@ export function formPinCollationToRow(c: FormPinCollation): TaxLinePinDiffRow {
     diff_empty: c.diffCount === 0,
     note: c.diffCount === 0 ? "帳簿↔ピン空差分" : `差分 ${c.diffCount} 行`,
   };
-}
-
-/**
- * Default form rows when Chat has no tenant projection yet.
- * Companies Act: ordinance label pin is product-shipped; projection loaded by live collation.
- */
-export function defaultFormPinCollations(): FormPinCollation[] {
-  return [
-    {
-      id: "companies-act-yen",
-      label: "会社計算規則 表示ピン",
-      pinPresent: true,
-      projectedReady: false,
-      diffCount: 0,
-    },
-    {
-      id: "schedule4-yen",
-      label: "別表四 記載例ピン",
-      pinPresent: true,
-      projectedReady: false,
-      diffCount: 0,
-    },
-    {
-      id: "corp-local-yen",
-      label: "法人地方税 印刷円",
-      pinPresent: true,
-      projectedReady: false,
-      diffCount: 0,
-    },
-    {
-      id: "sole-local-yen",
-      label: "個人地方税 印刷円",
-      pinPresent: true,
-      projectedReady: false,
-      diffCount: 0,
-    },
-    {
-      id: "consumption-formula",
-      label: "消費税 算式ピン",
-      pinPresent: true,
-      projectedReady: false,
-      diffCount: 0,
-    },
-    {
-      id: "consumption-yen",
-      label: "消費税 円ピン",
-      pinPresent: true,
-      projectedReady: false,
-      diffCount: 0,
-    },
-    {
-      id: "blue-return-yen",
-      label: "青色申告 手引き円",
-      pinPresent: true,
-      projectedReady: false,
-      diffCount: 0,
-    },
-  ];
 }
 
 export function buildFormPinDiffRows(
@@ -190,8 +131,14 @@ export function buildTaxLinesReadModel(
         detail: "記載例ピン照合は acceptance。e-Tax 提出は別ゲート",
       },
       {
-        id: "local-tax",
-        label: "法人・個人の地方税行",
+        id: "corp-local-tax",
+        label: "法人地方税行",
+        status: "info",
+        detail: "公式計算例ピン照合は acceptance。送信なし",
+      },
+      {
+        id: "sole-local-tax",
+        label: "個人地方税行",
         status: "info",
         detail: "公式計算例ピン照合は acceptance。送信なし",
       },

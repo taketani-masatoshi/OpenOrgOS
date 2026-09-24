@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import * as monthlyClose from "../src/lib/finance/monthly-close.js";
 import * as taxAdjustment from "../src/lib/finance/tax-adjustment.js";
 import * as expenseClaim from "../src/lib/finance/expense-claim.js";
+import * as expenseClaimPropose from "../src/lib/finance/expense-claim-propose.js";
+import * as expenseClaimWire from "../src/lib/finance/expense-claim-wire.js";
 import * as corporateLocalTax from "../src/lib/finance/corporate-local-tax.js";
 import * as solePropConsumptionTax from "../src/lib/finance/sole-prop-consumption-tax.js";
 import {
@@ -56,14 +58,17 @@ describe("finance public export baseline", () => {
       "ExpenseClaimItemRevisionConflictError",
       "ExpenseClaimsRevisionConflictError",
       "approveExpenseClaim",
+      "assertAllocationAccountConsistency",
       "assertExpectedClaimRevision",
       "assertExpectedClaimsRevision",
       "buildReceiptWireClaimPayload",
       "bumpAndSaveExpenseClaims",
+      "bumpClaimAndSaveExpenseClaims",
       "claimAllocations",
       "claimRevision",
       "computeExpenseClaimRemaining",
       "defaultReimbursementDueOn",
+      "evaluateAllocationGates",
       "evaluateExpenseClaimDeadline",
       "evaluateExpenseClaimGate",
       "expenseClaimsPath",
@@ -73,6 +78,9 @@ describe("finance public export baseline", () => {
       "listExpenseClaims",
       "loadExpenseClaims",
       "markExpenseClaimReimbursed",
+      "matchingClaimAllocationYen",
+      "nextClaimId",
+      "persistClaimPatch",
       "postExpenseClaim",
       "prepareExpenseClaimReimbursementTransfer",
       "proposeExpenseClaimFromReceipt",
@@ -81,6 +89,19 @@ describe("finance public export baseline", () => {
       "resolveIssuerWireReady",
       "saveExpenseClaims",
       "withExpenseClaimsLock",
+    ]);
+  });
+
+  it("pins expense-claim-propose.js exports", () => {
+    expect(Object.keys(expenseClaimPropose).sort()).toEqual([
+      "proposeExpenseClaimFromReceipt",
+    ]);
+  });
+
+  it("pins expense-claim-wire.js exports", () => {
+    expect(Object.keys(expenseClaimWire).sort()).toEqual([
+      "buildReceiptWireClaimPayload",
+      "resolveIssuerWireReady",
     ]);
   });
 

@@ -34,7 +34,7 @@ import {
 import {
   runIsolatedSolePropLaneFAcceptance,
   type SolePropAcceptancePins,
-} from "../src/lib/product/ledger-sole-prop-lane-f-acceptance.js";
+} from "../src/lib/finance/acceptance/sole-prop-lane-f-acceptance.js";
 
 function loadPins(): SolePropAcceptancePins {
   const blue = YAML.parse(

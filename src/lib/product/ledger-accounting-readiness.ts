@@ -12,7 +12,7 @@ import { runWithTenantId } from "../tenant.js";
 import {
   runIsolatedAccountingAcceptance,
   type AccountingAcceptanceResult,
-} from "./ledger-accounting-acceptance.js";
+} from "../finance/acceptance/accounting-acceptance.js";
 import { buildFleetHealthReport } from "./ledger-fleet-health.js";
 import { listActiveLedgerProductTenantIds } from "./ledger-product-tenant.js";
 

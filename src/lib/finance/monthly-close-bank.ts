@@ -1,8 +1,9 @@
 /**
  * Bank statement versus GL tie-out for monthly close.
  */
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 import { loadChartOfAccounts } from "../data.js";
 import { getDataDir } from "../utils.js";
 import { loadBankStatementsLite, bankStatementNetMovement } from "./bank-statements-lite.js";
@@ -43,9 +44,21 @@ function cashBalanceFileExists(): boolean {
   return existsSync(join(getDataDir(), "finance", "cash-balance.yaml"));
 }
 
-/** A cash register or a statement file means the tenant uses a bank. */
+/** True when the tenant operates a bank (statements or a confirmed cash register). */
 export function tenantUsesBank(): boolean {
-  return cashBalanceFileExists() || bankFileExists();
+  if (bankFileExists()) return true;
+  if (!cashBalanceFileExists()) return false;
+  try {
+    const raw = YAML.parse(
+      readFileSync(join(getDataDir(), "finance", "cash-balance.yaml"), "utf-8"),
+    ) as { status?: string; accounts?: unknown[]; total?: number | null };
+    // tenant-init skeleton is status: template with empty accounts — not yet a bank.
+    if (raw?.status === "template") return false;
+    if (Array.isArray(raw?.accounts) && raw.accounts.length === 0) return false;
+    return true;
+  } catch {
+    return true;
+  }
 }
 
 /**

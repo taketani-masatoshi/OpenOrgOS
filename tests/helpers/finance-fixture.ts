@@ -13,13 +13,43 @@ export function useFinanceFixtureTenant(): void {
 export function resetFixtureJournalEntries(): void {
   useFinanceFixtureTenant();
   const base = join(getTenantDir(), "data/finance");
+  // Empty ledger for isolation. Tracked JE-GUARD seed is restored by git in CI;
+  // local disposable checkouts should not point ORGOS_TEST_DISPOSABLE_ROOT at a
+  // shared tip you intend to commit without restoring this file.
   writeFileSync(join(base, "journal-entries.yaml"), "version: 1\nentries: []\n", "utf-8");
   writeFileSync(join(base, "period-locks.yaml"), "version: 1\nlocks: []\n", "utf-8");
-  // Clear monthly-close transaction state left by aborted/resumed closes.
+  // Clear monthly-close / annual-close transaction state left by aborted/resumed closes.
   if (!existsSync(base)) return;
   for (const name of readdirSync(base)) {
-    if (/^monthly-close\.\d{4}-\d{2}\.state\.yaml$/.test(name)) {
+    if (
+      /^monthly-close\.\d{4}-\d{2}\.state\.yaml$/.test(name) ||
+      /^annual-close\.FY\d{4}\.state\.yaml$/.test(name)
+    ) {
       unlinkSync(join(base, name));
+    }
+  }
+}
+
+/**
+ * Stronger fixture hygiene for lifecycle / readiness suites that touch opening
+ * balances or close state. Call from afterEach when a test mutates more than journals.
+ */
+export function resetFixtureCloseArtifacts(): void {
+  resetFixtureJournalEntries();
+  useFinanceFixtureTenant();
+  const base = join(getTenantDir(), "data/finance");
+  if (!existsSync(base)) return;
+  for (const name of readdirSync(base)) {
+    if (
+      name.startsWith("opening-balances") ||
+      name.endsWith(".state.yaml") ||
+      /^year-end\.FY\d{4}\.yaml$/.test(name)
+    ) {
+      // Keep tracked opening-balances.yaml seed; only clear ephemeral siblings.
+      if (name === "opening-balances.yaml") continue;
+      if (name.startsWith("opening-balances.") || name.endsWith(".state.yaml")) {
+        unlinkSync(join(base, name));
+      }
     }
   }
 }

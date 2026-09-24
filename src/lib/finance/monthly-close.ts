@@ -40,13 +40,14 @@ export {
 } from "./ledger/cashbook-display.js";
 
 export {
-  evaluateInventoryCloseGate,
   evaluateMonthlyCloseGates,
   type MonthlyCloseEvaluation,
   type MonthlyCloseGate,
   type MonthlyCloseGateLevel,
   type MonthlyCloseResult,
 } from "./monthly-close-gates.js";
+
+export { evaluateInventoryCloseGate } from "./monthly-close-inventory.js";
 
 function stableValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stableValue);

@@ -33,7 +33,7 @@ import {
   expenseClaimsPath,
   loadExpenseClaims,
   withExpenseClaimsLock,
-} from "./expense-claim.js";
+} from "./expense-claim-store.js";
 
 export type ExpenseClaimIntegrityIssue = {
   level: "error" | "warning";

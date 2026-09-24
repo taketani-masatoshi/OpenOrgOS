@@ -23,70 +23,30 @@ import { equityChangeAmounts } from "./ledger/balance-sheet.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { assertJpTaxProfile } from "./indirect-tax/port.js";
 import {
-  CAPITAL_REDUCED_RATE_CEILING_YEN,
-  EXPLICIT_ADD_ROWS,
-  EXPLICIT_SUBTRACT_ROWS,
-  FORM_BETSU_1,
-  FORM_BETSU_1_LEAF,
   FORM_BETSU_4,
-  FORM_BETSU_5_1,
-  FULL_YEAR_MONTHS,
-  HUNDRED_YEN,
-  LEAF_LOCAL_BASE_LABEL,
-  LEAF_LOCAL_TAX_LABEL,
-  LEAF_REDUCED_BASE_LABEL,
-  LEAF_REDUCED_TAX_LABEL,
-  LEAF_RESIDUAL_BASE_LABEL,
-  LEAF_RESIDUAL_TAX_LABEL,
-  BETSU1_LOCAL_BASE_LABEL,
-  BETSU1_LOCAL_TAX_LABEL,
-  REDUCED_BRACKET_YEN,
-  REDUCED_RATE_BPS,
   RESERVED_EXPLICIT_ROWS,
-  ROW_CARRYOVER_EARNINGS,
-  ROW_CORPORATE_TAX,
-  ROW_CURRENT_PROFIT,
   ROW_DEPRECIATION_EXCESS,
   ROW_ENTERTAINMENT_EXCESS,
-  ROW_LEAF_LOCAL_BASE,
-  ROW_LEAF_LOCAL_TAX,
-  ROW_LOCAL_CORPORATE_TAX,
-  ROW_LOCAL_TAX_BASE,
-  ROW_REDUCED_BASE,
-  ROW_REDUCED_TAX,
-  ROW_RESIDUAL_BASE,
-  ROW_RESIDUAL_TAX,
-  ROW_RETAINED_TOTAL,
-  ROW_RETURN_INCOME,
   ROW_TAXABLE_INCOME,
-  SCHEDULE_4_LINES,
-  SME_CATEGORY,
-  STANDARD_RATE_BPS,
-  THOUSAND_YEN,
-  truncateYen,
-  type OfficialAnnexColumn,
   type OfficialAnnexLine,
   type TaxAdjustmentKind,
   type TaxAdjustmentWorksheetLine,
 } from "./corporate-tax-annex.js";
 import {
-  betsu4,
-  schedule4Amount,
   schedule4Amounts,
 } from "./schedule4-pin.js";
 import {
-  localCorporateTaxAmountYen,
-  localCorporateTaxBaseYen,
-} from "./schedule1-pin.js";
-
-function betsu5(
-  row: string,
-  col: OfficialAnnexColumn,
-  label: string,
-  amountYen: number,
-): OfficialAnnexLine {
-  return { form: FORM_BETSU_5_1, row, col, label, amount_yen: amountYen };
-}
+  emptyNationalTax,
+  explicitRowAllowed,
+  nationalCorporateTax,
+  reducedBracketYen,
+  reducedRateApplies,
+  type CorporateTaxProfile,
+} from "./tax-adjustment-national.js";
+import {
+  officialAnnexLines,
+  type RetainedRollforward,
+} from "./tax-adjustment-annex-build.js";
 
 export {
   CORPORATE_TAX_FORM_EDITION,
@@ -121,14 +81,6 @@ export {
 
 const AUTO_IDS = new Set(["depreciation_excess", "entertainment_excess"]);
 
-type RetainedRollforward = {
-  opening_yen: number;
-  net_income_yen: number;
-  dividend_yen: number;
-  capital_yen: number;
-  closing_yen: number;
-};
-
 export type TaxAdjustmentWorksheet = {
   fiscal_year: string;
   as_of: string;
@@ -143,28 +95,6 @@ export type TaxAdjustmentWorksheet = {
   official_lines: OfficialAnnexLine[];
   official_pending: string[];
   errors: string[];
-};
-
-type CorporateTaxProfile = {
-  entertainment_account_code?: string;
-  entertainment_cap_yen?: number;
-  capital_stock?: number | "TBD";
-  category?: string;
-  reduced_rate_excluded?: boolean;
-};
-
-type ProfileFiscalYear = {
-  period_from?: string;
-  period_to?: string;
-};
-
-type NationalCorporateTax = {
-  corporate_tax_yen: number | null;
-  reduced_rate: boolean | null;
-  reduced_base_yen: number | null;
-  reduced_tax_yen: number | null;
-  residual_base_yen: number | null;
-  residual_tax_yen: number | null;
 };
 
 function dayBefore(isoDate: string): string {
@@ -195,235 +125,6 @@ function uncomputed(fiscalYear: string, asOf: string, errors: string[]): TaxAdju
     official_pending: [],
     errors,
   };
-}
-
-function taxAtRate(baseYen: number, rateBps: number): number {
-  return Math.floor((baseYen * rateBps) / 10_000);
-}
-
-function calendarMonths(fromIso: string, toIso: string): number | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fromIso) || !/^\d{4}-\d{2}-\d{2}$/.test(toIso)) return null;
-  if (toIso < fromIso) return null;
-  const [startYear, startMonth, startDay] = fromIso.split("-").map(Number);
-  const [endYear, endMonth, endDay] = toIso.split("-").map(Number);
-  if (
-    startYear == null ||
-    startMonth == null ||
-    startDay == null ||
-    endYear == null ||
-    endMonth == null ||
-    endDay == null
-  ) {
-    return null;
-  }
-  let months = (endYear - startYear) * 12 + (endMonth - startMonth);
-  if (endDay >= startDay) months += 1;
-  if (months < 1) return null;
-  return Math.min(months, FULL_YEAR_MONTHS);
-}
-
-function reducedBracketYen(
-  fiscalYear: ProfileFiscalYear | undefined,
-  companyStart: string,
-  companyEnd: string
-): number {
-  const declared =
-    fiscalYear?.period_from && fiscalYear.period_to
-      ? calendarMonths(fiscalYear.period_from, fiscalYear.period_to)
-      : null;
-  const months = declared ?? calendarMonths(companyStart, companyEnd) ?? FULL_YEAR_MONTHS;
-  return Math.floor((REDUCED_BRACKET_YEN * months) / FULL_YEAR_MONTHS);
-}
-
-function explicitRowAllowed(kind: TaxAdjustmentKind, formRow: string | undefined): boolean {
-  if (!formRow) return false;
-  if (kind === "add") return EXPLICIT_ADD_ROWS.has(formRow);
-  return EXPLICIT_SUBTRACT_ROWS.has(formRow);
-}
-
-function emptyNationalTax(): NationalCorporateTax {
-  return {
-    corporate_tax_yen: null,
-    reduced_rate: null,
-    reduced_base_yen: null,
-    reduced_tax_yen: null,
-    residual_base_yen: null,
-    residual_tax_yen: null,
-  };
-}
-
-function reducedRateApplies(profile: CorporateTaxProfile): boolean | null {
-  if (profile.reduced_rate_excluded) return null;
-  if (typeof profile.capital_stock === "number") {
-    return profile.capital_stock <= CAPITAL_REDUCED_RATE_CEILING_YEN;
-  }
-  if (profile.category === SME_CATEGORY) return true;
-  return null;
-}
-
-function nationalCorporateTax(
-  taxableIncomeYen: number,
-  reducedRate: boolean | null,
-  bracketYen: number,
-  excluded: boolean
-): NationalCorporateTax {
-  const base = truncateYen(Math.max(0, taxableIncomeYen), THOUSAND_YEN);
-  if (base === 0) {
-    return {
-      corporate_tax_yen: 0,
-      reduced_rate: reducedRate,
-      reduced_base_yen: 0,
-      reduced_tax_yen: 0,
-      residual_base_yen: 0,
-      residual_tax_yen: 0,
-    };
-  }
-  if (excluded || reducedRate == null) return emptyNationalTax();
-  const reducedBase = reducedRate ? Math.min(base, bracketYen) : 0;
-  const residualBase = base - reducedBase;
-  const reducedRateBps = reducedRate ? REDUCED_RATE_BPS : STANDARD_RATE_BPS;
-  let reducedTax = reducedRate ? taxAtRate(reducedBase, reducedRateBps) : 0;
-  let residualTax = taxAtRate(residualBase, STANDARD_RATE_BPS);
-  const corporateTax = truncateYen(reducedTax + residualTax, HUNDRED_YEN);
-  const discarded = reducedTax + residualTax - corporateTax;
-  if (discarded > 0 && residualTax >= discarded) residualTax -= discarded;
-  else if (discarded > 0) {
-    reducedTax -= discarded - residualTax;
-    residualTax = 0;
-  }
-  return {
-    corporate_tax_yen: corporateTax,
-    reduced_rate: reducedRate,
-    reduced_base_yen: reducedBase,
-    reduced_tax_yen: reducedTax,
-    residual_base_yen: residualBase,
-    residual_tax_yen: residualTax,
-  };
-}
-function officialAnnexLines(input: {
-  starting: number;
-  depreciationExcess: number;
-  entertainmentExcess: number;
-  mappedExplicit: TaxAdjustmentWorksheetLine[];
-  totalsReady: boolean;
-  schedule4: Map<string, number> | null;
-  retained: RetainedRollforward;
-  tax: NationalCorporateTax;
-}): OfficialAnnexLine[] {
-  const rows: OfficialAnnexLine[] = [];
-  if (input.schedule4) {
-    for (const line of SCHEDULE_4_LINES) {
-      rows.push(betsu4(line.row, line.label, schedule4Amount(input.schedule4, line.row)));
-    }
-  } else {
-    rows.push(betsu4(ROW_CURRENT_PROFIT, "当期利益又は当期欠損の額", input.starting));
-    if (input.depreciationExcess > 0) {
-      rows.push(betsu4(ROW_DEPRECIATION_EXCESS, "減価償却の償却超過額", input.depreciationExcess));
-    }
-    if (input.entertainmentExcess > 0) {
-      rows.push(
-        betsu4(ROW_ENTERTAINMENT_EXCESS, "交際費等の損金不算入額", input.entertainmentExcess)
-      );
-    }
-    for (const line of input.mappedExplicit) {
-      if (!line.row) continue;
-      rows.push(betsu4(line.row, line.label, line.amount_yen));
-    }
-  }
-  if (input.retained.capital_yen === 0) {
-    const opening = input.retained.opening_yen;
-    const decrease = input.retained.dividend_yen;
-    const increase = input.retained.net_income_yen;
-    const closing = opening - decrease + increase;
-    rows.push(
-      betsu5(ROW_CARRYOVER_EARNINGS, "1", "繰越損益金・期首現在利益積立金額", opening),
-      betsu5(ROW_CARRYOVER_EARNINGS, "2", "繰越損益金・当期の減", decrease),
-      betsu5(ROW_CARRYOVER_EARNINGS, "3", "繰越損益金・当期の増", increase),
-      betsu5(ROW_CARRYOVER_EARNINGS, "4", "繰越損益金・差引翌期首現在利益積立金額", closing),
-      betsu5(ROW_RETAINED_TOTAL, "1", "差引合計額・期首現在利益積立金額", opening),
-      betsu5(ROW_RETAINED_TOTAL, "2", "差引合計額・当期の減", decrease),
-      betsu5(ROW_RETAINED_TOTAL, "3", "差引合計額・当期の増", increase),
-      betsu5(ROW_RETAINED_TOTAL, "4", "差引合計額・差引翌期首現在利益積立金額", closing)
-    );
-  }
-  if (!input.totalsReady || input.tax.corporate_tax_yen == null || input.schedule4 == null)
-    return rows;
-  const income = schedule4Amount(input.schedule4, ROW_TAXABLE_INCOME);
-  rows.push({
-    form: FORM_BETSU_1,
-    row: ROW_RETURN_INCOME,
-    label: "所得金額又は欠損金額",
-    amount_yen: income,
-  });
-  rows.push({
-    form: FORM_BETSU_1,
-    row: ROW_CORPORATE_TAX,
-    label: "所得の金額に対する法人税額",
-    amount_yen: input.tax.corporate_tax_yen,
-  });
-  rows.push({
-    form: FORM_BETSU_1,
-    row: ROW_LOCAL_TAX_BASE,
-    label: BETSU1_LOCAL_BASE_LABEL,
-    amount_yen: input.tax.corporate_tax_yen,
-  });
-  const localAmount = localCorporateTaxAmountYen(input.tax.corporate_tax_yen);
-  rows.push({
-    form: FORM_BETSU_1,
-    row: ROW_LOCAL_CORPORATE_TAX,
-    label: BETSU1_LOCAL_TAX_LABEL,
-    amount_yen: localAmount,
-  });
-  if (
-    input.tax.reduced_rate === true &&
-    input.tax.reduced_base_yen != null &&
-    input.tax.reduced_base_yen > 0 &&
-    input.tax.reduced_tax_yen != null &&
-    input.tax.residual_base_yen != null &&
-    input.tax.residual_tax_yen != null
-  ) {
-    rows.push(
-      {
-        form: FORM_BETSU_1_LEAF,
-        row: ROW_REDUCED_BASE,
-        label: LEAF_REDUCED_BASE_LABEL,
-        amount_yen: input.tax.reduced_base_yen,
-      },
-      {
-        form: FORM_BETSU_1_LEAF,
-        row: ROW_REDUCED_TAX,
-        label: LEAF_REDUCED_TAX_LABEL,
-        amount_yen: input.tax.reduced_tax_yen,
-      },
-      {
-        form: FORM_BETSU_1_LEAF,
-        row: ROW_RESIDUAL_BASE,
-        label: LEAF_RESIDUAL_BASE_LABEL,
-        amount_yen: input.tax.residual_base_yen,
-      },
-      {
-        form: FORM_BETSU_1_LEAF,
-        row: ROW_RESIDUAL_TAX,
-        label: LEAF_RESIDUAL_TAX_LABEL,
-        amount_yen: input.tax.residual_tax_yen,
-      }
-    );
-  }
-  rows.push(
-    {
-      form: FORM_BETSU_1_LEAF,
-      row: ROW_LEAF_LOCAL_BASE,
-      label: LEAF_LOCAL_BASE_LABEL,
-      amount_yen: localCorporateTaxBaseYen(input.tax.corporate_tax_yen),
-    },
-    {
-      form: FORM_BETSU_1_LEAF,
-      row: ROW_LEAF_LOCAL_TAX,
-      label: LEAF_LOCAL_TAX_LABEL,
-      amount_yen: localAmount,
-    }
-  );
-  return rows;
 }
 
 export function evaluateTaxAdjustment(fiscalYear: string): TaxAdjustmentWorksheet {

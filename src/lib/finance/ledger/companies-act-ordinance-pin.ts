@@ -2,6 +2,10 @@
  * Ordinance display labels for Companies Act statements (product-shipped).
  * Labels follow e-Gov 会社計算規則. Yen amounts live only in test fixtures.
  * src/ must not import tests/fixtures.
+ *
+ * SSOT: labels+order live ONLY here. Dev fixtures may supply parallel `amounts[]`
+ * (nullable yen) that `withCompaniesActDevAmounts` merges by index — fixtures
+ * must not redefine article/label strings.
  */
 export type CompaniesActPinLine = {
   article: string;
@@ -47,3 +51,18 @@ export const COMPANIES_ACT_ORDINANCE_LABEL_PIN: readonly CompaniesActPinLine[] =
   { article: "第百十三条", label: "一株当たり情報に関する注記" },
   { article: "第百十四条", label: "重要な後発事象に関する注記" },
 ];
+
+/** Merge development-fixture yen onto the product ordinance pin (labels stay SSOT). */
+export function withCompaniesActDevAmounts(
+  amounts: ReadonlyArray<number | null | undefined>,
+): CompaniesActPinLine[] {
+  if (amounts.length !== COMPANIES_ACT_ORDINANCE_LABEL_PIN.length) {
+    throw new Error(
+      `dev amounts length ${amounts.length} != ordinance pin ${COMPANIES_ACT_ORDINANCE_LABEL_PIN.length}`,
+    );
+  }
+  return COMPANIES_ACT_ORDINANCE_LABEL_PIN.map((line, index) => {
+    const yen = amounts[index];
+    return yen == null ? { ...line } : { ...line, example_yen: yen };
+  });
+}

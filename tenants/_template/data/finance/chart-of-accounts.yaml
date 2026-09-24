@@ -5,6 +5,20 @@ accounts:
     name: 現金及び預金
     type: asset
     normal_balance: debit
+# Minimal mapping so month-close / cash gates work before demo COA ensure.
+journal_source_accounts:
+  bank_control: "1100"
+  accounts_receivable: "1150"
+  accounts_payable: "2110"
+  withholding_payable: "2120"
+  social_insurance_payable: "2130"
+  payroll_payable: "2140"
+  payroll_expense: "5300"
+  depreciation_expense: "5100"
+  accumulated_depreciation: "1290"
+  retained_earnings: "3200"
+  consumption_tax_payable: "2160"
+  consumption_tax_receivable: "2170"
 category_mapping:
   revenue: {}
   expense: {}

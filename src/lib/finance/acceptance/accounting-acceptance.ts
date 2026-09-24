@@ -6,17 +6,17 @@
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { closeAccountingYear, listFiscalYearMonths } from "../finance/annual-close.js";
+import { closeAccountingYear, listFiscalYearMonths } from "../annual-close.js";
 import { runValidateReport } from "../../commands/validate.js";
-import { resolveCompanyFiscalYearEndMonth } from "../finance/fiscal-year.js";
-import { closeAccountingMonth, monthCashGlDelta } from "../finance/monthly-close.js";
-import { getDataDir } from "../utils.js";
-import { writeYamlFileAtomic } from "../yaml-atomic.js";
-import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
-import { getTenantsDir, refreshOrgOsPaths } from "../orgos-paths.js";
-import { runBankImportReconcileE2E } from "./ledger-bank-e2e.js";
-import { provisionLedgerTenant } from "./ledger-provision.js";
-import { seedLedgerDemoYear } from "./ledger-seed-demo-year.js";
+import { resolveCompanyFiscalYearEndMonth } from "../fiscal-year.js";
+import { closeAccountingMonth, monthCashGlDelta } from "../monthly-close.js";
+import { getDataDir } from "../../utils.js";
+import { writeYamlFileAtomic } from "../../yaml-atomic.js";
+import { clearTenantId, getTenantId, setTenantId } from "../../tenant.js";
+import { getTenantsDir, refreshOrgOsPaths } from "../../orgos-paths.js";
+import { runBankImportReconcileE2E } from "../../product/ledger-bank-e2e.js";
+import { provisionLedgerTenant } from "../../product/ledger-provision.js";
+import { seedLedgerDemoYear } from "../../product/ledger-seed-demo-year.js";
 
 export type AccountingAcceptanceStep = {
   pass: boolean;
@@ -37,6 +37,8 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
   const originalWorkspace = process.env.ORGOS_WORKSPACE;
   const originalSkipBackup = process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK;
   const originalDeferValidate = process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE;
+  // Defer per-month validate during 12× close; run one validate after the year.
+  // See docs/org-os/general-ledger-spec.md § ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE.
   const originalConsoleLog = console.log;
   const originalTenant = (() => {
     try {

@@ -21,6 +21,7 @@ import {
   companiesActDisplayScore,
   COMPANIES_ACT_ORDINANCE_LABEL_PIN,
   runCompaniesActScore,
+  withCompaniesActDevAmounts,
   type CompaniesActPinLine,
 } from "../src/lib/finance/ledger/companies-act-score.js";
 import { legalReserveAdditionYen, buildStatutoryStatements } from "../src/lib/finance/ledger/statutory-statements.js";
@@ -38,15 +39,7 @@ const pinFileSchema = z.object({
 function loadPin(): CompaniesActPinLine[] {
   const path = fileURLToPath(new URL("./fixtures/companies-act/display-lines.yaml", import.meta.url));
   const amounts = pinFileSchema.parse(parseYaml(readFileSync(path, "utf8"))).amounts;
-  if (amounts.length !== COMPANIES_ACT_ORDINANCE_LABEL_PIN.length) {
-    throw new Error(
-      `fixture amounts length ${amounts.length} != ordinance pin ${COMPANIES_ACT_ORDINANCE_LABEL_PIN.length}`,
-    );
-  }
-  return COMPANIES_ACT_ORDINANCE_LABEL_PIN.map((line, index) => {
-    const yen = amounts[index];
-    return yen == null ? { ...line } : { ...line, example_yen: yen };
-  });
+  return withCompaniesActDevAmounts(amounts);
 }
 
 const FISCAL_YEAR = "FY2026";
