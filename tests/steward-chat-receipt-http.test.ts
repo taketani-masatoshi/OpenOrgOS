@@ -17,6 +17,8 @@ describe("steward chat receipt HTTP", () => {
     // A qualified invoice needs the issuer's corporate number, which the demo
     // tenant deliberately lacks; aiac is a fully identified fixture tenant.
     setTenantId("aiac");
+    process.env.ORGOS_TENANT = "aiac";
+    process.env.STEWARD_TENANT = "aiac";
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
@@ -94,6 +96,8 @@ describe("steward chat receipt HTTP", () => {
 
   it("refuses to issue for a tenant with no corporate number", async () => {
     setTenantId("demo");
+    process.env.ORGOS_TENANT = "demo";
+    process.env.STEWARD_TENANT = "demo";
     const cookie = await login();
     const res = await fetch(`${baseUrl}/chat/v1/receipts/preview`, {
       method: "POST",

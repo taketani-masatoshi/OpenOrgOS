@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { computeAgentReadiness } from "../src/lib/agent-readiness.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("executive_steward orchestration readiness axis", () => {
   it("scores the orchestration axis in full", () => {
+    // Pin tenant: parallel workers may leave ALS on a sparse demo (pct ~65).
+    setTenantId("mal");
     const result = computeAgentReadiness("executive_steward");
     const orchestration = result.axes.find((axis) => axis.id === "orchestration");
     expect(orchestration).toBeDefined();

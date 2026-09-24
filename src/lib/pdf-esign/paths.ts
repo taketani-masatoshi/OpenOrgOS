@@ -3,11 +3,21 @@
  * Path: src/lib/pdf-esign/paths.ts
  */
 import { join } from "node:path";
+import type { PdfEsignCase } from "../../../schemas/pdf-esign.js";
 import { getInstallRoot } from "../orgos-paths.js";
 import { tenantDataPath } from "../tenant.js";
 
 export function getPdfEsignDataDir(): string {
   return tenantDataPath("pdf-esign");
+}
+
+export function getPdfEsignCaseWorkDir(caseId: string): string {
+  return join(getPdfEsignDataDir(), "work", caseId);
+}
+
+/** Recorded `work_dir` wins so cases created under another data root stay addressable. */
+export function resolvePdfEsignCaseWorkDir(c: Pick<PdfEsignCase, "id" | "work_dir">): string {
+  return c.work_dir ?? getPdfEsignCaseWorkDir(c.id);
 }
 
 export function getPdfEsignCasesPath(): string {

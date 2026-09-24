@@ -18,6 +18,7 @@ import { z } from "zod";
 import { loadRegulationsCatalog } from "./regulations.js";
 import { loadTenantRegulationsFile } from "./regulations.js";
 import { isSkeletonTenant } from "./ops-config.js";
+import { checkModuleRegulationContract } from "./regulation-module-contract.js";
 import { getModuleTier, type ReadinessTier } from "./module-readiness.js";
 import {
   getJurisdictionPackRoot,
@@ -168,6 +169,7 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_trademark_application: "compliance",
   jp_corporate_registration: "secretary",
   jp_medical_device: "medical_device_regulatory",
+  jp_cosmetics_mah: "compliance",
   jp_permit_registry: "compliance",
   jp_permit_application: "compliance",
   jp_minpaku: "compliance",
@@ -219,6 +221,7 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_trademark_application",
   "jp_corporate_registration",
   "jp_medical_device",
+  "jp_cosmetics_mah",
   "jp_permit_registry",
   "jp_permit_application",
   "jp_minpaku",
@@ -492,6 +495,22 @@ const moduleManifestSchema = z.object({
   required_seeds: z.array(z.string()).default([]),
   activation_seeds: z.array(z.string()).default([]),
   optional_regulations: z.array(z.string()).optional(),
+  /**
+   * When this module is enabled on a tenant, each id must be enabled in
+   * regulations.yaml (validateRegulations error). Prefer risk-domain REGs.
+   */
+  required_regulations: z.array(z.string()).optional(),
+  /**
+   * Risk-domain cousin family (e.g. qms_gxp). sibling → fork_family WO;
+   * owner → source regs for siblings (do not self-fork).
+   */
+  regulation_family: z
+    .object({
+      id: z.string().min(1),
+      role: z.enum(["owner", "sibling"]).optional(),
+      do_not_mutate: z.array(z.string()).optional(),
+    })
+    .optional(),
   cli_commands: z.array(z.string()).optional(),
   notes: z.string().optional(),
   /**
@@ -588,6 +607,7 @@ export function checkModuleCatalogOnly(catalogId: string, tier: ReadinessTier): 
   if (tier === "production_ready") {
     issues.push(...checkSeedFiles(catalogId, manifest.required_seeds, "production"));
   }
+  issues.push(...checkModuleRegulationContract(catalogId));
   return issues;
 }
 

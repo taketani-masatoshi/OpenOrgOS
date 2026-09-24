@@ -1,10 +1,17 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHash, generateKeyPairSync } from "node:crypto";
+import { writeFileSync } from "node:fs";
+import { stringify } from "yaml";
 import type { StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { verifyWebAuthnAssertion } from "../src/lib/wire-console/auth/webauthn-assertion.js";
 import { mintTestWebAuthnAssertion, mintTestWebAuthnRegistration } from "../src/lib/wire-console/auth/webauthn-verify.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
+import {
+  clearOperatorsRegistryCacheForTests,
+  loadOperatorRegistry,
+  operatorsRegistryPath,
+} from "../src/lib/org/operators.js";
 import {
   mintPasskeyBootstrapToken,
   resetPasskeyBootstrapStoreForTests,
@@ -15,7 +22,7 @@ import {
   listWebAuthnCredentialsByPurpose,
   resetWebAuthnCredentialsForTests,
 } from "../src/lib/wire-console/auth/webauthn-store.js";
-import { resetWireConsoleTestTenant } from "./helpers/wire-console-test-fixture.js";
+import { resetWireConsoleTestTenant, WIRE_CONSOLE_TEST_TENANT } from "./helpers/wire-console-test-fixture.js";
 import { installFsGuardStoreForTests, type FsGuardStoreFixture } from "./helpers/fs-guard-store-fixture.js";
 
 describe("passkey bootstrap HTTP", () => {
@@ -37,7 +44,7 @@ describe("passkey bootstrap HTTP", () => {
     resetPasskeyBootstrapStoreForTests();
     disableWebAuthnChallengeStoreMemoryForTests();
     resetWebAuthnChallengeStoreForTests();
-    setTenantId("demo");
+    setTenantId(WIRE_CONSOLE_TEST_TENANT);
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     delete process.env.WIRE_CONSOLE_DEV_PASSKEY;
@@ -68,6 +75,16 @@ describe("passkey bootstrap HTTP", () => {
     process.env.WIRE_CONSOLE_OIDC_HS256_SECRET = "test-oidc-secret";
     delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
     delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
+    // Prod checklist rejects published fixture key hashes — rotate them for this suite.
+    clearOperatorsRegistryCacheForTests();
+    const registry = loadOperatorRegistry();
+    if (registry) {
+      for (const op of registry.operators) {
+        op.key_hash = `sha256:test-rotated-${op.operator_id.toLowerCase()}`;
+      }
+      writeFileSync(operatorsRegistryPath(), stringify(registry), "utf-8");
+      clearOperatorsRegistryCacheForTests();
+    }
     mintPasskeyBootstrapToken({ operatorId: "OP-001" });
     handle = await startStewardChatForTest();
     return handle.url;
@@ -77,12 +94,12 @@ describe("passkey bootstrap HTTP", () => {
     const idToken = mintTestOidcIdToken({
       sub: "OP-001",
       operator_id: "OP-001",
-      approver_id: "Demo CEO",
+      approver_id: "段燕燕",
     });
     const login = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_token: idToken, approver_id: "Demo CEO" }),
+      body: JSON.stringify({ id_token: idToken, approver_id: "段燕燕" }),
     });
     expect(login.status).toBe(200);
     return login.headers.get("set-cookie") ?? "";
@@ -94,7 +111,7 @@ describe("passkey bootstrap HTTP", () => {
     const res = await fetch(`${baseUrl}/chat/v1/auth/webauthn/register/options`, {
       method: "POST",
       headers: { "Content-Type": "application/json", cookie },
-      body: JSON.stringify({ operator_id: "OP-001", approver_id: "Demo CEO" }),
+      body: JSON.stringify({ operator_id: "OP-001", approver_id: "段燕燕" }),
     });
     expect(res.status).toBe(401);
   });
@@ -109,7 +126,7 @@ describe("passkey bootstrap HTTP", () => {
       headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({
         operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        approver_id: "段燕燕",
         bootstrap_token: token,
       }),
     });
@@ -128,7 +145,7 @@ describe("passkey bootstrap HTTP", () => {
       headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({
         operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        approver_id: "段燕燕",
         bootstrap_token: token,
       }),
     });
@@ -146,7 +163,7 @@ describe("passkey bootstrap HTTP", () => {
       headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({
         operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        approver_id: "段燕燕",
         bootstrap_token: token,
       }),
     });
@@ -158,7 +175,7 @@ describe("passkey bootstrap HTTP", () => {
       origin: "http://127.0.0.1:9471",
       challenge: regOpts.challenge,
       operator_id: "OP-001",
-      approver_id: "Demo CEO",
+      approver_id: "段燕燕",
       privateKey,
     });
     const register = await fetch(`${baseUrl}/chat/v1/auth/webauthn/register`, {
@@ -170,7 +187,7 @@ describe("passkey bootstrap HTTP", () => {
         client_data_json: registration.client_data_json,
         attestation_object_base64: registration.attestation_object_base64,
         operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        approver_id: "段燕燕",
         bootstrap_token: token,
       }),
     });
@@ -183,7 +200,7 @@ describe("passkey bootstrap HTTP", () => {
       headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({
         operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        approver_id: "段燕燕",
         bootstrap_token: token,
       }),
     });
@@ -204,7 +221,7 @@ describe("passkey bootstrap HTTP", () => {
         headers: { "Content-Type": "application/json", cookie },
         body: JSON.stringify({
           operator_id: "OP-001",
-          approver_id: "Demo CEO",
+          approver_id: "段燕燕",
           bootstrap_token: token,
         }),
       });
@@ -223,7 +240,7 @@ describe("passkey bootstrap HTTP", () => {
       origin: "http://127.0.0.1:9471",
       challenge: staleChallenge,
       operator_id: "OP-001",
-      approver_id: "Demo CEO",
+      approver_id: "段燕燕",
       privateKey,
     });
 
@@ -236,7 +253,7 @@ describe("passkey bootstrap HTTP", () => {
         client_data_json: registration.client_data_json,
         attestation_object_base64: registration.attestation_object_base64,
         operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        approver_id: "段燕燕",
         bootstrap_token: token,
       }),
     });
@@ -280,7 +297,7 @@ describe("webauthn register client bootstrap body", () => {
       },
       {
         operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        approver_id: "段燕燕",
         bootstrap_token: "pkb_test_token",
         optionsPath: "/options",
         registerPath: "/register",

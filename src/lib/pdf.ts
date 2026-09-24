@@ -1,6 +1,6 @@
-import { existsSync } from "node:fs";
-import { createWriteStream } from "node:fs";
+import { createWriteStream, existsSync } from "node:fs";
 import { join } from "node:path";
+import { PassThrough } from "node:stream";
 import PDFDocument from "pdfkit";
 import { ASSETS_DIR, formatCurrency } from "./utils.js";
 
@@ -83,6 +83,19 @@ export function writePdfToFile(doc: PdfDoc, outputPath: string): Promise<void> {
   });
 }
 
+/** In-memory PDF bytes (HTTP responses, Drive uploads). */
+export function renderPdfToBuffer(doc: PdfDoc): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    const stream = new PassThrough();
+    stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+    doc.pipe(stream);
+    doc.end();
+  });
+}
+
 function ensureSpace(w: PdfWriter, height: number): void {
   const bottom = w.doc.page.height - w.doc.page.margins.bottom;
   if (w.doc.y + height > bottom) {
@@ -137,12 +150,6 @@ export function pdfCoverHeader(
   drawHairline(w, w.doc.y, PDF_THEME.rule);
   w.doc.y += 14;
   w.doc.fillColor(PDF_THEME.ink);
-}
-
-/** @deprecated prefer pdfCoverHeader for new reports */
-export function pdfTitle(w: PdfWriter, text: string, size = 18): void {
-  pdfCoverHeader(w, text);
-  void size;
 }
 
 export function pdfSubtitle(w: PdfWriter, text: string, size = 11): void {
@@ -406,18 +413,4 @@ export function pdfSignatureBlock(
       .text(rep, x, w.doc.y, { width: blockWidth, align: "right" });
     w.doc.moveDown(0.55);
   }
-}
-
-export function fiscalPeriodLabel(from: string, to: string): string {
-  const [fy, fm] = from.split("-").map(Number);
-  const [ty, tm] = to.split("-").map(Number);
-  return `${fy}年${fm}月1日から${ty}年${tm}月31日まで`;
-}
-
-export function fiscalYearNumber(establishedDate: string | undefined, periodTo: string): number {
-  if (!establishedDate) return 1;
-  const [ey] = establishedDate.split("-").map(Number);
-  const [ty, tm] = periodTo.split("-").map(Number);
-  const endYear = tm === 1 ? ty - 1 : ty;
-  return Math.max(1, endYear - ey + 1);
 }

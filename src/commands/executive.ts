@@ -250,6 +250,10 @@ export function buildExecutiveBriefMarkdown(referenceDate = currentDate()): stri
 export function runExecutiveTasksArchive(opts: { dryRun?: boolean }): void {
   const tasksPath = join(getExecutiveDir(), "tasks.yaml");
   if (!existsSync(tasksPath)) {
+    if (opts.dryRun) {
+      console.log("data/executive/tasks.yaml 未作成 — dry-run で移行対象なし");
+      return;
+    }
     console.error("data/executive/tasks.yaml 未作成");
     process.exit(1);
   }

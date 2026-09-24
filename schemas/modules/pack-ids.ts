@@ -7,6 +7,7 @@ export const JP_PACK_MODULE_IDS = [
   "jp_trademark_application",
   "jp_corporate_registration",
   "jp_medical_device",
+  "jp_cosmetics_mah",
   "jp_permit_registry",
   "jp_permit_application",
   "jp_minpaku",

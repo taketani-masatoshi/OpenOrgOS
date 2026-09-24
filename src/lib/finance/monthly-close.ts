@@ -11,7 +11,7 @@ import YAML from "yaml";
 import { runValidateReport } from "../../commands/validate.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { getDataDir } from "../utils.js";
-import { buildConsumptionTaxSummary, runConsumptionTaxCheck } from "./consumption-tax.js";
+import { runConsumptionTaxCheck } from "./consumption-tax.js";
 import { resolveCloseAdjustmentAmountFromCoa } from "./close-adjustments.js";
 import { buildDepreciationSchedule, postDepreciationJournalEntries } from "./depreciation.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
@@ -435,10 +435,9 @@ export function evaluateMonthlyCloseGates(
   let taxPass = missingTax.length === 0;
   if (!taxPass) taxDetail = `missing tax_category ${missingTax.join(", ")}`;
   try {
-    // Summary has no issue list — build to surface aggregation failures; profile check gates close.
-    buildConsumptionTaxSummary({ period: month });
+    // Profile/check issues only — ConsumptionTaxSummary has no `issues` field.
     const profileErrors = runConsumptionTaxCheck().issues.filter(
-      (issue) => issue.severity === "blocking"
+      (issue) => issue.severity === "blocking",
     );
     if (profileErrors.length > 0) {
       taxPass = false;

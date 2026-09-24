@@ -65,3 +65,20 @@ export function nextFiscalYear(fiscalYear: string): string {
   const year = parseInt(fiscalYear.replace(/^FY/i, ""), 10);
   return `FY${year + 1}`;
 }
+
+/** Period label on statutory statements (`from` / `to` are YYYY-MM). */
+export function fiscalPeriodLabel(from: string, to: string): string {
+  const [fy, fm] = from.split("-").map(Number);
+  const end = lastDayOfMonth(to);
+  const [ty, tm, td] = end.split("-").map(Number);
+  return `${fy}年${fm}月1日から${ty}年${tm}月${td}日まで`;
+}
+
+/** 第N期 counted from the establishment year; a January period end belongs to the prior year. */
+export function fiscalYearNumber(establishedDate: string | undefined, periodTo: string): number {
+  if (!establishedDate) return 1;
+  const [ey] = establishedDate.split("-").map(Number);
+  const [ty, tm] = periodTo.split("-").map(Number);
+  const endYear = tm === 1 ? ty - 1 : ty;
+  return Math.max(1, endYear - ey + 1);
+}
