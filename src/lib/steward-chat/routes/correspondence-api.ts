@@ -24,7 +24,7 @@ import {
   buildCommunityMailConnectUrl,
   getCommunityUrl,
   resolveCommunityGmailBindForCli,
-} from "../../protocol/community-gmail-bind.js";
+} from "../../protocol/adapters/community-gmail-bind.js";
 import {
   buildMailSecretsSnapshot,
   MAIL_ENV_KEYS,

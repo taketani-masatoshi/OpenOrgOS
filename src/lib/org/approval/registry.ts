@@ -10,7 +10,7 @@ import {
   type PendingNotice,
 } from "../../../../schemas/protocol/pending-notice.js";
 import { getPendingApprovalsPath } from "../paths.js";
-import { getPendingNoticesPath } from "../../protocol/paths.js";
+import { getPendingNoticesPath } from "../../protocol/core/paths.js";
 import { currentDate, readYamlFile } from "../../utils.js";
 import { withYamlFileLock, writeYamlFileAtomic } from "../../yaml-atomic.js";
 import { resolveJurisdictionApprovalPolicy } from "../../jurisdiction/wire-governance/index.js";

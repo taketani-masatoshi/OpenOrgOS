@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 import {
   buildWireMimeMessage,
   deliverEnvelopeViaEmailWire,
   assertEmailWireAllowed,
   EMAIL_WIRE_MAX_BYTES,
-} from "../src/lib/protocol/email-wire-deliver.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+} from "../src/lib/protocol/adapters/email-wire-deliver.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {

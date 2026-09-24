@@ -4,7 +4,7 @@ import {
   generateProtocolKeyPair,
   signEventEnvelope,
   verifyEventEnvelopeSignature,
-} from "../src/lib/protocol/signing.js";
+} from "../src/lib/protocol/core/signing.js";
 
 describe("protocol envelope signing", () => {
   it("signs and verifies Ed25519 digest", () => {

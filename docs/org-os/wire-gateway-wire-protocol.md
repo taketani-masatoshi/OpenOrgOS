@@ -3,7 +3,7 @@
 **Status:** WG-0 正本 · 2026-07-07  
 **Parent:** [wire-gateway-requirements.md](wire-gateway-requirements.md)  
 **Schema:** [`schemas/protocol/wire-message.ts`](../../schemas/protocol/wire-message.ts)  
-**Codec:** [`src/lib/wire-gateway/codec.ts`](../../src/lib/wire-gateway/codec.ts)
+**Codec:** [`src/lib/protocol/transport/codec.ts`](../../src/lib/protocol/transport/codec.ts)
 
 ---
 
@@ -71,7 +71,7 @@ hash     = envelopeDigest(envelope)   // signature 除外 · キーソート JSO
 verify   = Ed25519_verify(hash_bytes, signature, sender_public_key)
 ```
 
-**参照:** [`canonical.ts`](../../src/lib/protocol/canonical.ts) · [`signing.ts`](../../src/lib/protocol/signing.ts)
+**参照:** [`canonical.ts`](../../src/lib/protocol/core/canonical.ts) · [`signing.ts`](../../src/lib/protocol/core/signing.ts)
 
 ### 3.2 Wire 単体 canonical（検証用 · 同等結果）
 
@@ -114,7 +114,7 @@ Gateway が EventEnvelope に展開せず検証する場合:
 
 ## 5. EventEnvelope ↔ WireMessage 変換
 
-**実装:** [`codec.ts`](../../src/lib/wire-gateway/codec.ts)
+**実装:** [`codec.ts`](../../src/lib/protocol/transport/codec.ts)
 
 ### 5.1 envelope → wire（encode）
 

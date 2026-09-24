@@ -3,7 +3,7 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   proposeInterOrgNotice,
   approveInterOrgNotice,
@@ -12,7 +12,7 @@ import { ingestWebhook } from "../src/lib/webhook.js";
 import {
   exportProtocolPublicKeyBase64,
   ensureProtocolSigningKey,
-} from "../src/lib/protocol/signing.js";
+} from "../src/lib/protocol/core/signing.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {

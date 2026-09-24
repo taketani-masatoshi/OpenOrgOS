@@ -5,7 +5,7 @@ import type {
   GovGatewayProfileId,
 } from "../../../../schemas/protocol/gov-gateway-adapter.js";
 import { STEWARD_PLATFORM_DIR } from "../../steward-paths.js";
-import { getGovGatewayYamlPath } from "../../protocol/paths.js";
+import { getGovGatewayYamlPath } from "../../protocol/core/paths.js";
 import {
   findProfileBinding,
   loadGovGatewayConfig,

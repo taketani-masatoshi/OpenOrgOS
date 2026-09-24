@@ -4,17 +4,17 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import {
   deliverEnvelopeViaMesh,
   resolveMeshRoute,
-} from "../src/lib/protocol/peer-mesh.js";
-import { getMeshRoutesYamlPath, getProtocolInboxDir } from "../src/lib/protocol/paths.js";
-import { mirrorInboundEnvelope } from "../src/lib/protocol/transport.js";
+} from "../src/lib/protocol/transport/peer-mesh.js";
+import { getMeshRoutesYamlPath, getProtocolInboxDir } from "../src/lib/protocol/core/paths.js";
+import { mirrorInboundEnvelope } from "../src/lib/protocol/transport/transport.js";
 import { eventEnvelopeSchema } from "../schemas/protocol/org-event.js";
-import { maybeSignEnvelope } from "../src/lib/protocol/signing.js";
-import { parseEventEnvelope } from "../src/lib/protocol/envelope.js";
+import { maybeSignEnvelope } from "../src/lib/protocol/core/signing.js";
+import { parseEventEnvelope } from "../src/lib/protocol/core/envelope.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {

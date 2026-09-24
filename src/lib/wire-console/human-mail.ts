@@ -1,11 +1,11 @@
 import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
 import type { OrgRef } from "../../../schemas/protocol/org-event.js";
 import { loadCompany, loadContract } from "../data.js";
-import { exportInboxEntries, exportOutboxEntries } from "../protocol/inbox-export.js";
-import { findPeerByOrgRef } from "../protocol/inbound-verify.js";
-import { loadPeersRegistry } from "../protocol/peers.js";
-import { listWitnessPending } from "../protocol/witness-queue.js";
-import { verifyCachedReceiptsForEvent } from "../protocol/witness-client.js";
+import { exportInboxEntries, exportOutboxEntries } from "../protocol/transport/inbox-export.js";
+import { findPeerByOrgRef } from "../protocol/core/inbound-verify.js";
+import { loadPeersRegistry } from "../protocol/transport/peers.js";
+import { listWitnessPending } from "../protocol/distribution/witness-queue.js";
+import { verifyCachedReceiptsForEvent } from "../protocol/distribution/witness-client.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import {
   loadAuthorizedApprovers,

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT_DIR, setTenantId } from "../../src/lib/tenant.js";
-import { ensureProtocolSigningKey } from "../../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../../src/lib/protocol/core/signing.js";
 
 export const WIRE_CONSOLE_TEST_TENANT = "wire-console-test";
 

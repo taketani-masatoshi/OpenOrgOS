@@ -13,17 +13,17 @@ import { copyFileSync, mkdirSync, writeFileSync, readdirSync, existsSync } from 
 import { join } from "node:path";
 import { setTenantId, ROOT_DIR, getTenantId } from "../src/lib/tenant.js";
 import { proposeInterOrgNotice, approveInterOrgNotice } from "../src/lib/wire/index.js";
-import { deliverProtocolEnvelopeWithRelay } from "../src/lib/protocol/transport.js";
+import { deliverProtocolEnvelopeWithRelay } from "../src/lib/protocol/transport/transport.js";
 import { syncMailReceive } from "../src/lib/correspondence/mail-receive-sync.js";
 import {
   parseNotifyEml,
   scanMailReceivedForNotify,
 } from "../src/lib/protocol/email-notify-ingest.js";
 import { getMailReceivedDir } from "../src/lib/correspondence/paths.js";
-import { findPeer, loadPeersRegistry, registerPeer } from "../src/lib/protocol/peers.js";
-import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { findPeer, loadPeersRegistry, registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { resolveWireOutboundConfig } from "../src/lib/correspondence/mail-config.js";
-import { listTransactions, removeTransactionsById } from "../src/lib/protocol/transactions.js";
+import { listTransactions, removeTransactionsById } from "../src/lib/protocol/core/transactions.js";
 import { deriveOpenOrgDidFromPublicKey } from "../schemas/protocol/openorg-did.js";
 
 const SENDER = "mal";

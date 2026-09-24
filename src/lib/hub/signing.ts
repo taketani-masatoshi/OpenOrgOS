@@ -2,7 +2,7 @@ import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sig
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { WitnessReceipt } from "../../../schemas/protocol/witness-receipt.js";
-import { canonicalJson } from "../protocol/canonical.js";
+import { canonicalJson } from "../protocol/core/canonical.js";
 import { getHubSigningKeyPath } from "./paths.js";
 
 export function generateHubKeyPair(): { publicKey: string; privateKeyPem: string } {

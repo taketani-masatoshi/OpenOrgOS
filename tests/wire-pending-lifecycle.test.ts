@@ -3,8 +3,8 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { enqueueWirePending, archiveWirePending, listWirePending } from "../src/lib/protocol/wire-queue.js";
-import { getWirePendingLifecyclePath } from "../src/lib/protocol/wire-pending-lifecycle.js";
+import { enqueueWirePending, archiveWirePending, listWirePending } from "../src/lib/protocol/transport/wire-queue.js";
+import { getWirePendingLifecyclePath } from "../src/lib/protocol/transport/wire-pending-lifecycle.js";
 
 function cleanup(): void {
   const protocolDir = join(getDataDir(), "protocol");

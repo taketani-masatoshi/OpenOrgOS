@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { runProdWireGate } from "../src/lib/protocol/prod-wire-gate.js";
+import { runProdWireGate } from "../src/lib/protocol/readiness/prod-wire-gate.js";
 
 function cleanup(): void {
   const protocolDir = join(getDataDir(), "protocol");

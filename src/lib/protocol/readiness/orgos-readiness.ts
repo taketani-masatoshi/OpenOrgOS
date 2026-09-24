@@ -1,0 +1,219 @@
+/**
+ * OrgOS readiness — checklist (artifact) scoring for framework-assessment §13.
+ * For operational score use orgos-readiness-strict.ts · orgos-scoring-methodology.md.
+ */
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import YAML from "yaml";
+import { getInstallRoot, getDeployDir, getSchemasDir } from "../../orgos-paths.js";
+import { JURISDICTION_PACKS_DIR } from "../../steward-paths.js";
+import { computeModuleAxisStats } from "../../extensibility-contract.js";
+import { computeCommunityReadiness } from "./community-readiness.js";
+import { computeEcoProductionEvidence } from "./eco-production-evidence.js";
+
+export interface ReadinessCheck {
+  id: string;
+  ok: boolean;
+  detail: string;
+}
+
+export interface OrgOsAxisReadiness {
+  score: number;
+  checks: ReadinessCheck[];
+}
+
+export interface OrgOsReadinessReport {
+  standaloneLoop: OrgOsAxisReadiness;
+  formUnification: OrgOsAxisReadiness;
+  interfaceAxis: OrgOsAxisReadiness;
+  wireEvidence: OrgOsAxisReadiness;
+  ecosystem: OrgOsAxisReadiness;
+  weighted: number;
+  gaps: string[];
+}
+
+function bucketScore(checks: ReadinessCheck[]): OrgOsAxisReadiness {
+  if (checks.length === 0) return { score: 0, checks };
+  const passed = checks.filter((c) => c.ok).length;
+  return { score: Math.round((passed / checks.length) * 100), checks };
+}
+
+function fileOk(relativePath: string, detail = "present"): ReadinessCheck {
+  const path = join(getInstallRoot(), relativePath);
+  return { id: relativePath, ok: existsSync(path), detail: existsSync(path) ? detail : "missing" };
+}
+
+function ciValidateTenantCount(): number {
+  const path = join(getInstallRoot(), "steward/platform/protocol/ci-validate-tenants.yaml");
+  if (!existsSync(path)) return 0;
+  const doc = YAML.parse(readFileSync(path, "utf-8")) as { tenants?: string[] };
+  return doc.tenants?.length ?? 0;
+}
+
+function computeStandaloneLoopChecks(): ReadinessCheck[] {
+  return [
+    fileOk("scripts/lib/standalone-org-demo.ts", "standalone demo script"),
+    fileOk("tests/standalone-org-demo.test.ts", "standalone demo test"),
+    fileOk("src/lib/protocol/core/protocol-write-guard.ts", "outbox write guard"),
+    fileOk("src/lib/protocol/transport/pre-deliver-gate.ts", "pre-deliver validate gate"),
+    fileOk("deploy/protocol-outbox/apply-permissions.sh", "deploy outbox permissions"),
+    fileOk("src/lib/org/audit-bridge.ts", "operational audit bridge"),
+    {
+      id: "ci-validate-tenants",
+      ok: ciValidateTenantCount() >= 15,
+      detail: `${ciValidateTenantCount()} tenants in ci-validate-tenants.yaml`,
+    },
+    fileOk("package.json", "demo:mal-standalone in package.json"),
+  ].map((c) =>
+    c.id === "package.json"
+      ? {
+          ...c,
+          ok: existsSync(join(getInstallRoot(), "package.json")) &&
+            readFileSync(join(getInstallRoot(), "package.json"), "utf-8").includes("demo:mal-standalone"),
+        }
+      : c
+  );
+}
+
+function computeFormUnificationChecks(): ReadinessCheck[] {
+  return [
+    fileOk("src/lib/protocol/distribution/witness-envelope-emit.ts", "witness emit on chain"),
+    fileOk("tests/protocol-witness-integration.test.ts", "witness integration E2E"),
+    fileOk("src/lib/protocol/core/outbox-provenance.ts", "outbox provenance"),
+    fileOk("src/lib/company-events-lint.ts", "company event MD lint"),
+    fileOk("tests/org-audit-bridge.test.ts", "audit bridge tests"),
+    fileOk("tests/protocol-external-verify.test.ts", "external verify"),
+    fileOk("src/lib/company-events-wire.ts", "company-events wire linkage"),
+    fileOk("tests/company-events-wire-void.test.ts", "company-events wire void"),
+    fileOk("tenants/mal/data/org/audit-bridge-state.yaml", "audit-bridge state (mal)"),
+    fileOk("docs/org-os/orgos-interface-spec.md", "I1/I2/I3 interface spec"),
+  ];
+}
+
+function computeWireEvidenceChecks(): ReadinessCheck[] {
+  return [
+    fileOk("tests/protocol-deliver-pull.test.ts", "deliver-pull E2E"),
+    fileOk("scripts/demo-mesh-deliver.ts", "mesh deliver demo"),
+    fileOk("scripts/seed-inter-org-demo.ts", "inter-org demo"),
+    fileOk("src/lib/protocol/adapters/protocol-api-server.ts", "peer outbox/inbox export API"),
+    fileOk("src/lib/protocol/distribution/witness-reconcile.ts", "witness reconcile + remote ledger"),
+    fileOk("src/lib/protocol/transport/peer-protocol-policy.ts", "contract peer whitelist"),
+    fileOk("tests/protocol-peer-policy.test.ts", "peer policy tests"),
+    fileOk("docs/runbook-orgos.md", "runbook §16–17 guardrails"),
+    fileOk("tests/mal-wire-pilot-gate.test.ts", "mal wire production gate"),
+    fileOk("tests/mal-wire-peer-deliver.test.ts", "mal peer deliver E2E"),
+    fileOk("scripts/install-mal-wire-systemd.sh", "mal wire systemd installer"),
+    fileOk("tests/wire-gateway-discover.test.ts", "wire-gateway discover v2"),
+    fileOk("tests/wire-gateway-discover-apply.test.ts", "discover apply E2E"),
+    fileOk("tests/wire-gateway-federation-sync.test.ts", "federation sync wrapper"),
+    fileOk("tests/wire-relay-e2e.test.ts", "relay E2E CI"),
+    fileOk("tests/mal-peers-trust-registry.test.ts", "mal peers trust-registry pin"),
+    fileOk("tests/relay-sla-alert.test.ts", "relay SLA alert"),
+    fileOk("scripts/hub-signing-rotate.sh", "Hub signing rotate"),
+    fileOk("docs/org-os/relay-sla-runbook.md", "relay SLA runbook"),
+    fileOk("docs/org-os/wire-console-staging-checklist.md", "Wire Console staging"),
+    fileOk("docs/org-os/steward-community-vocabulary.md", "Steward-Community vocabulary"),
+    fileOk("src/lib/protocol/adapters/community-export.ts", "community protocol export"),
+    fileOk("src/lib/protocol/readiness/eco-production-evidence.ts", "eco production evidence"),
+    fileOk("scripts/init-tenant-wire-pilot.sh", "wire pilot bootstrap"),
+  ];
+}
+
+function computeInterfaceAxisChecks(): ReadinessCheck[] {
+  const moduleAxis = computeModuleAxisStats();
+  return [
+    {
+      id: "module-production-ready",
+      ok: moduleAxis.coreProductionPct >= 88,
+      detail: `core ${moduleAxis.coreProductionPct}% production_ready (${moduleAxis.coreProductionReady}/${moduleAxis.coreTotal}) · catalog ${moduleAxis.productionReady}/${moduleAxis.catalogTotal}`,
+    },
+    fileOk("docs/org-os/orgos-interface-spec.md", "interface spec published"),
+    fileOk("src/lib/extensibility-contract.ts", "manifest / pack contract check"),
+    {
+      id: "jurisdiction-packs",
+      ok: existsSync(join(JURISDICTION_PACKS_DIR, "JP/pack.manifest.yaml")),
+      detail: "JP pack.manifest.yaml",
+    },
+  ];
+}
+
+function interfaceAxisScore(checks: ReadinessCheck[]): number {
+  const moduleAxis = computeModuleAxisStats();
+  let base =
+    moduleAxis.coreProductionPct >= 100
+      ? 99
+      : moduleAxis.coreProductionPct >= 93
+        ? 98
+        : moduleAxis.coreProductionPct >= 89
+          ? 95
+          : moduleAxis.coreProductionPct >= 88
+            ? 92
+            : 60;
+  const passed = checks.filter((c) => c.ok).length;
+  const ratio = checks.length ? passed / checks.length : 0;
+  if (ratio < 1) base = Math.min(base, Math.round(base * ratio));
+  return base;
+}
+
+export function computeOrgOsReadiness(): OrgOsReadinessReport {
+  const standaloneChecks = computeStandaloneLoopChecks();
+  const formChecks = computeFormUnificationChecks();
+  const wireChecks = computeWireEvidenceChecks();
+  const interfaceChecks = computeInterfaceAxisChecks();
+  const community = computeCommunityReadiness();
+
+  const standaloneLoop = bucketScore(standaloneChecks);
+  const formUnification = bucketScore(formChecks);
+  const wireEvidence = bucketScore(wireChecks);
+  const interfaceAxis = {
+    score: interfaceAxisScore(interfaceChecks),
+    checks: interfaceChecks,
+  };
+  const ecosystem = {
+    score: community.score,
+    checks: community.checks.map((c) => ({ id: c.id, ok: c.ok, detail: c.detail })),
+  };
+
+  const weighted = Math.round(
+    standaloneLoop.score * 0.35 +
+      formUnification.score * 0.25 +
+      interfaceAxis.score * 0.15 +
+      wireEvidence.score * 0.15 +
+      ecosystem.score * 0.1
+  );
+
+  const gaps: string[] = [];
+  for (const [label, axis] of [
+    ["単独閉ループ", standaloneLoop],
+    ["形式統一", formUnification],
+    ["Wire 証拠", wireEvidence],
+  ] as const) {
+    const failed = axis.checks.filter((c) => !c.ok);
+    if (failed.length) gaps.push(`${label}: ${failed.map((f) => f.id).join(", ")}`);
+  }
+  if (interfaceAxis.score < 98) {
+    gaps.push(`インターフェース ${interfaceAxis.score}% — module production_ready 93%+ で 98 · 100% で 99`);
+  }
+  if (ecosystem.score < 99) {
+    const eco = computeEcoProductionEvidence();
+    if (eco.cap >= 99) {
+      gaps.push(`エコシステム ${ecosystem.score}% — 99 は vocabulary i18n + jurisdiction UI 統合済み · 残チェック確認`);
+    } else if (eco.cap >= 98) {
+      gaps.push(`エコシステム ${ecosystem.score}% — Community 統合 OK（cap 98）· 99+ は jurisdiction UI + i18n`);
+    } else if (eco.cap >= 92) {
+      gaps.push(`エコシステム ${ecosystem.score}% — Community UI 統合で 98+`);
+    } else {
+      gaps.push(`エコシステム ${ecosystem.score}% — Steward publish + Community UI で 98+`);
+    }
+  }
+
+  return {
+    standaloneLoop,
+    formUnification,
+    interfaceAxis,
+    wireEvidence,
+    ecosystem,
+    weighted,
+    gaps,
+  };
+}

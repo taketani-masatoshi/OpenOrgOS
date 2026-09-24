@@ -5,12 +5,12 @@ import {
 import {
   computeOpenOrgOsCoreReadiness,
   computeOpenOrgOsCoreStrictReadiness,
-} from "./protocol/openorgos-core-readiness.js";
-import { computeOrgOsReadiness } from "./protocol/orgos-readiness.js";
-import { computeOrgOsStrictReadiness } from "./protocol/orgos-readiness-strict.js";
-import { computeCommunityReadiness } from "./protocol/community-readiness.js";
-import { evaluateWireImplementationChecklist } from "./protocol/wire-implementation-score.js";
-import { resolveTestSuiteVerification } from "./protocol/test-suite-status.js";
+} from "./protocol/readiness/openorgos-core-readiness.js";
+import { computeOrgOsReadiness } from "./protocol/readiness/orgos-readiness.js";
+import { computeOrgOsStrictReadiness } from "./protocol/readiness/orgos-readiness-strict.js";
+import { computeCommunityReadiness } from "./protocol/readiness/community-readiness.js";
+import { evaluateWireImplementationChecklist } from "./protocol/readiness/wire-implementation-score.js";
+import { resolveTestSuiteVerification } from "./protocol/readiness/test-suite-status.js";
 
 export interface ReadinessStatus {
   version: 1;

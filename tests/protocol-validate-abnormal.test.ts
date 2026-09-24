@@ -4,24 +4,24 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir, writeYamlFile } from "../src/lib/utils.js";
-import { validateProtocolState } from "../src/lib/protocol/validate.js";
+import { validateProtocolState } from "../src/lib/protocol/core/validate.js";
 import {
   getProtocolAuditChainPath,
   getPeersYamlPath,
   getTransactionsRegistryPath,
   getWitnessPoolYamlPath,
-} from "../src/lib/protocol/paths.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+} from "../src/lib/protocol/core/paths.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   appendProtocolAuditRecord,
   verifyProtocolAuditChain,
-} from "../src/lib/protocol/audit-chain.js";
-import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+} from "../src/lib/protocol/core/audit-chain.js";
+import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/core/identity.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 import { transactionsRegistrySchema } from "../schemas/protocol/transaction-record.js";
-import { PROTOCOL_REGISTRY_PATH } from "../src/lib/protocol/registry.js";
-import { validateProtocolFile } from "../src/lib/protocol/validate.js";
+import { PROTOCOL_REGISTRY_PATH } from "../src/lib/protocol/distribution/registry.js";
+import { validateProtocolFile } from "../src/lib/protocol/core/validate.js";
 
 const PLATFORM_REGISTRY_BACKUP = join(tmpdir(), "steward-protocol-registry-backup.yaml");
 

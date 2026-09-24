@@ -6,6 +6,12 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **Wire protocol 層レイアウト** — `src/lib/protocol/` を core / transport / distribution / adapters / readiness に物理分割。CLI ハンドラは `src/commands/protocol/<domain>.ts`。循環（codec/DNS・gov-gateway 注入・governance 設定）を解消。正準 CLI は `orgos wire`（歴史的 `protocol` / `hub` / `wire-gateway` は互換）。ADR 0079。
+- **Transport 重複解消** — `dns` / `inbound` / `relay` を `transport.ts` 正本挙動へ一本化（`mirrorInboundEnvelope` は canonical serialize）。CLI domain の余剰 import 刈り込み、notice 表示整形を commands へ分離。
+- **層依存の残債縮小** — envelope lookup を core へ、email_wire を port 注入へ、notice-transmit / resilience-sla / transaction-orphans を distribution へ。protocol-api-server を adapters、peer-discovery を distribution へ。transport→adapters/distribution の baseline 違反を削減。
+
 ### Added
 
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)

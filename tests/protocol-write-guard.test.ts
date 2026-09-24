@@ -3,13 +3,13 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { writeOutboxEnvelope } from "../src/lib/protocol/audit-chain.js";
-import { getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
+import { writeOutboxEnvelope } from "../src/lib/protocol/core/audit-chain.js";
+import { getProtocolOutboxDir } from "../src/lib/protocol/core/paths.js";
 import {
   runWithProtocolWriteGuard,
   isProtocolWriteGuardDisabled,
-} from "../src/lib/protocol/protocol-write-guard.js";
-import { verifyOutboxProvenance } from "../src/lib/protocol/outbox-provenance.js";
+} from "../src/lib/protocol/core/protocol-write-guard.js";
+import { verifyOutboxProvenance } from "../src/lib/protocol/core/outbox-provenance.js";
 import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 
 function cleanup(): void {

@@ -3,7 +3,7 @@ import { setTenantId } from "../src/lib/tenant.js";
 import {
   buildWebhookBodies,
   parseInboundWebhookBody,
-} from "../src/lib/protocol/webhook-bridge.js";
+} from "../src/lib/protocol/adapters/webhook-bridge.js";
 import { eventEnvelopeSchema } from "../schemas/protocol/org-event.js";
 
 describe("protocol webhook bridge", () => {

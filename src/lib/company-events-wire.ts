@@ -5,14 +5,14 @@ import {
   isContractVoidAcknowledgedType,
   isContractVoidRequestedType,
 } from "../../schemas/protocol/committee-transaction.js";
-import { isWireDelivered } from "./protocol/wire-delivered.js";
+import { isWireDelivered } from "./protocol/transport/wire-delivered.js";
 import {
   findTransactionByEventId,
   loadTransactionsRegistry,
-} from "./protocol/transactions.js";
+} from "./protocol/core/transactions.js";
 import { listOrgApprovals } from "./org/approval/index.js";
 import { proposeInterOrgWire } from "./wire/notice-workflow.js";
-import type { RecordTransactionResult } from "./protocol/record-transaction.js";
+import type { RecordTransactionResult } from "./protocol/core/record-transaction.js";
 import {
   findCompanyEventById,
   loadCompanyEvents,

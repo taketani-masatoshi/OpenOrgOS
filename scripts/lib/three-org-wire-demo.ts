@@ -8,12 +8,12 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTenantId, getTenantDir, ROOT_DIR } from "../../src/lib/tenant.js";
-import { registerPeer } from "../../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../../src/lib/protocol/signing.js";
-import { deliverEnvelopeViaMesh } from "../../src/lib/protocol/peer-mesh.js";
-import { getMeshRoutesYamlPath, getProtocolInboxDir } from "../../src/lib/protocol/paths.js";
-import { recordProtocolTransaction } from "../../src/lib/protocol/record-transaction.js";
-import { validateProtocolState } from "../../src/lib/protocol/validate.js";
+import { registerPeer } from "../../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../../src/lib/protocol/core/signing.js";
+import { deliverEnvelopeViaMesh } from "../../src/lib/protocol/transport/peer-mesh.js";
+import { getMeshRoutesYamlPath, getProtocolInboxDir } from "../../src/lib/protocol/core/paths.js";
+import { recordProtocolTransaction } from "../../src/lib/protocol/core/record-transaction.js";
+import { validateProtocolState } from "../../src/lib/protocol/core/validate.js";
 import { ingestWebhook } from "../../src/lib/webhook.js";
 import {
   DEMO_EVENT_ID,

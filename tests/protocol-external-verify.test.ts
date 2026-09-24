@@ -3,12 +3,12 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
-import { verifyAuditChainExternal, verifyDelegationProofExternal } from "../src/lib/protocol/external-verify.js";
-import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/delegation.js";
-import { getProtocolAuditChainPath } from "../src/lib/protocol/paths.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
+import { verifyAuditChainExternal, verifyDelegationProofExternal } from "../src/lib/protocol/core/external-verify.js";
+import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/core/delegation.js";
+import { getProtocolAuditChainPath } from "../src/lib/protocol/core/paths.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 
 function cleanup(): void {

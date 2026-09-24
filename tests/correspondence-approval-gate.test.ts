@@ -17,7 +17,7 @@ import {
 import { CorrespondenceMailSetupError } from "../src/lib/correspondence/mail-setup-readiness.js";
 import { CorrespondenceClaimsError } from "../src/lib/correspondence/claims-assert.js";
 import { humanApproveOrgApproval } from "../src/lib/org/approval/index.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 
 function seedContact(email: string, id = "EXT-001"): void {
   const execDir = join(getDataDir(), "executive");

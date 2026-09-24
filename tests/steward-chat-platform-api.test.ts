@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
-import { communityIntegrationPath } from "../src/lib/protocol/community-integration-flags.js";
+import { communityIntegrationPath } from "../src/lib/protocol/adapters/community-integration-flags.js";
 import {
   registerSession,
   WIRE_CONSOLE_SESSION_COOKIE,

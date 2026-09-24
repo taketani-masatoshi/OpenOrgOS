@@ -39,7 +39,7 @@ export function createMailReceivePoller(opts?: MailReceivePollerOptions): MailRe
         }
       }
       if (shouldAutoWireScan(config)) {
-        const { scanMailReceivedForWire } = await import("../protocol/email-wire-ingest.js");
+        const { scanMailReceivedForWire } = await import("../protocol/adapters/email-wire-ingest.js");
         await scanMailReceivedForWire({ sinceDays: 1 });
       }
     } finally {

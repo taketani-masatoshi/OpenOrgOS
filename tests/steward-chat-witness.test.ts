@@ -8,7 +8,7 @@ import {
   startDemoWitnessHubs,
   type DemoWitnessHubs,
 } from "./helpers/demo-witness-fixture.js";
-import { enqueueWitnessPending, saveWitnessPending } from "../src/lib/protocol/witness-queue.js";
+import { enqueueWitnessPending, saveWitnessPending } from "../src/lib/protocol/distribution/witness-queue.js";
 import { spawnSync } from "node:child_process";
 
 describe("steward chat witness API", () => {
@@ -19,6 +19,7 @@ describe("steward chat witness API", () => {
 
   beforeEach(async () => {
     setTenantId("demo");
+    process.env.ORGOS_TENANT = "demo";
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";

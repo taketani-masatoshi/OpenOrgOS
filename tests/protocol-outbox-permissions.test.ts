@@ -5,8 +5,8 @@ import { setTenantId } from "../src/lib/tenant.js";
 import {
   applyProtocolOutboxPermissions,
   checkProtocolOutboxPermissionsLoose,
-} from "../src/lib/protocol/outbox-permissions.js";
-import { getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
+} from "../src/lib/protocol/core/outbox-permissions.js";
+import { getProtocolOutboxDir } from "../src/lib/protocol/core/paths.js";
 
 describe("protocol outbox permissions", () => {
   const testFile = "perm-test-envelope.json";

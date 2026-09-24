@@ -4,7 +4,7 @@ import {
   isPkPrefixedOpenOrgDid,
   isPkDidRequired,
 } from "../schemas/protocol/openorg-did.js";
-import { assertPinLocalGovernanceApproved } from "../src/lib/protocol/wire-node-governance-gate.js";
+import { assertPinLocalGovernanceApproved } from "../src/lib/protocol/distribution/wire-node-governance-gate.js";
 
 describe("pk-DID enforcement", () => {
   const sampleKey =

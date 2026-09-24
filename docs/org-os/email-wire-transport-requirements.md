@@ -26,7 +26,7 @@ Secretary 人間向けメールとは **専用アドレス・専用 SMTP 設定*
 
 ## 3. 不変条件（Must）
 
-1. approve 前に外部配送しない（[`pre-deliver-gate.ts`](../../src/lib/protocol/pre-deliver-gate.ts)）
+1. approve 前に外部配送しない（[`pre-deliver-gate.ts`](../../src/lib/protocol/transport/pre-deliver-gate.ts)）
 2. 信頼の根は Ed25519 署名 — SPF/DKIM は補助ログのみ
 3. envelope 全文は L2（`records/executive/wire-sent/`）— tracked MD に payload 禁止
 4. `event_id` 冪等 — 再配送は idempotent skip

@@ -4,7 +4,7 @@ import {
   resolveWireTrustNode,
   validateWireTrustRegistry,
   nodeIdentifierMatches,
-} from "../src/lib/protocol/wire-trust-registry.js";
+} from "../src/lib/protocol/distribution/wire-trust-registry.js";
 
 describe("wire-trust-registry", () => {
   it("loads platform registry", () => {

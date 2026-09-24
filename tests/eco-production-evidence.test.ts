@@ -11,8 +11,8 @@ import {
   ECO_READINESS_CAP_FULL,
   resolveEcoStrictCap,
   resolveCommunityReadinessCap,
-} from "../src/lib/protocol/eco-production-evidence.js";
-import { exportCommunityProtocolBundle } from "../src/lib/protocol/community-export.js";
+} from "../src/lib/protocol/readiness/eco-production-evidence.js";
+import { exportCommunityProtocolBundle } from "../src/lib/protocol/adapters/community-export.js";
 import { getInstallRoot } from "../src/lib/orgos-paths.js";
 
 describe("eco production evidence (S-E5)", () => {

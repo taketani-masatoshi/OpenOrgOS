@@ -9,38 +9,38 @@ import { fileURLToPath } from "node:url";
 import { setTenantId, ROOT_DIR, getTenantDir } from "../src/lib/tenant.js";
 import { currentDate, readYamlFile, writeYamlFile } from "../src/lib/utils.js";
 import { contractSchema } from "../schemas/contract.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   proposeInterOrgNotice,
   proposeInterOrgAck,
   approveInterOrgNotice,
 } from "../src/lib/wire/index.js";
-import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
-import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/delegation.js";
+import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/core/identity.js";
+import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/core/delegation.js";
 import { resolveJurisdictionApprovalPolicy } from "../src/lib/jurisdiction/wire-governance/index.js";
-import { validateProtocolState } from "../src/lib/protocol/validate.js";
-import { verifyProtocolAuditChain, loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
-import { loadEnvelopesFromDirectories } from "../src/lib/protocol/external-verify.js";
-import { serializeEventEnvelope } from "../src/lib/protocol/envelope.js";
-import { getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
-import { writeOutboxEnvelope } from "../src/lib/protocol/audit-chain.js";
-import { runWithProtocolWriteGuard } from "../src/lib/protocol/protocol-write-guard.js";
-import { writeOutboxProvenance } from "../src/lib/protocol/outbox-provenance.js";
+import { validateProtocolState } from "../src/lib/protocol/core/validate.js";
+import { verifyProtocolAuditChain, loadProtocolAuditChain } from "../src/lib/protocol/core/audit-chain.js";
+import { loadEnvelopesFromDirectories } from "../src/lib/protocol/core/external-verify.js";
+import { serializeEventEnvelope } from "../src/lib/protocol/core/envelope.js";
+import { getProtocolOutboxDir } from "../src/lib/protocol/core/paths.js";
+import { writeOutboxEnvelope } from "../src/lib/protocol/core/audit-chain.js";
+import { runWithProtocolWriteGuard } from "../src/lib/protocol/core/protocol-write-guard.js";
+import { writeOutboxProvenance } from "../src/lib/protocol/core/outbox-provenance.js";
 import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 import { loadCompany } from "../src/lib/data.js";
 import { listActiveOperators } from "../src/lib/org/operators.js";
 import { orgApprovalRegistrySchema } from "../schemas/org/approval.js";
 import { getPendingApprovalsPath } from "../src/lib/org/paths.js";
-import { enqueueWitnessPending } from "../src/lib/protocol/witness-queue.js";
-import { envelopeDigest } from "../src/lib/protocol/canonical.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
+import { enqueueWitnessPending } from "../src/lib/protocol/distribution/witness-queue.js";
+import { envelopeDigest } from "../src/lib/protocol/core/canonical.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/core/signing.js";
 import { ingestWebhook } from "../src/lib/webhook.js";
 import { configureHubRuntime } from "../src/lib/hub/runtime.js";
 import { startHubServer } from "../src/lib/hub-server.js";
 import { exportHubPublicKeyBase64 } from "../src/lib/hub/signing.js";
-import { getWitnessPoolYamlPath } from "../src/lib/protocol/paths.js";
+import { getWitnessPoolYamlPath } from "../src/lib/protocol/core/paths.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
-import { registerWitnessAttestationFanOut } from "../src/lib/protocol/witness-client.js";
+import { registerWitnessAttestationFanOut } from "../src/lib/protocol/distribution/witness-client.js";
 import { hubFederationSchema } from "../schemas/protocol/hub-federation.js";
 import { syncFromPeer } from "../src/lib/hub/gossip-sync.js";
 import { findHubReceiptByEventId } from "../src/lib/hub/receipt.js";
@@ -48,7 +48,7 @@ import { loadHubAttestations } from "../src/lib/hub/registry.js";
 import {
   deliverProtocolEnvelopeWithRelay,
   flushWireRelayInbox,
-} from "../src/lib/protocol/transport.js";
+} from "../src/lib/protocol/transport/transport.js";
 import {
   configurePartyForProposal3,
   patchContractForProposal3,
@@ -237,7 +237,7 @@ export const AIAC_TENANT = "aiac";
 
 async function seedMalSendOnly(
   sharedEventId: string,
-  orgC: { relayEnqueueUrl: string; bundleUrl: string; pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial }
+  orgC: { relayEnqueueUrl: string; bundleUrl: string; pki: import("../src/lib/protocol/transport/tls-pki.js").Proposal3PkiMaterial }
 ): Promise<{ path: string; envelope: EventEnvelope }> {
   setTenantId(MAL_TENANT);
   resetProtocolState(MAL_TENANT);
@@ -464,7 +464,7 @@ async function seedVendorSide(
 }
 
 async function seedVendorReceiveOnly(
-  orgC: { bundleUrl: string; apiUrl: string; pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial }
+  orgC: { bundleUrl: string; apiUrl: string; pki: import("../src/lib/protocol/transport/tls-pki.js").Proposal3PkiMaterial }
 ): Promise<void> {
   setTenantId(VENDOR_TENANT);
   resetProtocolState(VENDOR_TENANT);

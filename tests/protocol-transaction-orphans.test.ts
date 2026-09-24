@@ -6,16 +6,16 @@ import { getDataDir, getDocsDir, writeYamlFile } from "../src/lib/utils.js";
 import {
   getTransactionsRegistryPath,
   getWitnessPoolYamlPath,
-} from "../src/lib/protocol/paths.js";
+} from "../src/lib/protocol/core/paths.js";
 import { transactionsRegistrySchema } from "../schemas/protocol/transaction-record.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 import {
   evaluateTransactionOrphans,
   pruneOrphanTransactions,
-} from "../src/lib/protocol/transaction-orphans.js";
-import { loadTransactionsRegistry } from "../src/lib/protocol/transactions.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
-import * as witnessClient from "../src/lib/protocol/witness-client.js";
+} from "../src/lib/protocol/distribution/transaction-orphans.js";
+import { loadTransactionsRegistry } from "../src/lib/protocol/core/transactions.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
+import * as witnessClient from "../src/lib/protocol/distribution/witness-client.js";
 import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 
 function cleanup(): void {

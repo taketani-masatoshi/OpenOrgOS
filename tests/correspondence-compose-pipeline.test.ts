@@ -15,7 +15,7 @@ import {
 } from "../src/lib/correspondence/draft.js";
 import { sendApprovedCorrespondence } from "../src/lib/correspondence/send-gate.js";
 import { humanApproveOrgApproval } from "../src/lib/org/approval/index.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import {
   assertCorrespondenceClaims,
   CorrespondenceClaimsError,

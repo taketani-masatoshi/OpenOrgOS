@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { getProtocolDataDir } from "../protocol/paths.js";
+import { getProtocolDataDir } from "../protocol/core/paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 import type { WireGatewayFederationEntry } from "./discover.js";
 import {

@@ -13,7 +13,7 @@ import {
   buildCliCommandCatalog,
   validateCliCommandCatalog,
 } from "./cli-command-catalog.js";
-import { validateLegacyWebhookSunset } from "./protocol/legacy-webhook-sunset.js";
+import { validateLegacyWebhookSunset } from "./protocol/transport/legacy-webhook-sunset.js";
 import { ROOT_DIR } from "./tenant.js";
 
 export interface PlatformExtensionCheck {

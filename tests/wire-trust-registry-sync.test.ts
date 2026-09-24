@@ -3,13 +3,13 @@ import { createServer } from "node:http";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/core/signing.js";
 import { getDataDir, ROOT_DIR, readYamlFile } from "../src/lib/utils.js";
 import {
   pinLocalWireTrustRegistryKeys,
   syncWireTrustRegistryPublicKeys,
-} from "../src/lib/protocol/wire-trust-registry-sync.js";
-import { validateWireTrustRegistry } from "../src/lib/protocol/wire-trust-registry.js";
+} from "../src/lib/protocol/distribution/wire-trust-registry-sync.js";
+import { validateWireTrustRegistry } from "../src/lib/protocol/distribution/wire-trust-registry.js";
 import { wireTrustRegistrySchema } from "../schemas/protocol/wire-trust-registry.js";
 
 const SCRATCH = join(ROOT_DIR, "scratch", "wire-trust-registry-sync");

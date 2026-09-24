@@ -3,10 +3,10 @@ import { existsSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir, writeYamlFile } from "../src/lib/utils.js";
-import { validateProtocolState } from "../src/lib/protocol/validate.js";
-import { getWitnessPoolYamlPath, getTransactionsRegistryPath } from "../src/lib/protocol/paths.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { validateProtocolState } from "../src/lib/protocol/core/validate.js";
+import { getWitnessPoolYamlPath, getTransactionsRegistryPath } from "../src/lib/protocol/core/paths.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 import { transactionsRegistrySchema } from "../schemas/protocol/transaction-record.js";
 

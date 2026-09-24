@@ -4,21 +4,21 @@ import { join } from "node:path";
 import { createServer } from "node:http";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
 import {
   ensureProtocolSigningKey,
   exportProtocolPublicKeyBase64,
-} from "../src/lib/protocol/signing.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
+} from "../src/lib/protocol/core/signing.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 import { startWireInternalApiServer } from "../src/lib/wire-gateway/internal-api-server.js";
 import { startWireGatewayServer } from "../src/lib/wire-gateway/server.js";
 import { WireInternalClient } from "../src/lib/wire-gateway/internal-client.js";
 import { createOutboundPoller } from "../src/lib/wire-gateway/outbound-poller.js";
 import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config.js";
-import { isWireDelivered } from "../src/lib/protocol/wire-delivered.js";
+import { isWireDelivered } from "../src/lib/protocol/transport/wire-delivered.js";
 import { wireMessageSchema } from "../schemas/protocol/wire-message.js";
-import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
+import { deliverProtocolEnvelope } from "../src/lib/protocol/transport/transport.js";
 import { allocateEphemeralPort } from "./helpers/ephemeral-port.js";
 
 const BEARER = "e2e-poll-token";

@@ -21,7 +21,7 @@ for i in $(seq 1 "$LOOPS"); do
   echo ""
   echo "--- Loop ${i}/${LOOPS} ---"
   read -r TOTAL GRADE GAPS < <(npx tsx -e "
-    import { evaluateWireImplementationScore } from './src/lib/protocol/wire-implementation-score.ts';
+    import { evaluateWireImplementationScore } from './src/lib/protocol/readiness/wire-implementation-score.ts';
     const s = evaluateWireImplementationScore();
     const gaps = s.items.filter(i => !i.ok).map(i => i.id + ':' + (i.detail ?? '')).join('|');
     console.log(s.total + ' ' + s.grade + ' ' + gaps);

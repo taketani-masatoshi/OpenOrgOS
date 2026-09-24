@@ -1,15 +1,15 @@
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { exportOutboxEntries } from "../protocol/inbox-export.js";
-import { exportProtocolPublicKeyBase64 } from "../protocol/signing.js";
-import { ourOrgRef } from "../protocol/identity.js";
-import { loadPeersRegistry, resolvePeerInboundEndpoints } from "../protocol/peers.js";
+import { exportOutboxEntries } from "../protocol/transport/inbox-export.js";
+import { exportProtocolPublicKeyBase64 } from "../protocol/core/signing.js";
+import { ourOrgRef } from "../protocol/core/identity.js";
+import { loadPeersRegistry, resolvePeerInboundEndpoints } from "../protocol/transport/peers.js";
 import { inferPeerTransport } from "../../../schemas/protocol/peer-endpoint.js";
-import { mirrorInboundEnvelope } from "../protocol/transport.js";
-import { isEventDelivered, markWireDelivered } from "../protocol/wire-delivered.js";
-import { verifyInboundProtocolEnvelope } from "../protocol/inbound-verify.js";
-import { getProtocolDataDir, getProtocolInboxDir } from "../protocol/paths.js";
+import { mirrorInboundEnvelope } from "../protocol/transport/transport.js";
+import { isEventDelivered, markWireDelivered } from "../protocol/transport/wire-delivered.js";
+import { verifyInboundProtocolEnvelope } from "../protocol/core/inbound-verify.js";
+import { getProtocolDataDir, getProtocolInboxDir } from "../protocol/core/paths.js";
 import { getTenantId, setTenantId } from "../tenant.js";
 import { readYamlFile } from "../utils.js";
 import { wireExportPolicySchema } from "../../../schemas/protocol/wire-export-policy.js";
@@ -18,7 +18,7 @@ import type { InternalWireInboxSubmit } from "../../../schemas/protocol/wire-gat
 import { internalWireDeliveryReportSchema } from "../../../schemas/protocol/wire-gateway-internal.js";
 import { loadOrgIdentityProfile } from "../org/identity-profile.js";
 import { resolveOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
-import { resolveWireTrustNode } from "../protocol/wire-trust-registry.js";
+import { resolveWireTrustNode } from "../protocol/distribution/wire-trust-registry.js";
 import { loadWireGatewayConfig } from "./validate.js";
 
 export interface WireInternalApiServerOptions {

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { startHubServer } from "../src/lib/hub-server.js";
-import { generateProtocolKeyPair } from "../src/lib/protocol/signing.js";
-import { signWitnessAttestation } from "../src/lib/protocol/witness-attestation-crypto.js";
+import { generateProtocolKeyPair } from "../src/lib/protocol/core/signing.js";
+import { signWitnessAttestation } from "../src/lib/protocol/distribution/witness-attestation-crypto.js";
 import { ROOT_DIR } from "../src/lib/utils.js";
 
 const HUB_DIR = join(ROOT_DIR, "scratch", "hub-server-test");

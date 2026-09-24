@@ -4,12 +4,12 @@ import type {
   PendingNoticesRegistry,
 } from "../../../schemas/protocol/pending-notice.js";
 import { loadContract } from "../data.js";
-import { resolveWireCounterparty } from "../protocol/wire-counterparty.js";
+import { resolveWireCounterparty } from "../protocol/core/wire-counterparty.js";
 import {
   recordProtocolTransaction,
   type RecordTransactionResult,
-} from "../protocol/record-transaction.js";
-import { getPendingNoticesPath } from "../protocol/paths.js";
+} from "../protocol/core/record-transaction.js";
+import { getPendingNoticesPath } from "../protocol/core/paths.js";
 import {
   humanApproveOrgApproval,
   completeOrgApprovalWire,

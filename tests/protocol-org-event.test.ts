@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
-import { roundTripEnvelope, parseEventEnvelope } from "../src/lib/protocol/envelope.js";
-import { loadProtocolRegistry, validateEnvelopeAgainstRegistry } from "../src/lib/protocol/registry.js";
-import { mapQueueEventToOrgEvent } from "../src/lib/protocol/map-internal.js";
+import { roundTripEnvelope, parseEventEnvelope } from "../src/lib/protocol/core/envelope.js";
+import { loadProtocolRegistry, validateEnvelopeAgainstRegistry } from "../src/lib/protocol/distribution/registry.js";
+import { mapQueueEventToOrgEvent } from "../src/lib/protocol/adapters/map-internal.js";
 import type { QueueEvent } from "../schemas/queue.js";
-import { envelopeDigest, canonicalJson } from "../src/lib/protocol/canonical.js";
-import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
+import { envelopeDigest, canonicalJson } from "../src/lib/protocol/core/canonical.js";
+import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/core/identity.js";
 
 describe("protocol org event", () => {
   beforeEach(() => setTenantId("demo"));

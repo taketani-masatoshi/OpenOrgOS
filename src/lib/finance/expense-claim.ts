@@ -71,8 +71,8 @@ import {
 import {
   isWireReadyAdopter,
   resolveWireTrustNode,
-} from "../protocol/wire-trust-registry.js";
-import { loadPeersRegistry } from "../protocol/peers.js";
+} from "../protocol/distribution/wire-trust-registry.js";
+import { loadPeersRegistry } from "../protocol/transport/peers.js";
 import { claimReceiptRemotely, ingestReceiptQrPayload } from "../receipt-qr.js";
 import { getTenantId, loadTenantConfig } from "../tenant.js";
 import { getDataDir, readYamlFile } from "../utils.js";

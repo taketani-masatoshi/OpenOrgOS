@@ -7,10 +7,10 @@ import {
   orgAuditBridgeRecommendedConfig,
 } from "../../../schemas/org/audit-bridge.js";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
-import { appendProtocolAuditRecord } from "../protocol/audit-chain.js";
-import { ourOrgRef } from "../protocol/identity.js";
-import { validateEnvelopeAgainstRegistry } from "../protocol/registry.js";
-import { maybeSignEnvelope } from "../protocol/signing.js";
+import { appendProtocolAuditRecord } from "../protocol/core/audit-chain.js";
+import { ourOrgRef } from "../protocol/core/identity.js";
+import { validateEnvelopeAgainstRegistry } from "../protocol/distribution/registry.js";
+import { maybeSignEnvelope } from "../protocol/core/signing.js";
 import { isAuditEventBridged, markAuditEventBridged } from "./audit-bridge-state.js";
 import { getOrgAuditBridgeConfigPath } from "./paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";

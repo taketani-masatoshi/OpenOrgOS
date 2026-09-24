@@ -3,12 +3,12 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
-import { findTransaction, loadTransactionsRegistry } from "../src/lib/protocol/transactions.js";
-import { getProtocolAuditChainPath } from "../src/lib/protocol/paths.js";
-import { validateProtocolState } from "../src/lib/protocol/validate.js";
-import { exportDelegationProof } from "../src/lib/protocol/delegation.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
+import { findTransaction, loadTransactionsRegistry } from "../src/lib/protocol/core/transactions.js";
+import { getProtocolAuditChainPath } from "../src/lib/protocol/core/paths.js";
+import { validateProtocolState } from "../src/lib/protocol/core/validate.js";
+import { exportDelegationProof } from "../src/lib/protocol/core/delegation.js";
 
 function cleanupProtocolData(): void {
   const paths = [

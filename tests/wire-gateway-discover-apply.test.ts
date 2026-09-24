@@ -7,7 +7,7 @@ import {
   applyWireGatewayDiscover,
   buildPeerProfileFromDiscoverEntry,
 } from "../src/lib/wire-gateway/discover.js";
-import { loadPeersRegistry } from "../src/lib/protocol/peers.js";
+import { loadPeersRegistry } from "../src/lib/protocol/transport/peers.js";
 
 describe("wire-gateway discover apply (W4-1)", () => {
   beforeEach(() => {

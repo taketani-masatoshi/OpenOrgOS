@@ -1,5 +1,5 @@
 import type { WitnessAttestation } from "../../../schemas/protocol/witness-attestation.js";
-import { verifyWitnessAttestationSignature } from "../protocol/witness-attestation-crypto.js";
+import { verifyWitnessAttestationSignature } from "../protocol/distribution/witness-attestation-crypto.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 import { existsSync } from "node:fs";
 import { z } from "zod";

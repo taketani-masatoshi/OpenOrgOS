@@ -8,7 +8,7 @@ import {
   STRICT_WIRE_SCORE_CATEGORIES,
   STRICT_WIRE_SCORE_TEST_FILES,
   type VitestJsonResult,
-} from "../src/lib/protocol/wire-implementation-score.js";
+} from "../src/lib/protocol/readiness/wire-implementation-score.js";
 
 function vitestEvidence(
   statuses: Partial<Record<string, "passed" | "failed">> = {}

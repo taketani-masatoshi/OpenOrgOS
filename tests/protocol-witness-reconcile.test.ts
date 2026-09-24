@@ -2,10 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
-import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
-import { reconcileWitnessWithPeer } from "../src/lib/protocol/witness-reconcile.js";
+import { registerPeer } from "../src/lib/protocol/transport/peers.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
+import { recordProtocolTransaction } from "../src/lib/protocol/core/record-transaction.js";
+import { reconcileWitnessWithPeer } from "../src/lib/protocol/distribution/witness-reconcile.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 
 function cleanup(): void {

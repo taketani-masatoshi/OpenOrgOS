@@ -5,7 +5,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { agentCatalogEntrySchema } from "../schemas/agent-catalog.js";
 import { eventEnvelopeSchema as compatibilityEventEnvelopeSchema } from "../schemas/protocol/org-event.js";
 import { protocolCore } from "../schemas/protocol/index.js";
-import { ourOrgRef as compatibilityOurOrgRef } from "../src/lib/protocol/identity.js";
+import { ourOrgRef as compatibilityOurOrgRef } from "../src/lib/protocol/core/identity.js";
 import { core as protocolCoreRuntime } from "../src/lib/protocol/index.js";
 import {
   computeAllAgentReadinessProfiles,
@@ -14,7 +14,7 @@ import {
 import { computeReadinessStatus } from "../src/lib/readiness.js";
 import { runStatus } from "../src/commands/status.js";
 import { setTenantId } from "../src/lib/tenant.js";
-import { exportCommunityProtocolBundle } from "../src/lib/protocol/community-export.js";
+import { exportCommunityProtocolBundle } from "../src/lib/protocol/adapters/community-export.js";
 import { validateCommunityExportDeterminism } from "../src/lib/generated-artifacts.js";
 import { exportPortableAgents } from "../src/lib/agent-portability.js";
 

@@ -11,7 +11,7 @@ import YAML from "yaml";
 import { validateCapabilityManifestDrift } from "./agent-capability-sync.js";
 import { validateAgentDocsGeneratedDrift } from "./agent-docs-sync.js";
 import { getInstallRoot } from "./orgos-paths.js";
-import { exportCommunityProtocolBundle } from "./protocol/community-export.js";
+import { exportCommunityProtocolBundle } from "./protocol/adapters/community-export.js";
 
 interface AgentIdSource {
   agents: Record<string, { id: string }>;

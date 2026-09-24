@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
+import { loadProtocolAuditChain } from "../src/lib/protocol/core/audit-chain.js";
 import {
   emitWitnessAttestationRegistered,
   emitWitnessReceiptIssued,
-} from "../src/lib/protocol/witness-envelope-emit.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+} from "../src/lib/protocol/distribution/witness-envelope-emit.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import { witnessAttestationSchema } from "../schemas/protocol/witness-attestation.js";
 import { witnessReceiptSchema } from "../schemas/protocol/witness-receipt.js";
 

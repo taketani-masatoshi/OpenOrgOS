@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { listWireGatewayFederationCatalog, type WireGatewayFederationEntry } from "./discover.js";
-import { loadWireTrustRegistry } from "../protocol/wire-trust-registry.js";
+import { loadWireTrustRegistry } from "../protocol/distribution/wire-trust-registry.js";
 import { wireNodeWellKnownSchema } from "../../../schemas/protocol/wire-message.js";
 import {
   applyIncomingWireFederationGossip,

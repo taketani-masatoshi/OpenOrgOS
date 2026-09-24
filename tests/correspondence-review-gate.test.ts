@@ -11,7 +11,7 @@ import {
   formatCorrespondenceDraftReview,
 } from "../src/lib/correspondence/review.js";
 import { findOrgApproval } from "../src/lib/org/approval/index.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import {
   approveFromStewardChat,
   loadSchedulingCorrespondencePreview,

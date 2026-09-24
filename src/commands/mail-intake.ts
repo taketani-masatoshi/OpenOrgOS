@@ -40,7 +40,7 @@ import {
   buildCommunityMailConnectUrl,
   getCommunityUrl,
   resolveCommunityGmailBindForCli,
-} from "../lib/protocol/community-gmail-bind.js";
+} from "../lib/protocol/adapters/community-gmail-bind.js";
 
 /** `--field <fieldId> <value>` を argv から抽出（繰り返し可） */
 export function parseCeoFieldArgs(argv: readonly string[]): Record<string, string> {
@@ -92,7 +92,7 @@ export async function runMailIntakeSync(opts: {
 
   let wireScan: { scanned: number; ingested: number; skipped: number } | undefined;
   if (!opts.dryRun && shouldAutoWireScan(config)) {
-    const { scanMailReceivedForWire } = await import("../lib/protocol/email-wire-ingest.js");
+    const { scanMailReceivedForWire } = await import("../lib/protocol/adapters/email-wire-ingest.js");
     wireScan = await scanMailReceivedForWire({ sinceDays: 1 });
   }
 
@@ -119,7 +119,7 @@ export async function runMailIntakeWireScan(opts: {
   dryRun?: boolean;
   json?: boolean;
 }): Promise<void> {
-  const { scanMailReceivedForWire } = await import("../lib/protocol/email-wire-ingest.js");
+  const { scanMailReceivedForWire } = await import("../lib/protocol/adapters/email-wire-ingest.js");
   const result = await scanMailReceivedForWire({
     sinceDays: opts.sinceDays,
     dryRun: opts.dryRun,

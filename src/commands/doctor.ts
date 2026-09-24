@@ -13,7 +13,7 @@ import {
 import { computeIntegrationsStatus } from "../lib/integrations-status.js";
 import { getTenantId, listTenantIds, setTenantId } from "../lib/tenant.js";
 import { STEWARD_CORE_DIR } from "../lib/steward-paths.js";
-import { runProdWireGate } from "../lib/protocol/prod-wire-gate.js";
+import { runProdWireGate } from "../lib/protocol/readiness/prod-wire-gate.js";
 import { collectOperationalReadinessIssues } from "../lib/scheduling-coordination/operational-readiness.js";
 import { runProdAuthChecks } from "../lib/console-auth/prod-checklist.js";
 import {

@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · security
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent security`
 
 ---
@@ -175,7 +175,7 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 **Wire 本番ゲート（read/review 責任）:**
 
-- `orgos doctor --wire-prod` · `src/lib/protocol/prod-wire-gate.ts` の本番可否レビュー
+- `orgos doctor --wire-prod` · `src/lib/protocol/readiness/prod-wire-gate.ts` の本番可否レビュー
 - Wire credential · classification 境界の違反指摘（**送信承認は CEO/approver**）
 - Platform 実装のセキュリティ観点レビュー — 実装修復は **engineering** へ委譲
 

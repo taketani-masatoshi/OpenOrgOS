@@ -6,7 +6,7 @@ import {
   type CompanyEventChainLink,
 } from "../../schemas/company-events-chain.js";
 import type { CompanyEvent, CompanyEventsRegistry } from "../../schemas/company-events.js";
-import { canonicalJson } from "./protocol/canonical.js";
+import { canonicalJson } from "./protocol/core/canonical.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { getDataDir, toLogicalPath, writeCanonicalFile } from "./utils.js";
 import { getClock } from "./runtime-context.js";

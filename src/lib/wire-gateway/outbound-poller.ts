@@ -2,7 +2,7 @@ import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-c
 import { WireInternalClient } from "./internal-client.js";
 import { envelopeToWireMessage } from "./codec.js";
 import { appendWireGatewayAudit } from "./audit.js";
-import { assertLegacyWebhookDeliveryAllowed } from "../protocol/legacy-webhook-sunset.js";
+import { assertLegacyWebhookDeliveryAllowed } from "../protocol/transport/legacy-webhook-sunset.js";
 import { strictPkDidError } from "./security.js";
 
 export interface OutboundPollerHandle {
@@ -104,7 +104,7 @@ export function createOutboundPoller(
               reason: "legacy_webhook transport; migrate to wire_v1",
               gateway_id: config.node_id,
             });
-            const { serializeEventEnvelope } = await import("../protocol/envelope.js");
+            const { serializeEventEnvelope } = await import("../protocol/core/envelope.js");
             body = serializeEventEnvelope(envelope);
             headers["X-Steward-Format"] = "envelope";
           }

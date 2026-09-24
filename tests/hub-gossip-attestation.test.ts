@@ -7,8 +7,8 @@ import { startHubServer } from "../src/lib/hub-server.js";
 import { exportHubPublicKeyBase64 } from "../src/lib/hub/signing.js";
 import { registerHubAttestation, findHubReceiptByEventId } from "../src/lib/hub/receipt.js";
 import { importAttestationGossip, exportAttestationGossip } from "../src/lib/hub/gossip-attestation.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
-import { signWitnessAttestation } from "../src/lib/protocol/witness-attestation-crypto.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/core/signing.js";
+import { signWitnessAttestation } from "../src/lib/protocol/distribution/witness-attestation-crypto.js";
 import { hubFederationSchema } from "../schemas/protocol/hub-federation.js";
 
 const HUB_A = join(ROOT_DIR, "scratch", "gossip-attest-a");

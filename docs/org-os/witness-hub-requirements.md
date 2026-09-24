@@ -178,7 +178,7 @@ Core event 型（registry 登録済み）:
 - アルゴリズム: **Ed25519**
 - 鍵: `data/protocol/signing-key.pem`（既存 protocol 鍵と共用）
 - 署名対象: `org_signature` を除く attestation フィールドの **canonical JSON SHA-256**
-- 実装: [`witness-attestation-crypto.ts`](../../src/lib/protocol/witness-attestation-crypto.ts)
+- 実装: [`witness-attestation-crypto.ts`](../../src/lib/protocol/distribution/witness-attestation-crypto.ts)
 
 ### 6.2 Hub receipt 署名
 
@@ -331,7 +331,7 @@ sequenceDiagram
 
 ## 12. 紛争解決
 
-1. **正本:** 署名付き envelope · `envelopeDigest()`（[`canonical.ts`](../../src/lib/protocol/canonical.ts)）
+1. **正本:** 署名付き envelope · `envelopeDigest()`（[`canonical.ts`](../../src/lib/protocol/core/canonical.ts)）
 2. **第三者証拠:** `witness_receipt` + Hub 公開鍵 pin 検証
 3. Hub は内容を編集しない — 矛盾は **quorum 未達** または envelope 開示による署名検証で解決
 4. Hub 間で receipt 状態が異なっても各ノードは独立正しい — Org 側 quorum が集約判断

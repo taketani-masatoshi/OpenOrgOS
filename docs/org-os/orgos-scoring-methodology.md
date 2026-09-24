@@ -1,7 +1,7 @@
 # OrgOS · OpenOrgOS Core — 採点方法論
 
 **版:** 1.0 · **日付:** 2026-06-28  
-**正本:** 本書 · 実装: `src/lib/protocol/orgos-readiness.ts` · `openorgos-core-readiness.ts`  
+**正本:** 本書 · 実装: `src/lib/protocol/readiness/orgos-readiness.ts` · `openorgos-core-readiness.ts`  
 **表示:** `npm run orgos -- status --orgos`
 
 ---

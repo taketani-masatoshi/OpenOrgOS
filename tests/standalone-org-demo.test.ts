@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { execSync } from "node:child_process";
 import { ROOT_DIR } from "../src/lib/tenant.js";
-import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
+import { loadProtocolAuditChain } from "../src/lib/protocol/core/audit-chain.js";
 import { runStandaloneOrgDemo } from "../scripts/lib/standalone-org-demo.js";
 
 describe("standalone org demo", () => {

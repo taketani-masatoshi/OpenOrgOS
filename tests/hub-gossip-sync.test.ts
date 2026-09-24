@@ -12,8 +12,8 @@ import { findHubReceiptByEventId } from "../src/lib/hub/receipt.js";
 import { loadHubAttestations } from "../src/lib/hub/registry.js";
 import { witnessAttestationSchema } from "../schemas/protocol/witness-attestation.js";
 import { hubFederationSchema } from "../schemas/protocol/hub-federation.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
-import { signWitnessAttestation } from "../src/lib/protocol/witness-attestation-crypto.js";
+import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/core/signing.js";
+import { signWitnessAttestation } from "../src/lib/protocol/distribution/witness-attestation-crypto.js";
 
 const HUB_A = join(ROOT_DIR, "scratch", "gossip-sync-a");
 const HUB_B = join(ROOT_DIR, "scratch", "gossip-sync-b");

@@ -18,11 +18,11 @@ import {
   loadHubFederation,
   addFederationPeer,
 } from "../lib/hub/federation.js";
-import { fetchReceiptFromHub } from "../lib/protocol/witness-attestation-build.js";
+import { fetchReceiptFromHub } from "../lib/protocol/distribution/witness-attestation-build.js";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { WitnessHubEntry } from "../../schemas/protocol/witness-pool.js";
-import { ensureDevServerTls } from "../lib/protocol/dev-server-tls.js";
+import { ensureDevServerTls } from "../lib/protocol/transport/dev-server-tls.js";
 import { getDeployDir } from "../lib/orgos-paths.js";
 import { buildWitnessHubGaReport } from "../lib/hub/ga-check.js";
 import { assertHubPublicBindAllowed } from "../lib/hub/public-bind.js";

@@ -1,18 +1,18 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { computeOrgOsReadiness } from "../src/lib/protocol/orgos-readiness.js";
-import { computeOrgOsStrictReadiness } from "../src/lib/protocol/orgos-readiness-strict.js";
+import { computeOrgOsReadiness } from "../src/lib/protocol/readiness/orgos-readiness.js";
+import { computeOrgOsStrictReadiness } from "../src/lib/protocol/readiness/orgos-readiness-strict.js";
 import {
   computeOpenOrgOsCoreReadiness,
   computeOpenOrgOsCoreStrictReadiness,
   OPENORGOS_CORE_STRICT_CAP_TEST_FAILED,
   OPENORGOS_CORE_STRICT_CAP_UNVERIFIED,
-} from "../src/lib/protocol/openorgos-core-readiness.js";
+} from "../src/lib/protocol/readiness/openorgos-core-readiness.js";
 import { computeOrgOsScore, computeOpenOrgOsCoreScore } from "../src/lib/os-score.js";
 import {
   clearTestSuiteStatus,
   writeTestSuiteFailed,
   writeTestSuitePassed,
-} from "../src/lib/protocol/test-suite-status.js";
+} from "../src/lib/protocol/readiness/test-suite-status.js";
 
 describe("orgos readiness scoring", () => {
   it("checklist score reflects artifact registry (high)", () => {

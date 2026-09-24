@@ -12,7 +12,7 @@ import {
   type HumanApprovalContext,
   type HumanApprovalSource,
 } from "../../../schemas/org/human-approval-context.js";
-import { canonicalJson } from "../protocol/canonical.js";
+import { canonicalJson } from "../protocol/core/canonical.js";
 import { getWorkspaceRoot } from "../orgos-paths.js";
 import { isProdSecurityMode } from "../console-auth/operator-rbac.js";
 

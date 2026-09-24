@@ -133,7 +133,7 @@ steward/platform/agent/exports/agents/*.pack.md  ×46
 | `.cursor/rules/tenant-active-context.mdc` | **G** | 生成ミラー · コミット不要 |
 | `publish/protocol/community-*.json` ×3 | **生成物** | `protocol community export` / Community script · CI 生成 |
 | `src/lib/integrity.ts` | **B** | TI / tenant setup 連動 |
-| `src/lib/protocol/validate.ts` | **A** | protocol validate 拡張 |
+| `src/lib/protocol/core/validate.ts` | **A** | protocol validate 拡張 |
 | `src/lib/tenant-init.ts` | **B** | tenant integrations |
 | `src/lib/tenant-setup-wizard.ts` | **B** | tenant integrations |
 | `steward/platform/protocol/seed/peers.yaml.example` | **A** | Wire seed |

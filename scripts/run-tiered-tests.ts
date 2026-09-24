@@ -16,7 +16,7 @@ import {
   clearTestSuiteStatus,
   writeTestSuiteFailed,
   writeTestSuitePassed,
-} from "../src/lib/protocol/test-suite-status.js";
+} from "../src/lib/protocol/readiness/test-suite-status.js";
 import {
   assertAllTestsRegistered,
   assertAxisCountsMatchTotal,

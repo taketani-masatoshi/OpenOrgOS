@@ -198,7 +198,7 @@ Wire Gateway は **以下のみ** を担当する。
 | `delegation` | `delegation` | 1:1 透過 |
 | — | `correlation_id` / `causation_id` | `correlationId` / `causationId` |
 
-**Canonical digest:** [`src/lib/protocol/canonical.ts`](../../src/lib/protocol/canonical.ts) — `signature` 除外 · キーソート JSON → SHA-256。
+**Canonical digest:** [`src/lib/protocol/core/canonical.ts`](../../src/lib/protocol/core/canonical.ts) — `signature` 除外 · キーソート JSON → SHA-256。
 
 **Gateway 境界での推奨:**
 

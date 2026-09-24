@@ -5,7 +5,7 @@ import { startHubServer } from "../src/lib/hub-server.js";
 import {
   fetchHubPublicKey,
   syncTrustedHubPublicKeys,
-} from "../src/lib/protocol/trusted-hubs-sync.js";
+} from "../src/lib/protocol/distribution/trusted-hubs-sync.js";
 import { ROOT_DIR } from "../src/lib/utils.js";
 
 const SCRATCH = join(ROOT_DIR, "scratch", "trusted-hubs-sync");

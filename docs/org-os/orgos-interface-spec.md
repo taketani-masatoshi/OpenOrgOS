@@ -56,7 +56,7 @@ Organization Implementation · Adapter · Wire · Witness の **境界（I1–I3
 | 外部 Wire JSON | §5.1 flat JSON | [wire-gateway-wire-protocol.md](wire-gateway-wire-protocol.md) |
 | 内部正本 | `EventEnvelope` | `schemas/protocol/org-event.ts` |
 | Gateway ↔ 本体 | Internal API | [wire-gateway-internal-api.md](wire-gateway-internal-api.md) |
-| Codec | encode/decode | [`src/lib/wire-gateway/codec.ts`](../../src/lib/wire-gateway/codec.ts) |
+| Codec | encode/decode | [`src/lib/protocol/transport/codec.ts`](../../src/lib/protocol/transport/codec.ts) |
 
 **不変条件:** Gateway は payload 非解釈 · Event 本文非保持 · DB 非接触。参照実装は [§21 ギャップ](wire-gateway-requirements.md#21-参照実装ギャップos_steward--2026-07-07) を参照。
 

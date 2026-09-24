@@ -5,11 +5,11 @@ import { witnessPoolConfigSchema } from "../../schemas/protocol/witness-pool.js"
 import { configureHubRuntime } from "../../src/lib/hub/runtime.js";
 import { startHubServer } from "../../src/lib/hub-server.js";
 import { exportHubPublicKeyBase64 } from "../../src/lib/hub/signing.js";
-import { envelopeDigest } from "../../src/lib/protocol/canonical.js";
-import { writeOutboxEnvelope } from "../../src/lib/protocol/audit-chain.js";
-import { getProtocolOutboxDir, getWitnessPoolYamlPath } from "../../src/lib/protocol/paths.js";
-import { runWithProtocolWriteGuard } from "../../src/lib/protocol/protocol-write-guard.js";
-import { ensureProtocolSigningKey } from "../../src/lib/protocol/signing.js";
+import { envelopeDigest } from "../../src/lib/protocol/core/canonical.js";
+import { writeOutboxEnvelope } from "../../src/lib/protocol/core/audit-chain.js";
+import { getProtocolOutboxDir, getWitnessPoolYamlPath } from "../../src/lib/protocol/core/paths.js";
+import { runWithProtocolWriteGuard } from "../../src/lib/protocol/core/protocol-write-guard.js";
+import { ensureProtocolSigningKey } from "../../src/lib/protocol/core/signing.js";
 import { ROOT_DIR, setTenantId } from "../../src/lib/tenant.js";
 import { writeYamlFile } from "../../src/lib/utils.js";
 

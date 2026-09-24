@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
-import { buildIdentityDocument } from "../src/lib/protocol/identity.js";
+import { buildIdentityDocument } from "../src/lib/protocol/core/identity.js";
 import { loadOrgIdentityProfile } from "../src/lib/org/identity-profile.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 

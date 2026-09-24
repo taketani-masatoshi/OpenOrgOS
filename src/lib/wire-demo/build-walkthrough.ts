@@ -15,8 +15,8 @@ import { listOrgApprovals } from "../org/approval/reject.js";
 import {
   loadPeersRegistry,
   peerHasDeliveryPath,
-} from "../protocol/peers.js";
-import { listWirePending } from "../protocol/wire-queue.js";
+} from "../protocol/transport/peers.js";
+import { listWirePending } from "../protocol/transport/wire-queue.js";
 import { getTenantId, getTenantDir } from "../tenant.js";
 import { currentDate } from "../utils.js";
 import { existsSync } from "node:fs";

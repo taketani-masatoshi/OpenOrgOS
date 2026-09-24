@@ -8,12 +8,12 @@ import {
   saveOrganizationCertificateAttestation,
   signOrganizationCertificateAttestation,
   verifyOrganizationCertificateAttestation,
-} from "../src/lib/protocol/org-cert-witness.js";
+} from "../src/lib/protocol/distribution/org-cert-witness.js";
 import {
   ensureWitnessTrustAuthorityKey,
   initWitnessTrustAuthority,
   publishWitnessTrustBundle,
-} from "../src/lib/protocol/witness-trust.js";
+} from "../src/lib/protocol/distribution/witness-trust.js";
 import { generateHubKeyPair } from "../src/lib/hub/signing.js";
 import {
   deriveOpenOrgDidFromPublicKey,

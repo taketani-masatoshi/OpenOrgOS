@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateWitnessWireGovernancePolicy } from "../src/lib/protocol/witness-policy.js";
+import { evaluateWitnessWireGovernancePolicy } from "../src/lib/protocol/distribution/witness-policy.js";
 import type { WitnessQuorumResult } from "../schemas/protocol/witness-quorum.js";
 
 const satisfied: WitnessQuorumResult = {

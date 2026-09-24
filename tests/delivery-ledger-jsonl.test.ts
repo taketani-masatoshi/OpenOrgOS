@@ -7,11 +7,11 @@ import {
   recordDeliveryAttempt,
   listDeliveryAttempts,
   resetDeliveryAttemptRepository,
-} from "../src/lib/protocol/delivery-ledger.js";
+} from "../src/lib/protocol/transport/delivery-ledger.js";
 import {
   getDeliveryAttemptsJsonlPath,
   getDeliveryAttemptsPath,
-} from "../src/lib/protocol/paths.js";
+} from "../src/lib/protocol/core/paths.js";
 
 function cleanup(): void {
   const protocolDir = join(getDataDir(), "protocol");

@@ -12,7 +12,7 @@ import {
   verifySignedReceiptPayload,
 } from "../src/lib/receipt-qr.js";
 import { renderReceiptQrSvg, renderReceiptQrPng } from "../src/lib/receipt-qr-render.js";
-import { canonicalJson } from "../src/lib/protocol/canonical.js";
+import { canonicalJson } from "../src/lib/protocol/core/canonical.js";
 import type { ReceiptQrData } from "../schemas/receipt-qr.js";
 
 function sampleReceipt(overrides: Partial<ReceiptQrData> = {}): ReceiptQrData {

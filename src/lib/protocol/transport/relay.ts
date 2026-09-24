@@ -1,7 +1,7 @@
 import type { EventEnvelope } from "../../../../schemas/protocol/org-event.js";
 import { loadContracts } from "../../data.js";
 import { loadTenantConfig } from "../../tenant.js";
-import { protocolHttpFetch } from "../protocol-http-client.js";
+import { protocolHttpFetch } from "./protocol-http-client.js";
 
 function relayApiOrigin(bundleOrApiUrl: string): string {
   return new URL(bundleOrApiUrl).origin;
@@ -66,5 +66,3 @@ export async function pullOrgCRelayInboxIfConfigured(): Promise<number> {
   }
   return total;
 }
-
-export { listWireRelayPending } from "../wire-relay-store.js";

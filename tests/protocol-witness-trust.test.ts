@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getDataDir } from "../src/lib/utils.js";
-import { getWitnessTrustDir } from "../src/lib/protocol/paths.js";
+import { getWitnessTrustDir } from "../src/lib/protocol/core/paths.js";
 import {
   initWitnessTrustAuthority,
   certifyWitnessHub,
@@ -10,7 +10,7 @@ import {
   verifyWitnessTrustBundle,
   publishWitnessTrustBundle,
   loadWitnessTrustBundle,
-} from "../src/lib/protocol/witness-trust.js";
+} from "../src/lib/protocol/distribution/witness-trust.js";
 import { generateHubKeyPair } from "../src/lib/hub/signing.js";
 
 function cleanup(): void {

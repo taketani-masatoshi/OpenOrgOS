@@ -15,7 +15,7 @@ import {
 } from "../../../../schemas/protocol/gov-gateway-profile.js";
 import { getInstallRoot } from "../../orgos-paths.js";
 import { readYamlFile } from "../../utils.js";
-import { getGovGatewayYamlPath } from "../../protocol/paths.js";
+import { getGovGatewayYamlPath } from "../../protocol/core/paths.js";
 import { PROTOCOL_REGISTRY_PATH, STEWARD_PLATFORM_DIR } from "../../steward-paths.js";
 import type { GovGatewayTransport, GovGatewayAdapter } from "./types.js";
 import { getDefaultGovGatewayTransport } from "./transport-http.js";

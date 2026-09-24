@@ -5,8 +5,8 @@ import {
   isPkDidRequired,
   isPkPrefixedOpenOrgDid,
 } from "../../../schemas/protocol/openorg-did.js";
-import { nodeIdentifierMatches } from "../protocol/wire-trust-registry.js";
-import { verifyEventEnvelopeSignature } from "../protocol/signing.js";
+import { nodeIdentifierMatches } from "../protocol/distribution/wire-trust-registry.js";
+import { verifyEventEnvelopeSignature } from "../protocol/core/signing.js";
 import {
   assertWireHashMatchesEnvelope,
   wireMessageToEnvelope,

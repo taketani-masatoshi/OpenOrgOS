@@ -33,7 +33,7 @@ import {
   humanApproveOrgApproval,
   rejectOrgApproval,
 } from "../src/lib/org/approval/index.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import {
   runJpMedicalDeviceDeadlines,
   runJpMedicalDeviceLedgerStatus,

@@ -9,7 +9,7 @@ import {
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
-import { canonicalJson } from "./protocol/canonical.js";
+import { canonicalJson } from "./protocol/core/canonical.js";
 import { getDataDir, readYamlFile, writeYamlFile } from "./utils.js";
 import { runWithEventsWriteGuard } from "./company-events-write-guard.js";
 

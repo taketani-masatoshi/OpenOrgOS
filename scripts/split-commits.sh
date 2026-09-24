@@ -16,11 +16,11 @@ commit_if_staged() {
 GUARDRAIL_PATHS=(
   deploy/protocol-outbox
   schemas/protocol/outbox-provenance.ts
-  src/lib/protocol/protocol-write-guard.ts
-  src/lib/protocol/outbox-provenance.ts
-  src/lib/protocol/outbox-permissions.ts
-  src/lib/protocol/pre-deliver-gate.ts
-  src/lib/protocol/peer-protocol-policy.ts
+  src/lib/protocol/core/protocol-write-guard.ts
+  src/lib/protocol/core/outbox-provenance.ts
+  src/lib/protocol/core/outbox-permissions.ts
+  src/lib/protocol/transport/pre-deliver-gate.ts
+  src/lib/protocol/transport/peer-protocol-policy.ts
   src/lib/company-events-lint.ts
   scripts/validate-protocol-tenants.ts
   steward/platform/protocol/ci-validate-tenants.yaml
@@ -31,7 +31,7 @@ GUARDRAIL_PATHS=(
   tests/validate-protocol-tenants.test.ts
   tenants/demo/data/company-events.yaml
   tenants/hk-demo/docs/protocol/outbox
-  src/lib/protocol/transport.ts
+  src/lib/protocol/transport/transport.ts
   src/commands/protocol.ts
   src/lib/company-events.ts
   schemas/protocol/contract-protocol.ts
@@ -49,10 +49,10 @@ company-events lint, and validate:protocol:tenants for all demo tenants."
 
 # --- 2. Scoring ---
 SCORING_PATHS=(
-  src/lib/protocol/orgos-readiness.ts
-  src/lib/protocol/orgos-readiness-strict.ts
-  src/lib/protocol/openorgos-core-readiness.ts
-  src/lib/protocol/test-suite-status.ts
+  src/lib/protocol/readiness/orgos-readiness.ts
+  src/lib/protocol/readiness/orgos-readiness-strict.ts
+  src/lib/protocol/readiness/openorgos-core-readiness.ts
+  src/lib/protocol/readiness/test-suite-status.ts
   src/lib/os-score.ts
   src/commands/status.ts
   scripts/run-tests.ts

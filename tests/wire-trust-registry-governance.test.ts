@@ -3,12 +3,13 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { setTenantId, getDataDir } from "../src/lib/utils.js";
-import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/core/signing.js";
 import {
   submitWireNodeGovernanceRequest,
   decideWireNodeGovernanceRequest,
   loadWireNodeGovernanceRegistry,
-} from "../src/lib/protocol/wire-node-governance.js";
+} from "../src/lib/protocol/distribution/wire-node-governance.js";
+import { loadWireGatewayConfig } from "../src/lib/wire-gateway/validate.js";
 import { readYamlFile } from "../src/lib/utils.js";
 import { wireTrustRegistrySchema } from "../schemas/protocol/wire-trust-registry.js";
 
@@ -70,6 +71,7 @@ internal_api:
 
   it("submit → decide approve merges node into trust registry", () => {
     const request = submitWireNodeGovernanceRequest({
+      gateway: loadWireGatewayConfig()!,
       tenantId: "demo",
       wireEmail: "wire-notices@demo.example",
       governancePath: govPath,
@@ -96,6 +98,7 @@ internal_api:
 
   it("rejects duplicate corporate_number on submit", () => {
     submitWireNodeGovernanceRequest({
+      gateway: loadWireGatewayConfig()!,
       tenantId: "demo",
       wireEmail: "wire-notices@demo.example",
       corporateNumber: "4010001199703",
@@ -146,6 +149,7 @@ internal_api:
 
     expect(() =>
       submitWireNodeGovernanceRequest({
+      gateway: loadWireGatewayConfig()!,
         tenantId: "acme",
         wireEmail: "wire-notices@acme.example",
         corporateNumber: "4010001199703",
