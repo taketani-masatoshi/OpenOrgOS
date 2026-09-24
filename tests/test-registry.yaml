@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 621
-  static_test_cases: 3120
-  tiered_execution_total: 621
+  vitest_total: 622
+  static_test_cases: 3122
+  tiered_execution_total: 622
   catalog_total: 55
   catalog_cli_registered: 55
   catalog_gap: 0
@@ -1058,6 +1058,10 @@ tests:
     kind: unit
     domain: P03_correspondence_org
   correspondence-gmail-sync.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-hooks-composition.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
