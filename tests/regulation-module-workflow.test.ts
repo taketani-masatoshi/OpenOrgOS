@@ -3,8 +3,10 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getTenantDir } from "../src/lib/tenant.js";
 import {
+  checkManifestRegulationContract,
   checkModuleRegulationContract,
   isRegulationRiskModuleId,
+  listRegulationFamilyIds,
 } from "../src/lib/regulation-module-contract.js";
 import { scaffoldRegulationDraftFiles } from "../src/lib/regulation-draft-scaffold.js";
 import {
@@ -14,6 +16,7 @@ import {
   isThinStubTemplate,
   regulationWorkflowSubject,
 } from "../src/lib/regulation-module-workflow.js";
+import { loadHandoff } from "../src/lib/routing.js";
 
 describe("regulation-module-workflow", () => {
   beforeEach(() => {
@@ -27,11 +30,12 @@ describe("regulation-module-workflow", () => {
     expect(reuse.regulationIds).toEqual(expect.arrayContaining(["REG-027", "REG-030"]));
   });
 
-  it("classifies jp_cosmetics_mah via regulation_family sibling (not regex-only)", () => {
+  it("classifies jp_cosmetics_mah via regulation_family sibling with REG-038", () => {
     const plan = planRegulationForModule("jp_cosmetics_mah");
     expect(plan.familyId).toBe("qms_gxp");
-    expect(plan.actions.some((a) => a.kind === "reuse")).toBe(true);
-    expect(plan.actions.find((a) => a.kind === "reuse")!.regulationIds).toContain("REG-037");
+    expect(plan.actions.find((a) => a.kind === "reuse")!.regulationIds).toEqual(
+      expect.arrayContaining(["REG-038", "REG-037"])
+    );
     const fork = plan.actions.find((a) => a.kind === "fork_family")!;
     expect(fork.draftTemplate).toContain("qms-gxp/FORK-DRAFT.md");
     expect(plan.doNotMutateRegulationIds).toEqual(
@@ -88,7 +92,7 @@ describe("regulation-module-workflow", () => {
     expect(result.workOrderId).toBeUndefined();
   });
 
-  it("scaffolds draft files and points WO context at them", () => {
+  it("scaffolds draft files without mutating medical 施行文", () => {
     const plan = planRegulationForModule("jp_cosmetics_mah");
     const draftRel = `docs/company/regulations/drafts/jp_cosmetics_mah-fork_family-草案.md`;
     const draftAbs = join(getTenantDir(), ...draftRel.split("/"));
@@ -100,8 +104,8 @@ describe("regulation-module-workflow", () => {
     const body = readFileSync(draftAbs, "utf-8");
     expect(body).toContain("未施行");
     expect(body).toContain("REG-025");
-    expect(body).toContain("qms_gxp");
-    expect(body).toContain("Reference scaffold");
+    expect(body).toContain("Pack path:");
+    expect(body).not.toContain("## 推奨アウトプット構成");
 
     const seiko = join(getTenantDir(), "docs/company/regulations/iryo-kiki-qms-kisoku.md");
     const before = readFileSync(seiko, "utf-8");
@@ -113,6 +117,23 @@ describe("regulation-module-workflow", () => {
     expect(wo.draftPaths).toContain(draftRel);
     expect(wo.workOrderId).toBeTruthy();
     expect(readFileSync(seiko, "utf-8")).toBe(before);
+  });
+
+  it("updates pending WO content on dedupe", () => {
+    const first = fileRegulationWorkflowWorkOrder("jp_cosmetics_mah", {
+      dedupe: false,
+      scaffoldDrafts: true,
+    });
+    expect(first.workOrderId).toBeTruthy();
+    const second = fileRegulationWorkflowWorkOrder("jp_cosmetics_mah", {
+      scaffoldDrafts: true,
+    });
+    expect(second.deduped).toBe(true);
+    expect(second.workOrderId).toBe(first.workOrderId);
+    const handoff = loadHandoff(first.workOrderId!);
+    expect(handoff.requirements).toContain("Draft output paths");
+    expect(handoff.skill).toBe("regulation_module_scaffold");
+    expect(handoff.context.path).toContain("drafts/");
   });
 
   it("dedupes pending regulation workflow work orders", () => {
@@ -149,13 +170,28 @@ describe("regulation-module-contract", () => {
     expect(checkModuleRegulationContract("jp_cosmetics_mah")).toEqual([]);
   });
 
+  it("lists known regulation families", () => {
+    expect(listRegulationFamilyIds()).toContain("qms_gxp");
+  });
+
   it("shares risk-module id detection with plan new-hints", () => {
     expect(isRegulationRiskModuleId("jp_tax_corporate")).toBe(true);
     expect(isRegulationRiskModuleId("jp_medical_device")).toBe(true);
     expect(isRegulationRiskModuleId("hospitality")).toBe(false);
   });
 
-  it("flags cash-like module with no regulation declarations", () => {
-    expect(checkModuleRegulationContract("jp_not_a_real_module")).toEqual([]);
+  it("flags cash-like manifest with no regulation declarations", () => {
+    const issues = checkManifestRegulationContract("jp_tax_synthetic", {
+      notes: "skeleton without regs",
+    });
+    expect(issues.some((i) => i.message.includes("missing required_regulations"))).toBe(true);
+  });
+
+  it("flags unknown regulation_family id", () => {
+    const issues = checkManifestRegulationContract("jp_tax_synthetic", {
+      required_regulations: ["REG-031"],
+      regulation_family: { id: "not_a_family", role: "sibling" },
+    });
+    expect(issues.some((i) => i.message.includes("unknown regulation_family"))).toBe(true);
   });
 });

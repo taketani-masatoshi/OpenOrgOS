@@ -2,14 +2,14 @@
 
 **Family id:** `qms_gxp`  
 **Owner module:** `jp_medical_device`（REG-025 QMS · REG-026 GVP）  
-**Sibling 例:** `jp_cosmetics_mah`（化粧品製造販売 · skeleton）、医薬部外品 等
+**Sibling 例:** `jp_cosmetics_mah`（REG-038 · skeleton）、医薬部外品 等
 
 ---
 
 ## 目的
 
 医療機器の QMS/GVP と **語彙は似ても法的義務が異なる** 業種向けに、  
-**新規 REG（または共通章＋業種別紙）** の草案を書くときの出発点。
+**新規 REG（化粧品は REG-038）または共通章＋業種別紙** の草案を書くときの出発点。
 
 ## 禁止
 

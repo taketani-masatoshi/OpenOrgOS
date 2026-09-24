@@ -100,3 +100,6 @@ regulations:
   - id: REG-037
     enabled: true
     notes: permit_application / registry / minpaku
+  - id: REG-038
+    enabled: false
+    notes: jp_cosmetics_mah Off · qms_gxp sibling stub

@@ -8,6 +8,7 @@ import { getRegulationsTemplatesDir } from "./jurisdiction.js";
 import { getTenantDir } from "./tenant.js";
 
 const DRAFTS_REL_DIR = "docs/company/regulations/drafts";
+const FORK_PREVIEW_LINES = 24;
 
 /** Minimal plan shape (avoids circular import with regulation-module-workflow). */
 export interface RegulationDraftPlanInput {
@@ -35,8 +36,9 @@ export interface ScaffoldRegulationDraftResult {
   targets: RegulationDraftTarget[];
   created: string[];
   skipped: string[];
-  /** Primary path for Work Order context.path (first created or existing). */
+  /** Primary path for Work Order context.path (index when multiple drafts). */
   primaryRelativePath?: string;
+  indexRelativePath?: string;
 }
 
 function draftsAbsDir(): string {
@@ -74,6 +76,24 @@ export function resolveRegulationDraftTargets(
   return out;
 }
 
+function scaffoldPreview(scaffoldSource: string): string {
+  const abs = join(getRegulationsTemplatesDir(), scaffoldSource);
+  if (!existsSync(abs)) {
+    return `Missing pack file: \`${scaffoldSource}\``;
+  }
+  const lines = readFileSync(abs, "utf-8").split("\n").slice(0, FORK_PREVIEW_LINES);
+  return [
+    `Pack path: \`steward/jurisdiction-packs/JP/regulations/templates/${scaffoldSource}\``,
+    "",
+    "```markdown",
+    ...lines,
+    lines.length >= FORK_PREVIEW_LINES ? "…" : undefined,
+    "```",
+  ]
+    .filter((l) => l !== undefined)
+    .join("\n");
+}
+
 function buildDraftBody(
   plan: RegulationDraftPlanInput,
   target: RegulationDraftTarget,
@@ -81,20 +101,13 @@ function buildDraftBody(
 ): string {
   let reference = "";
   if (target.scaffoldSource) {
-    const abs = join(getRegulationsTemplatesDir(), target.scaffoldSource);
-    if (existsSync(abs)) {
-      reference = [
-        "",
-        "## Reference scaffold (do not treat as 施行)",
-        "",
-        "```markdown",
-        readFileSync(abs, "utf-8").trimEnd(),
-        "```",
-        "",
-      ].join("\n");
-    } else {
-      reference = `\n## Reference scaffold\n\nMissing pack file: \`${target.scaffoldSource}\`\n\n`;
-    }
+    reference = [
+      "",
+      "## Reference scaffold (link + preview · do not treat as 施行)",
+      "",
+      scaffoldPreview(target.scaffoldSource),
+      "",
+    ].join("\n");
   } else if (regulationIds.length) {
     reference = [
       "",
@@ -135,6 +148,36 @@ function buildDraftBody(
   ].join("\n");
 }
 
+function writeIndexFile(
+  plan: RegulationDraftPlanInput,
+  targets: RegulationDraftTarget[]
+): { relativePath: string; absolutePath: string; wrote: boolean } {
+  const relativePath = `${DRAFTS_REL_DIR}/${plan.moduleId}-INDEX-草案.md`;
+  const absolutePath = join(getTenantDir(), ...relativePath.split("/"));
+  const body = [
+    `# ${plan.moduleId} · regulation drafts（索引）`,
+    "",
+    "**状態:** 草案索引 · **未施行**",
+    `**Module:** \`${plan.moduleId}\`${plan.familyId ? ` · **Family:** \`${plan.familyId}\`` : ""}`,
+    "",
+    "Work Order `context.path` は本索引を指す。各草案を編集すること。",
+    "",
+    "## Draft files",
+    "",
+    ...targets.map((t) => `- [\`${t.kind}\`](${t.relativePath.split("/").pop()}) — \`${t.relativePath}\``),
+    "",
+    "## Do not mutate",
+    "",
+    plan.doNotMutateRegulationIds.length
+      ? plan.doNotMutateRegulationIds.map((id) => `- \`${id}\``).join("\n")
+      : "- —",
+    "",
+  ].join("\n");
+  mkdirSync(dirname(absolutePath), { recursive: true });
+  writeFileSync(absolutePath, body, "utf-8");
+  return { relativePath, absolutePath, wrote: true };
+}
+
 export function scaffoldRegulationDraftFiles(
   plan: RegulationDraftPlanInput,
   opts: { force?: boolean; dryRun?: boolean } = {}
@@ -145,11 +188,16 @@ export function scaffoldRegulationDraftFiles(
   const skipped: string[] = [];
 
   if (opts.dryRun || targets.length === 0) {
+    const indexRelativePath =
+      targets.length > 1
+        ? `${DRAFTS_REL_DIR}/${plan.moduleId}-INDEX-草案.md`
+        : undefined;
     return {
       targets,
       created,
       skipped: targets.map((t) => t.relativePath),
-      primaryRelativePath: targets[0]?.relativePath,
+      primaryRelativePath: indexRelativePath ?? targets[0]?.relativePath,
+      indexRelativePath,
     };
   }
 
@@ -187,7 +235,20 @@ export function scaffoldRegulationDraftFiles(
     created.push(target.relativePath);
   }
 
-  const primary = created[0] ?? skipped[0] ?? targets[0]?.relativePath;
+  let indexRelativePath: string | undefined;
+  let primary = created[0] ?? skipped[0] ?? targets[0]?.relativePath;
+  if (targets.length > 1) {
+    const index = writeIndexFile(plan, targets);
+    indexRelativePath = index.relativePath;
+    primary = index.relativePath;
+    if (!created.includes(index.relativePath)) created.push(index.relativePath);
+  }
 
-  return { targets, created, skipped, primaryRelativePath: primary };
+  return {
+    targets,
+    created,
+    skipped,
+    primaryRelativePath: primary,
+    indexRelativePath,
+  };
 }

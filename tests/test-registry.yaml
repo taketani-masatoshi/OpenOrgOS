@@ -2136,6 +2136,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  regulation-module-workflow.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   relay-sla-alert.test.ts:
     axis: platform
     kind: unit

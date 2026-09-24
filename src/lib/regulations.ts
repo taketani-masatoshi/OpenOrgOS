@@ -138,7 +138,12 @@ export function loadEnabledRegulationIds(): string[] {
 export interface RegulationValidationIssue {
   file: string;
   message: string;
+  /** Default error. Warnings (e.g. optional REG-030) go to integrity. */
+  level?: "error" | "warning";
 }
+
+/** Cross-cutting optional regs that should stay enabled when listed on an ON module. */
+export const RECOMMENDED_OPTIONAL_REGULATION_IDS = ["REG-030"] as const;
 
 export function validateRegulations(): RegulationValidationIssue[] {
   const issues: RegulationValidationIssue[] = [];
@@ -147,6 +152,9 @@ export function validateRegulations(): RegulationValidationIssue[] {
   const catalogIds = new Set(catalog.map((r) => r.id));
   const tenantFile = loadTenantRegulationsFile();
   const seen = new Set<string>();
+  const effectiveById = new Map(
+    listEffectiveRegulations().map((r) => [r.id, r] as const)
+  );
 
   for (const entry of tenantFile.regulations) {
     if (seen.has(entry.id)) {
@@ -174,7 +182,7 @@ export function validateRegulations(): RegulationValidationIssue[] {
       });
     }
 
-    const effective = listEffectiveRegulations().find((r) => r.id === entry.id);
+    const effective = effectiveById.get(entry.id);
     if (entry.enabled && effective?.effective) {
       const docAbs = tenantDocsPath(
         TENANT_REGULATIONS_SUBDIR,
@@ -197,6 +205,7 @@ export function validateRegulations(): RegulationValidationIssue[] {
   }
 
   issues.push(...validateRequiredRegulationsForEnabledModules(logicalFile));
+  issues.push(...validateRecommendedOptionalRegulationsForEnabledModules(logicalFile));
 
   return issues;
 }
@@ -235,6 +244,45 @@ function validateRequiredRegulationsForEnabledModules(
         issues.push({
           file: logicalFile,
           message: `module "${mod.id}" requires regulation ${regId} enabled in regulations.yaml (risk-domain bind)`,
+        });
+      }
+    }
+  }
+
+  return issues;
+}
+
+/**
+ * Module ON + optional_regulations includes a recommended cross-cutting REG
+ * (e.g. REG-030) → warn if that REG is not tenant-enabled.
+ */
+function validateRecommendedOptionalRegulationsForEnabledModules(
+  logicalFile: string
+): RegulationValidationIssue[] {
+  const issues: RegulationValidationIssue[] = [];
+  let modulesFile;
+  try {
+    modulesFile = loadModulesFile();
+  } catch {
+    return issues;
+  }
+
+  const recommended = new Set<string>(RECOMMENDED_OPTIONAL_REGULATION_IDS);
+  const tenantById = new Map(
+    loadTenantRegulationsFile().regulations.map((r) => [r.id, r])
+  );
+
+  for (const mod of modulesFile.modules) {
+    if (!mod.enabled) continue;
+    const manifest = loadModuleManifest(mod.id);
+    const optional = manifest?.optional_regulations ?? [];
+    for (const regId of optional) {
+      if (!recommended.has(regId)) continue;
+      if (!tenantById.get(regId)?.enabled) {
+        issues.push({
+          file: logicalFile,
+          level: "warning",
+          message: `module "${mod.id}" lists recommended optional ${regId} but it is not enabled in regulations.yaml`,
         });
       }
     }

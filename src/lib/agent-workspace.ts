@@ -150,6 +150,49 @@ function enableRegulations(ids: string[]): string[] {
   return enabled;
 }
 
+/**
+ * After flag-only module enable, still apply regulation enable + 施行シード
+ * (and activation seeds when data_root is known). Does not re-toggle modules.yaml.
+ */
+export function applyModuleRegulationSideEffects(moduleId: string): {
+  regulationsEnabled: string[];
+  regulationsSeeded: string[];
+  seedsCopied: string[];
+} {
+  const manifest = loadModuleManifest(moduleId);
+  if (!manifest) {
+    throw new Error(`Module manifest not found: ${moduleId}`);
+  }
+
+  const file = loadModulesFile();
+  const mod = file.modules.find((m) => m.id === moduleId || m.agent === moduleId);
+  const dataRoot =
+    mod?.data_root?.replace(/\/$/, "") ??
+    MODULE_DEFAULT_DATA_ROOT[moduleId]?.replace(/\/$/, "") ??
+    `data/${moduleId.replace(/_/g, "-")}`;
+
+  const seedsCopied: string[] = [];
+  for (const seed of manifest.activation_seeds) {
+    if (copyActivationSeed(moduleId, seed, dataRoot)) {
+      seedsCopied.push(seed.replace(/\.example$/, ""));
+    }
+  }
+
+  const regulationsEnabled = enableRegulations(
+    [
+      ...(manifest.required_regulations ?? []),
+      ...(manifest.optional_regulations ?? []),
+    ].filter((id) => id.startsWith("REG-"))
+  );
+
+  const regulationsSeeded =
+    regulationsEnabled.length > 0
+      ? seedRegulationDocs({ ids: regulationsEnabled }).seeded
+      : [];
+
+  return { regulationsEnabled, regulationsSeeded, seedsCopied };
+}
+
 function enableIsoStandards(ids: string[]): string[] {
   const enabled: string[] = [];
   const file = loadTenantStandards();

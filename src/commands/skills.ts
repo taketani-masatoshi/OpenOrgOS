@@ -316,10 +316,16 @@ export const SKILL_COMMANDS = [
     description: "等級付き変更提案（ローカル LLM ゲート）",
   },
   {
-    id: "regulation-module-draft",
-    skill: "regulation_module_draft",
+    id: "regulation-module-scaffold",
+    skill: "regulation_module_scaffold",
     agent: "Compliance",
     description: "モジュール規程の草案 MD scaffold",
+  },
+  {
+    id: "regulation-module-draft",
+    skill: "regulation_module_scaffold",
+    agent: "Compliance",
+    description: "Alias: モジュール規程の草案 MD scaffold",
   },
   {
     id: "change-apply",
@@ -818,6 +824,7 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       runChangePlan({ intentJson: JSON.stringify(raw), json: opts.json, save: true });
       break;
     }
+    case "regulation-module-scaffold":
     case "regulation-module-draft": {
       const { planRegulationForModule } = await import(
         "../lib/regulation-module-workflow.js"
@@ -826,7 +833,7 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
         "../lib/regulation-draft-scaffold.js"
       );
       if (!opts.id) {
-        throw new Error("regulation-module-draft requires --id <moduleId>");
+        throw new Error("regulation-module-scaffold requires --id <moduleId>");
       }
       const plan = planRegulationForModule(opts.id);
       const result = scaffoldRegulationDraftFiles(plan, { force: Boolean(opts.write) });
@@ -839,6 +846,9 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
         }
         if (result.skipped.length) {
           console.log(`  skipped (exists): ${result.skipped.join(", ")}`);
+        }
+        if (result.indexRelativePath) {
+          console.log(`  index (context.path): ${result.indexRelativePath}`);
         }
         if (!result.targets.length) {
           console.log("  (no llmDraftAllowed actions — nothing to scaffold)");

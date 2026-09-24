@@ -12,7 +12,7 @@ import { loadRegulationsCatalog } from "./regulations.js";
  * Shared by `modules check` and regulation-plan `new` hints — keep one source.
  */
 export const REGULATION_RISK_MODULE_ID_RE =
-  /bank|payroll|tax|invoice|refund|permit|privacy|social.?insurance|medical_device/i;
+  /bank|payroll|tax|invoice|refund|permit|privacy|social.?insurance|medical_device|cosmetic/i;
 
 /** Pack-level family registry (cousins that must fork, not merge). */
 export const REGULATION_FAMILIES: Record<
@@ -20,6 +20,8 @@ export const REGULATION_FAMILIES: Record<
   {
     sourceRegs: readonly string[];
     ownerModuleIds: readonly string[];
+    /** Sibling module that owns the forked REG (when catalogued). */
+    siblingModuleIds?: readonly string[];
     moduleIdHint: RegExp;
     draftTemplate: string;
   }
@@ -27,20 +29,37 @@ export const REGULATION_FAMILIES: Record<
   qms_gxp: {
     sourceRegs: ["REG-025", "REG-026"],
     ownerModuleIds: ["jp_medical_device"],
+    siblingModuleIds: ["jp_cosmetics_mah"],
     moduleIdHint: /cosmetic|化粧品|quasi.?drug|医薬部外|otc.?drug|general.?drug/i,
     draftTemplate: "by-module/_families/qms-gxp/FORK-DRAFT.md",
   },
 };
 
+export function listRegulationFamilyIds(): string[] {
+  return Object.keys(REGULATION_FAMILIES).sort();
+}
+
 export function isRegulationRiskModuleId(moduleId: string): boolean {
   return REGULATION_RISK_MODULE_ID_RE.test(moduleId);
 }
 
-export function checkModuleRegulationContract(
-  catalogId: string
+/** Minimal manifest fields used by contract checks (for unit tests). */
+export interface RegulationContractManifest {
+  required_regulations?: string[];
+  optional_regulations?: string[];
+  regulation_family?: {
+    id: string;
+    role?: "owner" | "sibling";
+    do_not_mutate?: string[];
+  };
+  notes?: string;
+}
+
+export function checkManifestRegulationContract(
+  catalogId: string,
+  manifest: RegulationContractManifest | null
 ): { moduleId: string; message: string }[] {
   const issues: { moduleId: string; message: string }[] = [];
-  const manifest = loadModuleManifest(catalogId);
   if (!manifest) return issues;
 
   const catalogIds = new Set(loadRegulationsCatalog().regulations.map((r) => r.id));
@@ -105,4 +124,10 @@ export function checkModuleRegulationContract(
   }
 
   return issues;
+}
+
+export function checkModuleRegulationContract(
+  catalogId: string
+): { moduleId: string; message: string }[] {
+  return checkManifestRegulationContract(catalogId, loadModuleManifest(catalogId));
 }

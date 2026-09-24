@@ -268,3 +268,12 @@ regulations:
     tenant_doc: iryo-kiki-gvp-kisoku.md
     binds_to: { type: module, module_id: jp_medical_device }
     iso_ids: [ISO-13485]
+
+  - id: REG-038
+    name: 化粧品品質管理規程
+    template: by-module/jp_cosmetics_mah/REG-038-keshohin-hinshitsu/template.md
+    tenant_doc: keshohin-hinshitsu-kisoku.md
+    binds_to: { type: module, module_id: jp_cosmetics_mah }
+    risk_domains: [qms_gxp]
+    notes: qms_gxp sibling · REG-025/026 をマージしない · skeleton
+

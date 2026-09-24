@@ -35,7 +35,7 @@ import {
   listCatalogModuleIds,
   MODULES_FILE,
 } from "../modules.js";
-import { activateTenantModule } from "../agent-workspace.js";
+import { activateTenantModule, applyModuleRegulationSideEffects } from "../agent-workspace.js";
 import { initTenantControlsFile } from "../control-framework.js";
 import { syncActiveContext } from "../context-manifest.js";
 import { fileRegulationWorkflowWorkOrder } from "../regulation-module-workflow.js";
@@ -433,8 +433,9 @@ function setModuleEnabledFlag(moduleId: string, enabled: boolean): void {
 }
 
 /**
- * When full activateTenantModule fails, still file the regulation WO so the
- * classify → draft gate is not skipped (policy §4).
+ * When full activateTenantModule fails, still enable required/optional regs,
+ * seed 施行文 where missing, file the regulation WO, and warn that a full
+ * `modules activate` retry may still be needed for workspace/ISO/controls.
  */
 function flagOnlyEnableWithRegulationWo(
   moduleId: string,
@@ -445,11 +446,30 @@ function flagOnlyEnableWithRegulationWo(
   warnings.push(
     `activate fallback to flag-only: ${activateErr instanceof Error ? activateErr.message : String(activateErr)}`
   );
+  warnings.push(
+    `flag-only: re-run \`orgos modules activate ${moduleId}\` when the activate error is fixed (workspace / ISO / controls may be incomplete)`
+  );
+  try {
+    const side = applyModuleRegulationSideEffects(moduleId);
+    if (side.regulationsEnabled.length) {
+      warnings.push(`flag-only regulations enabled: ${side.regulationsEnabled.join(", ")}`);
+    }
+    if (side.regulationsSeeded.length) {
+      warnings.push(`flag-only regulation docs seeded: ${side.regulationsSeeded.join(", ")}`);
+    }
+    if (side.seedsCopied.length) {
+      warnings.push(`flag-only activation seeds copied: ${side.seedsCopied.join(", ")}`);
+    }
+  } catch (sideErr) {
+    warnings.push(
+      `flag-only regulation side-effects failed: ${sideErr instanceof Error ? sideErr.message : String(sideErr)}`
+    );
+  }
   try {
     const wo = fileRegulationWorkflowWorkOrder(moduleId);
     if (wo.deduped) {
       warnings.push(
-        `regulation WO reused pending ${wo.workOrderId} (flag-only activate)`
+        `regulation WO reused/updated pending ${wo.workOrderId} (flag-only activate)`
       );
     } else if (wo.workOrderId) {
       warnings.push(

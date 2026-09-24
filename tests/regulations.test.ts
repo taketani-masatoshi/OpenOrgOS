@@ -15,9 +15,9 @@ describe("regulations", () => {
   beforeEach(() => {
     setTenantId("mal");
   });
-  it("loads catalog with 37 regulations", () => {
+  it("loads catalog with 38 regulations", () => {
     const catalog = loadRegulationsCatalog();
-    expect(catalog.regulations.length).toBe(37);
+    expect(catalog.regulations.length).toBe(38);
     expect(catalog.regulations.map((r) => r.id)).toEqual(
       expect.arrayContaining([
         "REG-030",
@@ -28,6 +28,7 @@ describe("regulations", () => {
         "REG-035",
         "REG-036",
         "REG-037",
+        "REG-038",
       ])
     );
   });
@@ -47,7 +48,8 @@ describe("regulations", () => {
   });
 
   it("validates mal regulations without errors", () => {
-    expect(validateRegulations()).toEqual([]);
+    const issues = validateRegulations().filter((i) => i.level !== "warning");
+    expect(issues).toEqual([]);
   }, 15_000);
 
   it("lists block reason when tenant enabled but bind inactive", () => {
