@@ -21,6 +21,8 @@ describe("steward chat ledger workbench api", () => {
 
   beforeEach(() => {
     setTenantId("_fixture-books");
+    process.env.ORGOS_TENANT = "_fixture-books";
+    process.env.STEWARD_TENANT = "_fixture-books";
     resetFixtureJournalEntries();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";

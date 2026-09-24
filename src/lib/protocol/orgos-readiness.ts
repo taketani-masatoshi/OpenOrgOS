@@ -85,7 +85,7 @@ function computeFormUnificationChecks(): ReadinessCheck[] {
     fileOk("tests/protocol-external-verify.test.ts", "external verify"),
     fileOk("src/lib/company-events-wire.ts", "company-events wire linkage"),
     fileOk("tests/company-events-wire-void.test.ts", "company-events wire void"),
-    fileOk("tenants/mal/data/org/audit-bridge-state.yaml", "audit-bridge state (mal)"),
+    fileOk("tenants/mal/data/org/audit-bridge.yaml", "audit-bridge config (mal)"),
     fileOk("docs/org-os/orgos-interface-spec.md", "I1/I2/I3 interface spec"),
   ];
 }

@@ -1,18 +1,14 @@
 import type { IsoRoadmapTier } from "../../schemas/iso-catalog.js";
 import { setTenantId } from "../lib/tenant.js";
+import { listIsoCatalogEntries, listComingSoonIsoEntries } from "../lib/compliance/iso/catalog.js";
+import { listIsoMapStatuses, verifyIsoMaps } from "../lib/compliance/iso/map-status.js";
+import { evaluateIsoInternalAudit } from "../lib/compliance/audit/internal-audit.js";
+import { formatIsoInternalAuditReport } from "../lib/compliance/audit/internal-audit-report.js";
 import {
-  verifyIsoMaps,
-  listIsoMapStatuses,
-  listIsoCatalogEntries,
-  listComingSoonIsoEntries,
-} from "../lib/iso-catalog.js";
-import {
-  evaluateIsoInternalAudit,
-  formatIsoInternalAuditReport,
   latestIsoInternalAuditRun,
   loadIsoInternalAuditRuns,
   persistIsoInternalAuditRun,
-} from "../lib/iso-internal-audit.js";
+} from "../lib/compliance/audit/internal-audit-store.js";
 
 export interface IsoAuditCliOptions {
   tenant?: string;
@@ -48,9 +44,7 @@ export function runIsoCatalog(opts: IsoAuditCliOptions = {}): void {
   for (const s of statuses) {
     const map = s.skipped ? "skipped" : s.map_ok ? "ok" : (s.error ?? "fail");
     const folder = s.skipped ? "—" : s.folder_ok ? "ok" : "missing";
-    console.log(
-      `| ${s.id} | ${s.kind} | ${s.status} | ${folder} | ${map} | ${s.control_count} |`
-    );
+    console.log(`| ${s.id} | ${s.kind} | ${s.status} | ${folder} | ${map} | ${s.control_count} |`);
   }
 }
 
@@ -124,7 +118,11 @@ export function runIsoAuditReport(opts: IsoAuditCliOptions = {}): void {
   const runs = loadIsoInternalAuditRuns();
   const run = opts.runId ? runs.find((r) => r.id === opts.runId) : latestIsoInternalAuditRun();
   if (!run) {
-    console.error(opts.runId ? `Run not found: ${opts.runId}` : "No ISO internal audit runs yet. orgos iso audit run");
+    console.error(
+      opts.runId
+        ? `Run not found: ${opts.runId}`
+        : "No ISO internal audit runs yet. orgos iso audit run"
+    );
     process.exit(1);
   }
   const idx = runs.findIndex((r) => r.id === run.id);

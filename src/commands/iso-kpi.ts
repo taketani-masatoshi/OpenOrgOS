@@ -1,5 +1,5 @@
 import { setTenantId } from "../lib/tenant.js";
-import { buildKpiReport, formatKpiReport } from "../lib/iso-kpi.js";
+import { buildKpiReport, formatKpiReport } from "../lib/compliance/iso/kpi.js";
 
 export interface IsoKpiCliOptions {
   tenant?: string;

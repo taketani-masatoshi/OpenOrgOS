@@ -4,9 +4,9 @@ import { requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
 import {
   auditPlanDigest,
   findAuditPlan,
-  formatAuditPlan,
   recordAuditSignoff,
-} from "../lib/iso-audit-plan.js";
+} from "../lib/compliance/audit/plan.js";
+import { formatAuditPlan } from "../lib/compliance/audit/plan-format.js";
 
 /** Approval subject for a concluded internal audit. */
 export const AUDIT_SIGNOFF_SUBJECT_TYPE = "iso.internal_audit.signoff";
@@ -41,7 +41,7 @@ export function runIsoAuditSign(options: IsoAuditSignCliOptions = {}): void {
   }
   if (plan.status !== "concluded") {
     console.error(
-      `${plan.plan_id} は ${plan.status} です。orgos iso audit conclude を先に実行してください。`,
+      `${plan.plan_id} は ${plan.status} です。orgos iso audit conclude を先に実行してください。`
     );
     process.exit(1);
   }

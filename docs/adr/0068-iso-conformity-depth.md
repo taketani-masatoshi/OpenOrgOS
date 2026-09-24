@@ -48,7 +48,7 @@ section · no_placeholders   Markdown 様式の必須見出し・未置換
 `doc_missing`（作られていない）と区別することで、「書け」と「直せ」を混同させない。
 `orgos validate` にも `collectIsoRecordIntegrityIssues()` 経由で出る。
 
-KPI ログの構造検査は `records.yaml` に移し、`src/lib/iso-kpi.ts` は原単位と前月比の
+KPI ログの構造検査は `records.yaml` に移し、`src/lib/compliance/iso/kpi.ts`（互換バレル `src/lib/iso-kpi.ts`）は原単位と前月比の
 算出だけに縮めた。同じ検査を2箇所に持たない。
 
 ### B層 — 要求事項レジスタ
@@ -125,9 +125,9 @@ orgos iso audit conclude --plan IAP-001 --summary "..."
 
 | 層 | スキーマ | ライブラリ | CLI |
 |---|---|---|---|
-| A | `schemas/iso-record-spec.ts` | `src/lib/iso-records.ts` · `iso-records-integrity.ts` | `orgos iso records check` |
-| B | `schemas/iso-requirements.ts` | `src/lib/iso-requirements.ts` | `orgos iso requirements` |
-| C | `schemas/iso-audit-plan.ts` | `src/lib/iso-audit-plan.ts` | `orgos iso audit plan/finding/conclude` |
+| A | `schemas/iso-record-spec.ts` | `src/lib/compliance/records/`（互換バレル `iso-records*.ts`） | `orgos iso records check` |
+| B | `schemas/iso-requirements.ts` | `src/lib/compliance/iso/requirements.ts`（互換バレル `iso-requirements.ts`） | `orgos iso requirements` |
+| C | `schemas/iso-audit-plan.ts` | `src/lib/compliance/audit/`（互換バレル `iso-audit-plan.ts`） | `orgos iso audit plan/finding/conclude` |
 | D | 既存 `schemas/org/approval.ts` | 既存 `src/lib/org/approval/` | `orgos iso audit sign/eligibility/programme` |
 
 テスト: `tests/iso-records.test.ts` · `tests/iso-requirements.test.ts` · `tests/iso-audit-plan.test.ts`

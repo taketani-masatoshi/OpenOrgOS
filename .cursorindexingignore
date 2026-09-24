@@ -3,7 +3,9 @@
 # 同期確認: npm run orgos -- classification boundaries --check
 
 # L2 個情 vault（records）— 索引にも載せない
-**/records/**
+# ソース src/lib/compliance/records/ は対象外（**/records/** だとソースも Write 不能になる）
+tenants/**/records/**
+/records/**
 
 # 受信/出力トレイ・大容量生成物（テナント docs）
 tenants/*/docs/io/**

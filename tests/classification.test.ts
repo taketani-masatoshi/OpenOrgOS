@@ -64,6 +64,7 @@ describe("classification", () => {
 
   it("derives boundary needle from glob patterns", () => {
     expect(boundaryNeedle("**/records/**")).toBe("records");
+    expect(boundaryNeedle("tenants/**/records/**")).toBe("records");
     expect(boundaryNeedle("data/operations/kamezawa-secrets.yaml")).toBe(
       "data/operations/kamezawa-secrets.yaml"
     );

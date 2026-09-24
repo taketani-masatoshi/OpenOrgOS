@@ -1,5 +1,5 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,5 +30,21 @@ export default defineConfig({
     // hookTimeout must stay above that so beforeAll is not killed first.
     hookTimeout: 120_000,
     testTimeout: 60_000,
+    // Long sequential suites can outlive the default RPC teardown window and
+    // surface "Timeout calling onTaskUpdate" after all tests already passed.
+    teardownTimeout: 60_000,
+    // Vitest 3 birpc RPC defaults to 60s; with fileParallelism:false one worker
+    // keeps a long-lived channel and can trip onTaskUpdate even when tests pass.
+    // Preload sets timeout: -1 in-worker (no shared node_modules patch). Vitest 4
+    // has an upstream fix — drop the preload when we upgrade.
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        execArgv: [
+          "--import",
+          pathToFileURL(path.join(__dirname, "tests/vitest-birpc-timeout-preload.mjs")).href,
+        ],
+      },
+    },
   },
 });

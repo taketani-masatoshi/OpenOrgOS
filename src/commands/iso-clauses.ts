@@ -2,7 +2,7 @@ import { setTenantId } from "../lib/tenant.js";
 import {
   formatClauseVerification,
   summarizeClauseVerification,
-} from "../lib/iso-clause-verification.js";
+} from "../lib/compliance/iso/clause-verification.js";
 
 export interface IsoClausesCliOptions {
   tenant?: string;

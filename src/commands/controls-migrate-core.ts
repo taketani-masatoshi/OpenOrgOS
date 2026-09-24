@@ -16,7 +16,7 @@ import {
   loadControlMaps,
   loadCoreControls,
   maturityRank,
-} from "../lib/control-framework.js";
+} from "../lib/compliance/controls/index.js";
 import { setTenantId } from "../lib/tenant.js";
 import { readYamlFile, writeYamlFile } from "../lib/utils.js";
 
@@ -141,9 +141,7 @@ export function runControlsMigrateCore(opts: ControlsMigrateCoreOptions = {}): v
     }
     console.log(`\n削除される旧 ID: ${plan.removed_ids.length} 件`);
     if (plan.orphan_ids.length > 0) {
-      console.log(
-        `どのマップにも無い ID（手動確認）: ${plan.orphan_ids.join(", ")}`
-      );
+      console.log(`どのマップにも無い ID（手動確認）: ${plan.orphan_ids.join(", ")}`);
     }
   }
 

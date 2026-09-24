@@ -3,8 +3,8 @@ import {
   assessRequirementCoverage,
   formatRequirementCoverage,
   loadRequirements,
-} from "../lib/iso-requirements.js";
-import { loadEnabledIsoIds } from "../lib/tenant-standards.js";
+} from "../lib/compliance/iso/requirements.js";
+import { loadEnabledIsoIds } from "../lib/compliance/standards/tenant.js";
 
 export interface IsoRequirementsCliOptions {
   tenant?: string;
@@ -18,7 +18,7 @@ export function runIsoRequirements(options: IsoRequirementsCliOptions = {}): voi
   if (options.tenant) setTenantId(options.tenant);
 
   const standards = (options.iso ? [options.iso] : loadEnabledIsoIds()).filter(
-    (id) => loadRequirements(id) !== undefined,
+    (id) => loadRequirements(id) !== undefined
   );
   const coverages = standards.map((id) => assessRequirementCoverage(id));
 
@@ -28,9 +28,6 @@ export function runIsoRequirements(options: IsoRequirementsCliOptions = {}): voi
     console.log(formatRequirementCoverage(coverages, { unverifiedOnly: options.unverified }));
   }
 
-  const faults = coverages.reduce(
-    (n, c) => n + c.uncovered.length + c.dangling.length,
-    0,
-  );
+  const faults = coverages.reduce((n, c) => n + c.uncovered.length + c.dangling.length, 0);
   if (options.strict && faults > 0) process.exitCode = 1;
 }
