@@ -9,10 +9,9 @@ import {
 } from "../../../schemas/product/control-plane.js";
 import { getWorkspaceRoot, getTenantsDir } from "../orgos-paths.js";
 import { getClock } from "../runtime-context.js";
-import { resolveTenantFromEnv } from "../orgos-cli.js";
 import { listLedgerProductTenantIds } from "./ledger-product-tenant.js";
 import { loadLedgerSubscription } from "./ledger-subscription.js";
-import { runWithTenantId } from "../tenant.js";
+import { getTenantId, runWithTenantId } from "../tenant.js";
 
 const FLEET_DIR = "product-fleet";
 
@@ -136,8 +135,10 @@ export function resolveTenantFromRequest(req: IncomingMessage): string | null {
   const explicit = resolveExplicitTenantFromRequest(req);
   if (explicit) return explicit;
   if (isRequestTenantRequired()) return null;
+  // Prefer process/ALS tenant (setTenantId in tests, CLI) over raw ORGOS_TENANT
+  // so login sessions bind to the active tenant, not the setup-file default.
   try {
-    return resolveTenantFromEnv() ?? null;
+    return getTenantId();
   } catch {
     return null;
   }

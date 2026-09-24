@@ -69,12 +69,14 @@ Peer 横断の権限: [folder_access_policy.md §2.8.1](../steward/rules/folder_
 ```bash
 npm run orgos -- secretary contacts resolve --name "..." --org "..." --department "..."
 npm run orgos -- secretary contacts register --name "..." --email "..." --stakeholder-id STK-...
-npm run orgos -- secretary correspondence draft --contact-ref EXT-... --subject "..." --body "..."
+npm run orgos -- mail outbound correspondence draft --contact-ref EXT-... --subject "..." --body "..."
 npm run orgos -- org approval list --status pending_approval
-npm run orgos -- org approval approve --id APR-... --approver "CEO"
-npm run orgos -- secretary correspondence send --id DRAFT-...
+npm run orgos -- org approval approve --id APR-... --approver "CEO" --reviewed
+npm run orgos -- mail outbound correspondence send --id DRAFT-...
+# 後方互換: secretary correspondence draft|send
 # gmail_compose モードのみ: compose URL 生成（送信は人間クリック）
-npm run orgos -- secretary mail compose-url --to "..." --subject "..." --body "..."
+npm run orgos -- mail outbound mail compose-url --to "..." --subject "..." --body "..."
+# 後方互換: secretary mail compose-url
 ```
 
 ## 禁止

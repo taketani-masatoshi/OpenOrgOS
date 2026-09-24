@@ -424,12 +424,14 @@ export function postSalesInvoiceJournalEntry(input: {
     debit_yen: number;
     credit_yen: number;
     tax_category: typeof taxCategory | "out_of_scope";
+    counterparty_id?: string;
   }[] = [
     {
       account_code: input.arAccountCode ?? accounts.accounts_receivable,
       debit_yen: input.amountYen,
       credit_yen: 0,
       tax_category: "out_of_scope",
+      counterparty_id: input.propertyId ?? input.invoiceId,
     },
   ];
 

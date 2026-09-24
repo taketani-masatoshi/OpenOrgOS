@@ -152,8 +152,3 @@ export function parseScheduleReplyText(
     counter_dates: counterDates,
   };
 }
-
-export function extractEmailAddress(from: string): string {
-  const m = from.match(/<([^>]+)>/);
-  return (m?.[1] ?? from).trim().toLowerCase();
-}

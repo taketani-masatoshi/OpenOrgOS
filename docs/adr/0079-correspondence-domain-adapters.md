@@ -1,4 +1,4 @@
-# ADR 0078 — Correspondence domain adapters
+# ADR 0079 — Correspondence domain adapters
 
 - **Status:** Accepted
 - **Date:** 2026-09-24

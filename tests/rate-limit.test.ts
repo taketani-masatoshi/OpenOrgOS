@@ -81,7 +81,7 @@ describe("rate limit", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-OrgOS-Tenant": "tenant-a",
+          "X-OrgOS-Tenant": "demo",
         },
         body: JSON.stringify({ passkey: "test-pass" }),
       });
@@ -92,22 +92,22 @@ describe("rate limit", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-OrgOS-Tenant": "tenant-a",
+        "X-OrgOS-Tenant": "demo",
       },
       body: JSON.stringify({ passkey: "test-pass" }),
     });
     expect(blockedA.status).toBe(429);
     const body = (await blockedA.json()) as { tenant_id: string | null };
-    expect(body.tenant_id).toBe("tenant-a");
+    expect(body.tenant_id).toBe("demo");
 
-    const allowedB = await fetch(`${baseUrl}/chat/v1/auth/login`, {
+    const other = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-OrgOS-Tenant": "tenant-b",
+        "X-OrgOS-Tenant": "mal",
       },
       body: JSON.stringify({ passkey: "test-pass" }),
     });
-    expect(allowedB.status).toBe(200);
+    expect(other.status).toBe(200);
   });
 });

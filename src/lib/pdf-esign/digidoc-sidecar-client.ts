@@ -8,15 +8,15 @@ import {
   mkdirSync,
   statSync,
 } from "node:fs";
-import { createHash } from "node:crypto";
 import {
-  assertTrustedEndpoint,
   resolveAllowHttpLoopback,
   resolveDigidocRuntime,
   resolveDigidocSidecarToken,
   resolveDigidocSidecarUrl,
+  resolveTrustedEndpoint,
 } from "./digidoc-runtime.js";
 import { inspectAsiceContainer } from "./asice-lite.js";
+import { postEndpointJson } from "./endpoint-json.js";
 
 /**
  * digidoc4j sidecar — creates unsigned ASiC-E skeletons only.
@@ -44,6 +44,10 @@ export type CreateAsiceSkeletonResult = {
   reason?: string;
   sidecar_url?: string;
 };
+
+type SidecarCreateBody = { document?: string; error?: string; ok?: boolean };
+
+const SIDECAR_HEALTH_TIMEOUT_MS = 5_000;
 
 function isSafeFilename(name: string): boolean {
   if (!name || name.length > 200) return false;
@@ -74,17 +78,16 @@ function atomicWrite(outPath: string, bytes: Buffer): void {
   }
 }
 
+function bearerHeaders(token: string | undefined): Record<string, string> {
+  return token ? { authorization: `Bearer ${token}` } : {};
+}
+
 export async function createAsiceSkeletonViaSidecar(
   input: CreateAsiceSkeletonInput
 ): Promise<CreateAsiceSkeletonResult> {
   const runtime = resolveDigidocRuntime();
-  const allowHttp = input.allowHttpLoopback ?? resolveAllowHttpLoopback();
-  const rawBase = (input.baseUrl ?? resolveDigidocSidecarUrl())?.replace(/\/$/, "");
-  if (!rawBase) {
-    return { ok: false, reason: "digidoc_sidecar_url_missing" };
-  }
-  const trusted = assertTrustedEndpoint(rawBase, {
-    allowHttpLoopback: allowHttp,
+  const trusted = resolveTrustedEndpoint(input.baseUrl ?? runtime.digidoc_sidecar_url, {
+    allowHttpLoopback: input.allowHttpLoopback ?? runtime.allow_http_loopback,
     kind: "sidecar",
   });
   if (!trusted.ok) {
@@ -98,8 +101,7 @@ export async function createAsiceSkeletonViaSidecar(
   }
 
   const maxPdf = input.maxPdfBytes ?? runtime.max_pdf_bytes;
-  const st = statSync(input.pdfPath);
-  if (st.size > maxPdf) {
+  if (statSync(input.pdfPath).size > maxPdf) {
     return { ok: false, reason: "pdf_too_large", sidecar_url: baseUrl };
   }
   const pdfBuf = readFileSync(input.pdfPath);
@@ -107,62 +109,35 @@ export async function createAsiceSkeletonViaSidecar(
     return { ok: false, reason: "not_pdf_magic", sidecar_url: baseUrl };
   }
 
-  const document = pdfBuf.toString("base64");
-  const token = input.token ?? resolveDigidocSidecarToken();
-  const fetchImpl = input.fetchImpl ?? fetch;
-  const timeoutMs = input.timeoutMs ?? runtime.sidecar_timeout_ms;
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), timeoutMs);
-
-  const headers: Record<string, string> = {
-    "content-type": "application/json",
-    accept: "application/json",
-  };
-  if (token) headers.authorization = `Bearer ${token}`;
-
-  let res: Response;
-  try {
-    res = await fetchImpl(`${baseUrl}/container/create`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        filename,
-        document,
-        mimeType: "application/pdf",
-      }),
-      signal: ac.signal,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return {
-      ok: false,
-      sidecar_url: baseUrl,
-      reason: msg.includes("abort") ? "sidecar_timeout" : `sidecar_unreachable: ${msg}`,
-    };
-  } finally {
-    clearTimeout(timer);
+  const response = await postEndpointJson({
+    kind: "sidecar",
+    url: `${baseUrl}/container/create`,
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+      ...bearerHeaders(input.token ?? runtime.sidecar_token),
+    },
+    payload: {
+      filename,
+      document: pdfBuf.toString("base64"),
+      mimeType: "application/pdf",
+    },
+    fetchImpl: input.fetchImpl ?? fetch,
+    timeoutMs: input.timeoutMs ?? runtime.sidecar_timeout_ms,
+  });
+  if (!response.ok) {
+    return { ok: false, sidecar_url: baseUrl, reason: response.reason };
   }
 
-  const text = await res.text();
-  let body: { document?: string; error?: string; ok?: boolean } = {};
-  try {
-    body = text ? (JSON.parse(text) as typeof body) : {};
-  } catch {
-    return {
-      ok: false,
-      sidecar_url: baseUrl,
-      reason: `sidecar_non_json_${res.status}`,
-    };
-  }
-
-  if (res.status === 401 || res.status === 403) {
+  const body = response.body as SidecarCreateBody;
+  if (response.status === 401 || response.status === 403) {
     return { ok: false, sidecar_url: baseUrl, reason: "sidecar_auth_rejected" };
   }
-  if (!res.ok || !body.document) {
+  if (!response.httpOk || !body.document) {
     return {
       ok: false,
       sidecar_url: baseUrl,
-      reason: body.error ?? `sidecar_http_${res.status}`,
+      reason: body.error ?? `sidecar_http_${response.status}`,
     };
   }
 
@@ -207,20 +182,15 @@ export async function digidocSidecarHealth(
   fetchImpl: typeof fetch = fetch,
   opts?: { token?: string; allowHttpLoopback?: boolean; timeoutMs?: number }
 ): Promise<{ ok: boolean; reason?: string; ready?: boolean }> {
-  const allowHttp = opts?.allowHttpLoopback ?? resolveAllowHttpLoopback();
-  const raw = (baseUrl ?? resolveDigidocSidecarUrl())?.replace(/\/$/, "");
-  if (!raw) return { ok: false, reason: "digidoc_sidecar_url_missing" };
-  const trusted = assertTrustedEndpoint(raw, {
-    allowHttpLoopback: allowHttp,
+  const trusted = resolveTrustedEndpoint(baseUrl ?? resolveDigidocSidecarUrl(), {
+    allowHttpLoopback: opts?.allowHttpLoopback ?? resolveAllowHttpLoopback(),
     kind: "sidecar",
   });
   if (!trusted.ok) return { ok: false, reason: trusted.reason };
   const url = trusted.url;
-  const token = opts?.token ?? resolveDigidocSidecarToken();
-  const headers: Record<string, string> = {};
-  if (token) headers.authorization = `Bearer ${token}`;
+  const headers = bearerHeaders(opts?.token ?? resolveDigidocSidecarToken());
   const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), opts?.timeoutMs ?? 5_000);
+  const timer = setTimeout(() => ac.abort(), opts?.timeoutMs ?? SIDECAR_HEALTH_TIMEOUT_MS);
   try {
     const health = await fetchImpl(`${url}/health`, { headers, signal: ac.signal });
     if (!health.ok) return { ok: false, reason: `health_${health.status}` };
@@ -238,8 +208,4 @@ export async function digidocSidecarHealth(
   } finally {
     clearTimeout(timer);
   }
-}
-
-export function digestFileSha256(path: string): string {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
 }

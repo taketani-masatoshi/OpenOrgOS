@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { ROOT_DIR } from "../src/lib/tenant.js";
 
 import { registerDomainAdapters } from "../src/lib/bootstrap/domain-adapters.js";
+import "../src/lib/composition/register-correspondence-hooks.js";
 
 /** Default tenant for tests (mal instance). */
 process.env.ORGOS_TENANT ??= "mal";

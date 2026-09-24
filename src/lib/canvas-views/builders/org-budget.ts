@@ -11,7 +11,7 @@ import {
   loadOrgAuthority,
   sumAuthorityBudgets,
 } from "../../org/org-authority.js";
-import { formatUpdatedAtJst } from "../../secretary/canvas-sync-shared.js";
+import { formatUpdatedAtJst } from "../format-updated-at.js";
 import { getTenantId } from "../../tenant.js";
 import { currentDate } from "../../utils.js";
 import { computeVarianceReport } from "../../variance.js";

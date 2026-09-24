@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · secretary
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent secretary`
 
 ---
@@ -344,8 +344,9 @@ npm run orgos -- mail outbound correspondence show --id DRAFT-...
 npm run orgos -- org approval approve --id APR-... --approver "CEO" --reviewed
 npm run orgos -- mail outbound correspondence send --id DRAFT-...
 
-# 後方互換
+# 後方互換エイリアス（同一実装）
 npm run orgos -- secretary correspondence draft ...
+npm run orgos -- secretary mail setup-guide
 ```
 
 ---

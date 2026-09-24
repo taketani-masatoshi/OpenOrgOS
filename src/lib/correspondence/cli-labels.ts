@@ -6,6 +6,7 @@ export const CORRESPONDENCE_CLI = {
   list: "mail outbound correspondence list",
   setupGuide: "mail outbound mail setup-guide",
   config: "mail outbound mail config",
+  composeUrl: "mail outbound mail compose-url",
   /** Legacy alias — still registered */
   legacyDraft: "secretary correspondence draft",
   legacySend: "secretary correspondence send",

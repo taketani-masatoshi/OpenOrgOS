@@ -1,10 +1,5 @@
-import {
-  formatContactLookupReport,
-  registerContact,
-  resolveContactRegistry,
-  resolveEmailFromContactRef,
-  verifyRecipientInRegistry,
-} from "../lib/secretary/contact-registry.js";
+import { formatContactLookupReport, resolveContactRegistry } from "../lib/secretary/contact-registry.js";
+import { registerContact } from "../lib/secretary/contact-register.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 
 export interface ContactsResolveCliOptions {
@@ -99,42 +94,4 @@ export function runContactsRegister(opts: ContactsRegisterCliOptions): void {
   if (result.contact.email) console.log(`  email: ${result.contact.email}`);
   if (result.stakeholderSynced) console.log(`  stakeholders.yaml: representative_contact synced`);
   console.log("  next: npm run orgos -- validate");
-}
-
-export function resolveContactRefForDraft(opts: {
-  contactRef?: string;
-  to?: string;
-}): { to?: string; warnings: string[] } {
-  const warnings: string[] = [];
-  let to = opts.to;
-
-  if (opts.contactRef) {
-    const email = resolveEmailFromContactRef(opts.contactRef);
-    if (email) {
-      if (to && normEmail(to) !== normEmail(email)) {
-        warnings.push(
-          `--to (${to}) が --contact-ref ${opts.contactRef} の正本 (${email}) と一致しません`
-        );
-      } else if (!to) {
-        to = email;
-      }
-    } else {
-      warnings.push(`--contact-ref ${opts.contactRef} に email が未登録です`);
-    }
-  }
-
-  if (to) {
-    const verified = verifyRecipientInRegistry(to);
-    if (!verified.verified) {
-      warnings.push(
-        `宛先 ${to} は正本未登録です。推測送信を避け、人間確認後に orgos secretary contacts register を実行してください`
-      );
-    }
-  }
-
-  return { to, warnings };
-}
-
-function normEmail(email: string): string {
-  return email.normalize("NFKC").toLowerCase().trim();
 }

@@ -8,7 +8,7 @@ import {
   buildGvpPortfolio,
   listGvpDecisions,
 } from "../../medical-device/gvp-portfolio.js";
-import { formatUpdatedAtJst } from "../../secretary/canvas-sync-shared.js";
+import { formatUpdatedAtJst } from "../format-updated-at.js";
 import { getTenantId } from "../../tenant.js";
 import { currentDate } from "../../utils.js";
 

@@ -7,6 +7,7 @@ import {
   runModulesActivate,
   runModulesScaffoldDocs,
   runModulesReadiness,
+  runModulesRegulationPlan,
 } from "../../commands/modules.js";
 import { runTenantScaffoldDocs } from "../../commands/tenant-scaffold-docs.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
@@ -304,9 +305,10 @@ export function registerPlatformCommands(program: Command): void {
     .command("activate <id>")
     .description("Enable module · copy activation seeds · init agent workspace folders")
     .option("--tenant <id>", "Tenant id")
-    .option("--skip-regs", "Do not enable optional regulations")
+    .option("--skip-regs", "Do not enable required/optional regulations")
     .option("--skip-iso", "Do not enable related ISO standards")
     .option("--skip-controls", "Do not merge controls.yaml")
+    .option("--skip-regulation-wo", "Do not file Compliance Work Order for regulation workflow")
     .option("--json", "JSON output")
     .action((id: string, opts) =>
       runModulesActivate(id, {
@@ -314,8 +316,30 @@ export function registerPlatformCommands(program: Command): void {
         skipRegs: opts.skipRegs,
         skipIso: opts.skipIso,
         skipControls: opts.skipControls,
+        skipRegulationWo: opts.skipRegulationWo,
         json: opts.json,
       })
+    );
+  modulesCmd
+    .command("regulation-plan <id>")
+    .description(
+      "Classify regulation actions for a module (reuse/thicken/fork_family/new/none). Default: no writes."
+    )
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .option("--file-wo", "File Compliance Work Order for the plan (without module activate)")
+    .option("--dry-run", "With --file-wo: classify only, do not write WO")
+    .action(
+      (
+        id: string,
+        opts: { tenant?: string; json?: boolean; fileWo?: boolean; dryRun?: boolean }
+      ) =>
+        runModulesRegulationPlan(id, {
+          tenant: opts.tenant,
+          json: opts.json,
+          fileWo: opts.fileWo,
+          dryRun: opts.dryRun,
+        })
     );
   modulesCmd
     .command("scaffold-docs")

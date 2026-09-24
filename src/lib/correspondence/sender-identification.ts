@@ -1,6 +1,8 @@
 import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triage.js";
 import type { SenderIdentificationEntry } from "../../../schemas/correspondence/sender-identification.js";
-import { registerContact } from "../secretary/contact-registry.js";
+import type { MailInterpretationResult } from "../../../schemas/correspondence/mail-interpretation.js";
+import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
+import { registerContact } from "../secretary/contact-register.js";
 import { upsertTriageEntry, findTriageEntry } from "./mail-triage-queue.js";
 import {
   findSenderIdentification,
@@ -25,9 +27,6 @@ export interface IdentifySenderResult {
   identification?: SenderIdentificationEntry;
   action: "known" | "enriched" | "ceo_asked" | "skipped";
 }
-
-import type { MailInterpretationResult } from "../../../schemas/correspondence/mail-interpretation.js";
-import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
 
 function buildCeoQuestion(
   entry: MailTriageEntry,

@@ -1,6 +1,6 @@
 /**
  * Shared formatting for Canvas sync outputs (Web / Cursor same VM).
- * Path: src/lib/secretary/canvas-sync-shared.ts
+ * Path: src/lib/canvas-views/format-updated-at.ts
  */
 
 /** `更新: YYYY-MM-DD HH:mm JST` — stable label for view models. */

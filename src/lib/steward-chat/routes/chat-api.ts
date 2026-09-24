@@ -54,8 +54,8 @@ import {
   listPendingCeoInlineQuestions,
   findCeoInlineQuestion,
   answerCeoInline,
-  applyCeoInlineAnswerSideEffects,
 } from "../../correspondence/ceo-inline-question.js";
+import { applyCeoInlineAnswerSideEffects } from "../../correspondence/ceo-inline-answer.js";
 import {
   flushWitnessPendingFromChat,
   registerWitnessFromChat,

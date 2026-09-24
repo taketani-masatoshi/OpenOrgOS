@@ -2,11 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import {
-  answerCeoInline,
-  applyCeoInlineAnswerSideEffects,
-  loadCeoInlineQueue,
-} from "../src/lib/correspondence/ceo-inline-question.js";
+import { answerCeoInline, loadCeoInlineQueue } from "../src/lib/correspondence/ceo-inline-question.js";
+import { applyCeoInlineAnswerSideEffects } from "../src/lib/correspondence/ceo-inline-answer.js";
 import { listCorrespondenceDrafts, loadCorrespondenceDraft } from "../src/lib/correspondence/draft.js";
 import { loadMailTriageQueue } from "../src/lib/correspondence/mail-triage-queue.js";
 import { sendApprovedCorrespondence } from "../src/lib/correspondence/send-gate.js";

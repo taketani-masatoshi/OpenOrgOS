@@ -2,9 +2,7 @@
 import "./bootstrap-tenant.js";
 import { refreshOrgOsPaths } from "./lib/orgos-paths.js";
 import { registerDomainAdapters } from "./lib/bootstrap/domain-adapters.js";
-
-refreshOrgOsPaths();
-registerDomainAdapters();
+import "./lib/composition/register-correspondence-hooks.js";
 import { Command } from "commander";
 import { registerPlatformCommands } from "./cli/registrars/platform.js";
 import { registerOrchestrationCommands } from "./cli/registrars/orchestration.js";
@@ -19,6 +17,9 @@ import {
   LEGACY_TENANT_ENV,
 } from "./lib/orgos-cli.js";
 
+refreshOrgOsPaths();
+registerDomainAdapters();
+
 maybeWarnLegacyCli();
 
 const program = new Command();
@@ -31,7 +32,10 @@ program
     "--tenant <id>",
     `Tenant instance (env: ${ORGOS_TENANT_ENV} or ${LEGACY_TENANT_ENV}; default from tenant.yaml)`
   )
-  .option("--operator-id <id>", "Authenticated operator ID (required for mutation commands in prod)")
+  .option(
+    "--operator-id <id>",
+    "Authenticated operator ID (required for mutation commands in prod)"
+  )
   .option("--operator-key <key>", "Operator API key (or set ORGOS_OPERATOR_KEY env)");
 
 registerDomainCommands(program);

@@ -2,20 +2,7 @@ import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import { loadCorrespondenceDraft } from "./draft.js";
 import { CORRESPONDENCE_CLI } from "./cli-labels.js";
-
-export const CORRESPONDENCE_APPROVAL_SUBJECT_TYPES = [
-  "correspondence.email",
-  "correspondence.slack",
-] as const;
-
-export type CorrespondenceApprovalSubjectType =
-  (typeof CORRESPONDENCE_APPROVAL_SUBJECT_TYPES)[number];
-
-export function isCorrespondenceApprovalSubject(
-  subjectType: string
-): subjectType is CorrespondenceApprovalSubjectType {
-  return (CORRESPONDENCE_APPROVAL_SUBJECT_TYPES as readonly string[]).includes(subjectType);
-}
+import { isCorrespondenceApprovalSubject } from "./approval-subject.js";
 
 export function loadCorrespondenceDraftForApproval(
   approval: OrgApprovalRequest

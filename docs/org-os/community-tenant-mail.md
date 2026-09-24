@@ -60,7 +60,8 @@ Steward 側:
 承認済み下書きを Gmail API で送信:
 
 ```bash
-ORGOS_TENANT=mal npm run orgos -- secretary correspondence send --draft DRAFT-...
+ORGOS_TENANT=mal npm run orgos -- mail outbound correspondence send --id DRAFT-...
+# 後方互換: secretary correspondence send --id DRAFT-...
 ```
 
 ## API（Steward）

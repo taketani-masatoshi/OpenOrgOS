@@ -118,7 +118,7 @@ orgos validate --tenant <id>
 殻 → store / correspondence（送信・下書き）/ venue-booking / data（カレンダー）
 ```
 
-correspondence は `domain-adapters` 登録口だけを知る。日程調整は correspondence を呼べるが、逆向きの静的 import はない（ADR 0078）。
+correspondence は `domain-adapters` 登録口だけを知る。日程調整は correspondence を呼べるが、逆向きの静的 import はない（ADR 0079）。main の hooks composition（ADR 0078）は adapters への橋渡し。
 
 ### 核と殻
 

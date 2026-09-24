@@ -4,11 +4,8 @@ import { join } from "node:path";
 import { schedulingCaseSchema } from "../schemas/executive/scheduling-cases.js";
 import { clearSecretaryDraftToneCacheForTests } from "../src/lib/secretary/tenant-behavior.js";
 import { loadCorrespondenceDraft } from "../src/lib/correspondence/draft.js";
-import {
-  answerCeoInline,
-  applyCeoInlineAnswerSideEffects,
-  loadCeoInlineQueue,
-} from "../src/lib/correspondence/ceo-inline-question.js";
+import { answerCeoInline, loadCeoInlineQueue } from "../src/lib/correspondence/ceo-inline-question.js";
+import { applyCeoInlineAnswerSideEffects } from "../src/lib/correspondence/ceo-inline-answer.js";
 import { saveMailInterpretation } from "../src/lib/correspondence/mail-interpretation.js";
 import { upsertTriageEntry } from "../src/lib/correspondence/mail-triage-queue.js";
 import { getTenantsDir, setTenantId } from "../src/lib/tenant.js";

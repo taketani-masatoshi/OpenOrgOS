@@ -5,7 +5,7 @@ import {
   loadCeoInlineQueue,
 } from "../correspondence/ceo-inline-question.js";
 import { findTriageEntry, upsertTriageEntry } from "../correspondence/mail-triage-queue.js";
-import { extractEmailAddress } from "./reply-parse.js";
+import { extractEmailAddress } from "../correspondence/mail-address.js";
 import { resolveNextAction } from "./judgment-context.js";
 import { normalizeScheduleMailSubject } from "./mail-match.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";

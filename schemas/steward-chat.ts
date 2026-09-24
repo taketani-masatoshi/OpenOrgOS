@@ -145,6 +145,8 @@ export const todayContextSchema = z.object({
   scheduling_cases_active_count: z.number().int().nonnegative().default(0),
   scheduling_cases_action_count: z.number().int().nonnegative().default(0),
   scheduling_cases_pending: z.array(todaySchedulingCaseSchema).default([]),
+  /** One-line secretary calendar brief (today + next confirmed). */
+  schedule_headline: z.string().optional(),
   escalate_pending_count: z.number().int().nonnegative(),
   agent_coo_relay_count: z.number().int().nonnegative().default(0),
   agent_coo_relay: z.array(todayAgentRelayItemSchema).default([]),
@@ -188,7 +190,16 @@ export const todayContextSchema = z.object({
       z.object({
         id: z.string(),
         severity: z.enum(["p0", "p1", "p2"]),
-        kind: z.enum(["tax", "stay", "cleaning", "register", "damage", "recurring", "id_doc", "nights_cap"]),
+        kind: z.enum([
+          "tax",
+          "stay",
+          "cleaning",
+          "register",
+          "damage",
+          "recurring",
+          "id_doc",
+          "nights_cap",
+        ]),
         title: z.string(),
         due_on: z.string(),
         cli_hint: z.string(),
@@ -241,7 +252,6 @@ export const agentInboxDelegateSchema = z.object({
 
 export type AgentInboxScope = z.output<typeof agentInboxScopeSchema>;
 export type AgentInboxDelegate = z.output<typeof agentInboxDelegateSchema>;
-
 
 export const chatCashflowStructuredSchema = z.object({
   cashflow_path: z

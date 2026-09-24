@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { registerDomainAdapters } from "../bootstrap/domain-adapters.js";
+import "../composition/register-correspondence-hooks.js";
 import {
   clearSessionCookie,
   destroySession,

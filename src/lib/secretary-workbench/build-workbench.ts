@@ -45,7 +45,7 @@ function toLabel(to: string | undefined): string {
 }
 
 export function buildSecretaryWorkbench(): SecretaryWorkbench {
-  let today: TodayContext | null = null;
+  let today: TodayContext | null;
   try {
     today = buildTodayContext();
   } catch {

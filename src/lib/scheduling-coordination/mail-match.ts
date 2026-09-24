@@ -2,7 +2,7 @@ import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triag
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
 import { isOwnMailAddress, resolveSenderByEmail } from "../secretary/contact-registry.js";
-import { extractEmailAddress } from "./reply-parse.js";
+import { extractEmailAddress } from "../correspondence/mail-address.js";
 import { findSchedulingCase, listSchedulingCases } from "./store.js";
 
 export function normalizeScheduleMailSubject(subject: string): string {

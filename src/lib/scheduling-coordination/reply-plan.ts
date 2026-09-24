@@ -6,7 +6,11 @@ import type {
 import type { SchedulingJudgmentContext } from "./judgment-context.js";
 import { applyNextAction } from "./next-action.js";
 import { interpretScheduleReply } from "./reply-interpret.js";
-import { extractEmailAddress } from "./reply-parse.js";
+
+function extractEmailAddress(fromHeader: string): string {
+  const m = fromHeader.match(/<([^>]+)>/);
+  return (m?.[1] ?? fromHeader).trim().toLowerCase();
+}
 
 export type ScheduleReplyPlan = {
   nextRow: SchedulingCase;

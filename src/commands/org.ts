@@ -22,9 +22,9 @@ import {
   assertCorrespondenceReviewAcknowledged,
   CorrespondenceReviewRequiredError,
   formatCorrespondenceDraftReview,
-  isCorrespondenceApprovalSubject,
   loadCorrespondenceDraftForApproval,
 } from "../lib/correspondence/review.js";
+import { isCorrespondenceApprovalSubject } from "../lib/correspondence/approval-subject.js";
 import { CORRESPONDENCE_CLI } from "../lib/correspondence/cli-labels.js";
 import { markCorrespondenceDraftApproved } from "../lib/correspondence/draft.js";
 

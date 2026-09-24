@@ -20,6 +20,11 @@ import {
   listEffectiveRegulations,
   loadEnabledRegulationIds,
 } from "../lib/regulations.js";
+import {
+  fileRegulationWorkflowWorkOrder,
+  formatRegulationModulePlan,
+  planRegulationForModule,
+} from "../lib/regulation-module-workflow.js";
 import { getTenantId, setTenantId } from "../lib/tenant.js";
 import { getModuleTier, type ReadinessTier } from "../lib/module-readiness.js";
 import {
@@ -123,6 +128,7 @@ export interface ModulesActivateOptions {
   skipRegs?: boolean;
   skipIso?: boolean;
   skipControls?: boolean;
+  skipRegulationWo?: boolean;
   json?: boolean;
 }
 
@@ -154,6 +160,7 @@ export function runModulesActivate(moduleId: string, opts: ModulesActivateOption
     skipRegs: opts.skipRegs,
     skipIso: opts.skipIso,
     skipControls: opts.skipControls,
+    skipRegulationWo: opts.skipRegulationWo,
   });
   const docs = scaffoldModuleExtensionDocs(moduleId);
   if (opts.json) {
@@ -164,6 +171,45 @@ export function runModulesActivate(moduleId: string, opts: ModulesActivateOption
   if (docs.created.length) {
     console.log(`  extension docs created: ${docs.created.join(", ")}`);
   }
+}
+
+export function runModulesRegulationPlan(
+  moduleId: string,
+  opts: {
+    tenant?: string;
+    json?: boolean;
+    /** File Compliance WO without activating the module. */
+    fileWo?: boolean;
+    dryRun?: boolean;
+  } = {}
+): void {
+  if (opts.tenant) setTenantId(opts.tenant);
+  const plan = planRegulationForModule(moduleId);
+  if (opts.fileWo) {
+    const result = fileRegulationWorkflowWorkOrder(moduleId, {
+      dryRun: opts.dryRun === true,
+    });
+    if (opts.json) {
+      console.log(JSON.stringify({ plan: result.plan, workOrder: result }, null, 2));
+      return;
+    }
+    console.log(formatRegulationModulePlan(result.plan));
+    if (opts.dryRun || result.skipped) {
+      if (result.deduped) {
+        console.log(`  Work Order: reused pending ${result.workOrderId}`);
+      } else {
+        console.log("  Work Order: dry-run / skipped (no write)");
+      }
+    } else if (result.workOrderId) {
+      console.log(`  Work Order: ${result.workOrderId} (LLM draft only · human approve)`);
+    }
+    return;
+  }
+  if (opts.json) {
+    console.log(JSON.stringify(plan, null, 2));
+    return;
+  }
+  console.log(formatRegulationModulePlan(plan));
 }
 
 export interface ModulesReadinessOptions {

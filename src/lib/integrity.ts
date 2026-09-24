@@ -58,6 +58,7 @@ import { validateGuestRegisterIntegrity } from "../../steward/modules/hospitalit
 import { collectHospitalityIntegrityIssues } from "./hospitality/integrity.js";
 import { collectMedicalDeviceIntegrityIssues } from "./medical-device/integrity.js";
 import { validateReceiptRegistryIntegrity } from "./receipt-qr.js";
+import { REGULATIONS_FILE, validateRegulations } from "./regulations.js";
 import { validateLlmWorkersIntegrity } from "./llm-pool/registry.js";
 import { validateChatCommandCatalog } from "./operator-commands/validate-catalog.js";
 import { collectPmoIntegrityIssues } from "./pmo/integrity.js";
@@ -1110,6 +1111,20 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch {
     /* optional during partial checkouts */
+  }
+
+  try {
+    for (const issue of validateRegulations()) {
+      if (issue.level !== "warning") continue;
+      issues.push({
+        level: "warning",
+        file: issue.file || REGULATIONS_FILE,
+        message: issue.message,
+        code: "REG_OPTIONAL_RECOMMENDED",
+      });
+    }
+  } catch (e) {
+    push("warning", REGULATIONS_FILE, e instanceof Error ? e.message : String(e));
   }
 
   return issues;

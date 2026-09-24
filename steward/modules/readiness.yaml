@@ -97,6 +97,11 @@ modules:
   jp_medical_device:
     tier: production_ready
     notes: 医療機器 QMS 4階層 · GVP · 台帳 · ISO-13485 control-map · operations medical-device CLI
+  jp_cosmetics_mah:
+    tier: skeleton
+    notes: >-
+      化粧品製造販売 · qms_gxp sibling（REG-025/026 上書き禁止）· 規程は fork 草案 ·
+      許認可は REG-037。mal では有効化しない
   jp_permit_registry:
     tier: activation_ready
     notes: JP 許認可種別カタログ 60+ · 義務台帳 · operations permit CLI · gap 分析

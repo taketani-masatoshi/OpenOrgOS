@@ -6,6 +6,7 @@ import { evaluateTaxAdjustment } from "../src/lib/finance/tax-adjustment.js";
 import { buildCorporateTaxXmlDraft } from "../src/lib/finance/jp-corporate-tax-xml.js";
 import { getDataDir } from "../src/lib/utils.js";
 import {
+  injectRawJournalEntry,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -194,7 +195,7 @@ describe("tax adjustment acceptance", () => {
     expect(evaluateTaxAdjustment(FY).can_compute).toBe(false);
 
     resetFixtureJournalEntries();
-    appendJournalEntry({
+    injectRawJournalEntry({
       entry_id: "JE-BAD",
       occurred_at: "2026-09-15T00:00:00.000Z",
       description: "unknown",
