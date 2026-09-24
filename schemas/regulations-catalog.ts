@@ -17,6 +17,10 @@ export const regulationBindSchema = z.discriminatedUnion("type", [
     type: z.literal("module"),
     module_id: z.string(),
   }),
+  z.object({
+    type: z.literal("module_any"),
+    module_ids: z.array(z.string()).min(1),
+  }),
 ]);
 
 export const catalogRegulationSchema = z.object({
@@ -26,6 +30,8 @@ export const catalogRegulationSchema = z.object({
   tenant_doc: z.string(),
   binds_to: regulationBindSchema,
   iso_ids: z.array(z.string()).optional(),
+  /** Risk-domain tags for pack docs (cash · pii · permit · …). */
+  risk_domains: z.array(z.string()).optional(),
   notes: z.string().optional(),
 });
 

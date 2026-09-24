@@ -7,7 +7,7 @@ import {
 import { analyzeProperty } from "../src/lib/analyze.js";
 import { scanContractAlerts } from "../src/lib/alerts.js";
 import { runScenario } from "../src/lib/scenario.js";
-import { fiscalYearNumber } from "../src/lib/pdf.js";
+import { fiscalPeriodLabel, fiscalYearNumber } from "../src/lib/finance/fiscal-year.js";
 import { buildKessanPlRows } from "../src/lib/kessan-pdf.js";
 import { loadYojitsuFyPlan } from "../src/lib/data.js";
 import type { PropertyRevenuePlan, Property, MonthlyFinance, FixedCosts, Loans, Contract } from "../schemas/index.js";
@@ -223,6 +223,18 @@ describe("scenario", () => {
 describe("annual reports", () => {
   it("computes fiscal year number from establishment", () => {
     expect(fiscalYearNumber("2018-02-09", "2027-01")).toBe(9);
+  });
+
+  it("labels the fiscal period with the real calendar end day", () => {
+    expect(fiscalPeriodLabel("2026-02", "2027-01")).toBe(
+      "2026年2月1日から2027年1月31日まで",
+    );
+    expect(fiscalPeriodLabel("2025-07", "2026-06")).toBe(
+      "2025年7月1日から2026年6月30日まで",
+    );
+    expect(fiscalPeriodLabel("2023-03", "2024-02")).toBe(
+      "2023年3月1日から2024年2月29日まで",
+    );
   });
 
   it("builds kessan PL rows from FY2026 yojitsu", () => {

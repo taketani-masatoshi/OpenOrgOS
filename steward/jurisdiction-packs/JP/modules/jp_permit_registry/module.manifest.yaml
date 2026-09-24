@@ -10,6 +10,8 @@ optional_regulations:
   - REG-009
   - REG-012
   - REG-016
+required_regulations:
+  - REG-037
 notes: skeleton — JP 許認可種別カタログ · 義務台帳 · gap 分析（JP 法域のみ）
 cli_commands:
   - show

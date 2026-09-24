@@ -201,9 +201,10 @@ D1 完了で「国家クライアントで署名し、OOO が台帳化する」�
 | Adapter | `src/lib/pdf-esign/adapters/digidoc.ts` |
 | 削除 | `src/lib/pdf-esign/adapters/cloudsign.ts` |
 | SiVa | `src/lib/pdf-esign/siva-client.ts` |
+| ケース手順（CLI · Chat BFF 共通） | `src/lib/pdf-esign/case-workflow.ts` |
 | Schema | `schemas/pdf-esign.ts`（ESP id 除去） |
 | Sidecar | `services/digidoc-sidecar/` |
-| Tests | `tests/pdf-esign-digidoc.test.ts` |
+| Tests | `tests/pdf-esign-digidoc.test.ts` · `tests/pdf-esign-endpoints.test.ts` · `tests/pdf-esign-case-workflow.test.ts` |
 
 ---
 

@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 610
-  static_test_cases: 2811
-  tiered_execution_total: 610
+  vitest_total: 611
+  static_test_cases: 2877
+  tiered_execution_total: 611
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -1873,7 +1873,15 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  pdf-esign-case-workflow.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   pdf-esign-digidoc.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  pdf-esign-endpoints.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2148,11 +2156,19 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  receipt-qr-lifecycle.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   receipt-qr.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
   regulations.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  regulation-module-workflow.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2690,6 +2706,10 @@ tests:
     axis: meta
     kind: meta
   tenant-agent-roster.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  tenant-backup.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data

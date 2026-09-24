@@ -1,14 +1,14 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { PassThrough } from "node:stream";
 import type { SignedReceiptQrPayload } from "../../schemas/receipt-qr.js";
 import {
   createPdfWriter,
+  pdfCoverHeader,
   pdfMetaBlock,
   pdfParagraph,
   pdfSection,
   pdfTable,
-  pdfTitle,
+  renderPdfToBuffer,
   writePdfToFile,
   type PdfTableRow,
   type PdfWriter,
@@ -40,7 +40,7 @@ async function paintReceiptPdf(
   const link = encodeReceiptLink(payload, portalUrl);
   const qrPng = await renderReceiptQrPng(link, 180);
 
-  pdfTitle(w, documentTypeLabel(receipt.document_type), 18);
+  pdfCoverHeader(w, documentTypeLabel(receipt.document_type));
   w.doc.moveDown(0.3);
 
   pdfMetaBlock(w, [
@@ -52,7 +52,7 @@ async function paintReceiptPdf(
 
   if (receipt.document_type === "qualified_invoice" && receipt.recipient_name) {
     pdfSection(w, "宛名");
-    pdfParagraph(w, `${receipt.recipient_name}　御中`, 11);
+    pdfParagraph(w, `${receipt.recipient_name}\u3000御中`, 11);
   }
 
   pdfSection(w, "発行者");
@@ -122,13 +122,5 @@ export async function generateReceiptPdfBuffer(
 ): Promise<Buffer> {
   const w = createPdfWriter();
   await paintReceiptPdf(w, payload, options);
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    const stream = new PassThrough();
-    stream.on("data", (chunk: Buffer) => chunks.push(chunk));
-    stream.on("end", () => resolve(Buffer.concat(chunks)));
-    stream.on("error", reject);
-    w.doc.pipe(stream);
-    w.doc.end();
-  });
+  return renderPdfToBuffer(w.doc);
 }

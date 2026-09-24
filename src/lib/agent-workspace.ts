@@ -20,6 +20,7 @@ import { resolveTenantPath, writeYamlFile } from "./utils.js";
 import { scaffoldModuleExtensionDocs } from "./tenant-document-zones.js";
 import { tenantRegulationsFileSchema } from "../../schemas/tenant-regulations.js";
 import { tenantStandardsFileSchema } from "../../schemas/tenant-standards.js";
+import { fileRegulationWorkflowWorkOrder } from "./regulation-module-workflow.js";
 
 export interface WorkspaceInitResult {
   created: string[];
@@ -149,6 +150,49 @@ function enableRegulations(ids: string[]): string[] {
   return enabled;
 }
 
+/**
+ * After flag-only module enable, still apply regulation enable + 施行シード
+ * (and activation seeds when data_root is known). Does not re-toggle modules.yaml.
+ */
+export function applyModuleRegulationSideEffects(moduleId: string): {
+  regulationsEnabled: string[];
+  regulationsSeeded: string[];
+  seedsCopied: string[];
+} {
+  const manifest = loadModuleManifest(moduleId);
+  if (!manifest) {
+    throw new Error(`Module manifest not found: ${moduleId}`);
+  }
+
+  const file = loadModulesFile();
+  const mod = file.modules.find((m) => m.id === moduleId || m.agent === moduleId);
+  const dataRoot =
+    mod?.data_root?.replace(/\/$/, "") ??
+    MODULE_DEFAULT_DATA_ROOT[moduleId]?.replace(/\/$/, "") ??
+    `data/${moduleId.replace(/_/g, "-")}`;
+
+  const seedsCopied: string[] = [];
+  for (const seed of manifest.activation_seeds) {
+    if (copyActivationSeed(moduleId, seed, dataRoot)) {
+      seedsCopied.push(seed.replace(/\.example$/, ""));
+    }
+  }
+
+  const regulationsEnabled = enableRegulations(
+    [
+      ...(manifest.required_regulations ?? []),
+      ...(manifest.optional_regulations ?? []),
+    ].filter((id) => id.startsWith("REG-"))
+  );
+
+  const regulationsSeeded =
+    regulationsEnabled.length > 0
+      ? seedRegulationDocs({ ids: regulationsEnabled }).seeded
+      : [];
+
+  return { regulationsEnabled, regulationsSeeded, seedsCopied };
+}
+
 function enableIsoStandards(ids: string[]): string[] {
   const enabled: string[] = [];
   const file = loadTenantStandards();
@@ -179,12 +223,16 @@ export interface ActivateModuleResult {
   isoEnabled: string[];
   regulationsSeeded: string[];
   controlsInitialized: number;
+  regulationWorkOrderId?: string;
+  regulationWoDeduped?: boolean;
 }
 
 export interface ActivateModuleOptions {
   skipRegs?: boolean;
   skipIso?: boolean;
   skipControls?: boolean;
+  /** Skip Compliance Work Order for regulation classify → LLM draft → human approve. */
+  skipRegulationWo?: boolean;
 }
 
 export function activateTenantModule(
@@ -215,9 +263,14 @@ export function activateTenantModule(
   const workspace = agentId ? ensureAgentWorkspace(agentId) : { created: [], skipped: [] };
 
   const regulationsEnabled =
-    opts.skipRegs || !manifest.optional_regulations?.length
+    opts.skipRegs
       ? []
-      : enableRegulations(manifest.optional_regulations.filter((id) => id.startsWith("REG-")));
+      : enableRegulations(
+          [
+            ...(manifest.required_regulations ?? []),
+            ...(manifest.optional_regulations ?? []),
+          ].filter((id) => id.startsWith("REG-"))
+        );
 
   const isoEnabled =
     opts.skipIso || !MODULE_ISO[moduleId]?.length
@@ -234,6 +287,14 @@ export function activateTenantModule(
       ? 0
       : initTenantControlsFile().count;
 
+  let regulationWorkOrderId: string | undefined;
+  let regulationWoDeduped: boolean | undefined;
+  if (!opts.skipRegulationWo) {
+    const wo = fileRegulationWorkflowWorkOrder(moduleId);
+    regulationWorkOrderId = wo.workOrderId;
+    regulationWoDeduped = wo.deduped;
+  }
+
   return {
     moduleId,
     module: mod,
@@ -243,6 +304,8 @@ export function activateTenantModule(
     isoEnabled,
     regulationsSeeded,
     controlsInitialized,
+    regulationWorkOrderId,
+    regulationWoDeduped,
   };
 }
 
@@ -269,6 +332,12 @@ export function formatActivateModuleResult(result: ActivateModuleResult): string
   }
   if (result.controlsInitialized) {
     lines.push(`  controls initialized: ${result.controlsInitialized} entries`);
+  }
+  if (result.regulationWorkOrderId) {
+    const dedupeNote = result.regulationWoDeduped ? " · reused pending" : "";
+    lines.push(
+      `  regulation Work Order: ${result.regulationWorkOrderId} (LLM draft only · human approve${dedupeNote})`
+    );
   }
   return lines.join("\n");
 }

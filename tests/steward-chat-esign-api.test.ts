@@ -18,6 +18,8 @@ describe("steward chat esign api", () => {
 
   beforeEach(() => {
     setTenantId("_fixture-books");
+    process.env.ORGOS_TENANT = "_fixture-books";
+    process.env.STEWARD_TENANT = "_fixture-books";
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";
@@ -48,6 +50,7 @@ describe("steward chat esign api", () => {
       operator_id: operatorId,
       approver_id: operatorId,
       mode: "prod",
+      tenant_id: "_fixture-books",
     });
     return `${WIRE_CONSOLE_SESSION_COOKIE}=${token}`;
   }

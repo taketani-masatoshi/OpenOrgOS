@@ -21,6 +21,7 @@ import { buildMonthCloseChecklist } from "../src/lib/product/ledger-month-close-
 import { getDataDir } from "../src/lib/utils.js";
 import {
   applyFixtureStatementRoles,
+  injectRawJournalEntry,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -99,14 +100,20 @@ function manualEntry(input: {
     counterparty_id?: string;
   }>;
 }): void {
-  appendJournalEntry({
+  const payload = {
     entry_id: input.entryId,
     occurred_at: input.occurredAt,
     description: input.entryId,
     source: { kind: "manual", authorized_by: OPERATOR },
     evidence_refs: [`test:${input.entryId}`],
     lines: input.lines,
-  });
+  };
+  // Unknown-account fixtures must bypass post guards so close gates can reject them.
+  if (input.lines.some((line) => line.account_code === "9999")) {
+    injectRawJournalEntry(payload);
+    return;
+  }
+  appendJournalEntry(payload);
 }
 
 describe("monthly close acceptance", () => {
@@ -277,9 +284,12 @@ entries:
 
   it("does not lock when a control account has an unassigned balance", () => {
     useFinanceFixtureTenant();
-    manualEntry({
-      entryId: "JE-UNASSIGNED-AR",
-      occurredAt: "2026-09-11T00:00:00.000Z",
+    injectRawJournalEntry({
+      entry_id: "JE-UNASSIGNED-AR",
+      occurred_at: "2026-09-11T00:00:00.000Z",
+      description: "JE-UNASSIGNED-AR",
+      source: { kind: "manual", authorized_by: OPERATOR },
+      evidence_refs: ["test:JE-UNASSIGNED-AR"],
       lines: [
         { account_code: "1150", debit_yen: 500, credit_yen: 0, tax_category: "out_of_scope" },
         { account_code: "4100", debit_yen: 0, credit_yen: 500, tax_category: "non_taxable" },
@@ -410,7 +420,7 @@ entries:
     amount: 1000
     status: matched
 `);
-    appendJournalEntry({
+    injectRawJournalEntry({
       entry_id: "JE-NO-TAX",
       occurred_at: "2026-09-12T00:00:00.000Z",
       description: "missing category",

@@ -34,7 +34,7 @@
 | [chat-command-router.md](chat-command-router.md) | **Chat Command Router** — 決定論 CLI · ADR 0035 |
 | [aia-parallel-runtime.md](aia-parallel-runtime.md) | **AIA 並行** — soft 10 / target 20 / hard 30 · ADR 0040 |
 | [steward-orchestration-uplift-plan.md](steward-orchestration-uplift-plan.md) | **Steward オーケストレーション** — WO DAG · state machine · ADR 0044 |
-| [aia-workspace-isolation.md](aia-workspace-isolation.md) | **AIA 作業スペース隔離** — scratch/aia-runs |
+| [aia-workspace-isolation.md](aia-workspace-isolation.md) | **AIA 作業スペース隔離** — data/scratch/aia-runs |
 | [module-messaging.md](module-messaging.md) | **モジュール間メッセージ** — ModuleMessage · agent_relay |
 | [integration-agent.md](integration-agent.md) | **Integration Agent** — 横断統合 · 正データ非編集 |
 | [passkey-production-security-plan.md](passkey-production-security-plan.md) | **PassKey 本番 harden** — Wave 1 実装 · Wave 2 bootstrap（ADR 0039） |

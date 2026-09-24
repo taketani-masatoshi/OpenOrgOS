@@ -7,6 +7,8 @@
 
 法人税 · 地方法人税の **申告準備**（別表ドラフト · 固定資産 · 税見込整合）。申告 XML 生成は税理士。
 
+**社内規程雛形:** REG-031 — Path: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_tax_corporate/REG-031-hojin-zeimu/template.md`（テナント `regulations.yaml` で有効化）
+
 ## データ
 
 | パス | 内容 |

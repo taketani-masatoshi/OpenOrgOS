@@ -7,11 +7,18 @@ import {
   runModulesActivate,
   runModulesScaffoldDocs,
   runModulesReadiness,
+  runModulesRegulationPlan,
 } from "../../commands/modules.js";
 import { runTenantScaffoldDocs } from "../../commands/tenant-scaffold-docs.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
 import { runPipelineDaily, runPipelineList, runPipelineWeekly } from "../../commands/pipeline.js";
 import { runTenantInitCommand, runTenantScaffoldData, runTenantAlignClassification } from "../../commands/tenant.js";
+import {
+  runTenantBackupRestore,
+  runTenantBackupSnapshot,
+  runTenantBackupStatus,
+  runTenantGitRemoteCheck,
+} from "../../commands/tenant-backup.js";
 import {
   runRegulationsList,
   runRegulationsEffective,
@@ -298,9 +305,10 @@ export function registerPlatformCommands(program: Command): void {
     .command("activate <id>")
     .description("Enable module · copy activation seeds · init agent workspace folders")
     .option("--tenant <id>", "Tenant id")
-    .option("--skip-regs", "Do not enable optional regulations")
+    .option("--skip-regs", "Do not enable required/optional regulations")
     .option("--skip-iso", "Do not enable related ISO standards")
     .option("--skip-controls", "Do not merge controls.yaml")
+    .option("--skip-regulation-wo", "Do not file Compliance Work Order for regulation workflow")
     .option("--json", "JSON output")
     .action((id: string, opts) =>
       runModulesActivate(id, {
@@ -308,8 +316,30 @@ export function registerPlatformCommands(program: Command): void {
         skipRegs: opts.skipRegs,
         skipIso: opts.skipIso,
         skipControls: opts.skipControls,
+        skipRegulationWo: opts.skipRegulationWo,
         json: opts.json,
       })
+    );
+  modulesCmd
+    .command("regulation-plan <id>")
+    .description(
+      "Classify regulation actions for a module (reuse/thicken/fork_family/new/none). Default: no writes."
+    )
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .option("--file-wo", "File Compliance Work Order for the plan (without module activate)")
+    .option("--dry-run", "With --file-wo: classify only, do not write WO")
+    .action(
+      (
+        id: string,
+        opts: { tenant?: string; json?: boolean; fileWo?: boolean; dryRun?: boolean }
+      ) =>
+        runModulesRegulationPlan(id, {
+          tenant: opts.tenant,
+          json: opts.json,
+          fileWo: opts.fileWo,
+          dryRun: opts.dryRun,
+        })
     );
   modulesCmd
     .command("scaffold-docs")
@@ -454,6 +484,44 @@ export function registerPlatformCommands(program: Command): void {
         json: opts.json,
       })
     );
+
+  const tenantBackupCmd = tenantCmd
+    .command("backup")
+    .description("NAS restore copy of the tenant (not the working canonical)");
+  tenantBackupCmd
+    .command("status")
+    .description("Show whether a restore destination is configured and how old the stamp is")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => {
+      runTenantBackupStatus(opts);
+    });
+  tenantBackupCmd
+    .command("snapshot")
+    .description("Tar the tenant to the encrypted destination and stamp only on success")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => {
+      runTenantBackupSnapshot(opts);
+    });
+  tenantBackupCmd
+    .command("restore")
+    .description("Extract a snapshot into an empty directory that is not the live tenant")
+    .requiredOption("--archive <path>", "Absolute path to the snapshot tar.gz")
+    .requiredOption("--into <dir>", "Empty absolute directory, outside the live tenant")
+    .option("--json", "JSON output")
+    .action((opts: { archive: string; into: string; json?: boolean }) => {
+      runTenantBackupRestore(opts);
+    });
+
+  tenantCmd
+    .command("git-remote")
+    .description("Check that tenant history is not pointed at a public forge")
+    .command("check")
+    .description("Classify git_remote from backup-target.yaml, or --url")
+    .option("--url <url>", "Remote URL to classify instead of the config file")
+    .option("--json", "JSON output")
+    .action((opts: { url?: string; json?: boolean }) => {
+      runTenantGitRemoteCheck(opts);
+    });
 
   const tenantLifecycleCmd = tenantCmd
     .command("lifecycle")

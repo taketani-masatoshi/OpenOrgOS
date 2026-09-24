@@ -306,13 +306,11 @@ export function OnboardingPage() {
       </section>
 
       <section className="ops-card">
-        <h2 className="section-title">外部サービス連携</h2>
-        <p className="ops-page-meta">
-          Slack · Asana · Google Drive の接続と送信先は連携設定にまとめています。
-        </p>
+        <h2 className="section-title">{copy.integrationsOnboardingTitle}</h2>
+        <p className="ops-page-meta">{copy.integrationsOnboardingLead}</p>
         <p className="section-cta">
           <a className="btn btn-primary btn-sm" href="/?integrations=1">
-            連携設定を開く
+            {copy.openIntegrations}
           </a>
         </p>
       </section>

@@ -58,6 +58,7 @@ import { validateGuestRegisterIntegrity } from "../../steward/modules/hospitalit
 import { collectHospitalityIntegrityIssues } from "./hospitality/integrity.js";
 import { collectMedicalDeviceIntegrityIssues } from "./medical-device/integrity.js";
 import { validateReceiptRegistryIntegrity } from "./receipt-qr.js";
+import { REGULATIONS_FILE, validateRegulations } from "./regulations.js";
 import { validateLlmWorkersIntegrity } from "./llm-pool/registry.js";
 import { validateChatCommandCatalog } from "./operator-commands/validate-catalog.js";
 import { collectPmoIntegrityIssues } from "./pmo/integrity.js";
@@ -65,7 +66,8 @@ import { collectIrIntegrityIssues } from "./investor-relations/integrity.js";
 import { collectCustomerSuccessIntegrityIssues } from "./customer-success/integrity.js";
 import { collectAnalyticsIntegrityIssues } from "./analytics/integrity.js";
 import { collectRosterPayrollConsistencyIssues } from "./hr/roster-payroll-consistency.js";
-import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
+import { collectTenantBackupIntegrityIssues } from "./tenant-backup.js";
+import { getDataDir, getTenantDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
   resolveModuleSecretsPath,
@@ -743,6 +745,10 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   }
 
+  for (const issue of collectTenantBackupIntegrityIssues(getTenantDir())) {
+    push(issue.level, issue.file, issue.message);
+  }
+
   const hasExecutiveData = executiveYaml.some((name) =>
     existsSync(resolveTenantPath(`data/executive/${name}`))
   );
@@ -1105,6 +1111,20 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch {
     /* optional during partial checkouts */
+  }
+
+  try {
+    for (const issue of validateRegulations()) {
+      if (issue.level !== "warning") continue;
+      issues.push({
+        level: "warning",
+        file: issue.file || REGULATIONS_FILE,
+        message: issue.message,
+        code: "REG_OPTIONAL_RECOMMENDED",
+      });
+    }
+  } catch (e) {
+    push("warning", REGULATIONS_FILE, e instanceof Error ? e.message : String(e));
   }
 
   return issues;

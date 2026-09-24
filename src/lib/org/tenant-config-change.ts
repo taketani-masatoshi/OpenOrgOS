@@ -35,9 +35,10 @@ import {
   listCatalogModuleIds,
   MODULES_FILE,
 } from "../modules.js";
-import { activateTenantModule } from "../agent-workspace.js";
+import { activateTenantModule, applyModuleRegulationSideEffects } from "../agent-workspace.js";
 import { initTenantControlsFile } from "../control-framework.js";
 import { syncActiveContext } from "../context-manifest.js";
+import { fileRegulationWorkflowWorkOrder } from "../regulation-module-workflow.js";
 import {
   isRosterAgentActive,
   loadTenantAgentRoster,
@@ -431,6 +432,59 @@ function setModuleEnabledFlag(moduleId: string, enabled: boolean): void {
   writeYamlFile(modulesFilePath(), modulesFileSchema.parse(file));
 }
 
+/**
+ * When full activateTenantModule fails, still enable required/optional regs,
+ * seed 施行文 where missing, file the regulation WO, and warn that a full
+ * `modules activate` retry may still be needed for workspace/ISO/controls.
+ */
+function flagOnlyEnableWithRegulationWo(
+  moduleId: string,
+  activateErr: unknown,
+  warnings: string[]
+): void {
+  setModuleEnabledFlag(moduleId, true);
+  warnings.push(
+    `activate fallback to flag-only: ${activateErr instanceof Error ? activateErr.message : String(activateErr)}`
+  );
+  warnings.push(
+    `flag-only: re-run \`orgos modules activate ${moduleId}\` when the activate error is fixed (workspace / ISO / controls may be incomplete)`
+  );
+  try {
+    const side = applyModuleRegulationSideEffects(moduleId);
+    if (side.regulationsEnabled.length) {
+      warnings.push(`flag-only regulations enabled: ${side.regulationsEnabled.join(", ")}`);
+    }
+    if (side.regulationsSeeded.length) {
+      warnings.push(`flag-only regulation docs seeded: ${side.regulationsSeeded.join(", ")}`);
+    }
+    if (side.seedsCopied.length) {
+      warnings.push(`flag-only activation seeds copied: ${side.seedsCopied.join(", ")}`);
+    }
+  } catch (sideErr) {
+    warnings.push(
+      `flag-only regulation side-effects failed: ${sideErr instanceof Error ? sideErr.message : String(sideErr)}`
+    );
+  }
+  try {
+    const wo = fileRegulationWorkflowWorkOrder(moduleId);
+    if (wo.deduped) {
+      warnings.push(
+        `regulation WO reused/updated pending ${wo.workOrderId} (flag-only activate)`
+      );
+    } else if (wo.workOrderId) {
+      warnings.push(
+        `regulation WO filed ${wo.workOrderId} after flag-only activate (LLM draft only)`
+      );
+    } else {
+      warnings.push("regulation WO not filed after flag-only activate");
+    }
+  } catch (woErr) {
+    warnings.push(
+      `regulation WO failed after flag-only activate: ${woErr instanceof Error ? woErr.message : String(woErr)}`
+    );
+  }
+}
+
 function trySyncRoster(): string | undefined {
   try {
     const current = loadTenantAgentRoster();
@@ -498,10 +552,7 @@ export function applyTenantConfigChange(changeId: string): ApplyTenantConfigChan
         activateTenantModule(change.target_id);
       } catch (err) {
         try {
-          setModuleEnabledFlag(change.target_id, true);
-          warnings.push(
-            `activate fallback to flag-only: ${err instanceof Error ? err.message : String(err)}`
-          );
+          flagOnlyEnableWithRegulationWo(change.target_id, err, warnings);
         } catch (err2) {
           throw err2 instanceof Error ? err2 : err;
         }
@@ -511,10 +562,7 @@ export function applyTenantConfigChange(changeId: string): ApplyTenantConfigChan
         activateTenantModule(change.target_id);
       } catch (err) {
         try {
-          setModuleEnabledFlag(change.target_id, true);
-          warnings.push(
-            `activate fallback to flag-only: ${err instanceof Error ? err.message : String(err)}`
-          );
+          flagOnlyEnableWithRegulationWo(change.target_id, err, warnings);
         } catch (err2) {
           throw err2 instanceof Error ? err2 : err;
         }

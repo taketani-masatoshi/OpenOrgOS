@@ -6,13 +6,8 @@ import {
   type SivaMode,
   type SivaValidationConclusion,
 } from "../../../schemas/pdf-esign.js";
-import {
-  assertTrustedEndpoint,
-  resolveAllowHttpLoopback,
-  resolveDigidocRuntime,
-  resolveSivaBaseUrl,
-  resolveSivaMode,
-} from "./digidoc-runtime.js";
+import { resolveDigidocRuntime, resolveTrustedEndpoint } from "./digidoc-runtime.js";
+import { postEndpointJson } from "./endpoint-json.js";
 
 /**
  * SiVa REST client (open-eid national validation stack).
@@ -98,6 +93,32 @@ function decideIndication(conclusion: SivaValidationConclusion): string {
   return "TOTAL-FAILED";
 }
 
+/** Live failure before a trustworthy SiVa conclusion exists — no signatures are counted. */
+function liveFailure(reason: string): SivaValidateResult {
+  return {
+    mode: "live",
+    ok: false,
+    indication: "TOTAL-FAILED",
+    signatures_count: 0,
+    valid_signatures_count: 0,
+    reason,
+  };
+}
+
+function mockResult(summary: SivaCanonicalSummary, reason?: string): SivaValidateResult {
+  return {
+    mode: "mock",
+    ok: summary.indication === "TOTAL-PASSED",
+    indication: summary.indication,
+    signatures_count: summary.signatures_count,
+    valid_signatures_count: summary.valid_signatures_count,
+    ...(reason ? { reason } : {}),
+    ...(summary.validation_time ? { validation_time: summary.validation_time } : {}),
+    response_digest: sha256Json(summary),
+    summary,
+  };
+}
+
 /** Deterministic mock — CI without a SiVa process. Never used for case completed. */
 export function mockSivaValidate(input: {
   liteOk: boolean;
@@ -105,46 +126,32 @@ export function mockSivaValidate(input: {
   filename?: string;
 }): SivaValidateResult {
   if (!input.liteOk) {
-    const summary: SivaCanonicalSummary = {
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      signature_indications: [],
-      filename: input.filename,
-      mock: true,
-    };
-    return {
-      mode: "mock",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: "lite_asice_failed",
-      response_digest: sha256Json(summary),
-      summary,
-    };
+    return mockResult(
+      {
+        indication: "TOTAL-FAILED",
+        signatures_count: 0,
+        valid_signatures_count: 0,
+        signature_indications: [],
+        filename: input.filename,
+        mock: true,
+      },
+      "lite_asice_failed",
+    );
   }
   if (input.pdfDigestOk === false) {
-    const summary: SivaCanonicalSummary = {
-      indication: "TOTAL-FAILED",
-      signatures_count: 1,
-      valid_signatures_count: 0,
-      signature_indications: ["TOTAL-FAILED"],
-      filename: input.filename,
-      mock: true,
-    };
-    return {
-      mode: "mock",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 1,
-      valid_signatures_count: 0,
-      reason: "pdf_digest_mismatch",
-      response_digest: sha256Json(summary),
-      summary,
-    };
+    return mockResult(
+      {
+        indication: "TOTAL-FAILED",
+        signatures_count: 1,
+        valid_signatures_count: 0,
+        signature_indications: ["TOTAL-FAILED"],
+        filename: input.filename,
+        mock: true,
+      },
+      "pdf_digest_mismatch",
+    );
   }
-  const summary: SivaCanonicalSummary = {
+  return mockResult({
     indication: "TOTAL-PASSED",
     signatures_count: 1,
     valid_signatures_count: 1,
@@ -152,25 +159,14 @@ export function mockSivaValidate(input: {
     signature_indications: ["TOTAL-PASSED"],
     filename: input.filename ?? "document.asice",
     mock: true,
-  };
-  return {
-    mode: "mock",
-    ok: true,
-    indication: "TOTAL-PASSED",
-    signatures_count: 1,
-    valid_signatures_count: 1,
-    validation_time: summary.validation_time,
-    response_digest: sha256Json(summary),
-    summary,
-  };
+  });
 }
 
 export async function validateWithSiva(input: SivaValidateInput): Promise<SivaValidateResult> {
   const runtime = resolveDigidocRuntime({ sivaMode: input.mode });
-  const mode = resolveSivaMode(input.mode);
   const filename = input.filename ?? basename(input.asicePath);
 
-  if (mode === "mock") {
+  if (runtime.siva_mode === "mock") {
     return mockSivaValidate({
       liteOk: input.liteOk,
       pdfDigestOk: input.pdfDigestOk,
@@ -178,129 +174,43 @@ export async function validateWithSiva(input: SivaValidateInput): Promise<SivaVa
     });
   }
 
-  const allowHttp =
-    input.allowHttpLoopback ?? resolveAllowHttpLoopback() ?? runtime.allow_http_loopback;
-  const rawBase = (input.baseUrl ?? resolveSivaBaseUrl())?.replace(/\/$/, "");
-  if (!rawBase) {
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: "siva_base_url_missing",
-    };
-  }
-  const trusted = assertTrustedEndpoint(rawBase, {
-    allowHttpLoopback: allowHttp,
+  const trusted = resolveTrustedEndpoint(input.baseUrl ?? runtime.siva_base_url, {
+    allowHttpLoopback: input.allowHttpLoopback ?? runtime.allow_http_loopback,
     kind: "siva",
   });
-  if (!trusted.ok) {
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: trusted.reason,
-    };
-  }
-  const baseUrl = trusted.url;
+  if (!trusted.ok) return liveFailure(trusted.reason);
 
   if (!input.liteOk || input.pdfDigestOk === false) {
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: input.pdfDigestOk === false ? "pdf_digest_mismatch" : "lite_asice_failed",
-    };
+    return liveFailure(
+      input.pdfDigestOk === false ? "pdf_digest_mismatch" : "lite_asice_failed",
+    );
   }
 
   const maxBytes = input.maxAsiceBytes ?? runtime.max_asice_bytes;
-  const st = statSync(input.asicePath);
-  if (st.size > maxBytes) {
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: "asice_too_large",
-    };
+  if (statSync(input.asicePath).size > maxBytes) {
+    return liveFailure("asice_too_large");
   }
 
-  const document = readFileSync(input.asicePath).toString("base64");
-  const fetchImpl = input.fetchImpl ?? fetch;
-  const timeoutMs = input.timeoutMs ?? runtime.siva_timeout_ms;
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  const response = await postEndpointJson({
+    kind: "siva",
+    url: `${trusted.url}/validate`,
+    headers: { "content-type": "application/json", accept: "application/json" },
+    payload: {
+      filename,
+      document: readFileSync(input.asicePath).toString("base64"),
+      reportType: "Simple",
+    },
+    fetchImpl: input.fetchImpl ?? fetch,
+    timeoutMs: input.timeoutMs ?? runtime.siva_timeout_ms,
+  });
+  if (!response.ok) return liveFailure(response.reason);
+  if (!response.httpOk) return liveFailure(`siva_http_${response.status}`);
 
-  let res: Response;
-  try {
-    res = await fetchImpl(`${baseUrl}/validate`, {
-      method: "POST",
-      headers: { "content-type": "application/json", accept: "application/json" },
-      body: JSON.stringify({ filename, document, reportType: "Simple" }),
-      signal: ac.signal,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const reason = msg.includes("abort") ? "siva_timeout" : `siva_unreachable: ${msg}`;
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason,
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-
-  const text = await res.text();
-  let body: unknown;
-  try {
-    body = text ? JSON.parse(text) : {};
-  } catch {
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: `siva_non_json_${res.status}`,
-    };
-  }
-
-  if (!res.ok) {
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: `siva_http_${res.status}`,
-    };
-  }
-
-  const parsedBody = sivaValidateResponseSchema.safeParse(body);
-  if (!parsedBody.success) {
-    return {
-      mode: "live",
-      ok: false,
-      indication: "TOTAL-FAILED",
-      signatures_count: 0,
-      valid_signatures_count: 0,
-      reason: "siva_schema_invalid",
-    };
-  }
+  const parsedBody = sivaValidateResponseSchema.safeParse(response.body);
+  if (!parsedBody.success) return liveFailure("siva_schema_invalid");
 
   const conclusion = parsedBody.data.validationReport.validationConclusion;
   const summary = canonicalizeSivaSummary(conclusion, { filename });
-  const digest = sha256Json(summary);
   const ok = isNationalTotalPassed(conclusion);
   return {
     mode: "live",
@@ -309,7 +219,7 @@ export async function validateWithSiva(input: SivaValidateInput): Promise<SivaVa
     signatures_count: summary.signatures_count,
     valid_signatures_count: summary.valid_signatures_count,
     validation_time: summary.validation_time,
-    response_digest: digest,
+    response_digest: sha256Json(summary),
     summary,
     reason: ok ? undefined : "siva_not_total_passed",
   };

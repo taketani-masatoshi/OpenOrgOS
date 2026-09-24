@@ -1,10 +1,10 @@
 import {
   createPdfWriter,
+  pdfCoverHeader,
   pdfMetaBlock,
   pdfParagraph,
   pdfSection,
   pdfTable,
-  pdfTitle,
   writePdfToFile,
   type PdfTableRow,
 } from "./pdf.js";
@@ -98,7 +98,7 @@ export async function generateRentInvoicePdf(
   const dueDate = paymentDueDate(input.billingMonth);
   const invNo = invoiceNumber(input.billingMonth, input.invoiceNumberPrefix ?? "RENT");
 
-  pdfTitle(w, input.template?.pdf.title ?? "請 求 書", 20);
+  pdfCoverHeader(w, input.template?.pdf.title ?? "請 求 書");
   w.doc.moveDown(0.5);
 
   pdfMetaBlock(w, [

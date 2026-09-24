@@ -12,13 +12,26 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **月次の銀行突合** — 開始残高が当月の試算表に初めて載る分は現金の動きに数えない。明細がその金額の入金だけだと、月はロックしない。
 - **消費税申告書の行** — 外部の算式差分が空のときだけ 14 点。①-1 は税抜の対価を一度税込へ戻してから 100/108・100/110 を掛ける。⑦は④＋⑤＋⑥、⑨は②＋③−⑦の百円未満切捨て、⑪は⑨−⑩、⑱と⑳は付表1-3の⑪と⑬。提出は not-for-etax のまま。
 - **間接税の法域ポート** — 帳簿エンジンは共通のまま、月次締めの消費税ゲートは pack の `indirect_tax_family` 経由。日本の消費税計算は `JP` + `vat_credit` だけ。他法域は日本の税率・税区分必須・別表・適格請求書チェックを走らせない。減価償却率表は pack seed にあるときだけ読む。ADR 0078。
+- **JP 社内規程のモジュール連動方針** — リスク領域単位（金流・PII・許認可等）。REG-027 に資金章、REG-032 に還付吸収、REG-030/035/036/037 をカタログ化。`required_regulations` + validate error。J-SOX は REG-016+027 分界。
+- **モジュール有効化時の規程ワークフロー** — 分類（reuse/thicken/fork_family/new/none）→ Compliance Work Order → LLM 草案のみ → 人間承認。化粧品系は医療機器 QMS を上書きしない。`orgos modules regulation-plan` / `activate --skip-regulation-wo`。
+- **規程ワークフローのリファクタ** — `regulation_family` · WO pending 重複抑止 · thicken 判定強化 · qms_gxp FORK-DRAFT · `modules check` の規程契約。
+- **規程ワークフローの弱い点を閉じる** — リスク判定の一元化、税・給与等へ REG-030 optional、J-SOX に REG-027 必須、REG-025/026 雛形の厚化（恒久 thicken 解消）、flag-only activate でも規程 WO 起票、`regulation-plan --file-wo`。
+- **規程草案 scaffold + 化粧品 sibling** — WO 起票時に `docs/company/regulations/drafts/*-草案.md` を決定論生成（施行は触らない）。`jp_cosmetics_mah` skeleton（qms_gxp sibling）。Skill `regulation_module_draft`。
+- **規程ワークフローの残ギャップ対処** — test-registry 登録、flag-only で REG enable/seed、dedupe 時 WO 更新、REG-030 optional warning、REG-038 採番、family 追加手順、scaffold skill 改名、FORK はリンク+プレビュー。
+- **JP 社内規程（会計・税務）雛形の増強** — 経理（REG-027）· 経費精算（REG-005）を起草スタイル準拠で拡充。モジュール連動の REG-031〜034（法人税務準備 · 消費税務 · 適格請求書 · 源泉・法定調書）をカタログ追加。提出・e-Tax は人間/税理士権限のまま。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
+- **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **テナント退避を隣の仕組みに合わせる** — 実行中の `data/scratch/aia-runs` も tar から除く。validate は退避先が設定済みで週次条件を外れたときだけ warning（未設定は黙る）。週次の作業指示は `orgos tenant backup snapshot` で、連鎖の再署名は書かない。連携ハブは説明のままで退避を実行しない。テナント直下の `.git` が公開フォージなら snapshot を拒否する。本番の snapshot / restore は ceo / approver。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **テナント退避の穴** — 公開フォージはサブドメインと末尾ドットも含めて拒否し、届く `file://` は中の git remote を見る。未マウントは未検査で、週次は設定済みの公開リモートだけ失敗にする。アーカイブは一時ファイルから `0600` で確定し、同じ秒でも上書きしない。復元は `..` と絶対パスを拒み、失敗しても指定先を空のままにする。スタンプは日付・パス・バイト数・sha256 が実体と一致したときだけ週次を通し、日付だけは通さない。ボリュームが非暗号化と読めたときだけ snapshot を拒否し、読めない先は `declared` のまま検証済みとは書かない。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **テナントの復元用コピー** — `orgos tenant backup snapshot|restore|status`。最新は Mac のまま、NAS は暗号化ボリュームへの退避（ツールは鍵を作らない）。作業中の `scratch/aia-runs` は含めず、スタンプは成功後だけ。未設定のテナントは週次を失敗にしない。`orgos tenant git-remote check` はテナント履歴のリモートを `file://` または社内 ssh に限り、github.com / gitlab.com / bitbucket.org を拒否する（製品リポジトリの origin は見ない）。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **Drive の配達名** — アップロードするファイル名を `AIA-` で始め、説明に「写し。正本ではない」を付ける。削除も、Drive から正本へ戻す取り込みもしない。
+- **連携ハブの置き場説明** — コンソール `/?integrations=1` に「このマシン（最新）· NAS（復元）· Git（NAS 上の履歴。GitHub には実テナントを出さない）· Drive（AIA 成果物の配達口）」を明示。Drive は社員ファイルを消さない写しで、正本はテナント YAML / MD。セットアップ画面からも同じ説明でハブへ送る。
 
 ### Fixed
 
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
-
+- AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 
 ## [0.9.0-beta.1] — 2026-08-30

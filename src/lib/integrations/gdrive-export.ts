@@ -9,16 +9,16 @@
  */
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PassThrough } from "node:stream";
 import { z } from "zod";
 import {
   createPdfWriter,
   pdfBulletList,
+  pdfCoverHeader,
   pdfMutedNote,
   pdfParagraph,
   pdfSection,
   pdfSubtitle,
-  pdfTitle,
+  renderPdfToBuffer,
   type PdfWriter,
 } from "../pdf.js";
 import { getDataDir, getDocsDir, loadRegistryFile, writeYamlFile } from "../utils.js";
@@ -110,18 +110,6 @@ export function assertDocumentExportAllowed(relativePath: string): string {
   return withoutPrefix;
 }
 
-function pdfToBuffer(w: PdfWriter): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    const stream = new PassThrough();
-    stream.on("data", (chunk: Buffer) => chunks.push(chunk));
-    stream.on("end", () => resolve(Buffer.concat(chunks)));
-    stream.on("error", reject);
-    w.doc.pipe(stream);
-    w.doc.end();
-  });
-}
-
 /** Markdown headings and bullets only — enough to stay readable on paper. */
 function paintMarkdown(w: PdfWriter, markdown: string): void {
   const lines = markdown.split(/\r?\n/);
@@ -179,12 +167,12 @@ export async function buildDriveExportPdf(
     const absolute = join(getDocsDir(), relative);
     if (!existsSync(absolute)) throw new Error(`文書が見つかりません: docs/${relative}`);
     const w = createPdfWriter();
-    pdfTitle(w, relative.split("/").pop()!.replace(/\.md$/, ""));
+    pdfCoverHeader(w, relative.split("/").pop()!.replace(/\.md$/, ""));
     pdfSubtitle(w, `OrgOS · ${getTenantId()} · docs/${relative}`);
     paintMarkdown(w, readFileSync(absolute, "utf-8"));
     pdfMutedNote(w, "正本は OrgOS 内の Markdown です。この PDF は閲覧用の写しです。");
     return {
-      buffer: await pdfToBuffer(w),
+      buffer: await renderPdfToBuffer(w.doc),
       fileName: `${relative.replace(/\//g, "-").replace(/\.md$/, "")}.pdf`,
       sourceRef: `docs/${relative}`,
     };
@@ -194,7 +182,7 @@ export async function buildDriveExportPdf(
     if (!id) throw new Error("work order id required");
     const handoff = loadHandoff(id);
     const w = createPdfWriter();
-    pdfTitle(w, `${handoff.id} · ${handoff.subject ?? handoff.to_agent}`);
+    pdfCoverHeader(w, `${handoff.id} · ${handoff.subject ?? handoff.to_agent}`);
     pdfSubtitle(w, `OrgOS work order · ${getTenantId()}`);
     pdfSection(w, "概要");
     pdfBulletList(w, [
@@ -213,7 +201,7 @@ export async function buildDriveExportPdf(
     }
     pdfMutedNote(w, "正本は OrgOS の routing-queue です。この PDF は閲覧用の写しです。");
     return {
-      buffer: await pdfToBuffer(w),
+      buffer: await renderPdfToBuffer(w.doc),
       fileName: `${handoff.id}.pdf`,
       sourceRef: handoff.id,
     };
@@ -221,7 +209,7 @@ export async function buildDriveExportPdf(
 
   const tasks = loadExecutiveTasks().tasks.filter((t) => t.status !== "done");
   const w = createPdfWriter();
-  pdfTitle(w, "社長タスク一覧");
+  pdfCoverHeader(w, "社長タスク一覧");
   pdfSubtitle(w, `OrgOS · ${getTenantId()} · ${new Date().toISOString().slice(0, 10)}`);
   pdfBulletList(
     w,
@@ -231,7 +219,7 @@ export async function buildDriveExportPdf(
   );
   pdfMutedNote(w, "正本は OrgOS の data/executive/tasks.yaml です。この PDF は閲覧用の写しです。");
   return {
-    buffer: await pdfToBuffer(w),
+    buffer: await renderPdfToBuffer(w.doc),
     fileName: `executive-tasks-${new Date().toISOString().slice(0, 10)}.pdf`,
     sourceRef: "data/executive/tasks.yaml",
   };
@@ -264,6 +252,25 @@ async function resolveDriveAccessToken(fetchImpl: typeof fetch): Promise<string 
     expiry_date: body.expires_in ? Date.now() + body.expires_in * 1000 : token.expiry_date,
   });
   return refreshed.access_token;
+}
+
+export const AIA_DELIVERY_DESCRIPTION =
+  "AIA の写し。正本ではない。Drive 側の編集は OrgOS に戻らない。";
+
+export function aiaDeliveryFileName(fileName: string): string {
+  const base = fileName.replace(/^AIA-/, "");
+  return `AIA-${base}`;
+}
+
+export function buildDriveDeliveryMetadata(
+  fileName: string,
+  folderId: string,
+): { name: string; parents: string[]; description: string } {
+  return {
+    name: aiaDeliveryFileName(fileName),
+    parents: [folderId],
+    description: AIA_DELIVERY_DESCRIPTION,
+  };
 }
 
 export interface DriveExportResult {
@@ -304,7 +311,7 @@ export async function exportToGoogleDrive(opts: {
   }
 
   const boundary = `orgos-${Date.now().toString(36)}`;
-  const metadata = JSON.stringify({ name: document.fileName, parents: [folderId] });
+  const metadata = JSON.stringify(buildDriveDeliveryMetadata(document.fileName, folderId));
   const body = Buffer.concat([
     Buffer.from(
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`,
