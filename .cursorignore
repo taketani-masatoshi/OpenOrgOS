@@ -1,6 +1,8 @@
 # Steward OS — AI 自動コンテキスト除外（Git 境界とは別）
 # Zone C: 個情 vault — 必要時のみ @file で明示参照
-**/records/**
+# ソース src/lib/compliance/records/ は対象外（**/records/** だとソースも Write 不能になる）
+tenants/**/records/**
+/records/**
 
 # 試行・一時
 scratch/**

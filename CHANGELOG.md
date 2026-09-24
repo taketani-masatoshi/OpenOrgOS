@@ -6,6 +6,13 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **compliance records と Vitest RPC** — `.cursorignore` の Zone C を `tenants/**/records/**` · `/records/**` に絞り、`src/lib/compliance/records/` への Agent Write を回復。registry `RES-PII-RECORDS` を同パスに揃え、`boundaryNeedle` は `tenants/**/records/**` → `records` を返す。Vitest 3 の birpc 60s による `Timeout calling onTaskUpdate` は worker preload（`tests/vitest-birpc-timeout-preload.mjs`）で回避。Vitest 4 へ上げたら preload を削除する（共有 `node_modules` のため本 PR では major 上げしない）。
+- Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
+- AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
+- 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
+
 ### Added
 
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
@@ -16,12 +23,6 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **テナントの復元用コピー** — `orgos tenant backup snapshot|restore|status`。最新は Mac のまま、NAS は暗号化ボリュームへの退避（ツールは鍵を作らない）。作業中の `scratch/aia-runs` は含めず、スタンプは成功後だけ。未設定のテナントは週次を失敗にしない。`orgos tenant git-remote check` はテナント履歴のリモートを `file://` または社内 ssh に限り、github.com / gitlab.com / bitbucket.org を拒否する（製品リポジトリの origin は見ない）。[tenant-backup.md](docs/org-os/tenant-backup.md)
 - **Drive の配達名** — アップロードするファイル名を `AIA-` で始め、説明に「写し。正本ではない」を付ける。削除も、Drive から正本へ戻す取り込みもしない。
 - **連携ハブの置き場説明** — コンソール `/?integrations=1` に「このマシン（最新）· NAS（復元）· Git（NAS 上の履歴。GitHub には実テナントを出さない）· Drive（AIA 成果物の配達口）」を明示。Drive は社員ファイルを消さない写しで、正本はテナント YAML / MD。セットアップ画面からも同じ説明でハブへ送る。
-
-### Fixed
-
-- Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
-- AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
-- 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 
 ## [0.9.0-beta.1] — 2026-08-30
 

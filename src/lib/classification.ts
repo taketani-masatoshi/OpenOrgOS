@@ -197,9 +197,24 @@ export function validateBankAccountLinksSync(): ClassificationIssue[] {
 
 /**
  * Reduce a registry resource path glob to a literal "needle" usable for
- * substring matching against ignore files. `**​/records/**` → `records`.
+ * substring matching against ignore files.
+ *
+ * Prefers the last concrete path segment so vault globs stay meaningful:
+ * - global or scoped records vault globs → "records"
+ * - secrets yaml under data/operations → full concrete path
  */
 export function boundaryNeedle(resourcePath: string): string {
+  const concrete = resourcePath
+    .split("/")
+    .filter((part) => part.length > 0 && part !== "**" && !part.includes("*"));
+  if (concrete.length === 1) return concrete[0]!;
+  if (concrete.length > 1) {
+    // Prefer the vault/folder name when the path is a scoped glob
+    // (e.g. tenants/**/records/**). File paths keep the full concrete prefix.
+    const last = concrete[concrete.length - 1]!;
+    if (!last.includes(".")) return last;
+    return concrete.join("/");
+  }
   const withoutGlobalGlob = resourcePath.replace(/^\*\*\//, "");
   return (withoutGlobalGlob.split("*")[0] ?? withoutGlobalGlob).replace(/\/$/, "");
 }

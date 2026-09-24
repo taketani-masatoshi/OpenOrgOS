@@ -238,12 +238,12 @@ resources:
     write_agents: [secretary, contract]
 
   - id: RES-PII-RECORDS
-    path: "**/records/**"
+    path: "tenants/**/records/**"
     level: L2
     git: ignore
     ai_context: blocked
     cursorignore: true
-    description: 個人住所・携帯等（L2 専用 · .cursorignore）
+    description: 個人住所・携帯等（L2 · tenants/**/records/** とルート /records/**。.cursorignore 同型。src/lib/compliance/records はソースのため対象外）
     read_agents: [compliance, secretary]
     write_agents: [secretary]
 

@@ -155,7 +155,7 @@ npm run orgos -- status --legacy    # 旧データ成熟度メトリクス併記
 | L2 | 口座番号・Wi-Fi・records 個情 | × | `@file` / 担当 Agent |
 | L3 | L2 の転記・要約混入 | × | **禁止** |
 
-- `**/records/**` · `*-secrets.yaml` · `bank-accounts.yaml` · `executive/*.yaml` は Git 非追跡（`*.example` のみ追跡）
+- `tenants/**/records/**` · `/records/**` · `*-secrets.yaml` · `bank-accounts.yaml` · `executive/*.yaml` は Git 非追跡（`*.example` のみ追跡）。AI 自動除外も同スコープ（`src/lib/compliance/records/` はソースのため対象外）
 - `classification-registry.yaml` の `git: ignore` と `.gitignore` の整合は `steward classification check` が検証（未登録は **error → CI fail**）
 
 ```bash
@@ -164,7 +164,7 @@ npm run orgos -- classification access --agent finance --path data/finance/bank-
 npm run orgos -- classification boundaries --check   # registry 駆動で .cursorignore/.cursorindexingignore のドリフト検出
 ```
 
-- `**/records/**`（L2 個情 vault）は `.cursorignore`（AI 自動）と `.cursorindexingignore`（索引）の双方で除外。境界パターンは registry の `ai_context: blocked` / `cursorignore` リソースから導出（`classification boundaries`）
+- `tenants/**/records/**` · `/records/**`（L2 個情 vault）は `.cursorignore`（AI 自動）と `.cursorindexingignore`（索引）の双方で除外。`src/lib/compliance/records/` はソースのため対象外。境界パターンは registry の `ai_context: blocked` / `cursorignore` リソースから導出（`classification boundaries`）
 - tracked ファイル書込は `writeTrackedFile`（`src/lib/utils.ts`）に集約し L2 出力をサニタイズ。`assertSafeTrackedPath`（`src/lib/classification.ts`）が `git: ignore` パスへの追跡書込を拒否
 
 ---

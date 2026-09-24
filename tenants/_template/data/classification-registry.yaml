@@ -192,6 +192,16 @@ resources:
     read_agents: [investor_relations, finance, corporate_governance, executive_steward]
     write_agents: [investor_relations]
 
+  - id: RES-PII-RECORDS
+    path: "tenants/**/records/**"
+    level: L2
+    git: ignore
+    ai_context: blocked
+    cursorignore: true
+    description: 個人住所・携帯等（L2 · tenants/**/records/** とルート /records/**。.cursorignore 同型。src/lib/compliance/records はソースのため対象外）
+    read_agents: [compliance, secretary]
+    write_agents: [secretary]
+
 rules:
   - id: RULE-GITIGNORE
     text: git:ignore の resource は .gitignore にパターン登録必須。
