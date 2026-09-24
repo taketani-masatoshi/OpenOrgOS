@@ -22,6 +22,7 @@ import { openingBalancesSchema } from "../schemas/finance/opening-balances.js";
 import { parse as parseYaml } from "yaml";
 import {
   applyFixtureStatementRoles,
+  injectRawJournalEntry,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -297,7 +298,7 @@ describe("annual close acceptance", () => {
       unlockedBy: OPERATOR,
       reason: "inject imbalance",
     });
-    appendJournalEntry({
+    injectRawJournalEntry({
       entry_id: "JE-BAD-TB",
       occurred_at: `${finalMonth}-15T00:00:00.000Z`,
       description: "unknown account",

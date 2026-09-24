@@ -7,6 +7,7 @@ accounts:
     normal_balance: debit
     data_source: data/finance/cash-balance.yaml
     budget_delegation: department
+    bs_class: current
   - code: "1200"
     name: 建物
     type: asset
@@ -14,6 +15,7 @@ accounts:
     data_source: data/finance/fixed-assets.yaml
     filter: category=建物
     budget_delegation: department
+    bs_class: noncurrent
   - code: "1210"
     name: 土地
     type: asset
@@ -21,6 +23,7 @@ accounts:
     data_source: data/finance/fixed-assets.yaml
     filter: category=土地
     budget_delegation: department
+    bs_class: noncurrent
   - code: "1290"
     name: 減価償却累計額
     type: asset_contra
@@ -28,12 +31,14 @@ accounts:
     data_source: data/finance/fixed-assets.yaml
     field: accumulated_depreciation
     budget_delegation: department
+    bs_class: noncurrent
   - code: "1150"
     name: 売掛金
     type: asset
     normal_balance: debit
     budget_delegation: department
     note: 請求発行・入金消込の AR 科目
+    bs_class: current
   - code: "1300"
     name: 役員貸付金
     type: asset
@@ -41,6 +46,7 @@ accounts:
     data_source: data/finance/loans.yaml
     budget_delegation: department
     note: 貸付対象者は負債科目（役員借入金）と相殺せず別管理（税理士確認）
+    bs_class: current
   - code: "2100"
     name: 役員借入金
     type: liability
@@ -48,48 +54,56 @@ accounts:
     data_source: data/finance/loans.yaml
     budget_delegation: department
     note: 無利息役員貸付 LOAN-001/002。みなし利息調整は tax-profile 参照
+    bs_class: current
   - code: "2120"
     name: 預り金-源泉所得税
     type: liability
     normal_balance: credit
     budget_delegation: department
     note: 給与源泉徴収
+    bs_class: current
   - code: "2130"
     name: 預り金-社会保険料
     type: liability
     normal_balance: credit
     budget_delegation: department
     note: 健保・厚年・雇用（労働者負担分）
+    bs_class: current
   - code: "2140"
     name: 未払給与
     type: liability
     normal_balance: credit
     budget_delegation: department
     note: 給与支払未払
+    bs_class: current
   - code: "2160"
     name: 仮受消費税
     type: liability
     normal_balance: credit
     budget_delegation: department
     note: 請求書発行時の消費税相当額
+    bs_class: current
   - code: "2110"
     name: 買掛金
     type: liability
     normal_balance: credit
     budget_delegation: department
     note: 仕入・外注の AP 統制勘定
+    bs_class: current
   - code: "2165"
     name: 宿泊税預り金
     type: liability
     normal_balance: credit
     budget_delegation: department
     note: 都条例に基づく宿泊税特別徴収
+    bs_class: current
   - code: "2170"
     name: 仮払消費税
     type: asset
     normal_balance: debit
     budget_delegation: department
     note: 仕入税額（控除対象）
+    bs_class: current
   - code: "3100"
     name: 資本金
     type: equity

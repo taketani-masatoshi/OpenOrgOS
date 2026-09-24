@@ -6,35 +6,23 @@
  * tenant work dir, and PINs / private keys never reach the server (ADR 0014).
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { z } from "zod";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
-import { appendChatAudit } from "../audit.js";
+import { appendChatAudit, type ChatAuditAction } from "../audit.js";
 import {
   InvalidJsonError,
   PayloadTooLargeError,
   readJsonLimited,
 } from "../../http/read-json-limited.js";
-import { digestDocumentFile } from "../../document-digest.js";
 import { buildPdfEsignReadyReport } from "../../pdf-esign/ready.js";
+import { listPdfEsignCases, requirePdfEsignCase } from "../../pdf-esign/case-store.js";
 import {
-  findPdfEsignCase,
-  insertPdfEsignCase,
-  listPdfEsignCases,
-  nextPdfEsignCaseId,
-  updatePdfEsignCase,
-} from "../../pdf-esign/case-store.js";
-import { getPdfEsignDataDir } from "../../pdf-esign/paths.js";
-import { resolveActiveNationalEidStack } from "../../pdf-esign/national-eid.js";
-import { resolveDigidocRuntime } from "../../pdf-esign/digidoc-runtime.js";
-import { createAsiceSkeletonViaSidecar } from "../../pdf-esign/digidoc-sidecar-client.js";
-import {
-  asiceContainsPdfDigest,
-  inspectAsiceContainer,
-} from "../../pdf-esign/asice-lite.js";
-import { validateWithSiva } from "../../pdf-esign/siva-client.js";
+  attachUploadedEsignContainer,
+  createEsignCaseFromUpload,
+  prepareEsignSkeleton,
+  verifyEsignContainer,
+} from "../../pdf-esign/case-workflow.js";
 import type { PdfEsignCase } from "../../../../schemas/pdf-esign.js";
 
 /** Base64 containers are bulky; cap the body well above a realistic contract. */
@@ -99,10 +87,21 @@ function decodeBase64(value: string, kind: string): Buffer {
   return buf;
 }
 
-function requireCase(caseId: string): PdfEsignCase {
-  const record = findPdfEsignCase(caseId);
-  if (!record) throw new Error(`esign case not found: ${caseId}`);
-  return record;
+function auditEsign(
+  user: WireConsoleUser,
+  pathname: string,
+  action: ChatAuditAction,
+  ok: boolean,
+  detail: string,
+): void {
+  appendChatAudit({
+    action,
+    operator_id: user.operator_id,
+    approver_id: user.approver_id,
+    ok,
+    path: pathname,
+    detail,
+  });
 }
 
 export async function handleEsignApi(
@@ -128,54 +127,18 @@ export async function handleEsignApi(
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
       const body = createSchema.parse(await readJsonLimited(req, MAX_UPLOAD_BODY_BYTES));
-      const runtime = resolveDigidocRuntime();
-      const pdf = decodeBase64(body.pdf_base64, "pdf");
-      if (pdf.length > runtime.max_pdf_bytes) {
-        throw new Error(`pdf_too_large: ${pdf.length} > ${runtime.max_pdf_bytes}`);
-      }
-
-      const id = nextPdfEsignCaseId();
-      const workDir = join(getPdfEsignDataDir(), "work", id);
-      mkdirSync(workDir, { recursive: true });
-      const pdfPath = join(workDir, body.filename?.replace(/[^\w.-]/g, "_") ?? "source.pdf");
-      writeFileSync(pdfPath, pdf, { mode: 0o600 });
-
-      const now = new Date().toISOString();
-      const digest = digestDocumentFile(pdfPath);
-      const record = insertPdfEsignCase({
-        id,
+      const record = createEsignCaseFromUpload({
         title: body.title,
-        status: "draft",
-        provider_id: "digidoc",
-        national_eid_stack: resolveActiveNationalEidStack(),
-        pdf_path: pdfPath,
-        content_digest: digest.content_digest,
-        byte_length: digest.byte_length,
-        work_dir: workDir,
-        contract_id: body.contract_id,
-        approval_id: body.approval_id,
-        created_at: now,
-        updated_at: now,
+        filename: body.filename,
+        pdf: decodeBase64(body.pdf_base64, "pdf"),
+        contractId: body.contract_id,
+        approvalId: body.approval_id,
       });
-      appendChatAudit({
-        action: "esign_create",
-        operator_id: user.operator_id,
-        approver_id: user.approver_id,
-        ok: true,
-        path: pathname,
-        detail: record.id,
-      });
+      auditEsign(user, pathname, "esign_create", true, record.id);
       json(res, 200, { ok: true, case: caseRow(record) });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      appendChatAudit({
-        action: "esign_create",
-        operator_id: user.operator_id,
-        approver_id: user.approver_id,
-        ok: false,
-        path: pathname,
-        detail: message,
-      });
+      auditEsign(user, pathname, "esign_create", false, message);
       json(res, errorStatus(err), { ok: false, error: message });
     }
     return true;
@@ -185,41 +148,17 @@ export async function handleEsignApi(
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
       const body = caseIdSchema.parse(await readJsonLimited(req));
-      const record = requireCase(body.case_id);
-      const workDir = record.work_dir ?? join(getPdfEsignDataDir(), "work", record.id);
-      mkdirSync(workDir, { recursive: true });
-      const outPath = join(workDir, "unsigned.asice");
-      const result = await createAsiceSkeletonViaSidecar({
-        pdfPath: record.pdf_path,
-        filename: "document.pdf",
-        outPath,
+      const record = requirePdfEsignCase(body.case_id);
+      const prepared = await prepareEsignSkeleton(record, {
+        skeletonPdfFilename: "document.pdf",
       });
-      if (!result.ok) {
-        appendChatAudit({
-          action: "esign_prepare",
-          operator_id: user.operator_id,
-          approver_id: user.approver_id,
-          ok: false,
-          path: pathname,
-          detail: `${record.id}: ${result.reason}`,
-        });
-        json(res, 502, { ok: false, error: result.reason });
+      if (!prepared.ok) {
+        auditEsign(user, pathname, "esign_prepare", false, `${record.id}: ${prepared.reason}`);
+        json(res, 502, { ok: false, error: prepared.reason });
         return true;
       }
-      const next = updatePdfEsignCase(record.id, {
-        unsigned_asice_path: result.out_path,
-        unsigned_asice_digest: result.digest,
-        work_dir: workDir,
-      });
-      appendChatAudit({
-        action: "esign_prepare",
-        operator_id: user.operator_id,
-        approver_id: user.approver_id,
-        ok: true,
-        path: pathname,
-        detail: next.id,
-      });
-      json(res, 200, { ok: true, case: caseRow(next) });
+      auditEsign(user, pathname, "esign_prepare", true, prepared.case.id);
+      json(res, 200, { ok: true, case: caseRow(prepared.case) });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       json(res, errorStatus(err), { ok: false, error: message });
@@ -231,51 +170,21 @@ export async function handleEsignApi(
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
       const body = attachSchema.parse(await readJsonLimited(req, MAX_UPLOAD_BODY_BYTES));
-      const record = requireCase(body.case_id);
-      const runtime = resolveDigidocRuntime();
-      const container = decodeBase64(body.asice_base64, "asice");
-      if (container.length > runtime.max_asice_bytes) {
-        throw new Error(`asice_too_large: ${container.length} > ${runtime.max_asice_bytes}`);
-      }
-      const workDir = record.work_dir ?? join(getPdfEsignDataDir(), "work", record.id);
-      mkdirSync(workDir, { recursive: true });
-      const containerPath = join(workDir, "signed.asice");
-      writeFileSync(containerPath, container, { mode: 0o600 });
-
-      const lite = inspectAsiceContainer(containerPath, {
-        maxAsiceBytes: runtime.max_asice_bytes,
-      });
-      if (!lite.ok) {
-        appendChatAudit({
-          action: "esign_attach",
-          operator_id: user.operator_id,
-          approver_id: user.approver_id,
-          ok: false,
-          path: pathname,
-          detail: `${record.id}: ${lite.reason}`,
-        });
-        json(res, 422, { ok: false, error: lite.reason });
+      const record = requirePdfEsignCase(body.case_id);
+      const attached = attachUploadedEsignContainer(
+        record,
+        decodeBase64(body.asice_base64, "asice"),
+      );
+      if (!attached.ok) {
+        auditEsign(user, pathname, "esign_attach", false, `${record.id}: ${attached.reason}`);
+        json(res, 422, { ok: false, error: attached.reason });
         return true;
       }
-      const next = updatePdfEsignCase(record.id, {
-        container_path: containerPath,
-        container_digest: lite.container_digest,
-        status: "partially_signed",
-      });
-      appendChatAudit({
-        action: "esign_attach",
-        operator_id: user.operator_id,
-        approver_id: user.approver_id,
-        ok: true,
-        path: pathname,
-        detail: next.id,
-      });
+      auditEsign(user, pathname, "esign_attach", true, attached.case.id);
       json(res, 200, {
         ok: true,
-        case: caseRow(next),
-        pdf_digest_matches: record.content_digest
-          ? asiceContainsPdfDigest(lite, record.content_digest)
-          : null,
+        case: caseRow(attached.case),
+        pdf_digest_matches: attached.pdf_digest_matches,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -288,47 +197,22 @@ export async function handleEsignApi(
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
       const body = verifySchema.parse(await readJsonLimited(req));
-      const record = requireCase(body.case_id);
+      const record = requirePdfEsignCase(body.case_id);
       if (!record.container_path) {
         throw new Error(`container missing for ${record.id} — attach first`);
       }
-      const runtime = resolveDigidocRuntime({ sivaMode: body.siva_mode });
-      const lite = inspectAsiceContainer(record.container_path, {
-        maxAsiceBytes: runtime.max_asice_bytes,
-      });
-      const pdfDigestOk = record.content_digest
-        ? asiceContainsPdfDigest(lite, record.content_digest)
-        : null;
-      const result = await validateWithSiva({
-        asicePath: record.container_path,
-        liteOk: lite.ok,
-        pdfDigestOk,
-        mode: body.siva_mode,
-      });
-      // Only a live SiVa TOTAL-PASSED completes a case; mock never does.
-      const nationallyVerified = result.mode === "live" && result.ok;
-      const next = updatePdfEsignCase(record.id, {
-        siva_mode: result.mode,
-        siva_indication: result.indication,
-        siva_validated_at: new Date().toISOString(),
-        siva_response_digest: result.response_digest,
-        siva_signatures_count: result.signatures_count,
-        siva_valid_signatures_count: result.valid_signatures_count,
-        siva_reason: result.reason,
-        status: nationallyVerified
-          ? "completed"
-          : result.ok
-            ? "partially_signed"
-            : "failed",
-      });
-      appendChatAudit({
-        action: "esign_verify",
-        operator_id: user.operator_id,
-        approver_id: user.approver_id,
-        ok: result.ok,
-        path: pathname,
-        detail: `${next.id}: ${result.indication} (${result.mode})`,
-      });
+      const {
+        result,
+        nationallyVerified,
+        case: next,
+      } = await verifyEsignContainer(record, record.container_path, body.siva_mode);
+      auditEsign(
+        user,
+        pathname,
+        "esign_verify",
+        result.ok,
+        `${next.id}: ${result.indication} (${result.mode})`,
+      );
       json(res, 200, {
         ok: result.ok,
         nationally_verified: nationallyVerified,

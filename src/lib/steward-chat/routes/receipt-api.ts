@@ -25,8 +25,11 @@ import {
   type ReceiptIssueInput,
 } from "../../receipt-qr.js";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { getDataDir } from "../../utils.js";
+import {
+  assertClaimEndpointUnderBase,
+  trimClaimBaseUrl,
+} from "../../receipt-qr/config.js";
+import { receiptConfigPath } from "../../receipt-qr/paths.js";
 import { generateReceiptPdfBuffer } from "../../receipt-pdf.js";
 import { renderReceiptQrSvg } from "../../receipt-qr-render.js";
 import {
@@ -85,12 +88,10 @@ const issueBodySchema = z.object({
 function resolveClaimEndpoint(explicit?: string): string {
   const config = loadReceiptConfigOrDefault();
   if (explicit) {
-    if (!explicit.startsWith(config.claim_base_url.replace(/\/$/, ""))) {
-      throw new Error("claim_endpoint must be under the configured claim_base_url");
-    }
+    assertClaimEndpointUnderBase(explicit, config.claim_base_url);
     return explicit;
   }
-  return config.claim_base_url.replace(/\/$/, "");
+  return trimClaimBaseUrl(config.claim_base_url);
 }
 
 function mapStoredReceipt(row: ReturnType<typeof loadReceiptRegistry>["receipts"][number]) {
@@ -226,8 +227,7 @@ export async function handleReceiptApi(
     if (!requireBudgetSurfacePermission(user, "receipt:issue", res)) return true;
     try {
       // First-run: ensure config exists so issue does not fail after preview worked.
-      const configPath = join(getDataDir(), "receipt-qr", "config.yaml");
-      if (!existsSync(configPath)) {
+      if (!existsSync(receiptConfigPath())) {
         const defaults = defaultReceiptQrConfig();
         initReceiptQrConfig({
           claim_base_url: defaults.claim_base_url,

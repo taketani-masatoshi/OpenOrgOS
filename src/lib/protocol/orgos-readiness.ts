@@ -85,7 +85,8 @@ function computeFormUnificationChecks(): ReadinessCheck[] {
     fileOk("tests/protocol-external-verify.test.ts", "external verify"),
     fileOk("src/lib/company-events-wire.ts", "company-events wire linkage"),
     fileOk("tests/company-events-wire-void.test.ts", "company-events wire void"),
-    fileOk("tenants/mal/data/org/audit-bridge-state.yaml", "audit-bridge state (mal)"),
+    // Runtime/gitignore — empty state is synthesized by loadOrgAuditBridgeState until first write.
+    fileOk("src/lib/org/audit-bridge-state.ts", "audit-bridge state loader (mal lazy file)"),
     fileOk("docs/org-os/orgos-interface-spec.md", "I1/I2/I3 interface spec"),
   ];
 }

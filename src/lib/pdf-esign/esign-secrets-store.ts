@@ -43,6 +43,14 @@ const HEADER = [
 
 let hydrated = false;
 
+/** `1/true/yes` ⇒ true, `0/false/no` ⇒ false, anything else ⇒ unset. */
+export function parseEnvFlag(raw: string | undefined): boolean | undefined {
+  const value = raw?.trim().toLowerCase();
+  if (value === "1" || value === "true" || value === "yes") return true;
+  if (value === "0" || value === "false" || value === "no") return false;
+  return undefined;
+}
+
 export function esignSecretsFilePath(): string {
   return join(tenantDataPath("secrets"), "esign-secrets.env");
 }
@@ -77,7 +85,6 @@ export function buildEsignSecretsSnapshot(): EsignSecretsSnapshot {
   hydrateEsignEnvFromStore();
   const value = (key: EsignEnvKey) => process.env[key]?.trim() ?? "";
   const token = value("ORGOS_DIGIDOC_SIDECAR_TOKEN");
-  const loopback = value("ORGOS_DIGIDOC_ALLOW_HTTP_LOOPBACK").toLowerCase();
   return {
     storage_path: "data/secrets/esign-secrets.env",
     siva_base_url: value("ORGOS_SIVA_BASE_URL") || null,
@@ -85,6 +92,6 @@ export function buildEsignSecretsSnapshot(): EsignSecretsSnapshot {
     sidecar_url: value("ORGOS_DIGIDOC_SIDECAR_URL") || null,
     sidecar_token_configured: Boolean(token),
     sidecar_token_hint: token ? maskSecret(token) : null,
-    allow_http_loopback: loopback === "1" || loopback === "true" || loopback === "yes",
+    allow_http_loopback: parseEnvFlag(process.env.ORGOS_DIGIDOC_ALLOW_HTTP_LOOPBACK) === true,
   };
 }

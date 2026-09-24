@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 608
-  static_test_cases: 2802
-  tiered_execution_total: 608
+  vitest_total: 611
+  static_test_cases: 2877
+  tiered_execution_total: 611
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -1861,7 +1861,15 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  pdf-esign-case-workflow.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   pdf-esign-digidoc.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  pdf-esign-endpoints.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2133,6 +2141,10 @@ tests:
     axis: contract
     kind: contract
   receipt-pdf.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  receipt-qr-lifecycle.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

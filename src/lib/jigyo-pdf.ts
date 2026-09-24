@@ -4,10 +4,9 @@ import type { Company } from "../../schemas/company.js";
 import type { BusinessPlan } from "../../schemas/finance.js";
 import type { Property } from "../../schemas/property.js";
 import type { Loans } from "../../schemas/finance.js";
+import { fiscalPeriodLabel, fiscalYearNumber } from "./finance/fiscal-year.js";
 import {
   createPdfWriter,
-  fiscalPeriodLabel,
-  fiscalYearNumber,
   pdfBulletList,
   pdfCoverHeader,
   pdfMetaBlock,

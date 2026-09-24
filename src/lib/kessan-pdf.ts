@@ -7,10 +7,9 @@ import {
   resolveYojitsuMonthSide,
   sumOperatingExpenses,
 } from "./yojitsu-normalize.js";
+import { fiscalPeriodLabel, fiscalYearNumber } from "./finance/fiscal-year.js";
 import {
   createPdfWriter,
-  fiscalPeriodLabel,
-  fiscalYearNumber,
   pdfCoverHeader,
   pdfMetaBlock,
   pdfMutedNote,

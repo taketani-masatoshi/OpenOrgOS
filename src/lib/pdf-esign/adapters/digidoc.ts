@@ -1,7 +1,7 @@
 import { mkdirSync, copyFileSync, existsSync } from "node:fs";
 import { join, basename } from "node:path";
 import type { PdfEsignCase } from "../../../../schemas/pdf-esign.js";
-import { getPdfEsignDataDir } from "../paths.js";
+import { resolvePdfEsignCaseWorkDir } from "../paths.js";
 import type {
   PdfEsignAdapter,
   PdfEsignCancelResult,
@@ -17,7 +17,7 @@ import type {
 export const digidocPdfEsignAdapter: PdfEsignAdapter = {
   providerId: "digidoc",
   async createEnvelope(c: PdfEsignCase): Promise<PdfEsignCreateResult> {
-    const workDir = c.work_dir ?? join(getPdfEsignDataDir(), "work", c.id);
+    const workDir = resolvePdfEsignCaseWorkDir(c);
     mkdirSync(workDir, { recursive: true });
     const destPdf = join(workDir, basename(c.pdf_path));
     if (existsSync(c.pdf_path) && !existsSync(destPdf)) {
