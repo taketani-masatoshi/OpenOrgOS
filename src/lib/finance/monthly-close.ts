@@ -1,7 +1,9 @@
 /**
  * Monthly accounting close — one gate for CLI and Workbench.
  * Lock only when error-level gates pass.
- * A missing bank file is skipped. An existing unreadable/empty file blocks close.
+ * A tenant with a cash balance, or an existing bank file, must import that month's statements.
+ * A tenant with neither may skip the bank gates.
+ * An existing unreadable or empty bank file blocks close.
  * Monthly-plan reconciliation is advisory and never blocks the ledger close.
  */
 import { createHash } from "node:crypto";
@@ -11,7 +13,7 @@ import YAML from "yaml";
 import { runValidateReport } from "../../commands/validate.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { getDataDir } from "../utils.js";
-import { runConsumptionTaxCheck } from "./consumption-tax.js";
+import { evaluateIndirectTaxClose } from "./indirect-tax/port.js";
 import { resolveCloseAdjustmentAmountFromCoa } from "./close-adjustments.js";
 import { buildDepreciationSchedule, postDepreciationJournalEntries } from "./depreciation.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
@@ -21,14 +23,16 @@ import {
   resolveCompanyFiscalYearEndMonth,
   resolveFiscalYear,
 } from "./fiscal-year.js";
-import { loadBankStatementsLite } from "./bank-statements-lite.js";
+import { loadBankStatementsLite, bankStatementNetMovement } from "./bank-statements-lite.js";
 import { postMonthlyPlJournalEntries, postPayrollJournalEntry } from "./journal-sources.js";
+import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import { buildBalanceSheet } from "./ledger/balance-sheet.js";
+import { loadOpeningBalances } from "./ledger/opening-balance.js";
 import { buildMonthlyReconcileReport } from "./ledger/monthly-reconcile.js";
 import { subsidiaryLedgerIntegrityIssues } from "./ledger/subsidiary-ledger.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { computePayrollMonth } from "./payroll-jp.js";
-import { isMonthLocked, lockMonth } from "./period-lock.js";
+import { isMonthLocked, latestLockForMonth, lockMonth } from "./period-lock.js";
 import type { PeriodLockEvidence } from "../../../schemas/finance/period-lock.js";
 
 const SKIP_MPL_EXPENSE = new Set(["depreciation", "loan_payment", "capex"]);
@@ -152,16 +156,13 @@ export function monthlyJournalSnapshotHash(month: string): string {
   );
 }
 
-export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): PeriodLockEvidence {
+export function buildMonthlyCloseEvidence(
+  evaluation: MonthlyCloseEvaluation,
+  operatorId: string,
+): PeriodLockEvidence {
   if (!evaluation.can_lock) {
     throw new Error(`Cannot capture close evidence for ${evaluation.month}: close gates failed`);
   }
-  const rows = bankRowsForMonth(evaluation.month);
-  const bankSnapshot = {
-    state: rows,
-    unmatched:
-      typeof rows === "number" && rows > 0 ? unmatchedBankCountForMonth(evaluation.month) : null,
-  };
   const trial = buildTrialBalance({ asOf: evaluation.as_of });
   const gateResults = evaluation.items.map(({ id, pass, level, detail }) => ({
     id,
@@ -173,30 +174,13 @@ export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): P
     version: 1,
     algorithm: "sha256",
     journal_entries_sha256: monthlyJournalSnapshotHash(evaluation.month),
-    bank_reconciliation_sha256: sha256(bankSnapshot),
+    bank_reconciliation_sha256: sha256(bankEvidenceSnapshot(evaluation.month, operatorId)),
     trial_balance_sha256: sha256(trial),
     gate_results_sha256: sha256(gateResults),
+    operator_id: operatorId,
     can_lock: true,
     gate_results: gateResults,
   };
-}
-
-function missingTaxCategories(month: string): string[] {
-  const types = new Map(
-    loadChartOfAccounts().accounts.map((account) => [account.code, account.type]),
-  );
-  const missing: string[] = [];
-  for (const entry of loadJournalEntries().entries) {
-    if (!entry.occurred_at.startsWith(month)) continue;
-    for (const line of entry.lines) {
-      const type = types.get(line.account_code);
-      if (type !== "revenue" && type !== "expense") continue;
-      if (!line.tax_category) {
-        missing.push(`${entry.entry_id}:${line.account_code}`);
-      }
-    }
-  }
-  return missing;
 }
 
 export function evaluateInventoryCloseGate(month: string, asOf: string): MonthlyCloseGate {
@@ -260,6 +244,189 @@ export function evaluateInventoryCloseGate(month: string, asOf: string): Monthly
 
 function bankFileExists(): boolean {
   return existsSync(join(getDataDir(), "finance", "bank-statements.yaml"));
+}
+
+function cashBalanceFileExists(): boolean {
+  return existsSync(join(getDataDir(), "finance", "cash-balance.yaml"));
+}
+
+/** A cash register or a statement file means the tenant uses a bank. */
+function tenantUsesBank(): boolean {
+  return cashBalanceFileExists() || bankFileExists();
+}
+
+/**
+ * Exclusive start of the month's bank-versus-GL window.
+ * The first fiscal month starts at the opening cutover when that date is
+ * before the month ends. A later cutover is not this month's window.
+ */
+function tieOutFromExclusive(month: string): string {
+  if (isFirstFiscalMonth(month)) {
+    const openingAsOf = loadOpeningBalances()?.as_of;
+    if (openingAsOf && openingAsOf < lastDayOfMonth(month)) return openingAsOf;
+  }
+  return lastDayOfMonth(previousMonth(month));
+}
+
+/**
+ * Opening cash that first appears on the trial balance inside the window.
+ * That snapshot is a balance, not a bank movement.
+ */
+function openingCashInWindow(fromExclusive: string, toInclusive: string): number {
+  const opening = loadOpeningBalances();
+  if (!opening?.as_of || opening.as_of <= fromExclusive || opening.as_of > toInclusive) return 0;
+  const code = resolveJournalSourceAccounts().bank_control;
+  const line = opening.lines.find((row) => row.account_code === code);
+  if (!line) return 0;
+  const normal = loadChartOfAccounts().accounts.find((account) => account.code === code)
+    ?.normal_balance;
+  const delta = line.debit_yen - line.credit_yen;
+  return normal === "credit" ? -delta : delta;
+}
+
+/** Cash-account movement on the trial balance for the tie-out window. */
+export function monthCashGlDelta(month: string): number {
+  const fromExclusive = tieOutFromExclusive(month);
+  const toInclusive = lastDayOfMonth(month);
+  return (
+    cashBalanceYen(toInclusive) -
+    cashBalanceYen(fromExclusive) -
+    openingCashInWindow(fromExclusive, toInclusive)
+  );
+}
+
+function cashBalanceYen(asOf: string): number {
+  const code = resolveJournalSourceAccounts().bank_control;
+  return (
+    buildTrialBalance({ asOf }).rows.find((row) => row.account_code === code)?.balance_yen ?? 0
+  );
+}
+
+export type MonthBankTieOut = {
+  glDelta: number | null;
+  bankNet: number | null;
+  pass: boolean;
+  detail: string;
+};
+
+export function monthBankTieOut(month: string): MonthBankTieOut {
+  const rows = bankRowsForMonth(month);
+  if (!tenantUsesBank()) {
+    return { glDelta: null, bankNet: null, pass: true, detail: "no bank" };
+  }
+  if (rows === "missing") {
+    return { glDelta: null, bankNet: null, pass: false, detail: "no bank file" };
+  }
+  if (rows === "unreadable") {
+    return { glDelta: null, bankNet: null, pass: false, detail: "bank statements unreadable" };
+  }
+  if (rows === 0) {
+    return { glDelta: null, bankNet: null, pass: false, detail: "no bank rows for month" };
+  }
+  const file = loadBankStatementsLite();
+  if (!file) {
+    return { glDelta: null, bankNet: null, pass: false, detail: "bank statements unreadable" };
+  }
+  const fromExclusive = tieOutFromExclusive(month);
+  const toInclusive = lastDayOfMonth(month);
+  const glDelta = monthCashGlDelta(month);
+  const bankNet = bankStatementNetMovement(file, fromExclusive, toInclusive);
+  if (glDelta !== bankNet) {
+    return {
+      glDelta,
+      bankNet,
+      pass: false,
+      detail: `GL delta ${glDelta} != bank net ${bankNet}`,
+    };
+  }
+  return { glDelta, bankNet, pass: true, detail: "ok" };
+}
+
+function bankEvidenceSnapshot(month: string, operatorId: string): {
+  state: number | "missing" | "unreadable";
+  unmatched: number | null;
+  gl_delta: number | null;
+  bank_net: number | null;
+  operator_id: string;
+} {
+  const rows = bankRowsForMonth(month);
+  const tie = monthBankTieOut(month);
+  return {
+    state: rows,
+    unmatched:
+      typeof rows === "number" && rows > 0 ? unmatchedBankCountForMonth(month) : null,
+    gl_delta: tie.glDelta,
+    bank_net: tie.bankNet,
+    operator_id: operatorId,
+  };
+}
+
+function pushBankGates(items: MonthlyCloseGate[], month: string): void {
+  const rows = bankRowsForMonth(month);
+  if (!tenantUsesBank()) {
+    items.push(gate("bank-imported", "銀行明細を取込済み", true, "skip", "no bank"));
+    items.push(gate("bank-unmatched", "銀行明細の未消込なし", true, "skip", "no bank"));
+    items.push(gate("bank-gl-tieout", "銀行残高と総勘定が一致", true, "skip", "no bank"));
+    return;
+  }
+  if (rows === "missing" || rows === "unreadable" || rows === 0) {
+    const detail =
+      rows === "missing"
+        ? "no bank file"
+        : rows === "unreadable"
+          ? "bank statements unreadable"
+          : "no bank rows for month";
+    items.push(gate("bank-imported", "銀行明細を取込済み", false, "error", detail));
+    items.push(gate("bank-unmatched", "銀行明細の未消込なし", false, "error", detail));
+    items.push(gate("bank-gl-tieout", "銀行残高と総勘定が一致", false, "error", detail));
+    return;
+  }
+  items.push(gate("bank-imported", "銀行明細を取込済み", true, "error", "ok"));
+  const unmatched = unmatchedBankCountForMonth(month) ?? 0;
+  items.push(
+    gate(
+      "bank-unmatched",
+      "銀行明細の未消込なし",
+      unmatched === 0,
+      "error",
+      unmatched === 0 ? "ok" : `${unmatched} unmatched`,
+    ),
+  );
+  const tie = monthBankTieOut(month);
+  items.push(
+    gate("bank-gl-tieout", "銀行残高と総勘定が一致", tie.pass, "error", tie.detail),
+  );
+}
+
+function priorEvidenceGate(month: string): MonthlyCloseGate {
+  if (isFirstFiscalMonth(month)) {
+    return gate("prior-evidence", "直前月の銀行と試算表", true, "skip", "first fiscal month");
+  }
+  const previous = previousMonth(month);
+  const latest = latestLockForMonth(previous);
+  if (latest?.status !== "locked" || !latest.evidence?.operator_id) {
+    return gate(
+      "prior-evidence",
+      "直前月の銀行と試算表",
+      true,
+      "skip",
+      "no prior close evidence",
+    );
+  }
+  const bankHash = sha256(bankEvidenceSnapshot(previous, latest.evidence.operator_id));
+  const trialHash = sha256(buildTrialBalance({ asOf: lastDayOfMonth(previous) }));
+  const bankOk = bankHash === latest.evidence.bank_reconciliation_sha256;
+  const trialOk = trialHash === latest.evidence.trial_balance_sha256;
+  if (!bankOk || !trialOk) {
+    return gate(
+      "prior-evidence",
+      "直前月の銀行と試算表",
+      false,
+      "error",
+      "prior bank or trial balance changed",
+    );
+  }
+  return gate("prior-evidence", "直前月の銀行と試算表", true, "error", "ok");
 }
 
 /** Unmatched bank rows in the close month. null = no bank file. */
@@ -396,58 +563,15 @@ export function evaluateMonthlyCloseGates(
     ),
   );
 
-  const rows = bankRowsForMonth(month);
-  if (rows === "missing") {
-    items.push(gate("bank-imported", "銀行明細を取込済み", true, "skip", "no bank file"));
-    items.push(gate("bank-unmatched", "銀行明細の未消込なし", true, "skip", "no bank file"));
-  } else if (rows === 0) {
-    items.push(
-      gate("bank-imported", "銀行明細を取込済み", false, "error", "no bank rows for month"),
-    );
-    items.push(
-      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "no bank rows for month"),
-    );
-  } else if (rows === "unreadable") {
-    items.push(
-      gate("bank-imported", "銀行明細を取込済み", false, "error", "bank statements unreadable"),
-    );
-    items.push(
-      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "bank statements unreadable"),
-    );
-  } else {
-    const unmatched = unmatchedBankCountForMonth(month);
-    items.push(gate("bank-imported", "銀行明細を取込済み", true, "error", "ok"));
-    items.push(
-      gate(
-        "bank-unmatched",
-        "銀行明細の未消込なし",
-        unmatched === 0,
-        "error",
-        `${unmatched} unmatched`,
-      ),
-    );
-  }
+  pushBankGates(items, month);
+  items.push(priorEvidenceGate(month));
 
   items.push(evaluateInventoryCloseGate(month, asOf));
 
-  const missingTax = missingTaxCategories(month);
-  let taxDetail = "ok";
-  let taxPass = missingTax.length === 0;
-  if (!taxPass) taxDetail = `missing tax_category ${missingTax.join(", ")}`;
-  try {
-    // Profile/check issues only — ConsumptionTaxSummary has no `issues` field.
-    const profileErrors = runConsumptionTaxCheck().issues.filter(
-      (issue) => issue.severity === "blocking",
-    );
-    if (profileErrors.length > 0) {
-      taxPass = false;
-      taxDetail = profileErrors.map((issue) => issue.message).join("; ");
-    }
-  } catch (error) {
-    taxPass = false;
-    taxDetail = error instanceof Error ? error.message : String(error);
-  }
-  items.push(gate("consumption-tax", "消費税集計", taxPass, "error", taxDetail));
+  const indirectTax = evaluateIndirectTaxClose(month);
+  items.push(
+    gate("consumption-tax", indirectTax.label, indirectTax.pass, "error", indirectTax.detail),
+  );
 
   // Always re-validate live finance data. Callers must not inject a report.
   const validate = runValidateReport({ warnings: true });
@@ -587,23 +711,46 @@ export function closeAccountingMonth(input: {
   postPayroll?: boolean;
 }): MonthlyCloseResult {
   monthKey(input.month);
-  const posted = isMonthLocked(input.month)
-    ? []
-    : postMonthJournals(input.month, input.operatorId, {
-        postDepreciation: input.postDepreciation,
-        postPayroll: input.postPayroll,
-      });
+  if (isMonthLocked(input.month)) {
+    const evaluation = evaluateMonthlyCloseGates(input.month, {
+      requireDepreciation: input.postDepreciation,
+      requirePayroll: input.postPayroll,
+    });
+    const exclusive = gate(
+      "month-exclusive",
+      "同じ月の再締めを拒否",
+      false,
+      "error",
+      "already locked",
+    );
+    return {
+      month: input.month,
+      posted_entry_ids: [],
+      locked: true,
+      ok: false,
+      evaluation: {
+        ...evaluation,
+        can_lock: false,
+        items: [...evaluation.items, exclusive],
+        errors: [...evaluation.errors, "month-exclusive: already locked"],
+      },
+    };
+  }
+  const posted = postMonthJournals(input.month, input.operatorId, {
+    postDepreciation: input.postDepreciation,
+    postPayroll: input.postPayroll,
+  });
   const evaluation = evaluateMonthlyCloseGates(input.month, {
     requireDepreciation: input.postDepreciation,
     requirePayroll: input.postPayroll,
   });
-  let locked = isMonthLocked(input.month);
-  if (evaluation.can_lock && !locked) {
+  let locked = false;
+  if (evaluation.can_lock) {
     lockMonth({
       month: input.month,
       lockedBy: input.operatorId,
       reason: "finances close",
-      evidence: buildMonthlyCloseEvidence(evaluation),
+      evidence: buildMonthlyCloseEvidence(evaluation, input.operatorId),
     });
     locked = true;
   }

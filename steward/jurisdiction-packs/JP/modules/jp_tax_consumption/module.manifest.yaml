@@ -11,6 +11,7 @@ cli_commands:
   - check
   - calc
   - eligibility
+  - return-rows
 security:
   limits:
     concurrent_jobs: 1

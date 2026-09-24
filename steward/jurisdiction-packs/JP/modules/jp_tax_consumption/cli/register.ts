@@ -4,6 +4,7 @@ import {
   runTaxConsumptionCalc,
   runTaxConsumptionCheck,
   runTaxConsumptionEligibility,
+  runTaxConsumptionReturnRows,
 } from "../../../../../../src/commands/tax.js";
 
 export const MODULE_ID = "jp_tax_consumption";
@@ -64,6 +65,18 @@ export const jp_tax_consumptionCli: ModuleCliBundle = {
           period: opts.period,
           method: opts.method === "simplified" ? "simplified" : opts.method === "standard" ? "standard" : undefined,
           deemedRate: opts.deemedRate,
+          json: Boolean(opts.json),
+        }),
+      );
+
+    cmd
+      .command("return-rows")
+      .description("Map 10% and 8% totals onto return rows (not e-Tax)")
+      .requiredOption("--fiscal-year <YYYY>", "Fiscal year, YYYY or FY2026")
+      .option("--json")
+      .action((opts: { fiscalYear: string; json?: boolean }) =>
+        runTaxConsumptionReturnRows({
+          fiscalYear: opts.fiscalYear,
           json: Boolean(opts.json),
         }),
       );

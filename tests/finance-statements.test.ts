@@ -8,6 +8,7 @@ import {
   unlockMonth,
   isMonthLocked,
   loadPeriodLocks,
+  resetPeriodLocksForTests,
 } from "../src/lib/finance/period-lock.js";
 import {
   buildGlEquityChangeRows,
@@ -71,6 +72,7 @@ describe("period lock", () => {
 
   it("blocks journal posts to locked months", () => {
     useFinanceFixtureTenant();
+    resetPeriodLocksForTests();
     lockMonth({ month: "2026-09", lockedBy: "test" });
     expect(isMonthLocked("2026-09")).toBe(true);
     expect(() =>
@@ -90,6 +92,7 @@ describe("period lock", () => {
 
   it("keeps unlock history instead of deleting the lock row", () => {
     useFinanceFixtureTenant();
+    resetPeriodLocksForTests();
     lockMonth({ month: "2026-09", lockedBy: "test" });
     unlockMonth({ month: "2026-09", unlockedBy: "approver", reason: "late invoice" });
     expect(isMonthLocked("2026-09")).toBe(false);

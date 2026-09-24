@@ -12,6 +12,10 @@ import {
   runConsumptionTaxCheck,
 } from "../lib/finance/consumption-tax.js";
 import {
+  buildFiscalYearConsumptionTaxReturnRows,
+  formatConsumptionTaxReturnRows,
+} from "../lib/finance/consumption-tax-return-rows.js";
+import {
   assessConsumptionRefundEligibility,
   formatConsumptionTaxEligibilityMarkdown,
 } from "../lib/finance/consumption-tax-eligibility.js";
@@ -180,6 +184,18 @@ export function runTaxConsumptionEligibility(opts: {
     return;
   }
   console.log(formatConsumptionTaxEligibilityMarkdown(eligibility));
+}
+
+export function runTaxConsumptionReturnRows(opts: {
+  fiscalYear: string;
+  json?: boolean;
+}): void {
+  const rows = buildFiscalYearConsumptionTaxReturnRows(opts.fiscalYear);
+  if (opts.json) {
+    console.log(JSON.stringify(rows, null, 2));
+    return;
+  }
+  console.log(formatConsumptionTaxReturnRows(rows));
 }
 
 export function runTaxInvoiceRegistrationCheck(opts?: { json?: boolean }): void {

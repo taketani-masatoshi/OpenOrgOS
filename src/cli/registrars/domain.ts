@@ -73,6 +73,7 @@ import {
   runTaxConsumptionCalc,
   runTaxConsumptionCheck,
   runTaxConsumptionEligibility,
+  runTaxConsumptionReturnRows,
   runTaxDepreciation,
   runTaxGaps,
   runTaxHandoff,
@@ -1022,6 +1023,17 @@ export function registerDomainCommands(program: Command): void {
       deemedRate?: number;
       json?: boolean;
     }) => runTaxConsumptionEligibility(opts));
+  tax
+    .command("consumption-return-rows")
+    .description("Map 10% and 8% totals onto consumption-tax return rows (not e-Tax)")
+    .requiredOption("--fiscal-year <YYYY>", "Fiscal year, YYYY or FY2026")
+    .option("--json", "Print JSON")
+    .action((opts: { fiscalYear: string; json?: boolean }) =>
+      runTaxConsumptionReturnRows({
+        fiscalYear: opts.fiscalYear,
+        json: Boolean(opts.json),
+      }),
+    );
 
   tax
     .command("invoice-registration")

@@ -8,6 +8,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **月次締めの銀行・証跡・排他** — 現金台帳があるテナントは明細なしで月を閉じない。当月の現金預金増減と明細純額が違うとロックしない。次月の締めは直前月の銀行と試算表の hash を再計算する。既にロックした月の再締めは拒否し、再ロックは unlock の理由と直前証跡の hash を残す。
+- **月次の銀行突合** — 開始残高が当月の試算表に初めて載る分は現金の動きに数えない。明細がその金額の入金だけだと、月はロックしない。
+- **消費税申告書の行** — 外部の算式差分が空のときだけ 14 点。①-1 は税抜の対価を一度税込へ戻してから 100/108・100/110 を掛ける。⑦は④＋⑤＋⑥、⑨は②＋③−⑦の百円未満切捨て、⑪は⑨−⑩、⑱と⑳は付表1-3の⑪と⑬。提出は not-for-etax のまま。
+- **間接税の法域ポート** — 帳簿エンジンは共通のまま、月次締めの消費税ゲートは pack の `indirect_tax_family` 経由。日本の消費税計算は `JP` + `vat_credit` だけ。他法域は日本の税率・税区分必須・別表・適格請求書チェックを走らせない。減価償却率表は pack seed にあるときだけ読む。ADR 0078。
 - **JP 社内規程のモジュール連動方針** — リスク領域単位（金流・PII・許認可等）。REG-027 に資金章、REG-032 に還付吸収、REG-030/035/036/037 をカタログ化。`required_regulations` + validate error。J-SOX は REG-016+027 分界。
 - **モジュール有効化時の規程ワークフロー** — 分類（reuse/thicken/fork_family/new/none）→ Compliance Work Order → LLM 草案のみ → 人間承認。化粧品系は医療機器 QMS を上書きしない。`orgos modules regulation-plan` / `activate --skip-regulation-wo`。
 - **規程ワークフローのリファクタ** — `regulation_family` · WO pending 重複抑止 · thicken 判定強化 · qms_gxp FORK-DRAFT · `modules check` の規程契約。

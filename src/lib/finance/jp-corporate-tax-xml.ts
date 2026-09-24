@@ -17,6 +17,7 @@ import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
 import { evaluateTaxAdjustment } from "./tax-adjustment.js";
+import { assertJpTaxProfile } from "./indirect-tax/port.js";
 
 export type CorporateTaxXmlDraft = {
   fiscal_year: string;
@@ -61,6 +62,7 @@ export function buildCorporateTaxXmlDraft(input?: {
 }): Omit<CorporateTaxXmlDraft, "relative_path" | "absolute_path"> & {
   relative_path: string;
 } {
+  assertJpTaxProfile();
   const company = loadCompany();
   const fiscalYear = resolveDefaultFiscalYear(input?.fiscalYear);
   const endMonth = resolveCompanyFiscalYearEndMonth();

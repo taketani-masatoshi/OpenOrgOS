@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { runValidateReport } from "../src/commands/validate.js";
 import { appendJournalEntry, loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
 import { lastDayOfMonth } from "../src/lib/finance/fiscal-year.js";
@@ -9,11 +10,13 @@ import { buildBalanceSheet } from "../src/lib/finance/ledger/balance-sheet.js";
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
 import { subsidiaryLedgerIntegrityIssues } from "../src/lib/finance/ledger/subsidiary-ledger.js";
 import {
+  buildMonthlyCloseEvidence,
   closeAccountingMonth,
   evaluateMonthlyCloseGates,
+  monthBankTieOut,
 } from "../src/lib/finance/monthly-close.js";
 import { buildConsumptionTaxSummary } from "../src/lib/finance/consumption-tax.js";
-import { isMonthLocked, loadPeriodLocks, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
+import { isMonthLocked, loadPeriodLocks, lockMonth, periodLockIntegrityIssues, resetPeriodLocksForTests, unlockMonth } from "../src/lib/finance/period-lock.js";
 import { buildMonthCloseChecklist } from "../src/lib/product/ledger-month-close-checklist.js";
 import { getDataDir } from "../src/lib/utils.js";
 import {
@@ -36,6 +39,50 @@ function writeBank(yaml: string): void {
 
 function removeBank(): void {
   if (existsSync(bankPath())) unlinkSync(bankPath());
+}
+
+function previousMonth(month: string): string {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const date = new Date(year!, monthNumber! - 2, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function cashDeltaYen(month: string): number {
+  const end =
+    buildTrialBalance({ asOf: lastDayOfMonth(month) }).rows.find(
+      (row) => row.account_code === "1100",
+    )?.balance_yen ?? 0;
+  const start =
+    buildTrialBalance({ asOf: lastDayOfMonth(previousMonth(month)) }).rows.find(
+      (row) => row.account_code === "1100",
+    )?.balance_yen ?? 0;
+  return end - start;
+}
+
+function tiedLines(month: string, status = "matched"): string {
+  const delta = cashDeltaYen(month);
+  if (delta === 0) {
+    return `  - id: BS-${month}-IN
+    date: "${month}-10"
+    direction: inflow
+    amount: 1
+    status: ${status}
+  - id: BS-${month}-OUT
+    date: "${month}-11"
+    direction: outflow
+    amount: 1
+    status: ${status}`;
+  }
+  const direction = delta > 0 ? "inflow" : "outflow";
+  return `  - id: BS-${month}
+    date: "${month}-10"
+    direction: ${direction}
+    amount: ${Math.abs(delta)}
+    status: ${status}`;
+}
+
+function writeTiedBank(months: string[], extra = ""): void {
+  writeBank(`entries:\n${months.map((month) => tiedLines(month)).join("\n")}\n${extra}`);
 }
 
 function lockPrior(): void {
@@ -73,6 +120,7 @@ describe("monthly close acceptance", () => {
   beforeEach(() => {
     resetFixtureJournalEntries();
     applyFixtureStatementRoles();
+    resetPeriodLocksForTests();
     removeBank();
   });
 
@@ -84,14 +132,7 @@ describe("monthly close acceptance", () => {
   it("closes 2026-09 when journals, statements, subsidiary and validate pass", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
+    writeTiedBank([MONTH]);
     const asOf = lastDayOfMonth(MONTH);
     const first = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(first.ok).toBe(true);
@@ -130,6 +171,10 @@ entries:
 
     const count = loadJournalEntries().entries.length;
     const second = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(second.ok).toBe(false);
+    expect(second.evaluation.errors.some((error) => error.startsWith("month-exclusive"))).toBe(
+      true,
+    );
     expect(second.locked).toBe(true);
     expect(second.posted_entry_ids).toEqual([]);
     expect(loadJournalEntries().entries.length).toBe(count);
@@ -176,21 +221,17 @@ entries:
     );
   });
 
-  it("skips bank reconciliation and locks when no bank file exists", () => {
+  it("does not lock when cash is on the books and the bank file is missing", () => {
     useFinanceFixtureTenant();
     lockPrior();
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(existsSync(bankPath())).toBe(false);
     expect(closed.evaluation.items.find((item) => item.id === "bank-imported")).toMatchObject({
-      pass: true,
-      level: "skip",
+      pass: false,
+      level: "error",
+      detail: "no bank file",
     });
-    expect(closed.locked).toBe(true);
-    expect(loadPeriodLocks().locks.at(-1)?.evidence).toMatchObject({
-      version: 1,
-      algorithm: "sha256",
-      can_lock: true,
-    });
+    expect(closed.locked).toBe(false);
   });
 
   it("refuses lock when the bank statement file cannot be read", () => {
@@ -206,19 +247,14 @@ entries:
   it("ignores unmatched bank rows that belong to a later month", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-THIS
-    date: "2026-09-04"
-    direction: inflow
-    amount: 100
-    status: matched
-  - id: BS-NEXT
+    writeTiedBank(
+      [MONTH],
+      `  - id: BS-NEXT
     date: "2026-10-02"
     direction: outflow
     amount: 800
-    status: unmatched
-`);
+    status: unmatched`,
+    );
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.evaluation.errors.some((error) => error.startsWith("bank-unmatched"))).toBe(
       false,
@@ -229,14 +265,6 @@ entries:
   it("warns but locks when monthly YAML and journals differ", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     manualEntry({
       entryId: "JE-EXTRA-RENT",
       occurredAt: "2026-09-12T00:00:00.000Z",
@@ -245,6 +273,7 @@ entries:
         { account_code: "4100", debit_yen: 0, credit_yen: 1000, tax_category: "non_taxable" },
       ],
     });
+    writeTiedBank([MONTH]);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.evaluation.warnings.some((warning) => warning.startsWith("monthly-reconcile"))).toBe(
       true,
@@ -274,14 +303,6 @@ entries:
   it("corrects a locked month only after a reasoned unlock, then re-locks", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     manualEntry({
       entryId: "JE-BS-ONLY",
       occurredAt: "2026-09-11T00:00:00.000Z",
@@ -290,6 +311,7 @@ entries:
         { account_code: "1300", debit_yen: 0, credit_yen: 2, tax_category: "out_of_scope" },
       ],
     });
+    writeTiedBank([MONTH]);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(true);
     const reversal = reverseJournalEntry({
@@ -319,6 +341,7 @@ entries:
       reason: "correct depreciation",
     });
     appendJournalEntry(reversal);
+    writeTiedBank([MONTH]);
     const count = loadJournalEntries().entries.length;
     const relocked = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(relocked.locked).toBe(true);
@@ -336,19 +359,18 @@ entries:
 
     const locks = loadPeriodLocks().locks.filter((row) => row.month === MONTH);
     expect(locks.map((row) => row.status)).toEqual(["locked", "unlocked", "locked"]);
+    expect(locks[2]?.reason).toBe("correct depreciation");
+    expect(locks[1]?.prior_evidence_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(locks[2]?.prior_evidence_sha256).toBe(locks[1]?.prior_evidence_sha256);
+    expect(periodLockIntegrityIssues().some((issue) => issue.includes("prior evidence"))).toBe(
+      false,
+    );
   });
 
   it("keeps an existing lock when a later gate failure is found", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
+    writeTiedBank([MONTH]);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(true);
     writeBank(`
@@ -420,14 +442,7 @@ entries:
   it("posts a specified accrual and ignores a zero adjustment", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
+    writeTiedBank([MONTH]);
     const chartPath = join(getDataDir(), "finance", "chart-of-accounts.yaml");
     const original = readFileSync(chartPath, "utf-8");
     writeFileSync(
@@ -475,14 +490,7 @@ entries:
   it("does not post monthly depreciation for a small-amount asset", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
+    writeTiedBank([MONTH]);
     const assetPath = join(getDataDir(), "finance", "fixed-assets.yaml");
     const original = readFileSync(assetPath, "utf-8");
     writeFileSync(assetPath, original.replace("id: ASSET-001\n", "id: ASSET-001\n    small_amount: true\n"));
@@ -499,21 +507,10 @@ entries:
   it("warns but locks when the month has no monthly plan", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-  - id: BS-2026-10-1
-    date: "2026-10-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
+    writeTiedBank([MONTH]);
     const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(september.locked).toBe(true);
+    writeTiedBank([MONTH, "2026-10"]);
     const october = closeAccountingMonth({ month: "2026-10", operatorId: OPERATOR });
     expect(october.evaluation.warnings.some((warning) => warning.includes("monthly plan not imported"))).toBe(
       true,
@@ -525,14 +522,7 @@ entries:
   it("carries the locked month balance into the next month", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
+    writeTiedBank([MONTH]);
     const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(september.locked).toBe(true);
     const asOf = lastDayOfMonth(MONTH);
@@ -557,5 +547,149 @@ entries:
     expect(
       buildTrialBalance({ asOf }).rows.find((row) => row.account_code === "1100")?.balance_yen,
     ).toBe(before);
+  });
+
+  it("does not lock when the bank net differs from the cash account", () => {
+    useFinanceFixtureTenant();
+    lockPrior();
+    writeBank(`
+entries:
+  - id: BS-OFF
+    date: "2026-09-10"
+    direction: inflow
+    amount: 99999
+    status: matched
+`);
+    const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(closed.locked).toBe(false);
+    expect(closed.evaluation.errors.some((error) => error.startsWith("bank-gl-tieout"))).toBe(
+      true,
+    );
+  });
+
+  it("does not close the next month when the prior bank evidence no longer matches", () => {
+    useFinanceFixtureTenant();
+    lockPrior();
+    writeTiedBank([MONTH]);
+    const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(september.locked).toBe(true);
+    writeBank(`
+entries:
+  - id: BS-CHANGED
+    date: "2026-09-10"
+    direction: inflow
+    amount: 4
+    status: matched
+`);
+    const october = evaluateMonthlyCloseGates("2026-10");
+    expect(october.errors.some((error) => error.startsWith("prior-evidence"))).toBe(true);
+    expect(october.can_lock).toBe(false);
+  });
+
+  it("refuses a second close of a month that is already locked", () => {
+    useFinanceFixtureTenant();
+    lockPrior();
+    writeTiedBank([MONTH]);
+    const first = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(first.locked).toBe(true);
+    const second = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(second.ok).toBe(false);
+    expect(second.locked).toBe(true);
+    expect(second.posted_entry_ids).toEqual([]);
+    expect(second.evaluation.errors.some((error) => error.startsWith("month-exclusive"))).toBe(
+      true,
+    );
+    expect(loadPeriodLocks().locks.filter((row) => row.month === MONTH && row.status === "locked")).toHaveLength(
+      1,
+    );
+  });
+
+  it("does not treat opening cash as a bank movement", () => {
+    useFinanceFixtureTenant();
+    lockMonth({ month: "2026-07", lockedBy: OPERATOR, reason: "prior month" });
+    writeBank(`
+entries:
+  - id: BS-2026-08-IN
+    date: "2026-08-10"
+    direction: inflow
+    amount: 1
+    status: matched
+  - id: BS-2026-08-OUT
+    date: "2026-08-11"
+    direction: outflow
+    amount: 1
+    status: matched
+`);
+    const tie = monthBankTieOut("2026-08");
+    expect(tie.glDelta).toBe(0);
+    expect(tie.pass).toBe(true);
+    const gate = evaluateMonthlyCloseGates("2026-08").items.find(
+      (item) => item.id === "bank-gl-tieout",
+    );
+    expect(gate?.pass).toBe(true);
+  });
+
+  it("does not lock when a bank inflow only restates the opening cash", () => {
+    useFinanceFixtureTenant();
+    lockMonth({ month: "2026-07", lockedBy: OPERATOR, reason: "prior month" });
+    writeBank(`
+entries:
+  - id: BS-OPENING
+    date: "2026-08-10"
+    direction: inflow
+    amount: 1000000
+    status: matched
+`);
+    const tie = monthBankTieOut("2026-08");
+    expect(tie.pass).toBe(false);
+    expect(tie.glDelta).toBe(0);
+    expect(tie.bankNet).toBe(1_000_000);
+    const evaluation = evaluateMonthlyCloseGates("2026-08");
+    expect(evaluation.items.find((item) => item.id === "bank-gl-tieout")?.pass).toBe(false);
+    expect(evaluation.errors.some((error) => error.startsWith("bank-gl-tieout"))).toBe(true);
+  });
+
+  it("changes the bank evidence hash when the operator changes", () => {
+    useFinanceFixtureTenant();
+    lockPrior();
+    writeTiedBank([MONTH]);
+    const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(closed.ok).toBe(true);
+    const stored = loadPeriodLocks().locks.find(
+      (row) => row.month === MONTH && row.status === "locked",
+    );
+    const other = buildMonthlyCloseEvidence(closed.evaluation, "OP-OTHER");
+    expect(other.bank_reconciliation_sha256).not.toBe(stored?.evidence?.bank_reconciliation_sha256);
+    expect(other.gate_results_sha256).toBe(stored?.evidence?.gate_results_sha256);
+  });
+
+  it("does not close the next month when the prior trial balance changed", () => {
+    useFinanceFixtureTenant();
+    lockPrior();
+    writeTiedBank([MONTH]);
+    const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(september.locked).toBe(true);
+    const path = join(getDataDir(), "finance", "journal-entries.yaml");
+    const file = parseYaml(readFileSync(path, "utf-8")) as {
+      entries: Array<{
+        lines: Array<{ account_code: string; debit_yen: number; credit_yen: number }>;
+      }>;
+    };
+    let changed = false;
+    for (const entry of file.entries) {
+      if (entry.lines.some((line) => line.account_code === "1100")) continue;
+      const debit = entry.lines.find((line) => line.debit_yen > 0);
+      const credit = entry.lines.find((line) => line.credit_yen > 0);
+      if (!debit || !credit) continue;
+      debit.debit_yen += 1;
+      credit.credit_yen += 1;
+      changed = true;
+      break;
+    }
+    expect(changed).toBe(true);
+    writeFileSync(path, stringifyYaml(file), "utf-8");
+    const october = evaluateMonthlyCloseGates("2026-10");
+    expect(october.errors.some((error) => error.startsWith("prior-evidence"))).toBe(true);
+    expect(october.can_lock).toBe(false);
   });
 });

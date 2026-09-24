@@ -18,6 +18,7 @@ import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import { equityChangeAmounts } from "./ledger/balance-sheet.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
+import { assertJpTaxProfile } from "./indirect-tax/port.js";
 
 const AUTO_IDS = new Set(["depreciation_excess", "entertainment_excess"]);
 
@@ -64,6 +65,7 @@ function accountBalance(code: string, asOf: string): number {
 }
 
 export function evaluateTaxAdjustment(fiscalYear: string): TaxAdjustmentWorksheet {
+  assertJpTaxProfile();
   if (!/^FY\d{4}$/.test(fiscalYear)) {
     throw new Error("fiscal year FY#### is required");
   }

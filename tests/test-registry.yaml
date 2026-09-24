@@ -902,6 +902,14 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  consumption-tax-return-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  consumption-tax-return-rows.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   context-manifest.test.ts:
     axis: platform
     kind: unit
@@ -1294,6 +1302,10 @@ tests:
     kind: unit
     domain: P04_wire_stack
   human-approval-context.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  indirect-tax-port.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
