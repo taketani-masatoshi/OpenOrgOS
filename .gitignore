@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 dist/
 test-results/
 playwright-report/
@@ -165,6 +165,7 @@ tenants/*/docs/finance/accounting/invoices/**/output/**
 tenants/*/docs/engineering/**
 !tenants/_template/docs/engineering/**
 # L2 records vault at tenant root (template examples stay tracked)
+# includes records/procurement/subcontract/（取適法7条記録 · 個人事業者の住所・口座）
 tenants/*/records/**
 !tenants/_template/records/**
 !tenants/*/records/00-このフォルダについて.md

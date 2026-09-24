@@ -1,0 +1,100 @@
+# 特許出願台帳（例示 · 架空データ）
+# 発明者・共同出願人は stakeholder_id のみ。氏名・住所（L2）は data/executive/stakeholders.yaml 側に置き、願書へは人間が転記する。
+entity: "サンプル商事株式会社"
+as_of: "2026-09-24"
+applications:
+  # 出願準備中 · 国内優先権 + 自己の展示会発表（30条2項）· 形式チェックはおおむね充足
+  - id: PAT-2026-001
+    title: "センサーデータに基づく設備点検計画の最適化システム"
+    status: draft
+    inventor_stakeholder_ids: [STK-INV-001, STK-INV-002]
+    reference_number: "SMP-P2601"
+    ipc: ["G06Q 10/20"]
+    planned_filing_on: "2026-11-16"
+    priority_claims:
+      - kind: domestic
+        base_filed_on: "2026-02-10"
+        base_application_no: "特願2026-012345"
+    disclosures:
+      - disclosed_on: "2026-06-05"
+        kind: exhibition
+        against_will: false
+        description: "サンプル産業展（架空）での自社ブース展示"
+    notes: "例示 · 直接出願（代理人なし）"
+
+  # 出願済 · 検出用の違反・要確認を意図的に含む
+  - id: PAT-2026-002
+    title: "画像認識による在庫計数方法"
+    status: filed
+    inventor_stakeholder_ids: [STK-INV-003]
+    reference_number: "smp_p2602_long"
+    filed_on: "2026-03-23"
+    application_no: "特願2026-030001"
+    agent_name: "見本太郎"
+    agent_registration_no: "100000001"
+    priority_claims:
+      # 優先期間（2026-03-10）経過後の出願 → 回復枠内（故意でない場合のみ）= needs_review
+      - kind: paris
+        base_filed_on: "2025-03-10"
+        base_country: "米国"
+        base_application_no: "63/000,001"
+    disclosures:
+      # 1年の末日 2026-03-20（春分の日）→ 休日順延に依拠した出願 = needs_review · 証明書は期限後提出 = overdue
+      - disclosed_on: "2025-03-20"
+        kind: website
+        against_will: false
+        certificate_submitted_on: "2026-04-30"
+        description: "自社ウェブサイトでの技術紹介記事（架空）"
+      # 公報掲載による公開は30条2項括弧書で対象外 = ng
+      - disclosed_on: "2025-12-01"
+        kind: patent_gazette
+        against_will: false
+        description: "自社の別出願の公開公報（架空）"
+    notes: "例示 · 検出テスト用"
+
+  # 特許査定済 · 第1〜3年分の一括納付期限（2026-10-10 土 → 10-12 スポーツの日 → 10-13）
+  - id: PAT-2024-003
+    title: "搬送ロボットの経路制御装置"
+    status: allowed
+    inventor_stakeholder_ids: [STK-INV-004]
+    filed_on: "2024-01-15"
+    application_no: "特願2024-005001"
+    exam_requested_on: "2024-01-15"
+    published_on: "2025-07-17"
+    allowance_served_on: "2026-09-10"
+
+  # 登録済 · 第4年分の納付期限 2026-09-22（休日）→ 09-23（秋分の日）→ 09-24 に順延
+  - id: PAT-2023-004
+    title: "省電力型の無線タグ読取装置"
+    status: registered
+    inventor_stakeholder_ids: [STK-INV-001]
+    filed_on: "2020-12-01"
+    application_no: "特願2020-200001"
+    exam_requested_on: "2021-02-01"
+    published_on: "2022-06-02"
+    allowance_served_on: "2023-08-25"
+    registered_on: "2023-09-22"
+    patent_no: "特許第7000001号"
+    annuity_paid_through_year: 3
+
+  # 登録済 · 第4年分（2026-06-30）未納 → 追納期間 2026-12-31 → 年末年始で 2027-01-04 まで順延
+  - id: PAT-2023-005
+    title: "食品包装用の鮮度表示ラベル"
+    status: registered
+    inventor_stakeholder_ids: [STK-INV-005]
+    filed_on: "2021-06-15"
+    application_no: "特願2021-100001"
+    exam_requested_on: "2021-06-15"
+    published_on: "2022-12-16"
+    allowance_served_on: "2023-06-01"
+    registered_on: "2023-06-30"
+    patent_no: "特許第7000002号"
+    annuity_paid_through_year: 3
+
+  # 放棄済 · 期限計算の対象外
+  - id: PAT-2025-006
+    title: "折り畳み式の作業台"
+    status: abandoned
+    inventor_stakeholder_ids: [STK-INV-002]
+    filed_on: "2025-05-01"
+    application_no: "特願2025-070001"

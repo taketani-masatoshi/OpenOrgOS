@@ -1,0 +1,134 @@
+# 36協定（時間外・休日労働に関する協定）台帳 · 架空サンプル
+# work_category: general | construction | construction_disaster_recovery | motor_vehicle_driving | physician | new_technology_rnd
+agreements:
+  - id: AGR36-2026-HQ
+    workplace_id: WP-HQ
+    work_category: general
+    variable_hours_over_3_months: false
+    covered_workers: 本社の事務・営業職（管理監督者を除く）
+    extension_reasons:
+      - 月末の受注集中
+      - 決算業務
+    period_start: 2026-04-01
+    effective_from: 2026-04-01
+    effective_to: 2027-03-31
+    filed_on: 2026-03-25
+    party:
+      type: majority_representative
+      representative_employee_id: EMP-105
+      selection_method: vote
+      representative_is_manager: false
+    general:
+      daily_hours: 4
+      monthly_hours: 45
+      annual_hours: 360
+      holiday_days_per_month: 2
+    special_clause:
+      monthly_total_hours: 80
+      annual_overtime_hours: 600
+      max_months_over_limit: 4
+      circumstances:
+        - 大規模なクレーム対応
+        - 予算・決算業務の集中
+      health_measures:
+        - 医師による面接指導
+        - 勤務間インターバルの確保
+      premium_rate_percent: 30
+      procedure: 労働者代表への事前通知
+    confirms_statutory_caps: true
+    notification:
+      method: posting
+      notified_on: 2026-04-01
+
+  - id: AGR36-2025-OSAKA
+    workplace_id: WP-OSAKA
+    work_category: general
+    covered_workers: 大阪営業所の営業職
+    extension_reasons:
+      - 繁忙期の顧客対応
+    period_start: 2025-10-01
+    effective_from: 2025-10-01
+    effective_to: 2026-09-30
+    filed_on: 2025-09-20
+    party:
+      type: majority_representative
+      representative_employee_id: EMP-150
+      selection_method: show_of_hands
+      representative_is_manager: false
+    general:
+      daily_hours: 5
+      monthly_hours: 50
+      annual_hours: 360
+    special_clause:
+      monthly_total_hours: 100
+      annual_overtime_hours: 720
+      max_months_over_limit: 6
+      circumstances:
+        - 大型案件の納期ひっ迫
+      health_measures:
+        - 医師による面接指導
+      premium_rate_percent: 25
+      procedure: 労使協議
+    confirms_statutory_caps: true
+    notification:
+      method: posting
+      notified_on: 2025-10-01
+    notes: 一般条項 月50h（>45h）· 特別条項 月100h（100h未満でない）· 期限間近（検出用）
+
+  - id: AGR36-2026-LAB
+    workplace_id: WP-LAB
+    work_category: general
+    variable_hours_over_3_months: true
+    covered_workers: 開発室の開発職
+    extension_reasons:
+      - リリース前の検証作業
+    period_start: 2026-04-01
+    effective_from: 2026-04-01
+    effective_to: 2027-03-31
+    filed_on: 2026-04-10
+    party:
+      type: majority_representative
+      representative_employee_id: EMP-301
+      selection_method: vote
+      representative_is_manager: false
+    general:
+      daily_hours: 3
+      monthly_hours: 42
+      annual_hours: 320
+    confirms_statutory_caps: true
+    notification:
+      method: electronic
+      notified_on: 2026-04-10
+    notes: 1年単位変形（3か月超）· 届出が有効期間開始後（検出用）
+
+  - id: AGR36-2026-DEPOT
+    workplace_id: WP-DEPOT
+    work_category: motor_vehicle_driving
+    covered_workers: 配送センターのトラック運転者
+    extension_reasons:
+      - 荷主都合による配送遅延
+    period_start: 2026-04-01
+    effective_from: 2026-04-01
+    effective_to: 2027-03-31
+    filed_on: 2026-03-28
+    party:
+      type: majority_union
+      union_name: サンプル商事労働組合
+    general:
+      daily_hours: 5
+      monthly_hours: 45
+      annual_hours: 360
+    special_clause:
+      monthly_total_hours: 110
+      annual_overtime_hours: 960
+      max_months_over_limit: 12
+      circumstances:
+        - 繁忙期の配送量増加
+      health_measures:
+        - 休息期間の確保
+      premium_rate_percent: 25
+      procedure: 組合への事前協議
+    notification:
+      method: written_delivery
+      notified_on: 2026-04-01
+    notes: 自動車運転業務（附則140条）— 改善基準告示は別途確認

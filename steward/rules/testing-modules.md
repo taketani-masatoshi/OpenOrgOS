@@ -11,16 +11,17 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 
 | 指標 | 値 |
 |------|-----|
-| Vitest テストファイル | **623**（`tests/**/*.test.ts` · registry 含む） |
-| テストケース（静的 `it`/`test` **2942**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
-| 業務 catalog module | **46**（readiness.yaml 正本 · core + JP pack） |
+| Vitest テストファイル | **631**（`tests/**/*.test.ts` · registry 含む） |
+| テストケース（静的 `it`/`test` **3165**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
+| 業務 catalog module | **55**（readiness.yaml 正本 · core + JP pack） |
 | production_ready | **32** |
-| skeleton | **1**（`jp_permit_registry`） |
-| CLI 登録（`MODULE_CLI_BUNDLES`） | **47** |
+| activation_ready | **23** |
+| skeleton | **0** |
+| CLI 登録（`MODULE_CLI_BUNDLES`） | **55** |
 | catalog coverage gap | **0** |
 | catalog dedicated (+ full) | **30** |
 | catalog bundled | **9** |
-| catalog_only | **8** |
+| catalog_only | **16** |
 
 整合テスト: [`tests/testing-registry.test.ts`](../tests/testing-registry.test.ts) · [`tests/testing-modules-doc-sync.test.ts`](../tests/testing-modules-doc-sync.test.ts)
 
@@ -32,7 +33,7 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 |----|------|-----------------|
 | **Contract / Meta** | extensibility · modules · readiness · os100 等 | `npm run test:contract` |
 | **Platform** | `src/lib/` 6 ドメイン | `npm run test:platform` |
-| **Catalog** | 業務 module catalog id（30） | `npm run test:catalog` |
+| **Catalog** | 業務 module catalog id（55） | `npm run test:catalog` |
 | **Integration** | CLI subprocess · protocol E2E · mal 共有 queue | `npm run test:integration` |
 | **Full gate** | 全件 | `npm test`（CI 正本） |
 | **Tiered** | 上記を依存順 | `npm run test:tiered` |

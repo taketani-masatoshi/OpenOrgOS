@@ -7,7 +7,8 @@
 
 ## 役割
 
-ベンダー選定 · 見積比較 · 発注下書き · REG-004 稟議。
+ベンダー選定 · 見積比較 · 発注下書き · REG-004 稟議 · 取適法（旧下請法）点検。
+**モジュール:** `jp_subcontractor_act`
 
 ## Primary Folders
 
@@ -48,6 +49,8 @@
 
 | 手段 | 内容 |
 |------|------|
+| jp_subcontractor_scope | `orgos operations subcontract scope` |
+| jp_subcontractor_checklist | `orgos operations subcontract check` |
 | agent_pulse | `orgos agent pulse --agent procurement` |
 
 

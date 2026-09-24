@@ -1,0 +1,23 @@
+<!-- jp_statutory_meetings · {{meeting_id}} · ドラフト — 内容確認は人間 -->
+
+# {{meeting_title}} 議事録（決議の省略）
+
+{{omission_article}}の規定により、{{body_label}}の決議があったものとみなされたので、次のとおり議事録を作成する。
+
+1. 決議があったものとみなされた事項の内容
+
+{{agenda_block}}
+
+2. 上記事項の提案をした者　{{proposer_name}}
+3. 決議があったものとみなされた日　{{deemed_date_reiwa}}
+4. 議事録の作成に係る職務を行った取締役　{{author_name}}
+
+{{company_name}}
+
+---
+
+## 作成メモ（確定前に削除）
+
+- 記載事項: {{minutes_basis}}
+- 備置: {{retention_note}}
+- 一次資料: {{source_regulation_url}}

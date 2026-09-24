@@ -323,7 +323,7 @@ export const SKILL_COMMANDS = [
   },
   {
     id: "regulation-module-draft",
-    skill: "regulation_module_scaffold",
+    skill: "regulation_module_draft",
     agent: "Compliance",
     description: "Alias: モジュール規程の草案 MD scaffold",
   },

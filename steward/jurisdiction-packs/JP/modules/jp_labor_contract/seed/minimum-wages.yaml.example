@@ -1,0 +1,56 @@
+# 地域別最低賃金（時間額）— 令和7年度改定
+# 出典: 厚生労働省「令和７年度地域別最低賃金全国一覧」（PDF: https://www.mhlw.go.jp/content/11200000/001571192.pdf）
+# 令和8年度改定は 2026-09-03 に全都道府県で答申済み（2026-10-01〜12-02 に順次発効予定）。
+# verified_through より後の判定日は needs_review になる — 改定の発効を確認してから rates を追加し verified_through を更新する。
+fiscal_year_label: "令和7年度"
+source_url: "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_roudou/roudoukijun/minimumichiran/"
+retrieved_on: "2026-09-24"
+verified_through: "2026-09-30"
+rates:
+  - { prefecture: 北海道, hourly_yen: 1075, effective_from: "2025-10-04" }
+  - { prefecture: 青森県, hourly_yen: 1029, effective_from: "2025-11-21" }
+  - { prefecture: 岩手県, hourly_yen: 1031, effective_from: "2025-12-01" }
+  - { prefecture: 宮城県, hourly_yen: 1038, effective_from: "2025-10-04" }
+  - { prefecture: 秋田県, hourly_yen: 1031, effective_from: "2026-03-31" }
+  - { prefecture: 山形県, hourly_yen: 1032, effective_from: "2025-12-23" }
+  - { prefecture: 福島県, hourly_yen: 1033, effective_from: "2026-01-01" }
+  - { prefecture: 茨城県, hourly_yen: 1074, effective_from: "2025-10-12" }
+  - { prefecture: 栃木県, hourly_yen: 1068, effective_from: "2025-10-01" }
+  - { prefecture: 群馬県, hourly_yen: 1063, effective_from: "2026-03-01" }
+  - { prefecture: 埼玉県, hourly_yen: 1141, effective_from: "2025-11-01" }
+  - { prefecture: 千葉県, hourly_yen: 1140, effective_from: "2025-10-03" }
+  - { prefecture: 東京都, hourly_yen: 1226, effective_from: "2025-10-03" }
+  - { prefecture: 神奈川県, hourly_yen: 1225, effective_from: "2025-10-04" }
+  - { prefecture: 新潟県, hourly_yen: 1050, effective_from: "2025-10-02" }
+  - { prefecture: 富山県, hourly_yen: 1062, effective_from: "2025-10-12" }
+  - { prefecture: 石川県, hourly_yen: 1054, effective_from: "2025-10-08" }
+  - { prefecture: 福井県, hourly_yen: 1053, effective_from: "2025-10-08" }
+  - { prefecture: 山梨県, hourly_yen: 1052, effective_from: "2025-12-01" }
+  - { prefecture: 長野県, hourly_yen: 1061, effective_from: "2025-10-03" }
+  - { prefecture: 岐阜県, hourly_yen: 1065, effective_from: "2025-10-18" }
+  - { prefecture: 静岡県, hourly_yen: 1097, effective_from: "2025-11-01" }
+  - { prefecture: 愛知県, hourly_yen: 1140, effective_from: "2025-10-18" }
+  - { prefecture: 三重県, hourly_yen: 1087, effective_from: "2025-11-21" }
+  - { prefecture: 滋賀県, hourly_yen: 1080, effective_from: "2025-10-05" }
+  - { prefecture: 京都府, hourly_yen: 1122, effective_from: "2025-11-21" }
+  - { prefecture: 大阪府, hourly_yen: 1177, effective_from: "2025-10-16" }
+  - { prefecture: 兵庫県, hourly_yen: 1116, effective_from: "2025-10-04" }
+  - { prefecture: 奈良県, hourly_yen: 1051, effective_from: "2025-11-16" }
+  - { prefecture: 和歌山県, hourly_yen: 1045, effective_from: "2025-11-01" }
+  - { prefecture: 鳥取県, hourly_yen: 1030, effective_from: "2025-10-04" }
+  - { prefecture: 島根県, hourly_yen: 1033, effective_from: "2025-11-17" }
+  - { prefecture: 岡山県, hourly_yen: 1047, effective_from: "2025-12-01" }
+  - { prefecture: 広島県, hourly_yen: 1085, effective_from: "2025-11-01" }
+  - { prefecture: 山口県, hourly_yen: 1043, effective_from: "2025-10-16" }
+  - { prefecture: 徳島県, hourly_yen: 1046, effective_from: "2026-01-01" }
+  - { prefecture: 香川県, hourly_yen: 1036, effective_from: "2025-10-18" }
+  - { prefecture: 愛媛県, hourly_yen: 1033, effective_from: "2025-12-01" }
+  - { prefecture: 高知県, hourly_yen: 1023, effective_from: "2025-12-01" }
+  - { prefecture: 福岡県, hourly_yen: 1057, effective_from: "2025-11-16" }
+  - { prefecture: 佐賀県, hourly_yen: 1030, effective_from: "2025-11-21" }
+  - { prefecture: 長崎県, hourly_yen: 1031, effective_from: "2025-12-01" }
+  - { prefecture: 熊本県, hourly_yen: 1034, effective_from: "2026-01-01" }
+  - { prefecture: 大分県, hourly_yen: 1035, effective_from: "2026-01-01" }
+  - { prefecture: 宮崎県, hourly_yen: 1023, effective_from: "2025-11-16" }
+  - { prefecture: 鹿児島県, hourly_yen: 1026, effective_from: "2025-11-01" }
+  - { prefecture: 沖縄県, hourly_yen: 1023, effective_from: "2025-12-01" }

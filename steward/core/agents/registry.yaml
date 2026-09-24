@@ -519,6 +519,7 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 採用 · 社保 · 就業規則 · 給与連携
+    binds_modules: [jp_employment_rules, jp_labor_contract, jp_visa_employment]
     access:
       read:
         - data/hr/
@@ -539,11 +540,14 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 株主総会 · 取締役会 · 議事録 · 招集
+    binds_modules: [jp_statutory_meetings]
     access:
       read:
         - data/governance/
         - docs/company/governance/
       write:
+        - data/governance/
+        - docs/company/governance/
         - docs/reports/agent-summaries/corporate-governance/
 
   accounting:
@@ -608,11 +612,14 @@ agents:
     status: active
     reports_to: coo
     scope: ベンダー · 発注 · 稟議 REG-004
+    binds_modules: [jp_subcontractor_act]
     access:
       read:
         - data/procurement/
         - docs/procurement/
       write:
+        - data/procurement/
+        - docs/procurement/
         - docs/reports/agent-summaries/procurement/
 
   government_affairs:
@@ -645,12 +652,14 @@ agents:
     status: active
     reports_to: legal
     scope: 商標 · 特許 · ライセンス
-    binds_modules: [jp_trademark_application]
+    binds_modules: [jp_trademark_application, jp_patent_application]
     access:
       read:
         - data/ip/
         - docs/ip/
       write:
+        - data/ip/
+        - docs/ip/
         - docs/reports/agent-summaries/intellectual-property/
 
   general_affairs:
@@ -885,11 +894,15 @@ agents:
     status: active
     reports_to: compliance
     scope: 個情 · DPIA · 越境
+    binds_modules: [jp_data_breach]
     access:
       read:
         - data/classification-registry.yaml
+        - data/privacy/
         - docs/compliance/privacy/
       write:
+        - data/privacy/
+        - docs/compliance/privacy/
         - docs/reports/agent-summaries/privacy-officer/
 
   treasury:

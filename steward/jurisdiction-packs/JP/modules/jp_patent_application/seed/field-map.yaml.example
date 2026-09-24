@@ -1,0 +1,13 @@
+# 特許願（様式第26）の出願人欄 → company.yaml の写像
+# 発明者欄は写像しない（stakeholder_id のみ · 氏名・住所は L2 台帳から人間が転記）
+mappings:
+  - form_field: "特許出願人・住所又は居所"
+    source: company.address
+  - form_field: "特許出願人・氏名又は名称"
+    source: company.name
+  - form_field: "特許出願人・代表者"
+    source: company.representative
+    notes: "代理人によらない法人出願のみ記載（様式第26 備考11・19）"
+  - form_field: "法人番号（参考 · 願書本文には記載しない）"
+    source: company.corporate_number
+    notes: "内部管理用"

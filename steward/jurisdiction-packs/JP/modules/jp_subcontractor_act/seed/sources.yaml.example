@@ -1,0 +1,66 @@
+sources:
+  - id: jftc-toriteki-portal
+    title: "中小受託取引適正化法（取適法）— 公正取引委員会"
+    url: "https://www.jftc.go.jp/toriteki/"
+    type: guide
+    retrieved_on: 2026-09-24
+    notes: "取適法の入口。法令・ガイドライン・運用基準への索引"
+  - id: egov-toriteki-act
+    title: "製造委託等に係る中小受託事業者に対する代金の支払の遅延等の防止に関する法律（昭和31年法律第120号 · 取適法）"
+    url: "https://laws.e-gov.go.jp/law/331AC0000000120/"
+    type: law
+    retrieved_on: 2026-09-24
+    notes: "第2条（定義・資本金/従業員基準）· 第3条（60日）· 第4条（明示）· 第5条（禁止行為）· 第6条（遅延利息）· 第7条（記録）"
+  - id: egov-toriteki-cabinet-order
+    title: "同法第二条第八項第一号の情報成果物及び役務を定める政令（平成13年政令第5号）"
+    url: "https://laws.e-gov.go.jp/law/413CO0000000005"
+    type: cabinet_order
+    retrieved_on: 2026-09-24
+    notes: "プログラム · 運送 · 物品の倉庫における保管 · 情報処理（3億円・300人区分）"
+  - id: egov-toriteki-interest-rate-rule
+    title: "同法第六条第一項及び第二項の率を定める規則（令和7年公正取引委員会規則第9号）"
+    url: "https://laws.e-gov.go.jp/law/507M60200000009"
+    type: regulation
+    retrieved_on: 2026-09-24
+    notes: "年14.6% · 令和8年1月1日施行"
+  - id: egov-toriteki-records-rule
+    title: "同法第七条の書類等の作成及び保存に関する規則（令和7年公正取引委員会規則第10号）"
+    url: "https://laws.e-gov.go.jp/law/507M60200000010"
+    type: regulation
+    retrieved_on: 2026-09-24
+    notes: "第3条 — 全部の記載又は記録をした日から2年間保存"
+  - id: jftc-toriteki-legislation
+    title: "法令・ガイドライン等（取適法）— 公正取引委員会"
+    url: "https://www.jftc.go.jp/toriteki/legislation/"
+    type: guide
+    retrieved_on: 2026-09-24
+    notes: "明示規則（令和7年公正取引委員会規則第8号）等の索引"
+  - id: jftc-toriteki-unyou
+    title: "取適法の運用基準 — 公正取引委員会"
+    url: "https://www.jftc.go.jp/toriteki/legislation/unyou.html"
+    type: guideline
+    retrieved_on: 2026-09-24
+    notes: "第2-2（規模要件 · 常時使用する従業員）· 第4-2(5)(6)（手形・電子記録債権・一括決済）"
+  - id: jftc-toriteki-ryuijiko
+    title: "取適法施行に当たり事業者の皆様に御留意いただきたい事項 — 公正取引委員会"
+    url: "https://www.jftc.go.jp/toriteki/toriteki_ryuijiko/"
+    type: guide
+    retrieved_on: 2026-09-24
+    notes: "令和8年1月1日施行 · 同日以降に発注する取引に適用"
+  - id: jftc-toriteki-qa
+    title: "よくある質問コーナー（取適法）— 公正取引委員会"
+    url: "https://www.jftc.go.jp/toriteki/torireki_qa.html"
+    type: faq
+    retrieved_on: 2026-09-24
+    notes: "Q83（手形の満期日を支払日として扱う）· Q98（円未満端数）· 建設工事の下請負は対象外"
+  - id: jftc-toriteki-text
+    title: "中小受託取引適正化法テキスト（令和7年度）— 公正取引委員会"
+    url: "https://www.jftc.go.jp/toriteki/r7text.pdf"
+    type: guide
+    retrieved_on: 2026-09-24
+    notes: "支払期日は受領日を算入して60日以内"
+  - id: jftc-oyagimu
+    title: "委託事業者の義務 — 公正取引委員会"
+    url: "https://www.jftc.go.jp/toriteki/toritekigaiyo/oyagimu.html"
+    type: guide
+    retrieved_on: 2026-09-24

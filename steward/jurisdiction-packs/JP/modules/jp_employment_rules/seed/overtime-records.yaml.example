@@ -1,0 +1,78 @@
+# 月別 時間外・休日労働実績（架空サンプル）
+# テナントでは L2（個人別の労働時間）— data/hr/employment-rules/overtime-records.yaml は gitignore 推奨
+# month: 協定の起算日から1か月ごとに区分した期間の開始月（YYYY-MM）
+# overtime_hours: 法定時間外労働（法定休日労働を除く）· holiday_work_hours: 法定休日労働
+# 2〜6か月平均の判定のため、対象期間開始前5か月分も登録する
+records:
+  - employee_id: EMP-101
+    agreement_id: AGR36-2026-HQ
+    months:
+      - { month: 2025-11, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2025-12, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-01, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-02, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-03, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-04, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-05, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-06, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-07, overtime_hours: 20, holiday_work_hours: 0 }
+      - { month: 2026-08, overtime_hours: 20, holiday_work_hours: 0 }
+
+  # 2026-06 に時間外＋休日 101h（100h 未満違反）· 2か月平均 80h 超（検出用）
+  - employee_id: EMP-102
+    agreement_id: AGR36-2026-HQ
+    months:
+      - { month: 2025-11, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2025-12, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-01, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-02, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-03, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-04, overtime_hours: 40, holiday_work_hours: 0 }
+      - { month: 2026-05, overtime_hours: 60, holiday_work_hours: 8 }
+      - { month: 2026-06, overtime_hours: 85, holiday_work_hours: 16 }
+      - { month: 2026-07, overtime_hours: 70, holiday_work_hours: 10 }
+      - { month: 2026-08, overtime_hours: 40, holiday_work_hours: 0 }
+
+  # 月45h 超が5か月（協定の特別条項 4か月を超過 · 検出用）
+  - employee_id: EMP-103
+    agreement_id: AGR36-2026-HQ
+    months:
+      - { month: 2025-11, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2025-12, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-01, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-02, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-03, overtime_hours: 30, holiday_work_hours: 0 }
+      - { month: 2026-04, overtime_hours: 50, holiday_work_hours: 0 }
+      - { month: 2026-05, overtime_hours: 50, holiday_work_hours: 0 }
+      - { month: 2026-06, overtime_hours: 50, holiday_work_hours: 0 }
+      - { month: 2026-07, overtime_hours: 50, holiday_work_hours: 0 }
+      - { month: 2026-08, overtime_hours: 50, holiday_work_hours: 0 }
+
+  # 2026-02 の実績欠落（2〜6か月平均が一部未評価 → needs_review · 検出用）
+  - employee_id: EMP-104
+    agreement_id: AGR36-2026-HQ
+    months:
+      - { month: 2025-11, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2025-12, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2026-01, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2026-03, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2026-04, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2026-05, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2026-06, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2026-07, overtime_hours: 25, holiday_work_hours: 0 }
+      - { month: 2026-08, overtime_hours: 25, holiday_work_hours: 0 }
+
+  # 自動車運転業務（附則140条: 年960h · 月100h/平均80h は不適用 → needs_review）
+  - employee_id: EMP-201
+    agreement_id: AGR36-2026-DEPOT
+    months:
+      - { month: 2025-11, overtime_hours: 60, holiday_work_hours: 0 }
+      - { month: 2025-12, overtime_hours: 60, holiday_work_hours: 0 }
+      - { month: 2026-01, overtime_hours: 60, holiday_work_hours: 0 }
+      - { month: 2026-02, overtime_hours: 60, holiday_work_hours: 0 }
+      - { month: 2026-03, overtime_hours: 60, holiday_work_hours: 0 }
+      - { month: 2026-04, overtime_hours: 70, holiday_work_hours: 0 }
+      - { month: 2026-05, overtime_hours: 80, holiday_work_hours: 0 }
+      - { month: 2026-06, overtime_hours: 90, holiday_work_hours: 0 }
+      - { month: 2026-07, overtime_hours: 95, holiday_work_hours: 10 }
+      - { month: 2026-08, overtime_hours: 85, holiday_work_hours: 0 }

@@ -69,6 +69,13 @@ alwaysApply: true
 - **REG-006** 利益相反取引規程: 施行 `docs/company/regulations/riekisohan-torihiki-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-006-riekisohan/template.md` は改定時のみ）
 - **REG-007** 文書管理規程: 施行 `docs/company/regulations/bunsho-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-007-bunsho-kanri/template.md` は改定時のみ）
 - **REG-008** 旅費規程: 施行 `docs/company/regulations/ryohi-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-008-ryohi/template.md` は改定時のみ）
+- **REG-027** 経理規程: 施行 `docs/company/regulations/keiri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-027-keiri/template.md` は改定時のみ）
+- **REG-030** 組織情報システム権限管理規程: 施行 `docs/company/regulations/soshiki-joho-system-kengen-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-030-soshiki-joho-system/template.md` は改定時のみ）
+- **REG-031** 法人税務・申告準備規程: 施行 `docs/company/regulations/hojin-zeimu-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_tax_corporate/REG-031-hojin-zeimu/template.md` は改定時のみ）
+- **REG-032** 消費税務規程: 施行 `docs/company/regulations/shohi-zeimu-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_tax_consumption/REG-032-shohi-zeimu/template.md` は改定時のみ）
+- **REG-033** 適格請求書管理規程: 施行 `docs/company/regulations/tekikaku-seikyusho-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_invoice_qualified/REG-033-tekikaku-seikyusho/template.md` は改定時のみ）
+- **REG-034** 源泉徴収・法定調書規程: 施行 `docs/company/regulations/gensen-hoteichosho-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_withholding_statutory/REG-034-gensen-hoteichosho/template.md` は改定時のみ）
+- **REG-037** 許認可管理規程: 施行 `docs/company/regulations/kyoka-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_permit/REG-037-kyoka-kanri/template.md` は改定時のみ）
 - **REG-010** 個人情報保護規程: 施行 `docs/company/regulations/kojin-joho-hogo-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-010-kojin-joho/template.md` は改定時のみ）
 - **REG-014** 環境・エネルギー管理規程: 施行 `docs/company/regulations/kankyo-energy-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-014-kankyo-energy/template.md` は改定時のみ）
 - **REG-016** 内部監査規程: 施行 `docs/company/regulations/naibu-kansa-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-016-naibu-kansa/template.md` は改定時のみ）

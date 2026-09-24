@@ -1,0 +1,15 @@
+skills:
+  - id: jp_employment_contract_draft
+    file: jp_labor_contract_ops.md
+    runtime: cli
+    cli_command: operations labor-contract draft
+    argv: [operations, labor-contract, draft]
+    description: 労働条件通知書（雇用契約）ドラフト MD を明示事項つきで生成（賃金額は L2 のため記入欄のみ）
+    agent_id: human_resources
+  - id: jp_fixed_term_conversion_check
+    file: jp_labor_contract_ops.md
+    runtime: cli
+    cli_command: operations labor-contract conversion-check
+    argv: [operations, labor-contract, conversion-check]
+    description: 有期契約の通算期間 · 無期転換申込権の発生時期 · 雇止め予告期限を従業員別に判定
+    agent_id: human_resources

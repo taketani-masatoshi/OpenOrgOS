@@ -1,0 +1,36 @@
+# 機関設計・定款の定め（架空サンプル）
+# 役員は stakeholder_id で参照する。個人住所・連絡先は記載しない（L2）。
+entity: sample
+as_of: 2026-09-24
+company_profile:
+  is_public_company: false        # 全株式譲渡制限会社（会社法2条5号の公開会社に該当しない）
+  has_board: true                 # 取締役会設置会社（会社法326条2項）
+  has_auditor: true               # 監査役設置会社 — 取締役会の招集通知・省略同意の対象に監査役を含む
+  has_branches: true              # 支店あり — 株主総会議事録の写し備置（会社法318条3項）
+  uses_electronic_provision: false
+  voting_shareholders_count: 12
+articles:
+  board_notice_days: 3            # 定款で取締役会招集通知を3日前に短縮（会社法368条1項括弧書）
+  allow_board_written_resolution: false  # 取締役会決議の省略の定款規定なし（会社法370条）
+  ordinary_quorum_excluded: true  # 普通決議の定足数を定款で排除（会社法309条1項「定款に別段の定め」）
+  special_quorum:                 # 特別決議の定足数を1/3に緩和（会社法309条2項）
+    numerator: 1
+    denominator: 3
+  election_quorum:                # 役員選任の定足数を1/3に緩和（会社法341条）
+    numerator: 1
+    denominator: 3
+  annual_meeting_within_months: 3 # 定時総会は事業年度末日の翌日から3か月以内（定款）
+  heightened_requirements: false
+officers:
+  - stakeholder_id: STK-DIR-001
+    role: representative_director
+    display_name: サンプル 一郎
+  - stakeholder_id: STK-DIR-002
+    role: director
+    display_name: サンプル 二郎
+  - stakeholder_id: STK-DIR-003
+    role: outside_director
+    display_name: サンプル 三郎
+  - stakeholder_id: STK-AUD-001
+    role: auditor
+    display_name: サンプル 監子

@@ -1,0 +1,15 @@
+skills:
+  - id: jp_ppc_breach_report
+    file: jp_ppc_breach_report.md
+    runtime: cli
+    cli_command: operations data-breach draft
+    argv: [operations, data-breach, draft]
+    description: 個情漏えい報告準備 — 報告対象事態の判定結果と施行規則8条1項の報告事項から速報/確報の下書き MD を生成
+    agent_id: privacy_officer
+  - id: jp_breach_deadline_watch
+    file: jp_breach_deadline_watch.md
+    runtime: cli
+    cli_command: operations data-breach deadlines
+    argv: [operations, data-breach, deadlines]
+    description: 漏えい等報告の期限監視 — 速報（GL目安3〜5日）· 確報（30/60日 · 休日繰延べ）· 本人通知 · 委託元通知
+    agent_id: privacy_officer

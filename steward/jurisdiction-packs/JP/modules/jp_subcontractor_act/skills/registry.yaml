@@ -1,0 +1,15 @@
+skills:
+  - id: jp_subcontractor_checklist
+    file: jp_subcontractor_act_ops.md
+    runtime: cli
+    cli_command: operations subcontract check
+    argv: [operations, subcontract, check]
+    description: 取適法（旧下請法）チェック — 明示 · 60日支払期日 · 手形等禁止 · 支払遅延 · 減額 · 返品 · 記録保存
+    agent_id: procurement
+  - id: jp_subcontractor_scope
+    file: jp_subcontractor_act_ops.md
+    runtime: cli
+    cli_command: operations subcontract scope
+    argv: [operations, subcontract, scope]
+    description: 取適法の適用対象判定（取引類型 × 資本金基準 · 従業員基準）
+    agent_id: procurement

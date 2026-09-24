@@ -1,0 +1,15 @@
+skills:
+  - id: jp_shareholder_meeting_pack
+    file: jp_statutory_meetings_ops.md
+    runtime: cli
+    cli_command: operations statutory-meetings checklist
+    argv: [operations, statutory-meetings, checklist]
+    description: 株主総会パック — 招集期限 · 基準日 · 決議要件 · 議事録記載事項 · 備置の確認（draft で招集通知・議事録）
+    agent_id: corporate_governance
+  - id: jp_board_meeting_pack
+    file: jp_statutory_meetings_ops.md
+    runtime: cli
+    cli_command: operations statutory-meetings schedule
+    argv: [operations, statutory-meetings, schedule]
+    description: 取締役会パック — 招集期限 · 招集省略 · 書面決議の可否（checklist · draft で議事録）
+    agent_id: corporate_governance

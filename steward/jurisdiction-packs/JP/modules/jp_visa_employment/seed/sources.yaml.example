@@ -1,0 +1,99 @@
+# 一次資料（L0 · 公表資料）— retrieved_on 時点の内容で statutory.ts / deadlines.ts の定数を確認済み。
+# 改正時は e-Gov の施行日を確認し、定数・本ファイルを同時に更新する。
+sources:
+  - id: egov-immigration-act
+    title: 出入国管理及び難民認定法（昭和26年政令第319号）
+    publisher: e-Gov 法令検索（デジタル庁）
+    url: https://laws.e-gov.go.jp/law/326CO0000000319
+    type: law
+    articles: ["2条の5", "19条", "19条の3", "19条の16", "19条の17", "19条の18", "20条6項", "21条", "73条の2", "別表第一", "別表第二"]
+    retrieved_on: "2026-09-24"
+    notes: 活動の範囲と資格外活動許可（19条）· 本人の所属機関等届出（19条の16）· 特例期間（20条6項 · 21条4項準用）· 不法就労助長罪（73条の2）
+  - id: egov-immigration-act-regulation
+    title: 出入国管理及び難民認定法施行規則（昭和56年法務省令第54号）
+    publisher: e-Gov 法令検索（デジタル庁）
+    url: https://laws.e-gov.go.jp/law/356M50000010054
+    type: law
+    articles: ["19条5項"]
+    retrieved_on: "2026-09-24"
+    notes: 包括許可 1週28時間以内 · 留学生の長期休業期間 1日8時間以内 · 風俗営業等の除外
+  - id: egov-labor-policy-act
+    title: 労働施策の総合的な推進並びに労働者の雇用の安定及び職業生活の充実等に関する法律（昭和41年法律第132号）
+    publisher: e-Gov 法令検索（デジタル庁）
+    url: https://laws.e-gov.go.jp/law/341AC0000000132
+    type: law
+    articles: ["7条", "28条1項", "40条1項2号"]
+    retrieved_on: "2026-09-24"
+    notes: 外国人雇用状況の届出義務 · 届出懈怠/虚偽は30万円以下の罰金
+  - id: egov-labor-policy-act-regulation
+    title: 労働施策総合推進法施行規則（昭和41年労働省令第23号）
+    publisher: e-Gov 法令検索（デジタル庁）
+    url: https://laws.e-gov.go.jp/law/341M50002000023
+    type: law
+    articles: ["1条の2", "10条", "11条", "12条"]
+    retrieved_on: "2026-09-24"
+    notes: "外交・公用・特別永住者の除外（1条の2）· 確認書類（11条）· 届出期限（12条 — 雇入れ翌月10日 · 離職翌日から10日以内 · 被保険者でない者は翌月末日）"
+  - id: egov-employment-insurance-regulation
+    title: 雇用保険法施行規則（昭和50年労働省令第3号）
+    publisher: e-Gov 法令検索（デジタル庁）
+    url: https://laws.e-gov.go.jp/law/350M50002000003
+    type: law
+    articles: ["6条", "7条"]
+    retrieved_on: "2026-09-24"
+    notes: 資格取得届（翌月10日まで）· 資格喪失届（翌日から起算して10日以内）
+  - id: mhlw-foreign-employment-notice
+    title: 「外国人雇用状況の届出」について
+    publisher: 厚生労働省
+    url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_roudou/koyou/gaikokujin/todokede/index.html
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: 雇用保険被保険者は資格取得届/喪失届で届出 · 被保険者でない者は様式第3号（令和9年4月1日から新様式）· 届出に在留カード写しの添付は不要
+  - id: mhlw-work-eligibility
+    title: 外国人の方を雇い入れる際には、就労が認められるかどうかを確認してください。
+    publisher: 厚生労働省
+    url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_roudou/koyou/jigyounushi/seido/anteikyoku/gairou/980908gai01.htm
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: 就労可否の3区分 · 留学/家族滞在の資格外活動 · 風俗営業等への従事不可
+  - id: isa-permission-to-engage
+    title: 資格外活動許可について
+    publisher: 出入国在留管理庁
+    url: https://www.moj.go.jp/isa/applications/procedures/nyuukokukanri07_00045.html
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: 包括許可（1週28時間以内）と個別許可 · 別表第二の在留資格は対象外
+  - id: isa-student-permission
+    title: 「留学」の在留資格に係る資格外活動許可について
+    publisher: 出入国在留管理庁
+    url: https://www.moj.go.jp/isa/applications/procedures/nyuukokukanri07_00003.html
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: 長期休業期間は1日8時間以内 · インターンシップ等の個別許可
+  - id: isa-extension-of-stay
+    title: 在留期間更新許可申請
+    publisher: 出入国在留管理庁
+    url: https://www.moj.go.jp/isa/applications/procedures/16-3.html
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: 6か月以上の在留期間は満了の3か月前から申請可 · 申請は本人等（会社は取次承認を受けた場合のみ）
+  - id: isa-proper-employment-leaflet
+    title: 外国人の適正な雇用にご協力ください（リーフレット）
+    publisher: 出入国在留管理庁
+    url: https://www.moj.go.jp/isa/content/001462229.pdf
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: 在留カードの就労制限欄 · 裏面の資格外活動許可欄 · 指定書の確認 · 不法就労助長罪
+  - id: isa-card-reader-app
+    title: 在留カード等読取アプリケーション／失効情報照会 サポートページ
+    publisher: 出入国在留管理庁
+    url: https://www.moj.go.jp/isa/applications/procedures/rcc-support.html
+    type: tool
+    retrieved_on: "2026-09-24"
+    notes: 券面の真正性確認と失効情報照会（2026-01-05 から https://lapse-immi.moj.go.jp/html/top.html）— 人間が実施し番号は記録しない
+  - id: isa-ikusei-shuro
+    title: 育成就労制度の制度概要・関係法令
+    publisher: 出入国在留管理庁
+    url: https://www.moj.go.jp/isa/03_00163.html
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: 令和6年法律第60号 · 施行日 令和9年4月1日（一部を除く）— 本モジュールは対象外

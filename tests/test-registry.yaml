@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 623
-  static_test_cases: 2942
-  tiered_execution_total: 623
-  catalog_total: 47
-  catalog_cli_registered: 47
+  vitest_total: 631
+  static_test_cases: 3165
+  tiered_execution_total: 631
+  catalog_total: 55
+  catalog_cli_registered: 55
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 8
+  catalog_only: 16
 platform_domains:
   P01_kernel:
     layer: 1
@@ -147,6 +147,18 @@ catalog_modules:
     cli: false
     tests:
       - catalog/jp-cosmetics-mah.test.ts
+  jp_data_breach:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-data-breach.test.ts
+  jp_employment_rules:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-employment-rules.test.ts
   jp_inspection:
     tier: activation_ready
     coverage_tier: dedicated
@@ -167,6 +179,12 @@ catalog_modules:
     tests:
       - catalog/jp-jsox.test.ts
       - jp-jsox.test.ts
+  jp_labor_contract:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-labor-contract.test.ts
   jp_medical_device:
     tier: production_ready
     coverage_tier: dedicated
@@ -182,6 +200,12 @@ catalog_modules:
     cli: true
     tests:
       - catalog/jp-minpaku.test.ts
+  jp_patent_application:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-patent-application.test.ts
   jp_payroll:
     tier: activation_ready
     coverage_tier: catalog_only
@@ -217,12 +241,30 @@ catalog_modules:
     cli: true
     tests:
       - catalog/jp-payroll-modules.test.ts
+  jp_statutory_meetings:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-statutory-meetings.test.ts
+  jp_subcontractor_act:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-subcontractor-act.test.ts
   jp_subsidy_application:
     tier: production_ready
     coverage_tier: dedicated
     cli: true
     tests:
       - jp-subsidy-application.test.ts
+  jp_takken:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-takken.test.ts
   jp_tax_consumption:
     tier: activation_ready
     coverage_tier: catalog_only
@@ -241,6 +283,12 @@ catalog_modules:
     cli: true
     tests:
       - jp-trademark-application.test.ts
+  jp_visa_employment:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-visa-employment.test.ts
   jp_withholding_statutory:
     tier: activation_ready
     coverage_tier: catalog_only
@@ -688,6 +736,16 @@ tests:
     kind: unit
     catalog_ids:
       - jp_cosmetics_mah
+  catalog/jp-data-breach.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_data_breach
+  catalog/jp-employment-rules.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_employment_rules
   catalog/jp-inspection.test.ts:
     axis: catalog
     kind: unit
@@ -698,11 +756,21 @@ tests:
     kind: unit
     catalog_ids:
       - jp_jsox
+  catalog/jp-labor-contract.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_labor_contract
   catalog/jp-minpaku.test.ts:
     axis: catalog
     kind: unit
     catalog_ids:
       - jp_minpaku
+  catalog/jp-patent-application.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_patent_application
   catalog/jp-payroll-modules.test.ts:
     axis: catalog
     kind: unit
@@ -714,6 +782,21 @@ tests:
     kind: unit
     catalog_ids:
       - jp_privacy_policy
+  catalog/jp-statutory-meetings.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_statutory_meetings
+  catalog/jp-subcontractor-act.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_subcontractor_act
+  catalog/jp-takken.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_takken
   catalog/jp-tax-modules.test.ts:
     axis: catalog
     kind: unit
@@ -722,6 +805,11 @@ tests:
       - jp_tax_consumption
       - jp_invoice_qualified
       - jp_withholding_statutory
+  catalog/jp-visa-employment.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_visa_employment
   catalog/jp-women-empowerment.test.ts:
     axis: catalog
     kind: unit

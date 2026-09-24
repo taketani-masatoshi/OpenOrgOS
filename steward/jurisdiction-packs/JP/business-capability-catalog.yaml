@@ -125,48 +125,97 @@ agents:
     name_ja: 人事・労務
     name_en: Human Resources
     tier: extension
-    status: planned
+    status: implemented
+    path: steward/core/agents/human_resources_agent.md
     categories:
       - labor_hr
     scope_ja: 採用 · 就業規則 · 社保 · 給与 · 36協定 · 労務監督
     priority: P0
-    notes: agents/registry.yaml planned · Finance と分担要整理
+    notes: jp_employment_rules · jp_labor_contract · jp_visa_employment を bind
+  - id: legal
+    name_ja: 法務
+    name_en: Legal
+    tier: extension
+    status: implemented
+    path: steward/core/agents/legal_agent.md
+    categories:
+      - compliance_legal
+    scope_ja: 契約レビュー · 定款 · 登記ドラフト · リスク整理
+    priority: P1
+    notes: 旧 catalog id legal_ip の法務側。知財は intellectual_property
   - id: legal_ip
-    name_ja: 法務・知財
+    name_ja: 法務・知財（索引）
     name_en: Legal & IP
     tier: extension
-    status: planned
+    status: implemented
     categories:
       - compliance_legal
       - intellectual_property
     scope_ja: 契約レビュー · 商標・特許出願支援 · 紛争エスカレーション
     priority: P1
-    notes: 現状 Compliance proxy（jp_trademark_application 等）
+    notes: 運用 ID は legal + intellectual_property。本行はギャップ索引の互換
+  - id: intellectual_property
+    name_ja: 知財
+    name_en: Intellectual Property
+    tier: extension
+    status: implemented
+    path: steward/core/agents/intellectual_property_agent.md
+    categories:
+      - intellectual_property
+    scope_ja: 商標 · 特許 · ライセンス
+    priority: P1
+    notes: jp_trademark_application · jp_patent_application を bind
+  - id: corporate_governance
+    name_ja: コーポレートガバナンス
+    name_en: Corporate Governance
+    tier: extension
+    status: implemented
+    path: steward/core/agents/corporate_governance_agent.md
+    categories:
+      - corporate_governance
+    scope_ja: 株主総会 · 取締役会 · 議事録 · 招集
+    priority: P0
+    notes: jp_statutory_meetings を bind
+  - id: privacy_officer
+    name_ja: 個情管理責任者
+    name_en: Privacy Officer
+    tier: extension
+    status: implemented
+    path: steward/core/agents/privacy_officer_agent.md
+    categories:
+      - compliance_legal
+    scope_ja: 個情 · DPIA · 越境 · 漏えい報告準備
+    priority: P2
+    notes: jp_data_breach を bind
   - id: government_affairs
     name_ja: 行政・公的制度
     name_en: Government Affairs
     tier: extension
-    status: planned
+    status: implemented
+    path: steward/core/agents/government_affairs_agent.md
     categories:
       - government_programs
     scope_ja: 補助金 · 交付金 · 認定 · 行政書士連携
     priority: P1
-    notes: 現状 Finance/Compliance proxy（jp_subsidy_application）
+    notes: jp_subsidy_application を bind
   - id: procurement
     name_ja: 購買・調達
     name_en: Procurement
     tier: extension
-    status: planned
+    status: implemented
+    path: steward/core/agents/procurement_agent.md
     categories:
       - sector_operations
       - compliance_legal
-    scope_ja: ベンダー選定 · 発注 · 稟議 REG-004 連動
-    priority: P2
+    scope_ja: ベンダー選定 · 発注 · 稟議 REG-004 連動 · 取適法点検
+    priority: P1
+    notes: jp_subcontractor_act を bind
   - id: risk_insurance
     name_ja: リスク・保険
     name_en: Risk & Insurance
     tier: extension
-    status: planned
+    status: implemented
+    path: steward/core/agents/risk_insurance_agent.md
     categories:
       - insurance_risk
     scope_ja: 損保 · 賠責 · 許認可 INDEX · 事業継続
@@ -504,10 +553,10 @@ modules:
       - https://www.moj.go.jp/homu/homu_06.html
   - id: jp_statutory_meetings
     name_ja: 株主総会・取締役会手続
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
-    agent_proxy: secretary
+    agent_proxy: corporate_governance
     categories:
       - corporate_governance
     priority: P0
@@ -515,6 +564,7 @@ modules:
       - REG-002
       - REG-003
       - REG-004
+    notes: 招集期限 · 決議要件 · 議事録ドラフト。発出・提出は人間
   - id: jp_tax_corporate
     name_ja: 法人税・地方法人税申告
     status: partial
@@ -584,13 +634,14 @@ modules:
       - https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_rodou/rodouteiriku/
   - id: jp_employment_rules
     name_ja: 就業規則・36協定
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
     categories:
       - labor_hr
     priority: P0
+    notes: 作成・届出・周知点検と36協定の限度点検。労基署届出は人間
   - id: jp_payroll
     name_ja: 給与・賞与・年末調整
     status: partial
@@ -603,14 +654,15 @@ modules:
     priority: P0
   - id: jp_labor_contract
     name_ja: 雇用契約・労務管理
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
     categories:
       - labor_hr
       - compliance_legal
     priority: P0
+    notes: 労働条件明示 · 無期転換 · 最低賃金点検。契約締結は人間
   - id: jp_permit_registry
     name_ja: 許認可・届出台帳
     status: partial
@@ -623,23 +675,24 @@ modules:
     priority: P1
     notes: permit-types-catalog 60+ 種 · obligations · operations permit CLI · gap 分析
   - id: jp_subcontractor_act
-    name_ja: 下請法コンプライアンス
-    status: planned
-    tier: skeleton
+    name_ja: 取適法（旧下請法）コンプライアンス
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
-    agent_proxy: contract
+    agent_proxy: procurement
     categories:
       - compliance_legal
       - sector_operations
     priority: P1
     official_urls:
-      - https://www.chusho.meti.go.jp/policy/shitauke/index.html
+      - https://www.jftc.go.jp/toriteki/
+    notes: 取適法の適用判定と禁止行為点検。行政提出は人間
   - id: jp_data_breach
     name_ja: 個情漏えい報告・記録
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
-    agent_proxy: compliance
+    agent_proxy: privacy_officer
     categories:
       - compliance_legal
     priority: P1
@@ -647,17 +700,19 @@ modules:
       - REG-010
     official_urls:
       - https://www.ppc.go.jp/
+    notes: 報告対象判定 · 速報/確報期限 · 下書き。PPC 提出は人間
   - id: jp_patent_application
     name_ja: 特許出願
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
-    agent_proxy: compliance
+    agent_proxy: intellectual_property
     categories:
       - intellectual_property
     priority: P2
     official_urls:
       - https://www.jpo.go.jp/system/process/tokkyo/index.html
+    notes: 願書ひな形と期限管理。特許庁提出は人間
   - id: jp_minpaku
     name_ja: 民泊・住宅宿泊
     status: planned
@@ -673,16 +728,17 @@ modules:
       - rental
   - id: jp_takken
     name_ja: 宅地建物取引業
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
-    agent_proxy: contract
+    agent_proxy: compliance
     categories:
       - sector_operations
       - compliance_legal
     priority: P2
     binds_modules:
       - real_estate_brokerage
+    notes: 免許 · 専任宅建士 · 35条/37条 · 報酬上限点検。申請は人間
   - id: jp_bank_corporate
     name_ja: 法人口座・資金管理
     status: implemented
@@ -696,8 +752,8 @@ modules:
     notes: append-only 消込 · 冪等銀行取込 · aging/tie-out · fixture E2E · orgos jp bank CLI
   - id: jp_visa_employment
     name_ja: 在留・外国人雇用
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
     categories:
@@ -706,6 +762,7 @@ modules:
     priority: P2
     official_urls:
       - https://www.moj.go.jp/isa/applications/procedures/index.html
+    notes: 就労可否 · 資格外活動上限 · 雇用状況届出期限。申請書作成・送信なし
 skills:
   - id: daily_ops
     name_ja: 日次運用
@@ -912,24 +969,26 @@ skills:
     cli_command: operations corporate draft
   - id: jp_shareholder_meeting_pack
     name_ja: 株主総会招集・議事録パック
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: secretary
+    agent_id: corporate_governance
     module_id: jp_statutory_meetings
     categories:
       - corporate_governance
     priority: P0
+    cli_command: operations statutory-meetings checklist
     regulations:
       - REG-003
   - id: jp_board_meeting_pack
     name_ja: 取締役会招集・議事録パック
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: secretary
+    agent_id: corporate_governance
     module_id: jp_statutory_meetings
     categories:
       - corporate_governance
     priority: P0
+    cli_command: operations statutory-meetings schedule
     regulations:
       - REG-002
   - id: jp_ringi_draft
@@ -1035,22 +1094,24 @@ skills:
     priority: P0
   - id: jp_work_rules_draft
     name_ja: 就業規則ドラフト
-    status: planned
+    status: partial
     runtime: cli
     agent_id: human_resources
     module_id: jp_employment_rules
     categories:
       - labor_hr
     priority: P0
+    cli_command: operations work-rules draft
   - id: jp_36_agreement
     name_ja: 36協定届出準備
-    status: planned
+    status: partial
     runtime: cli
     agent_id: human_resources
     module_id: jp_employment_rules
     categories:
       - labor_hr
     priority: P1
+    cli_command: operations work-rules agreement-check
   - id: jp_payroll_run
     name_ja: 給与計算・明細
     status: planned
@@ -1072,7 +1133,7 @@ skills:
     priority: P0
   - id: jp_employment_contract_draft
     name_ja: 雇用契約書ドラフト
-    status: planned
+    status: partial
     runtime: cli
     agent_id: human_resources
     module_id: jp_labor_contract
@@ -1080,6 +1141,40 @@ skills:
       - labor_hr
       - compliance_legal
     priority: P0
+    cli_command: operations labor-contract draft
+  - id: jp_fixed_term_conversion_check
+    name_ja: 無期転換・雇止め予告点検
+    status: partial
+    runtime: cli
+    agent_id: human_resources
+    module_id: jp_labor_contract
+    categories:
+      - labor_hr
+      - compliance_legal
+    priority: P0
+    cli_command: operations labor-contract conversion-check
+  - id: jp_foreign_worker_check
+    name_ja: 外国人就労可否点検
+    status: partial
+    runtime: cli
+    agent_id: human_resources
+    module_id: jp_visa_employment
+    categories:
+      - labor_hr
+      - cross_border
+    priority: P2
+    cli_command: operations foreign-workers check
+  - id: jp_foreign_employment_notice
+    name_ja: 外国人雇用状況届出期限
+    status: partial
+    runtime: cli
+    agent_id: human_resources
+    module_id: jp_visa_employment
+    categories:
+      - labor_hr
+      - cross_border
+    priority: P2
+    cli_command: operations foreign-workers notifications
   - id: jp_privacy_policy_publish
     name_ja: プライバシーポリシー生成
     status: planned
@@ -1093,22 +1188,65 @@ skills:
       - REG-010
   - id: jp_ppc_breach_report
     name_ja: 個情漏えい報告準備
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: compliance
+    agent_id: privacy_officer
     module_id: jp_data_breach
     categories:
       - compliance_legal
     priority: P1
-  - id: jp_subcontractor_checklist
-    name_ja: 下請法チェックリスト
-    status: planned
+    cli_command: operations data-breach draft
+  - id: jp_breach_deadline_watch
+    name_ja: 漏えい報告期限監視
+    status: partial
     runtime: cli
-    agent_id: contract
+    agent_id: privacy_officer
+    module_id: jp_data_breach
+    categories:
+      - compliance_legal
+    priority: P1
+    cli_command: operations data-breach deadlines
+  - id: jp_subcontractor_checklist
+    name_ja: 取適法（旧下請法）チェックリスト
+    status: implemented
+    runtime: cli
+    agent_id: procurement
     module_id: jp_subcontractor_act
     categories:
       - compliance_legal
     priority: P1
+    cli_command: operations subcontract check
+  - id: jp_subcontractor_scope
+    name_ja: 取適法適用対象判定
+    status: partial
+    runtime: cli
+    agent_id: procurement
+    module_id: jp_subcontractor_act
+    categories:
+      - compliance_legal
+    priority: P1
+    cli_command: operations subcontract scope
+  - id: jp_takken_compliance_check
+    name_ja: 宅建業取引点検
+    status: partial
+    runtime: cli
+    agent_id: compliance
+    module_id: jp_takken
+    categories:
+      - sector_operations
+      - compliance_legal
+    priority: P2
+    cli_command: operations takken check
+  - id: jp_takken_fee_calc
+    name_ja: 宅建報酬上限計算
+    status: partial
+    runtime: cli
+    agent_id: compliance
+    module_id: jp_takken
+    categories:
+      - sector_operations
+    priority: P2
+    cli_command: operations takken fee
   - id: jp_women_plan_draft
     name_ja: 女性活躍行動計画ドラフト
     status: planned
@@ -1130,13 +1268,24 @@ skills:
     priority: P2
   - id: jp_patent_draft
     name_ja: 特許出願書類ドラフト
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: compliance
+    agent_id: intellectual_property
     module_id: jp_patent_application
     categories:
       - intellectual_property
     priority: P2
+    cli_command: operations patent draft
+  - id: jp_patent_deadlines
+    name_ja: 特許期限ウォッチ
+    status: partial
+    runtime: cli
+    agent_id: intellectual_property
+    module_id: jp_patent_application
+    categories:
+      - intellectual_property
+    priority: P2
+    cli_command: operations patent deadlines
   - id: jp_travel_expense_claim
     name_ja: 旅費精算（REG-008）
     status: planned
@@ -1204,22 +1353,20 @@ skills:
     cli_command: operations ir disclosure-calendar
 summary:
   agents:
-    implemented: 8
+    implemented: 17
     partial: 0
-    planned: 5
-    total: 13
+    planned: 0
+    total: 17
   modules:
     implemented: 21
-    partial: 16
-    planned: 9
+    partial: 24
+    planned: 1
     total: 46
   skills:
-    implemented: 16
-    partial: 16
-    planned: 18
-    total: 50
+    implemented: 17
+    partial: 31
+    planned: 10
+    total: 58
   p0_gaps:
-    - human_resources Agent 未実装（就業規則 · 社保 · 給与）
-    - jp_statutory_meetings モジュール未実装
-    - jp_social_insurance · jp_payroll モジュールは集計 CLI まで実装（申告提出は未実装）
-    - 税務モジュールは skeleton — 申告書 XML · e-Tax 提出は未実装（tax-filing-spec 参照）
+    - jp_social_insurance · jp_payroll は集計 CLI まで実装（算定基礎届・年末調整の提出は未実装）
+    - 税務モジュールは申告書 XML ドラフトまで — e-Tax 提出は未実装（tax-filing-spec 参照）

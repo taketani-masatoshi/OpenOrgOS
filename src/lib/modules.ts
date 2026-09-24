@@ -184,6 +184,14 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_withholding_statutory: "tax",
   jp_payroll: "human_resources",
   jp_social_insurance: "human_resources",
+  jp_statutory_meetings: "corporate_governance",
+  jp_employment_rules: "human_resources",
+  jp_labor_contract: "human_resources",
+  jp_subcontractor_act: "procurement",
+  jp_data_breach: "privacy_officer",
+  jp_visa_employment: "human_resources",
+  jp_takken: "compliance",
+  jp_patent_application: "intellectual_property",
 };
 
 const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
@@ -236,6 +244,14 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_withholding_statutory",
   "jp_payroll",
   "jp_social_insurance",
+  "jp_statutory_meetings",
+  "jp_employment_rules",
+  "jp_labor_contract",
+  "jp_subcontractor_act",
+  "jp_data_breach",
+  "jp_visa_employment",
+  "jp_takken",
+  "jp_patent_application",
 ];
 
 export function modulesFilePath(): string {

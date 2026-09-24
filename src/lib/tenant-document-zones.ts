@@ -63,6 +63,14 @@ export const MODULE_DEFAULT_DOCS_ROOT: Record<string, string> = {
   jp_women_empowerment: "docs/compliance/declarations/",
   jp_privacy_policy: "docs/compliance/privacy/",
   jp_consumption_refund: "docs/company/tax/refund/",
+  jp_statutory_meetings: "docs/company/governance/",
+  jp_employment_rules: "docs/company/hr/work-rules/",
+  jp_labor_contract: "docs/company/hr/labor-contracts/",
+  jp_subcontractor_act: "docs/procurement/subcontract/",
+  jp_data_breach: "docs/compliance/privacy/breach/",
+  jp_visa_employment: "docs/company/hr/foreign-workers/",
+  jp_takken: "docs/takken/",
+  jp_patent_application: "docs/ip/patent/",
 };
 
 const PROPERTY_MODULE_AGENTS = new Set(["rental", "hospitality", "property_management"]);

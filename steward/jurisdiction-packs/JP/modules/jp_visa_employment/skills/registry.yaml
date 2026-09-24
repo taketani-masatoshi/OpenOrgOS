@@ -1,0 +1,15 @@
+skills:
+  - id: jp_foreign_worker_check
+    file: jp_foreign_worker_check.md
+    runtime: cli
+    cli_command: operations foreign-workers check
+    argv: [operations, foreign-workers, check]
+    description: 外国人労働者の就労可否（在留資格 × 業務区分）· 資格外活動の時間上限 · 在留カード確認記録のチェック
+    agent_id: human_resources
+  - id: jp_foreign_employment_notice
+    file: jp_foreign_employment_notice.md
+    runtime: cli
+    cli_command: operations foreign-workers notifications
+    argv: [operations, foreign-workers, notifications]
+    description: ハローワーク外国人雇用状況届出（雇入れ・離職）の期限・超過確認と本人届出リマインダ
+    agent_id: human_resources

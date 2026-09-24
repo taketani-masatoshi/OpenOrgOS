@@ -1,0 +1,120 @@
+# 外国人労働者台帳（架空サンプル）
+# テナントでは L2 — data/hr/foreign-workers/foreign-workers.yaml を .gitignore に追加すること。
+# 記録してよいのは下記キーのみ（schema は strict — 在留カード番号 · 旅券番号 · 国籍 · 住所 · 氏名は保存不可）。
+# 人物は employee_id で参照し、氏名等は人事台帳（L2）側にのみ置く。
+# 下記は各チェックを発火させるための意図的な不備を含む（コメント参照 · as_of 2026-09-24 基準）。
+as_of: "2026-09-24"
+
+workers:
+  # 全チェック OK の基準例
+  - employee_id: EMP-101
+    status_of_residence: engineer_humanities_international_services
+    period_expires_on: "2027-08-31"
+    card_valid_until: "2027-08-31"
+    card_verified_on: "2025-03-25"
+    card_verified_by: EMP-001
+    job_category: software_engineering
+    hired_on: "2025-04-01"
+    employment_insurance_insured: true
+    hello_work_hire_notified_on: "2025-05-08"
+
+  # 留学 · 包括許可 — weekly-hours に 28h 超過週 · 長期休業 8h/日 超過週 · 他社時間未記録週あり
+  - employee_id: EMP-102
+    status_of_residence: student
+    period_expires_on: "2027-03-31"
+    card_valid_until: "2027-03-31"
+    card_verified_on: "2026-04-05"
+    card_verified_by: EMP-001
+    permission_to_engage:
+      granted: true
+      scope: comprehensive
+      weekly_limit_hours: 28
+      granted_on: "2026-03-20"
+    job_category: restaurant_service
+    hired_on: "2026-04-10"
+    employment_insurance_insured: false
+    hello_work_hire_notified_on: "2026-05-20"
+
+  # 家族滞在 · 資格外活動許可なし（就労不可 alert）· 雇入れ届出の期限超過 · 更新申請可能期間
+  - employee_id: EMP-103
+    status_of_residence: dependent
+    period_expires_on: "2026-11-15"
+    card_valid_until: "2026-11-15"
+    card_verified_on: "2026-06-25"
+    card_verified_by: EMP-001
+    job_category: retail_sales
+    hired_on: "2026-07-01"
+    employment_insurance_insured: false
+
+  # 永住者 · 離職済（離職届出は期限前 pending）
+  - employee_id: EMP-104
+    status_of_residence: permanent_resident
+    card_valid_until: "2031-05-31"
+    card_verified_on: "2024-09-20"
+    card_verified_by: EMP-001
+    job_category: factory_line_work
+    hired_on: "2024-10-01"
+    separated_on: "2026-09-18"
+    employment_insurance_insured: true
+    hello_work_hire_notified_on: "2024-11-05"
+
+  # 特定技能1号 · 満了30日以内（urgent）· 所属機関義務は needs_review · 届出は期限当日提出
+  - employee_id: EMP-105
+    status_of_residence: specified_skilled_worker_i
+    period_expires_on: "2026-10-10"
+    card_valid_until: "2026-10-10"
+    card_verified_on: "2025-10-01"
+    card_verified_by: EMP-001
+    job_category: food_service_industry
+    hired_on: "2025-10-15"
+    employment_insurance_insured: true
+    hello_work_hire_notified_on: "2025-11-10"
+
+  # 技人国で除外業務（alert）· 満了後だが満了前に更新申請（特例期間 needs_review）· 確認者未記録 · 届出遅延
+  - employee_id: EMP-106
+    status_of_residence: engineer_humanities_international_services
+    period_expires_on: "2026-09-01"
+    card_verified_on: "2026-01-25"
+    renewal_application_filed_on: "2026-08-20"
+    job_category: factory_line_work
+    hired_on: "2026-02-01"
+    employment_insurance_insured: true
+    hello_work_hire_notified_on: "2026-03-12"
+
+  # 特別永住者 — 雇用状況届出 · 在留カード確認の対象外
+  - employee_id: EMP-107
+    status_of_residence: special_permanent_resident
+    job_category: accounting
+    hired_on: "2023-04-01"
+    employment_insurance_insured: true
+
+  # 特定活動 — 業務区分マップなし（needs_review）· 在留カード確認記録なし（alert）
+  - employee_id: EMP-108
+    status_of_residence: designated_activities
+    period_expires_on: "2027-01-31"
+    job_category: interpretation_translation
+    hired_on: "2026-09-01"
+    employment_insurance_insured: false
+
+  # 技能 · 在留期間満了済で更新申請なし（expired alert）· カード有効期間経過
+  - employee_id: EMP-109
+    status_of_residence: skilled_labor
+    period_expires_on: "2026-09-20"
+    card_valid_until: "2026-09-20"
+    card_verified_on: "2022-05-25"
+    card_verified_by: EMP-001
+    job_category: foreign_cuisine_chef
+    hired_on: "2022-06-01"
+    employment_insurance_insured: true
+    hello_work_hire_notified_on: "2022-06-20"
+
+  # 新規雇入れ — 雇入れ届出 pending · 本人の契約機関届出リマインダ（14日以内）
+  - employee_id: EMP-110
+    status_of_residence: engineer_humanities_international_services
+    period_expires_on: "2029-09-14"
+    card_valid_until: "2029-09-14"
+    card_verified_on: "2026-09-10"
+    card_verified_by: EMP-001
+    job_category: marketing
+    hired_on: "2026-09-15"
+    employment_insurance_insured: true

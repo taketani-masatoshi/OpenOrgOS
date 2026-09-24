@@ -1,0 +1,18 @@
+# 過去の有期労働契約の期間（労契法18条の通算用 · 同一使用者）
+# 現行・予定の契約は labor-contracts.yaml に記載し、ここには満了済みの期間のみを書く。
+# 2013-04-01 より前に始まった契約は通算対象外（平成24年法律56号附則2項）。
+entity: サンプル商事株式会社
+as_of: "2026-09-24"
+periods:
+  # E-1002: 6か月契約の後に3か月の空白 → 直前通算6か月の1/2 = 3か月以上でクーリング
+  - { employee_id: E-1002, contract_id: LC-2024-021, start_date: "2024-04-01", end_date: "2024-09-30" }
+  # E-1002: 1年契約の後に3か月の空白 → 直前通算1年のため6か月未満はクーリングしない
+  - { employee_id: E-1002, contract_id: LC-2025-002, start_date: "2025-01-01", end_date: "2025-12-31" }
+  # E-1004: 1年契約を4回（LC-2025-004 で5回目 · 通算ちょうど5年）
+  - { employee_id: E-1004, contract_id: LC-2021-004, start_date: "2021-10-01", end_date: "2022-09-30" }
+  - { employee_id: E-1004, contract_id: LC-2022-004, start_date: "2022-10-01", end_date: "2023-09-30" }
+  - { employee_id: E-1004, contract_id: LC-2023-004, start_date: "2023-10-01", end_date: "2024-09-30" }
+  - { employee_id: E-1004, contract_id: LC-2024-004, start_date: "2024-10-01", end_date: "2025-09-30" }
+  # E-1005: 6か月契約を2回 → LC-2026-006 満了時に雇入れから1年超
+  - { employee_id: E-1005, contract_id: LC-2025-051, start_date: "2025-04-01", end_date: "2025-09-30" }
+  - { employee_id: E-1005, contract_id: LC-2025-052, start_date: "2025-10-01", end_date: "2026-03-31" }

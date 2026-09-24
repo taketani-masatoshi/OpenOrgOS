@@ -1,0 +1,108 @@
+# 一次資料（公表資料 · L0）と書式カタログ。retrieved_on は取得（確認）日。
+sources:
+  - id: egov-patent-act
+    title: "特許法（昭和34年法律第121号）"
+    url: "https://laws.e-gov.go.jp/law/334AC0000000121"
+    type: law
+    retrieved_on: "2026-09-24"
+    notes: "3条（期間計算・休日順延）· 30条 · 36条 · 36条の2第2項 · 41条 · 43条 · 43条の2 · 48条の3 · 64条 · 66条 · 67条 · 107条 · 108条 · 112条"
+  - id: egov-patent-rules
+    title: "特許法施行規則（昭和35年通商産業省令第10号）"
+    url: "https://laws.e-gov.go.jp/law/335M50000400010"
+    type: ordinance
+    retrieved_on: "2026-09-24"
+    notes: "23条（様式第26）· 24条（様式第29）· 24条の2 · 24条の3（請求項の記載）· 24条の4（様式第29の2）· 25条の3（様式第31）· 27条の4の2（優先権の回復期間 2月）"
+  - id: egov-form-26
+    title: "特許法施行規則 様式第26（特許願）"
+    url: "https://laws.e-gov.go.jp/data/MinisterialOrdinance/335M50000400010/608805_1/pict/2JH00000226583.pdf"
+    type: form
+    retrieved_on: "2026-09-24"
+    notes: "欄構成 · 備考6（整理番号）· 備考11・19（代表者）· 備考26（30条2項の特記事項）· 備考27・28（優先権主張）"
+  - id: egov-form-29
+    title: "特許法施行規則 様式第29（明細書）"
+    url: "https://laws.e-gov.go.jp/data/MinisterialOrdinance/335M50000400010/607942_1/pict/2FH00000049451.pdf"
+    type: form
+    retrieved_on: "2026-09-24"
+    notes: "見出し構成 · 備考4（発明の名称に半角を用いない）· 備考14 · 備考18（段落番号【0001】）"
+  - id: jpo-abstract-guide
+    title: "要約書の概要（特許庁）"
+    url: "https://www.jpo.go.jp/system/patent/shutugan/sakusei/ygaiyo.html"
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: "要約は400字以内（好ましくは200〜400字）· 選択図は1つ"
+  - id: jpo-novelty-exception
+    title: "発明の新規性喪失の例外規定の適用を受けるための手続について（特許庁）"
+    url: "https://www.jpo.go.jp/system/laws/rule/guideline/patent/hatumei_reigai.html"
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: "出願と同時に適用を受けようとする旨の書面 · 出願から30日以内に証明書 · 出願人の手引き・Q&A集"
+  - id: jpo-paris-convention
+    title: "パリ条約（特許庁 · 和文）"
+    url: "https://www.jpo.go.jp/system/laws/gaikoku/paris/patent/chap1.html"
+    type: treaty
+    retrieved_on: "2026-09-24"
+    notes: "4条C(1) 特許12箇月 · C(2) 出願の日は算入しない · C(3) 休日は次の就業日まで延長"
+  - id: jpo-annuity-flow
+    title: "権利維持のための特許（登録）料の納付の流れについて（特許庁）"
+    url: "https://www.jpo.go.jp/system/process/toroku/kenri_iji_nagare.html"
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: "納付期限日 = 設定登録日 + 納付済年分（閉庁日は翌開庁日）· 追納6月 · 割増特許料は同額"
+  - id: inpit-holiday-faq
+    title: "手続期間の末日が休日である場合（INPIT FAQ）"
+    url: "https://faq.inpit.go.jp/FAQ/2024/01/000151.html"
+    type: guide
+    retrieved_on: "2026-09-24"
+    notes: "3条2項は手続の期間のみ（存続期間は対象外）· 期間経過後の一定期間は順延後の末日の翌日から起算"
+  - id: jpo-fee-table
+    title: "産業財産権関係料金一覧（特許庁）"
+    url: "https://www.jpo.go.jp/system/process/tesuryo/hyou.html"
+    type: fee
+    retrieved_on: "2026-09-24"
+    notes: "特許庁ページの更新日 2026-04-06 · 減免制度あり · 金額は提出前に再確認"
+  - id: cao-national-holidays
+    title: "「国民の祝日」について（内閣府 · CSV）"
+    url: "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
+    type: calendar
+    retrieved_on: "2026-09-24"
+    notes: "holidays.yaml の national_holidays の出典"
+  - id: jpo-online-filing-guide
+    title: "電子出願ソフトサポートサイト — 特許願の作成方法"
+    url: "https://www.pcinfo.jpo.go.jp/guide/Content/Guide/Patent/Gansho/doc/P_Normal.htm"
+    type: tool
+    retrieved_on: "2026-09-24"
+    notes: "オンライン出願は人間が電子出願ソフトで行う（本モジュールは送信しない）"
+
+forms:
+  - id: form-tokkyo-gan
+    name: "特許願"
+    template: templates/tokkyo-gan.md.example
+    output: tokkyo-gan.md
+    legal_basis: "特許法36条1項 · 施行規則23条1項 · 様式第26"
+  - id: form-meisaisho
+    name: "明細書"
+    template: templates/meisaisho.md.example
+    output: meisaisho.md
+    legal_basis: "特許法36条2項〜4項 · 施行規則24条・24条の2 · 様式第29"
+  - id: form-tokkyo-seikyu-no-hani
+    name: "特許請求の範囲"
+    template: templates/tokkyo-seikyu-no-hani.md.example
+    output: tokkyo-seikyu-no-hani.md
+    legal_basis: "特許法36条5項・6項 · 施行規則24条の3・24条の4 · 様式第29の2"
+  - id: form-yoyakusho
+    name: "要約書"
+    template: templates/yoyakusho.md.example
+    output: yoyakusho.md
+    legal_basis: "特許法36条7項 · 施行規則25条の3 · 様式第31"
+
+fees:
+  - id: patent-application
+    label: "特許出願料"
+    amount_jpy: 14000
+    source_id: jpo-fee-table
+    retrieved_on: "2026-09-24"
+  - id: exam-request
+    label: "出願審査請求料（平成31年4月1日以降の出願）"
+    formula: "138,000円＋請求項の数×4,000円（減免制度あり · 本モジュールは算定しない）"
+    source_id: jpo-fee-table
+    retrieved_on: "2026-09-24"

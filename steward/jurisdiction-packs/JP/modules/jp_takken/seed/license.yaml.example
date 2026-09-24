@@ -1,0 +1,33 @@
+# 宅建業免許 · 変更届出 · 営業保証金（架空例示 · L1）
+# license_number は公表情報（免許証番号）。個人名・住所は書かない。
+entity: "サンプル不動産株式会社"
+as_of: "2026-09-24"
+license:
+  licensor_kind: governor          # governor（都道府県知事）| minister（国土交通大臣）
+  licensor_prefecture: "東京都"
+  license_number: "東京都知事(1)第000000号"
+  issued_on: "2021-12-01"
+  valid_from: "2021-12-01"
+  expires_on: "2026-11-30"         # 有効期間5年（法第3条第2項）
+  # renewal_applied_on: "2026-10-01"  # 更新申請日（満了90日前〜30日前 · 施行規則第3条）
+changes:
+  - id: CHG-001
+    item: office                   # 事務所の名称・所在地（第4条第1項第4号）
+    description: "本店移転（例示）"
+    changed_on: "2026-04-01"
+    notified_on: "2026-04-20"      # 30日以内 → ok
+  - id: CHG-002
+    item: officer                  # 役員の氏名（同第2号）
+    description: "取締役の就任（例示）"
+    changed_on: "2026-06-01"
+    notified_on: "2026-07-15"      # 期限 2026-07-01 超過 → fail（検出用）
+  - id: CHG-003
+    item: dedicated_takkenshi      # 専任の宅建士の氏名（同第5号）
+    description: "支店の専任宅建士の交代（例示）"
+    changed_on: "2026-09-10"       # 未届出 · 期限 2026-10-10 → warn
+security:
+  method: guarantee_association    # deposit（営業保証金）| guarantee_association（保証協会 · 弁済業務保証金分担金）
+  provider_name: "サンプル保証協会（例示）"
+  amount_yen: 900000               # 主たる事務所60万円 + 支店30万円（施行令第7条）
+  completed_on: "2021-12-10"
+  business_started_on: "2021-12-15"

@@ -1,0 +1,147 @@
+# 取引台帳（7条記録の管理メタ）— 金額以外の L2（口座・個人連絡先）は記載しない
+# category: manufacturing | repair | information_product_program | information_product_other |
+#           service_transport | service_warehousing | service_information_processing | service_other |
+#           specific_transport | construction_subcontract（建設工事の下請負 · 対象外）
+entity: サンプル商事株式会社
+as_of: 2026-09-24
+transactions:
+  - id: SC-2026-001
+    vendor_id: VEN-SC-001
+    category: manufacturing
+    description: 樹脂部品の製造委託（問題なしの例）
+    ordered_on: 2026-04-01
+    terms_disclosed_on: 2026-04-01
+    disclosure_method: paper
+    received_on: 2026-04-20
+    payment_due_on: 2026-05-31
+    paid_on: 2026-05-29
+    payment_method: bank_transfer
+    amount_yen: 1200000
+    records_completed_on: 2026-05-29
+    records_retained_until: 2028-05-29
+
+  - id: SC-2026-002
+    vendor_id: VEN-SC-002
+    category: information_product_other
+    description: 販促ポスターのデザイン（支払期日60日超 · 支払遅延の例）
+    ordered_on: 2026-05-10
+    terms_disclosed_on: 2026-05-12
+    disclosure_method: electronic
+    received_on: 2026-06-01
+    payment_due_on: 2026-08-15
+    paid_on: 2026-08-14
+    payment_method: bank_transfer
+    amount_yen: 800000
+    records_completed_on: 2026-08-14
+    records_retained_until: 2028-08-14
+
+  - id: SC-2026-003
+    vendor_id: VEN-SC-003
+    category: specific_transport
+    description: 販売商品の顧客向け配送（手形払の例 · 支払期日は上限ちょうど）
+    ordered_on: 2026-06-01
+    terms_disclosed_on: 2026-06-01
+    disclosure_method: electronic
+    received_on: 2026-06-30
+    payment_due_on: 2026-08-28
+    paid_on: 2026-07-31
+    payment_method: promissory_note
+    instrument_maturity_on: 2026-10-29
+    amount_yen: 450000
+    records_completed_on: 2026-07-31
+    records_retained_until: 2028-07-31
+
+  - id: SC-2026-004
+    vendor_id: VEN-SC-004
+    category: service_other
+    description: コールセンター運営の再委託（減額 · 協議拒否記録 · 保存期限不足の例）
+    ordered_on: 2026-07-01
+    terms_disclosed_on: 2026-07-01
+    disclosure_method: electronic
+    paper_copy_requested_on: 2026-07-03
+    received_on: 2026-07-31
+    payment_due_on: 2026-08-31
+    paid_on: 2026-08-31
+    payment_method: bank_transfer
+    amount_yen: 600000
+    amount_changes:
+      - changed_on: 2026-08-31
+        delta_yen: -30000
+        reason: 協力金名目の差引
+        cause: principal_request
+    events:
+      - on: 2026-07-15
+        kind: price_negotiation_declined
+        note: 人件費上昇を理由とする単価協議の求めに回答せず
+    records_completed_on: 2026-08-31
+    records_retained_until: 2027-08-31
+
+  - id: SC-2026-005
+    vendor_id: VEN-SC-001
+    category: manufacturing
+    description: 金属部品の製造委託（未払 · 返品 · 有償支給早期決済の例）
+    ordered_on: 2026-08-20
+    terms_disclosed_on: 2026-08-20
+    disclosure_method: paper
+    received_on: 2026-09-01
+    payment_due_on: 2026-10-30
+    payment_method: electronic_record
+    instrument_maturity_on: 2026-10-30
+    amount_yen: 2000000
+    returns:
+      - returned_on: 2026-09-05
+        reason: 自社の販売計画変更
+        supplier_fault: false
+    paid_materials:
+      - settled_on: 2026-09-10
+        amount_yen: 300000
+        notes: 有償支給材の対価を先行相殺
+
+  - id: SC-2026-006
+    vendor_id: VEN-SC-005
+    category: manufacturing
+    description: 大手メーカーへの製造委託（適用対象外の例）
+    ordered_on: 2026-05-01
+    terms_disclosed_on: 2026-05-01
+    disclosure_method: paper
+    received_on: 2026-06-01
+    payment_due_on: 2026-09-30
+    payment_method: promissory_note
+    instrument_maturity_on: 2026-12-31
+    amount_yen: 9000000
+
+  - id: SC-2026-007
+    vendor_id: VEN-SC-001
+    category: construction_subcontract
+    description: 倉庫改修工事の下請負（建設業法 · 対象外の例）
+    ordered_on: 2026-06-10
+    amount_yen: 3000000
+
+  - id: SC-2025-101
+    vendor_id: VEN-SC-001
+    category: manufacturing
+    description: 施行日前の発注（旧下請法の例による · needs_review）
+    ordered_on: 2025-12-15
+    terms_disclosed_on: 2025-12-15
+    disclosure_method: paper
+    received_on: 2026-01-20
+    payment_due_on: 2026-03-19
+    paid_on: 2026-03-19
+    payment_method: promissory_note
+    instrument_maturity_on: 2026-05-19
+    amount_yen: 700000
+
+  - id: SC-2026-008
+    vendor_id: VEN-SC-006
+    category: repair
+    description: 設備修理の委託（受託側規模未取得 · scope needs_review の例）
+    ordered_on: 2026-07-10
+    terms_disclosed_on: 2026-07-10
+    disclosure_method: paper
+    received_on: 2026-07-25
+    payment_due_on: 2026-08-31
+    paid_on: 2026-08-31
+    payment_method: bank_transfer
+    amount_yen: 250000
+    records_completed_on: 2026-08-31
+    records_retained_until: 2028-08-31

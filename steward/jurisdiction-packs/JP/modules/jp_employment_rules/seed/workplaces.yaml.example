@@ -1,0 +1,37 @@
+# 事業場台帳（架空サンプル · サンプル商事株式会社）
+# regular_headcount = 常時使用する労働者数（事業場単位 · パート・アルバイトを含む）
+# data/hr/employees.yaml には事業場の区分が無いため、本モジュールで事業場別人数を保持する
+as_of: 2026-09-01
+workplaces:
+  - id: WP-HQ
+    name: 本社
+    labor_standards_office: サンプル労働基準監督署
+    regular_headcount: 24
+    headcount_as_of: 2026-09-01
+    has_shift_work: false
+  - id: WP-OSAKA
+    name: 大阪営業所
+    labor_standards_office: サンプル西労働基準監督署
+    regular_headcount: 12
+    headcount_as_of: 2026-09-01
+    has_shift_work: false
+    notes: 規程改定後の届出・周知漏れのサンプル
+  - id: WP-LAB
+    name: 開発室
+    labor_standards_office: サンプル労働基準監督署
+    regular_headcount: 9
+    headcount_as_of: 2026-09-01
+    has_shift_work: false
+    notes: 10人未満（就業規則の作成・届出義務なし）のサンプル
+  - id: WP-DEPOT
+    name: 配送センター
+    labor_standards_office: サンプル東労働基準監督署
+    regular_headcount: 15
+    headcount_as_of: 2026-09-01
+    has_shift_work: true
+    notes: 交替制あり · 自動車運転業務を含む
+  - id: WP-KOBE
+    name: 神戸倉庫
+    labor_standards_office: サンプル南労働基準監督署
+    regular_headcount: null
+    notes: 人数未登録（needs_review）のサンプル

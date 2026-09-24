@@ -1,0 +1,38 @@
+# 受託側の規模情報のみ（名称・連絡先は data/procurement/vendors.yaml が正本 — ここに重複させない）
+# 個人事業者の氏名・住所・口座等（L2）は記載しない。vendor_id で参照する。
+entity: サンプル商事株式会社
+as_of: 2026-04-01
+parties:
+  - vendor_id: VEN-SC-001
+    entity_type: corporation
+    capital_yen: 8000000
+    regular_employees: 40
+    as_of: 2026-04-01
+    notes: 部品加工（資本金基準 · 1千万円以下）
+  - vendor_id: VEN-SC-002
+    entity_type: individual
+    regular_employees: 0
+    as_of: 2026-04-01
+    notes: 個人デザイナー（情報成果物 · 5千万円区分）
+  - vendor_id: VEN-SC-003
+    entity_type: corporation
+    capital_yen: 50000000
+    regular_employees: 120
+    as_of: 2026-04-01
+    notes: 運送（資本金基準は非該当 · 従業員基準300人で該当）
+  - vendor_id: VEN-SC-004
+    entity_type: corporation
+    capital_yen: 30000000
+    regular_employees: 150
+    as_of: 2026-04-01
+    notes: コールセンター運営（役務 · 5千万円区分）
+  - vendor_id: VEN-SC-005
+    entity_type: corporation
+    capital_yen: 500000000
+    regular_employees: 1200
+    as_of: 2026-04-01
+    notes: 大手メーカー（適用対象外の例）
+  - vendor_id: VEN-SC-006
+    entity_type: corporation
+    as_of: 2026-04-01
+    notes: 規模情報未取得（needs_review の例）

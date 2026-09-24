@@ -64,6 +64,7 @@ Decisions · obligations · policies in tenant data are **committee/implementati
 |---------|-------|------|
 | 商標登録願 | Country (JP) | `jurisdiction-packs/JP/modules/jp_trademark_application/` |
 | 補助金申請 | Country (JP) | `jurisdiction-packs/JP/modules/jp_subsidy_application/` |
+| 取適法（旧下請法） | Country (JP) | `jurisdiction-packs/JP/modules/jp_subcontractor_act/` |
 | REG-HK-001 役員報酬 | Country (HK) | `jurisdiction-packs/HK/regulations/` |
 | クリニック受付 | Industry | `steward/modules/clinic/` |
 | 宿泊 PMS | Industry | `steward/modules/hospitality/` |

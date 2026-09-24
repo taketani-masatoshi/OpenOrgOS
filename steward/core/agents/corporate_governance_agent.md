@@ -8,11 +8,14 @@
 ## 役割
 
 株主総会 · 取締役会 · 招集 · 議事録 · 法定保存。
+**モジュール:** `jp_statutory_meetings`
 
 ## Primary Folders
 
 | パス | 権限 |
 |------|------|
+| `data/governance/**` | Primary |
+| `docs/company/governance/**` | Primary |
 | `docs/company/*gijiroku*` | Primary |
 | `docs/company/shareholder-register.md` | Primary |
 | `docs/company/regulations/REG-002*` | Primary |
@@ -50,6 +53,8 @@
 
 | 手段 | 内容 |
 |------|------|
+| jp_shareholder_meeting_pack | `orgos operations statutory-meetings checklist` |
+| jp_board_meeting_pack | `orgos operations statutory-meetings schedule` |
 | agent_pulse | `orgos agent pulse --agent corporate_governance` |
 
 

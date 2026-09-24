@@ -14,6 +14,11 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 - **月次締め消費税ゲート** — `buildConsumptionTaxSummary` に存在しない `issues` を参照していた tsc エラーを修正（`runConsumptionTaxCheck` の blocking のみ判定）。
 - **Correspondence hooks 黙殺** — binder 未登録時に warn（`ORGOS_REQUIRE_CORRESPONDENCE_HOOKS=1` で throw）。契約テストで composition root を固定。
+- **生成物同期** — Agent pack export と `skill_delegation_map` を現行 Agent / Skill に合わせる（CI `generated:check`）。
+- **agent / module inventory テスト** — catalog import を readiness 全件採点から切り離し、一覧テストは `enrichReadiness: false` でハングを避ける。
+- **残 JP 日付スキーマ** — trademark · medical-device · permit 等も `schemas/iso-date.ts` に寄せる。
+- **JP モジュール日付スキーマ** — 暦日検証を `schemas/iso-date.ts` に集約。8 モジュールの Zod スキーマが共有する。
+- **在留資格カタログ検証** — `restricted_to_activity` で permitted/excluded が空かつ notes なしを拒否。台帳が空マップの在留資格を参照する場合も拒否。
 
 ### Added
 
@@ -24,6 +29,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **規程草案 scaffold + 化粧品 sibling** — WO 起票時に `docs/company/regulations/drafts/*-草案.md` を決定論生成（施行は触らない）。`jp_cosmetics_mah` skeleton（qms_gxp sibling）。Skill `regulation_module_draft`。
 - **規程ワークフローの残ギャップ対処** — test-registry 登録、flag-only で REG enable/seed、dedupe 時 WO 更新、REG-030 optional warning、REG-038 採番、family 追加手順、scaffold skill 改名、FORK はリンク+プレビュー。
 - **JP 社内規程（会計・税務）雛形の増強** — 経理（REG-027）· 経費精算（REG-005）を起草スタイル準拠で拡充。モジュール連動の REG-031〜034（法人税務準備 · 消費税務 · 適格請求書 · 源泉・法定調書）をカタログ追加。提出・e-Tax は人間/税理士権限のまま。
+- **取適法（旧下請法）モジュール** — `jp_subcontractor_act` を `activation_ready` で追加。適用対象判定（`jp_subcontractor_scope`）と禁止行為点検（`jp_subcontractor_checklist`）。一次資料は公取委 https://www.jftc.go.jp/toriteki/ 。行政提出は人間。
+- **JP 未実装モジュール 8 件** — 株主総会・取締役会、就業規則・36協定、労働条件通知、取適法（旧下請法）、個情漏えい報告、在留・外国人雇用、宅建業、特許出願を `activation_ready` の CLI + seed として追加。人事・法務・知財・ガバナンス・購買・個情・行政の Agent に bind。提出・届出は人間。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
@@ -41,6 +48,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 ### Fixed
 
 - **日程調整 F1–F4** — CLI propose を `proposeSlotsOntoSchedulingCase` に統一。`SchedulingCaseNotFoundError` 文言一本化。案件 ID / 返信日付の年に注入時計。リマインド期限を `scheduling_reminder_after_hours`（既定72h）に合わせる。
+- **月次締めの消費税ゲート** — `buildConsumptionTaxSummary` に無い `issues` 参照をやめ、プロファイルの blocking 判定と summary 構築の例外だけを見る（`tsc` 修正）。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
  `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。

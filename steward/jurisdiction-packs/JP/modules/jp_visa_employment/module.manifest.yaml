@@ -1,0 +1,19 @@
+id: jp_visa_employment
+required_seeds: []
+activation_seeds:
+  - foreign-workers.yaml.example
+  - weekly-hours.yaml.example
+  - status-catalog.yaml.example
+  - sources.yaml.example
+optional_regulations:
+  - REG-010
+notes: activation_ready — 在留資格と就労可否 · 資格外活動の時間上限 · 在留カード確認 · 在留期間満了アラート · 外国人雇用状況届出の期限管理（JP 法域のみ · 申請書作成・送信なし）
+cli_commands:
+  - show
+  - validate
+  - check
+  - expiry
+  - notifications
+security:
+  limits:
+    concurrent_jobs: 1

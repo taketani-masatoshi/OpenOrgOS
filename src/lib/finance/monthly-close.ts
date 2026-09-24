@@ -435,7 +435,7 @@ export function evaluateMonthlyCloseGates(
   let taxPass = missingTax.length === 0;
   if (!taxPass) taxDetail = `missing tax_category ${missingTax.join(", ")}`;
   try {
-    buildConsumptionTaxSummary({ period: month });
+    // Profile/check issues only — ConsumptionTaxSummary has no `issues` field.
     const profileErrors = runConsumptionTaxCheck().issues.filter(
       (issue) => issue.severity === "blocking"
     );

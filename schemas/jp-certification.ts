@@ -1,6 +1,5 @@
 import { z } from "zod";
-
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+import { isoDate } from "./iso-date.js";
 
 export const certificationTypeSchema = z.object({
   id: z.string().min(1),

@@ -1,0 +1,38 @@
+---
+title: 特許願
+application_id: {{application_id}}
+generated: {{generated_on}}
+sources:
+  - {{source_law_url}}
+  - {{source_form_url}}
+  - {{source_fee_url}}
+---
+
+> **ひな形（非提出稿）** — 特許法36条1項・特許法施行規則 様式第26 の欄構成に準拠。`（要記入）` 欄（発明者の氏名・住所、予納台帳番号など）は人間が正本から転記し、提出前に弁理士または担当者が最終確認すること。本稿は特許庁への提出・送信を行わない。
+
+```text
+【書類名】　特許願
+【整理番号】　{{reference_number}}
+{{special_notes_block}}
+【提出日】　{{filing_date_reiwa}}
+【あて先】　特許庁長官　殿
+{{ipc_block}}
+{{inventors_block}}
+{{applicant_block}}
+{{agent_and_priority_block}}
+{{fee_block}}
+{{attachments_block}}
+```
+
+---
+
+## 内部メモ（提出書類に含めない）
+
+| 項目 | 値 |
+|------|-----|
+| 案件 ID | {{application_id}} |
+| 生成日 | {{generated_on}} |
+| 様式 | 特許法施行規則 様式第26（{{source_form_url}}） |
+| 料金 | 特許庁 料金一覧（{{source_fee_url}}）で提出前に再確認 |
+
+_発明者の住所・氏名は L2 台帳（stakeholder_id 参照）から人間が転記する。tracked ファイルに書き戻さない。_

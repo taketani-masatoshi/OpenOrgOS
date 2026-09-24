@@ -325,7 +325,7 @@ skills:
     file: regulation_module_scaffold.md
     runtime: cli
     cli_command: regulation-module-draft
-    handler: regulation_module_scaffold
+    handler: regulation_module_draft
     description: Alias of regulation_module_scaffold（後方互換）
     agent_id: compliance
   - id: change_apply

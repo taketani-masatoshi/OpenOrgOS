@@ -49,6 +49,22 @@ export const EXECUTING_AGENT_OVERRIDES: Partial<Record<string, AgentId>> = {
   jp_subsidy_draft: "government_affairs",
   jp_trademark_checklist: "intellectual_property",
   jp_trademark_draft: "intellectual_property",
+  jp_shareholder_meeting_pack: "corporate_governance",
+  jp_board_meeting_pack: "corporate_governance",
+  jp_work_rules_draft: "human_resources",
+  jp_36_agreement: "human_resources",
+  jp_employment_contract_draft: "human_resources",
+  jp_fixed_term_conversion_check: "human_resources",
+  jp_foreign_worker_check: "human_resources",
+  jp_foreign_employment_notice: "human_resources",
+  jp_subcontractor_checklist: "procurement",
+  jp_subcontractor_scope: "procurement",
+  jp_ppc_breach_report: "privacy_officer",
+  jp_breach_deadline_watch: "privacy_officer",
+  jp_patent_draft: "intellectual_property",
+  jp_patent_deadlines: "intellectual_property",
+  jp_takken_compliance_check: "compliance",
+  jp_takken_fee_calc: "compliance",
 };
 
 const HUMAN_APPROVAL_SKILL_PATTERN =
