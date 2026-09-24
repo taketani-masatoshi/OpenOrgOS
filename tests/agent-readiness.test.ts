@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { setTenantId } from "../src/lib/tenant.js";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { setTenantId, getTenantDir } from "../src/lib/tenant.js";
 import { computeAllAgentReadiness, computeAgentReadiness } from "../src/lib/agent-readiness.js";
 import { listActiveTenantAgents } from "../src/lib/agent-roster.js";
 import { getCatalogAgent } from "../src/lib/agent-catalog.js";
@@ -48,6 +50,9 @@ describe("agent readiness", () => {
 
   it("sales_inbound agent reaches full readiness on mal tenant", () => {
     setTenantId("mal");
+    const pulseDir = join(getTenantDir(), "docs/reports/agent-summaries/sales-inbound");
+    mkdirSync(pulseDir, { recursive: true });
+    writeFileSync(join(pulseDir, "2026-09-24-readiness-pulse.md"), "# sales_inbound pulse\n", "utf-8");
     const r = computeAgentReadiness("sales_inbound");
     expect(r.pct).toBe(100);
     expect(r.axes.find((a) => a.id === "skill_cli")?.score).toBe(20);

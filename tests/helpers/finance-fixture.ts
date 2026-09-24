@@ -1,5 +1,6 @@
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 import { setTenantId, getTenantDir } from "../../src/lib/tenant.js";
 
 /** Isolated tenant for finance / GL / ledger vitest — safe for journal writes. */
@@ -15,6 +16,24 @@ export function resetFixtureJournalEntries(): void {
   const base = join(getTenantDir(), "data/finance");
   writeFileSync(join(base, "journal-entries.yaml"), "version: 1\nentries: []\n", "utf-8");
   writeFileSync(join(base, "period-locks.yaml"), "version: 1\nlocks: []\n", "utf-8");
+}
+
+/**
+ * Bypass post-time guards to inject an intentionally invalid journal (e.g. unknown
+ * account codes) so close/adjustment tests can assert fail-closed behaviour.
+ */
+export function injectRawJournalEntry(entry: Record<string, unknown>): void {
+  useFinanceFixtureTenant();
+  const path = join(getTenantDir(), "data/finance/journal-entries.yaml");
+  const raw = existsSync(path) ? readFileSync(path, "utf-8") : "version: 1\nentries: []\n";
+  const doc = (YAML.parse(raw) as { version?: number; entries?: unknown[] } | null) ?? {};
+  const entries = Array.isArray(doc.entries) ? doc.entries : [];
+  entries.push(entry);
+  writeFileSync(
+    path,
+    YAML.stringify({ version: doc.version ?? 1, entries }, { lineWidth: 0 }),
+    "utf-8",
+  );
 }
 
 const STATEMENT_ROLES: Record<string, readonly [string | null, string]> = {

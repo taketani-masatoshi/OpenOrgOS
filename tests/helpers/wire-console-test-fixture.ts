@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import { ROOT_DIR, setTenantId } from "../../src/lib/tenant.js";
 import { ensureProtocolSigningKey } from "../../src/lib/protocol/signing.js";
+import { clearOperatorsRegistryCacheForTests } from "../../src/lib/org/operators.js";
 
 export const WIRE_CONSOLE_TEST_TENANT = "wire-console-test";
 
@@ -38,6 +39,7 @@ export function resetWireConsoleTestTenant(): void {
 
   for (const rel of [
     "data/org/pending-approvals.yaml",
+    "data/org/operators.yaml",
     "data/protocol/transactions-registry.yaml",
     "data/protocol/audit-chain.jsonl",
     "docs/protocol/outbox/seed-outbox.json",
@@ -62,5 +64,6 @@ export function resetWireConsoleTestTenant(): void {
   if (existsSync(receiptsDir)) rmSync(receiptsDir, { recursive: true, force: true });
 
   setTenantId(WIRE_CONSOLE_TEST_TENANT);
+  clearOperatorsRegistryCacheForTests();
   ensureProtocolSigningKey();
 }

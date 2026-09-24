@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
-import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureStatementRoles,
+  resetFixtureJournalEntries,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
+import { closeAccountingMonth } from "../src/lib/finance/monthly-close.js";
+import { lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
 
 /**
  * HTTP surface of the ledger: posting, the month lock, reversal, 電子帳簿
@@ -18,6 +24,7 @@ describe("steward chat ledger HTTP", () => {
   beforeEach(async () => {
     useFinanceFixtureTenant();
     resetFixtureJournalEntries();
+    applyFixtureStatementRoles();
     ensureLedgerDemoChartOfAccounts();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
@@ -27,6 +34,18 @@ describe("steward chat ledger HTTP", () => {
     baseUrl = handle.url;
     cookie = await login("OP-001");
   });
+
+  /** Satisfy month-close gates, then reopen so HTTP lock can succeed. */
+  function prepareHttpLockableMonth(month: string, priorMonth: string): void {
+    lockMonth({ month: priorMonth, lockedBy: "OP-001", reason: "prior for http" });
+    const closed = closeAccountingMonth({ month, operatorId: "OP-001" });
+    if (!closed.ok) {
+      throw new Error(
+        `cannot prepare ${month} for HTTP lock: ${closed.evaluation.errors.join("; ")}`,
+      );
+    }
+    unlockMonth({ month, unlockedBy: "OP-001", reason: "reopen for http lock" });
+  }
 
   afterEach(async () => {
     await new Promise<void>((resolve) => {
@@ -100,7 +119,8 @@ describe("steward chat ledger HTTP", () => {
   });
 
   it("locks a month, refuses posting into it, and unlocks only with a reason", async () => {
-    const month = "2026-01";
+    const month = "2026-09";
+    prepareHttpLockableMonth(month, "2026-08");
     const lock = await post("/chat/v1/ledger/period", { month, action: "lock" });
     expect(lock.status, await lock.clone().text()).toBe(200);
 

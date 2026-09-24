@@ -365,10 +365,15 @@ export function loadFixedCosts(): FixedCosts {
 }
 
 export function loadPayroll() {
-  return readYamlFile(
-    join(getDataDir(), "finance", "payroll.yaml"),
-    payrollSchema,
-  );
+  const path = join(getDataDir(), "finance", "payroll.yaml");
+  if (!existsSync(path)) {
+    const example = `${path}.example`;
+    if (existsSync(example)) {
+      return readYamlFile(example, payrollSchema);
+    }
+    return payrollSchema.parse({});
+  }
+  return readYamlFile(path, payrollSchema);
 }
 
 export function loadCashBalance(): CashBalance | undefined {
@@ -752,10 +757,15 @@ export function loadExecutiveCalendar(): CalendarFile {
 }
 
 export function loadExecutiveTasks(): TasksFile {
-  return readYamlFile(
-    join(getDataDir(), "executive", "tasks.yaml"),
-    tasksFileSchema,
-  );
+  const path = join(getDataDir(), "executive", "tasks.yaml");
+  if (!existsSync(path)) {
+    const example = `${path}.example`;
+    if (existsSync(example)) {
+      return readYamlFile(example, tasksFileSchema);
+    }
+    return tasksFileSchema.parse({ tasks: [] });
+  }
+  return readYamlFile(path, tasksFileSchema);
 }
 
 export function loadOneOnOnes(): OneOnOnesFile {

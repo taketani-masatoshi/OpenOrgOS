@@ -10,9 +10,13 @@ import {
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
 import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
-import { postPayrollJournalEntry } from "../src/lib/finance/journal-sources.js";
-import { resetFixtureJournalEntries } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureStatementRoles,
+  resetFixtureJournalEntries,
+} from "./helpers/finance-fixture.js";
 import { getPendingApprovalsPath } from "../src/lib/org/paths.js";
+import { closeAccountingMonth } from "../src/lib/finance/monthly-close.js";
+import { lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
 
 describe("steward chat ledger workbench api", () => {
   let handle: StewardChatServerHandle | undefined;
@@ -22,10 +26,22 @@ describe("steward chat ledger workbench api", () => {
   beforeEach(() => {
     setTenantId("_fixture-books");
     resetFixtureJournalEntries();
+    applyFixtureStatementRoles();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";
   });
+
+  function prepareHttpLockableMonth(month: string, priorMonth: string): void {
+    lockMonth({ month: priorMonth, lockedBy: "OP-001", reason: "prior for http" });
+    const closed = closeAccountingMonth({ month, operatorId: "OP-001" });
+    if (!closed.ok) {
+      throw new Error(
+        `cannot prepare ${month} for HTTP lock: ${closed.evaluation.errors.join("; ")}`,
+      );
+    }
+    unlockMonth({ month, unlockedBy: "OP-001", reason: "reopen for http lock" });
+  }
 
   afterEach(async () => {
     await new Promise<void>((resolve) => {
@@ -57,6 +73,7 @@ describe("steward chat ledger workbench api", () => {
     process.env.ORGOS_CHAT_AUDIT = "1";
     process.env.ORGOS_CHAT_AUDIT_LOG = auditPath;
     await start();
+    prepareHttpLockableMonth("2026-09", "2026-08");
     const headers = {
       Cookie: cookieFor("OP-001"),
       "Content-Type": "application/json",
@@ -65,14 +82,14 @@ describe("steward chat ledger workbench api", () => {
     const lock = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ month: "2026-08", action: "lock" }),
+      body: JSON.stringify({ month: "2026-09", action: "lock" }),
     });
     expect(lock.status).toBe(200);
 
     const noReason = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ month: "2026-08", action: "unlock" }),
+      body: JSON.stringify({ month: "2026-09", action: "unlock" }),
     });
     expect(noReason.status).toBe(422);
 
@@ -80,7 +97,7 @@ describe("steward chat ledger workbench api", () => {
       method: "POST",
       headers,
       body: JSON.stringify({
-        month: "2026-08",
+        month: "2026-09",
         action: "unlock",
         reason: "監査対応で再計上",
       }),
@@ -210,6 +227,7 @@ describe("steward chat ledger workbench api", () => {
 
   it("allows finance:reconcile to reverse, lock, remit, post, and settle", async () => {
     await start();
+    prepareHttpLockableMonth("2026-09", "2026-08");
     appendJournalEntry({
       entry_id: "JE-LEDGER-API-001",
       occurred_at: "2026-09-10T00:00:00.000Z",
@@ -220,13 +238,6 @@ describe("steward chat ledger workbench api", () => {
         { account_code: "5300", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
         { account_code: "1100", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" },
       ],
-    });
-    postPayrollJournalEntry({
-      period: "2026-09",
-      authorizedBy: "OP-001",
-      grossYen: 50000,
-      withholdingYen: 5000,
-      socialEmployerYen: 7500,
     });
 
     const headers = {

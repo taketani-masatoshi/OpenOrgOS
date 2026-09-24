@@ -5,6 +5,7 @@ accounts:
     name: Cash
     type: asset
     normal_balance: debit
+    bs_class: current
   - code: "4100"
     name: Fixture revenue
     type: revenue
@@ -30,26 +31,32 @@ accounts:
     name: 売掛金
     type: asset
     normal_balance: debit
+    bs_class: current
   - code: "1290"
     name: 減価償却累計額
     type: asset
     normal_balance: credit
+    bs_class: noncurrent
   - code: "2110"
     name: 買掛金
     type: liability
     normal_balance: credit
+    bs_class: current
   - code: "2120"
     name: 預り金（源泉所得税）
     type: liability
     normal_balance: credit
+    bs_class: current
   - code: "2130"
     name: 預り金（社会保険）
     type: liability
     normal_balance: credit
+    bs_class: current
   - code: "2140"
     name: 未払給与
     type: liability
     normal_balance: credit
+    bs_class: current
   - code: "3200"
     name: 繰越利益剰余金
     type: equity
