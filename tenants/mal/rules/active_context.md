@@ -190,6 +190,14 @@
 - `property_management` / `property_management` — `steward/modules/property_management/` **読まない**
 - `membership` / `membership` — `steward/modules/membership/` **読まない**
 - `jp_social_insurance` / `jp_social_insurance` — `steward/modules/jp_social_insurance/` **読まない**
+- `jp_statutory_meetings` / `jp_statutory_meetings` — `steward/modules/jp_statutory_meetings/` **読まない**
+- `jp_employment_rules` / `jp_employment_rules` — `steward/modules/jp_employment_rules/` **読まない**
+- `jp_labor_contract` / `jp_labor_contract` — `steward/modules/jp_labor_contract/` **読まない**
+- `jp_subcontractor_act` / `jp_subcontractor_act` — `steward/modules/jp_subcontractor_act/` **読まない**
+- `jp_data_breach` / `jp_data_breach` — `steward/modules/jp_data_breach/` **読まない**
+- `jp_visa_employment` / `jp_visa_employment` — `steward/modules/jp_visa_employment/` **読まない**
+- `jp_takken` / `jp_takken` — `steward/modules/jp_takken/` **読まない**
+- `jp_patent_application` / `jp_patent_application` — `steward/modules/jp_patent_application/` **読まない**
 
 ## 有効 ISO 標準
 
@@ -219,6 +227,13 @@
 - **REG-006** 利益相反取引規程 — 施行: `docs/company/regulations/riekisohan-torihiki-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-006-riekisohan/template.md`
 - **REG-007** 文書管理規程 — 施行: `docs/company/regulations/bunsho-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-007-bunsho-kanri/template.md`
 - **REG-008** 旅費規程 — 施行: `docs/company/regulations/ryohi-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-008-ryohi/template.md`
+- **REG-027** 経理規程 — 施行: `docs/company/regulations/keiri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-027-keiri/template.md`
+- **REG-030** 組織情報システム権限管理規程 — 施行: `docs/company/regulations/soshiki-joho-system-kengen-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-030-soshiki-joho-system/template.md`
+- **REG-031** 法人税務・申告準備規程 — 施行: `docs/company/regulations/hojin-zeimu-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_tax_corporate/REG-031-hojin-zeimu/template.md`
+- **REG-032** 消費税務規程 — 施行: `docs/company/regulations/shohi-zeimu-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_tax_consumption/REG-032-shohi-zeimu/template.md`
+- **REG-033** 適格請求書管理規程 — 施行: `docs/company/regulations/tekikaku-seikyusho-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_invoice_qualified/REG-033-tekikaku-seikyusho/template.md`
+- **REG-034** 源泉徴収・法定調書規程 — 施行: `docs/company/regulations/gensen-hoteichosho-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_withholding_statutory/REG-034-gensen-hoteichosho/template.md`
+- **REG-037** 許認可管理規程 — 施行: `docs/company/regulations/kyoka-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_permit/REG-037-kyoka-kanri/template.md`
 - **REG-010** 個人情報保護規程 — 施行: `docs/company/regulations/kojin-joho-hogo-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-010-kojin-joho/template.md`
 - **REG-014** 環境・エネルギー管理規程 — 施行: `docs/company/regulations/kankyo-energy-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-014-kankyo-energy/template.md`
 - **REG-016** 内部監査規程 — 施行: `docs/company/regulations/naibu-kansa-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-016-naibu-kansa/template.md`
@@ -228,9 +243,10 @@
 
 ## 無効社内規程（読取禁止）
 
-- `REG-027` 経理規程 — `docs/company/regulations/keiri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-028` クレジットカード規程 — `docs/company/regulations/credit-card-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-029` 役員退職金規程 — `docs/company/regulations/yakuin-taishoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-035` 給与規程 — `docs/company/regulations/kyuyo-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-036` 社会保険手続規程 — `docs/company/regulations/shakai-hoken-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-009` 情報セキュリティ管理規程 — `docs/company/regulations/joho-security-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-011` 品質管理規程 — `docs/company/regulations/hinshitsu-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-013` 事業継続・危機管理規程 — `docs/company/regulations/jigyo-keizoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
@@ -243,11 +259,13 @@
 - `REG-022` EC取引規程 — `docs/company/regulations/ec-torihiki-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-023` 配送・倉庫管理規程 — `docs/company/regulations/haiso-soko-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-024` 会員管理規程 — `docs/company/regulations/kaiin-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-038` 化粧品品質管理規程 — `docs/company/regulations/keshohin-hinshitsu-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 
 ## 未バインドカタログ（読取禁止）
 
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_consumption_refund` — `modules.yaml` 未登録 · **読まない**
+- `jp_cosmetics_mah` — `modules.yaml` 未登録 · **読まない**
 - `jp_payroll` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
 - `real_estate_brokerage` — `modules.yaml` 未登録 · **読まない**

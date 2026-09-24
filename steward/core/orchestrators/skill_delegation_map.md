@@ -453,6 +453,8 @@ Skill id / CLI が指定された
 | `real_estate_brokerage_validate` | cli | `operations` | `brokerage-validate` | real_estate_brokerage |
 | `recruiting_interview_prep` | agent | `recruiting` | — | core |
 | `recruiting_pipeline_review` | agent | `recruiting` | — | core |
+| `regulation_module_draft` | cli | `compliance` | `regulation-module-draft` | core |
+| `regulation_module_scaffold` | cli | `compliance` | `regulation-module-scaffold` | core |
 | `rental_rent_roll` | cli | `property_rental` | `rental-rent-roll` | rental |
 | `rental_show` | cli | `property_rental` | `rental-show` | rental |
 | `restaurant_seating` | cli | `operations` | `restaurant-seating` | restaurant |

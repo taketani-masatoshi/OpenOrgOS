@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 616
-  static_test_cases: 3025
-  tiered_execution_total: 616
-  catalog_total: 54
+  vitest_total: 621
+  static_test_cases: 3120
+  tiered_execution_total: 621
+  catalog_total: 55
   catalog_cli_registered: 55
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 15
+  catalog_only: 16
 platform_domains:
   P01_kernel:
     layer: 1
@@ -141,6 +141,12 @@ catalog_modules:
     tests:
       - jp-corporate-registration.test.ts
       - mal-module-cli-contract.test.ts
+  jp_cosmetics_mah:
+    tier: skeleton
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/jp-cosmetics-mah.test.ts
   jp_data_breach:
     tier: activation_ready
     coverage_tier: catalog_only
@@ -725,6 +731,11 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  catalog/jp-cosmetics-mah.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_cosmetics_mah
   catalog/jp-data-breach.test.ts:
     axis: catalog
     kind: unit
@@ -1949,7 +1960,15 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  pdf-esign-case-workflow.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   pdf-esign-digidoc.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  pdf-esign-endpoints.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2224,7 +2243,15 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  receipt-qr-lifecycle.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   receipt-qr.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  regulation-module-workflow.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

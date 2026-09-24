@@ -59,6 +59,8 @@ agents:
       - jp_women_empowerment_kpi
       - jp_women_empowerment_show
       - permit_expiry_check
+      - regulation_module_draft
+      - regulation_module_scaffold
     pulse_checks:
       - type: path_exists
         path: data/compliance/

@@ -326,6 +326,8 @@ orgos agent pulse --agent compliance
 
 - `permit_expiry_check` · cli · `steward/core/skills/permit_expiry_check.md`
 - `iso_control_review` · cli · `steward/core/skills/iso_control_review.md`
+- `regulation_module_scaffold` · cli · `steward/core/skills/regulation_module_scaffold.md`
+- `regulation_module_draft` · cli · `steward/core/skills/regulation_module_scaffold.md`
 - `jp_carbon_neutral_show` · cli · `steward/jurisdiction-packs/JP/modules/jp_carbon_neutral_2050/skills/carbon_neutral_show.md`
 - `jp_carbon_neutral_targets` · cli · `steward/jurisdiction-packs/JP/modules/jp_carbon_neutral_2050/skills/carbon_neutral_targets.md`
 - `jp_certification_list` · cli · `steward/jurisdiction-packs/JP/modules/jp_certification/skills/jp_certification_list.md`
