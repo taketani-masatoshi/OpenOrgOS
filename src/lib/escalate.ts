@@ -323,7 +323,11 @@ export function formatAgentImplementationPrompt(handoff: Handoff): string {
   return lines.join("\n");
 }
 
-export function writeWorkOrderFiles(handoff: Handoff, matched?: MatchedRoute): {
+export function writeWorkOrderFiles(
+  handoff: Handoff,
+  matched?: MatchedRoute,
+  opts: { quiet?: boolean } = {}
+): {
   yamlPath: string;
   mdPath: string;
   promptPath?: string;
@@ -334,7 +338,7 @@ export function writeWorkOrderFiles(handoff: Handoff, matched?: MatchedRoute): {
   writeYamlFile(yamlPath, handoff);
   writeTrackedFile(mdPath, formatWorkOrderMarkdown(handoff, matched));
 
-  if (handoff.task_type === "implement") {
+  if (handoff.task_type === "implement" && !opts.quiet) {
     appendAuditEvent({
       event: "escalate",
       ref: handoff.id,

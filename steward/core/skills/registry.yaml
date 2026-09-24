@@ -302,12 +302,12 @@ skills:
         - grade A
       args:
         - { name: body, type: string, required: false }
-  - id: regulation_module_draft
-    file: regulation_module_draft.md
+  - id: regulation_module_scaffold
+    file: regulation_module_scaffold.md
     runtime: cli
-    cli_command: regulation-module-draft
-    handler: regulation_module_draft
-    description: モジュール規程ワークフローの草案 MD を決定論で scaffold
+    cli_command: regulation-module-scaffold
+    handler: regulation_module_scaffold
+    description: モジュール規程ワークフローの草案 MD を決定論で scaffold（本文は LLM/人間）
     agent_id: compliance
     chat:
       enabled: true
@@ -316,10 +316,18 @@ skills:
       label: 規程草案 scaffold
       keywords:
         - regulation draft
+        - regulation scaffold
         - 規程草案
         - fork_family
       args:
         - { name: id, type: string, required: true }
+  - id: regulation_module_draft
+    file: regulation_module_scaffold.md
+    runtime: cli
+    cli_command: regulation-module-draft
+    handler: regulation_module_scaffold
+    description: Alias of regulation_module_scaffold（後方互換）
+    agent_id: compliance
   - id: change_apply
     file: change_apply.md
     runtime: cli

@@ -437,9 +437,35 @@ export function fileRegulationWorkflowWorkOrder(
   if (dedupe) {
     const existing = findPendingRegulationWorkflowWo(moduleId);
     if (existing) {
+      const toAgent = (opts.toAgent ?? existing.to_agent ?? "compliance") as AgentId;
+      const contextPath =
+        draftScaffold.primaryRelativePath ??
+        existing.context.path ??
+        `steward/jurisdiction-packs/JP/regulations/00-モジュール連動方針.md`;
+      const updated = handoffSchema.parse({
+        ...existing,
+        from_agent: opts.fromAgent ?? existing.from_agent,
+        to_agent: toAgent,
+        skill: draftPaths.length ? "regulation_module_scaffold" : undefined,
+        context: {
+          text: text.requirements,
+          path: contextPath,
+        },
+        subject: text.subject,
+        background: text.background,
+        requirements: text.requirements,
+        deliverables: text.deliverables,
+        acceptance_criteria: text.acceptance_criteria,
+        agent_prompt_path:
+          existing.agent_prompt_path ?? join("prompts", `${existing.id}_${toAgent}.md`),
+      });
+      const files = writeWorkOrderFiles(updated, undefined, { quiet: true });
       return {
         plan,
         workOrderId: existing.id,
+        yamlPath: files.yamlPath,
+        mdPath: files.mdPath,
+        promptPath: files.promptPath,
         skipped: true,
         deduped: true,
         draftPaths,
@@ -458,7 +484,7 @@ export function fileRegulationWorkflowWorkOrder(
     created_at: new Date().toISOString(),
     from_agent: opts.fromAgent ?? "executive_steward",
     to_agent: toAgent,
-    skill: draftPaths.length ? "regulation_module_draft" : undefined,
+    skill: draftPaths.length ? "regulation_module_scaffold" : undefined,
     mode: "implement",
     task_type: "implement",
     access: { allowed: true, reason: "module regulation workflow" },

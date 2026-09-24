@@ -960,6 +960,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   }
 
   for (const issue of validateRegulations()) {
+    if (issue.level === "warning") continue;
     errors.push({ file: issue.file, message: issue.message });
   }
 

@@ -19,8 +19,6 @@ activation_seeds:
   - ledgers/authority-inquiry-records.yaml.example
 optional_regulations:
   - REG-011
-  - REG-025
-  - REG-026
 required_regulations:
   - REG-025
   - REG-026
