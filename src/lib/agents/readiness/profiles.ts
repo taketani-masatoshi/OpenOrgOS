@@ -1,13 +1,10 @@
-import { existsSync } from "node:fs";
-import { isAbsolute, join } from "node:path";
 import type { AgentId } from "../../../../schemas/classification.js";
 import type { AgentReadinessResult } from "../../../../schemas/agent-capability.js";
 import type { AgentReadinessProfile } from "../../../../schemas/agent-catalog.js";
-import { agentDefinitionPath, getAgentCapability } from "../../agent-capability.js";
+import { getAgentCapability } from "../../agent-capability.js";
 import { getCatalogAgent, listCatalogAgents } from "../../agent-catalog.js";
 import { listActiveTenantAgents } from "../../agent-roster.js";
 import { evaluateAgentPulseChecks } from "../../agent-pulse.js";
-import { getInstallRoot } from "../../orgos-paths.js";
 import {
   scoreAdvisorDefinition,
   scoreDashboard,
@@ -20,6 +17,8 @@ import {
   scoreTenant,
 } from "./axes.js";
 import { WEIGHTS } from "./weights.js";
+
+export { agentDefinitionExists } from "../definition.js";
 
 export function computeAgentReadiness(agentId: AgentId): AgentReadinessResult {
   const catalogAgent = getCatalogAgent(agentId);
@@ -151,10 +150,4 @@ export function computeAllAgentReadinessProfiles(): Record<
     advisor: computeAgentReadinessProfile("advisor"),
     bootstrap: computeAgentReadinessProfile("bootstrap"),
   };
-}
-
-export function agentDefinitionExists(agentId: AgentId): boolean {
-  const path = agentDefinitionPath(agentId);
-  if (isAbsolute(path)) return existsSync(path);
-  return existsSync(join(getInstallRoot(), path));
 }

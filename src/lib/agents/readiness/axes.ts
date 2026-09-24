@@ -1,14 +1,15 @@
 import { existsSync, readdirSync } from "node:fs";
-import { isAbsolute, join } from "node:path";
+import { join } from "node:path";
 import type { AgentId } from "../../../../schemas/classification.js";
 import type { AgentReadinessAxis } from "../../../../schemas/agent-capability.js";
-import { agentDefinitionPath, getAgentCapability } from "../../agent-capability.js";
+import { getAgentCapability } from "../../agent-capability.js";
 import { getCatalogAgent, isAgentActive } from "../../agent-catalog.js";
 import { loadRoutingRegistry } from "../../routing.js";
 import { loadSkillRegistry } from "../../skill-registry.js";
 import { resolveExecutingAgentId } from "../../skill-execution-mode.js";
 import { getTenantDir, resolveTenantPath } from "../../tenant.js";
 import { getInstallRoot } from "../../orgos-paths.js";
+import { agentDefinitionExists } from "../definition.js";
 import { EXECUTIVE_STEWARD_SKILL_CLI_MAX, WEIGHTS } from "./weights.js";
 
 /** Matches `evaluateAgentPulseChecks` return — passed in to avoid importing pulse here. */
@@ -29,12 +30,6 @@ function routingRegistry() {
 function skillRegistry() {
   _skillRegistry ??= loadSkillRegistry();
   return _skillRegistry;
-}
-
-function agentDefinitionExists(agentId: AgentId): boolean {
-  const path = agentDefinitionPath(agentId);
-  if (isAbsolute(path)) return existsSync(path);
-  return existsSync(join(getInstallRoot(), path));
 }
 
 function frameworkWorkspacePathExists(rel: string): boolean {
