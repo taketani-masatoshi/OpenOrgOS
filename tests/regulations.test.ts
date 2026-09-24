@@ -15,9 +15,27 @@ describe("regulations", () => {
   beforeEach(() => {
     setTenantId("mal");
   });
-  it("loads catalog with 29 regulations", () => {
+  it("loads catalog with 38 regulations", () => {
     const catalog = loadRegulationsCatalog();
-    expect(catalog.regulations.length).toBe(29);
+    expect(catalog.regulations.length).toBe(38);
+    expect(catalog.regulations.map((r) => r.id)).toEqual(
+      expect.arrayContaining([
+        "REG-030",
+        "REG-031",
+        "REG-032",
+        "REG-033",
+        "REG-034",
+        "REG-035",
+        "REG-036",
+        "REG-037",
+        "REG-038",
+      ])
+    );
+  });
+
+  it("requires risk-domain regulations when money modules are enabled", () => {
+    const issues = validateRegulations();
+    expect(issues.filter((i) => i.message.includes("requires regulation"))).toEqual([]);
   });
 
   it("mal effective regulations exclude disabled ISO/module binds", () => {
@@ -30,7 +48,8 @@ describe("regulations", () => {
   });
 
   it("validates mal regulations without errors", () => {
-    expect(validateRegulations()).toEqual([]);
+    const issues = validateRegulations().filter((i) => i.level !== "warning");
+    expect(issues).toEqual([]);
   }, 15_000);
 
   it("lists block reason when tenant enabled but bind inactive", () => {

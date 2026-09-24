@@ -35,8 +35,10 @@ steward/modules/{id}/
 | `id` | string | ○ | カタログ id（ディレクトリ名と一致） |
 | `required_seeds` | string[] | （既定 `[]`） | production_ready に必須の seed。`invoice-*` を含むと billing 連携が必須 |
 | `activation_seeds` | string[] | （既定 `[]`） | activation_ready で必要な seed 一式 |
-| `optional_regulations` | string[] | 任意 | 関連する REG カタログ id |
-| `notes` | string | 任意 | tier 根拠等のメモ |
+| `optional_regulations` | string[] | 任意 | 関連する REG カタログ id（推奨） |
+| `required_regulations` | string[] | 任意 | モジュール有効時にテナントで `enabled: true` 必須（validate error · リスク領域） |
+| `regulation_family` | object | 任意 | `{ id, role?: owner\|sibling, do_not_mutate? }` — fork_family 分類（例: `qms_gxp`） |
+| `notes` | string | 任意 | tier 根拠等のメモ。規程不要ならその旨を書く |
 
 ## 3. readiness tier 別の要件
 
@@ -65,5 +67,9 @@ steward/modules/{id}/
 6. `npm run orgos -- modules check {id}` で契約検証 → `npm run check`
 7. テナントで使う場合のみ `tenants/{id}/modules.yaml` にエントリ追加（パスバインドのみ）
 8. `MODULE_DEFAULT_DOCS_ROOT` / `PROPERTY_OPERATIONS_SUBDIRS` を `src/lib/tenant-document-zones.ts` に登録（docs_root 既定値）
-9. `orgos modules activate {id}` または `orgos modules scaffold-docs` で **Zone B** フォルダ展開
+9. `orgos modules activate {id}` または `orgos modules scaffold-docs` で **Zone B** フォルダ展開  
+   - activate 時は規程分類プランを計算し、既定で Compliance 向け Work Order を起票する（`--skip-regulation-wo` で省略可）  
+   - 分類だけ見る: `orgos modules regulation-plan {id}`  
+   - 方針: [JP regulations 00-モジュール連動方針](../jurisdiction-packs/JP/regulations/00-モジュール連動方針.md)
 10. CLI がある場合 `{id}/cli/register.ts` で `ModuleCliBundle` を export し `src/lib/module-cli.ts` の `MODULE_CLI_BUNDLES` に追加
+11. 規程参照: `required_regulations` / `optional_regulations` を空にしない（不要なら `[]` + notes で理由）
