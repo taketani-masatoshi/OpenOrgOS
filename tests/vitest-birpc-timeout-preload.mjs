@@ -7,35 +7,46 @@
  *
  * Loaded via poolOptions.forks.execArgv --import (worker only; no disk patch
  * of the shared Core node_modules).
+ *
+ * CI uses Node 20 (no registerHooks); local Node 22+ can use registerHooks.
  */
-import { registerHooks } from "node:module";
+import module from "node:module";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-registerHooks({
-  load(url, context, nextLoad) {
-    const result = nextLoad(url, context);
-    const apply = (resolved) => {
-      if (resolved.format !== "module" || resolved.source == null) return resolved;
-      if (!url.includes("/vitest/") || !url.includes("chunks/utils.")) return resolved;
+function patchSource(url, source) {
+  if (!url.includes("/vitest/") || !url.includes("chunks/utils.")) return source;
+  if (!source.includes("function createForksRpcOptions")) return source;
+  return source
+    .replace(
+      "function createForksRpcOptions(nodeV8) {\n\treturn {",
+      "function createForksRpcOptions(nodeV8) {\n\treturn {\n\t\ttimeout: -1,"
+    )
+    .replace(
+      "function createThreadsRpcOptions({ port }) {\n\treturn {",
+      "function createThreadsRpcOptions({ port }) {\n\treturn {\n\t\ttimeout: -1,"
+    );
+}
 
-      let source =
-        typeof resolved.source === "string"
-          ? resolved.source
-          : Buffer.from(resolved.source).toString("utf8");
-      if (!source.includes("function createForksRpcOptions")) return resolved;
-
-      source = source
-        .replace(
-          "function createForksRpcOptions(nodeV8) {\n\treturn {",
-          "function createForksRpcOptions(nodeV8) {\n\treturn {\n\t\ttimeout: -1,"
-        )
-        .replace(
-          "function createThreadsRpcOptions({ port }) {\n\treturn {",
-          "function createThreadsRpcOptions({ port }) {\n\treturn {\n\t\ttimeout: -1,"
-        );
-
-      return { ...resolved, source, shortCircuit: true };
-    };
-
-    return result && typeof result.then === "function" ? result.then(apply) : apply(result);
-  },
-});
+if (typeof module.registerHooks === "function") {
+  module.registerHooks({
+    load(url, context, nextLoad) {
+      const result = nextLoad(url, context);
+      const apply = (resolved) => {
+        if (resolved.format !== "module" || resolved.source == null) return resolved;
+        const raw =
+          typeof resolved.source === "string"
+            ? resolved.source
+            : Buffer.from(resolved.source).toString("utf8");
+        const patched = patchSource(url, raw);
+        if (patched === raw) return resolved;
+        return { ...resolved, source: patched, shortCircuit: true };
+      };
+      return result && typeof result.then === "function" ? result.then(apply) : apply(result);
+    },
+  });
+} else {
+  // Node 20 (GitHub Actions): register() + separate loader hook file
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  module.register(pathToFileURL(path.join(here, "vitest-birpc-timeout-loader.mjs")).href);
+}
