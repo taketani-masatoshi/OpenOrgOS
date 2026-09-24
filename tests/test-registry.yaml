@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 611
-  static_test_cases: 2877
-  tiered_execution_total: 611
-  catalog_total: 46
+  vitest_total: 614
+  static_test_cases: 2899
+  tiered_execution_total: 614
+  catalog_total: 47
   catalog_cli_registered: 47
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 7
+  catalog_only: 8
 platform_domains:
   P01_kernel:
     layer: 1
@@ -141,6 +141,12 @@ catalog_modules:
     tests:
       - jp-corporate-registration.test.ts
       - mal-module-cli-contract.test.ts
+  jp_cosmetics_mah:
+    tier: skeleton
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/jp-cosmetics-mah.test.ts
   jp_inspection:
     tier: activation_ready
     coverage_tier: dedicated
@@ -677,6 +683,11 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  catalog/jp-cosmetics-mah.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_cosmetics_mah
   catalog/jp-inspection.test.ts:
     axis: catalog
     kind: unit
@@ -959,6 +970,10 @@ tests:
     kind: unit
     domain: P03_correspondence_org
   correspondence-gmail-sync.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-hooks-composition.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -2152,11 +2167,11 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
-  regulations.test.ts:
+  regulation-module-workflow.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
-  regulation-module-workflow.test.ts:
+  regulations.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

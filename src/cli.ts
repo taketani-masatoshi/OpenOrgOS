@@ -3,6 +3,8 @@ import "./bootstrap-tenant.js";
 import { refreshOrgOsPaths } from "./lib/orgos-paths.js";
 
 refreshOrgOsPaths();
+/** Composition: correspondence ↔ scheduling hooks (single import). */
+import "./lib/composition/register-correspondence-hooks.js";
 import { Command } from "commander";
 import { registerPlatformCommands } from "./cli/registrars/platform.js";
 import { registerOrchestrationCommands } from "./cli/registrars/orchestration.js";
@@ -29,7 +31,10 @@ program
     "--tenant <id>",
     `Tenant instance (env: ${ORGOS_TENANT_ENV} or ${LEGACY_TENANT_ENV}; default from tenant.yaml)`
   )
-  .option("--operator-id <id>", "Authenticated operator ID (required for mutation commands in prod)")
+  .option(
+    "--operator-id <id>",
+    "Authenticated operator ID (required for mutation commands in prod)"
+  )
   .option("--operator-key <key>", "Operator API key (or set ORGOS_OPERATOR_KEY env)");
 
 registerDomainCommands(program);

@@ -4,12 +4,9 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import {
-  collectContactRegistryCandidates,
-  registerContact,
-  resolveContactRegistry,
-  resolveEmailFromContactRef,
-} from "../src/lib/secretary/contact-registry.js";
+import { resolveContactRegistry, resolveEmailFromContactRef } from "../src/lib/secretary/contact-registry.js";
+import { registerContact } from "../src/lib/secretary/contact-register.js";
+import { collectContactRegistryCandidates } from "../src/lib/secretary/contact-sources.js";
 
 function seedExecutiveContacts(): void {
   const execDir = join(getDataDir(), "executive");

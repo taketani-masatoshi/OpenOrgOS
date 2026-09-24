@@ -102,6 +102,6 @@ orgos mail outbound mail setup-guide
 orgos integrations asana status|link|push|pull
 ```
 
-後方互換: `orgos secretary correspondence *` は同一実装のエイリアス。
+後方互換: `orgos secretary correspondence *` / `orgos secretary mail *` は同一実装のエイリアス。
 
 **Path:** `steward/core/agents/mail_outbound_agent.md`

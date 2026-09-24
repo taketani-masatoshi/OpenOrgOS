@@ -6,6 +6,15 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **Correspondence / Secretary 境界** — CLI 正本は `mail outbound`（`secretary correspondence` / `secretary mail` は互換エイリアス）。`lib/correspondence` は scheduling を静的 import せず hooks で接続。承認 subject 判定を葉モジュール化。hooks 登録は `composition/register-correspondence-hooks` に一元化（ADR 0078）。Skill / spec の CLI 表記を正本へ追随。Today に `schedule_headline` を追加。
+
+### Fixed
+
+- **月次締め消費税ゲート** — `buildConsumptionTaxSummary` に存在しない `issues` を参照していた tsc エラーを修正（`runConsumptionTaxCheck` の blocking のみ判定）。
+- **Correspondence hooks 黙殺** — binder 未登録時に warn（`ORGOS_REQUIRE_CORRESPONDENCE_HOOKS=1` で throw）。契約テストで composition root を固定。
+
 ### Added
 
 - **JP 社内規程のモジュール連動方針** — リスク領域単位（金流・PII・許認可等）。REG-027 に資金章、REG-032 に還付吸収、REG-030/035/036/037 をカタログ化。`required_regulations` + validate error。J-SOX は REG-016+027 分界。

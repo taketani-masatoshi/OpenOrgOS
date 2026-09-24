@@ -45,6 +45,7 @@ import {
   recordSchedulingLifecycleEvent,
 } from "../lib/scheduling-coordination/lifecycle.js";
 
+
 export interface SchedulingParticipantInput {
   name: string;
   email?: string;

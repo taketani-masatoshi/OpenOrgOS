@@ -9,7 +9,7 @@
 
 ## 禁止
 
-- `secretary correspondence send` · `org approval approve` · Wire · broker
+- `mail outbound correspondence send`（後方互換: `secretary correspondence send`）· `org approval approve` · Wire · broker
 - L2 メール本文のチャット・tracked MD への転記
 
 ## 要約出力
@@ -46,7 +46,7 @@ Secretary（スケジュール整合）· 返信下書きは **Mail Outbound** �
 
 ## Forbidden
 
-- `secretary correspondence send` · `org approval approve` · Wire · broker
+- `mail outbound correspondence send`（後方互換: `secretary correspondence send`）· `org approval approve` · Wire · broker
 - L2 メール本文のチャット・tracked MD への転記
 - 受信ポーリング以外での `records/executive/mail-received/` 改変（Secretary は読取のみ）
 

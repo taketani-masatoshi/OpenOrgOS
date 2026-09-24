@@ -17,7 +17,7 @@ import {
 } from "../correspondence/ceo-inline-question.js";
 import { applyNextAction } from "./next-action.js";
 import { isOwnMailAddress, resolveSenderByEmail } from "../secretary/contact-registry.js";
-import { extractEmailAddress } from "./reply-parse.js";
+import { extractEmailAddress } from "../correspondence/mail-address.js";
 import { interpretScheduleReply } from "./reply-interpret.js";
 import { proposeExecutiveSlots } from "./slots.js";
 import {

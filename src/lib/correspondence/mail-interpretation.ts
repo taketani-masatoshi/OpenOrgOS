@@ -7,7 +7,7 @@ import {
   type MailInterpretVote,
   type MailInterpretationResult,
 } from "../../../schemas/correspondence/mail-interpretation.js";
-import { parseEmlHeaders } from "./mail-triage.js";
+import { parseEmlHeaders } from "./eml-headers.js";
 import { getMailReceivedDir } from "./paths.js";
 import { postLlmChat } from "../operator-runtime/llm-chat.js";
 import { getLlmApiConfig, isLlmMockEnabled, type LlmApiConfig } from "../operator-runtime/llm-api.js";

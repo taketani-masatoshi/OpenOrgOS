@@ -46,7 +46,7 @@
 ## 禁止
 
 - L2 値（SMTP password · webhook secret）を tracked MD / チャットに転記
-- 承認なしのメール送信（Secretary Agent 領域 · `secretary correspondence send` は別経路）
+- 承認なしのメール送信（Mail Outbound 領域 · 正本 `mail outbound correspondence send` · 互換 `secretary correspondence send`）
 
 ---
 

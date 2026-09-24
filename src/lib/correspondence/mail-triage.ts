@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { simpleParser } from "mailparser";
 import type {
   MailDisposition,
   MailImportance,
@@ -17,21 +16,14 @@ import {
   saveMailTriageQueue,
   upsertTriageEntry,
   isHighPriorityEntry,
-  findTriageEntry,
 } from "./mail-triage-queue.js";
 import { identifySenderForTriageEntry } from "./sender-identification.js";
 import { postTriageInterpretAndCeoAsk } from "./mail-triage-interpret.js";
 import { getMailReceivedDir } from "./paths.js";
+import { parseEmlHeaders, type ParsedMailHeaders } from "./eml-headers.js";
+import { extractEmailAddress } from "./mail-address.js";
 import { existsSync, readdirSync } from "node:fs";
 import { buildThreadIdsFromHeaders } from "../sales-mail-utils.js";
-
-export interface ParsedMailHeaders {
-  from: string;
-  subject: string;
-  messageId?: string;
-  receivedAt: string;
-  textPreview: string;
-}
 
 export interface TriageResult {
   entry: MailTriageEntry;
@@ -41,11 +33,6 @@ export interface TriageBatchResult {
   processed: number;
   highPriorityIds: string[];
   notified: number;
-}
-
-function extractEmailAddress(from: string): string {
-  const m = from.match(/<([^>]+)>/);
-  return (m?.[1] ?? from).trim().toLowerCase();
 }
 
 function extractDomain(email: string): string {
@@ -145,7 +132,7 @@ export function classifyMail(
   const importance = pickImportance(hits);
   const urgency = pickUrgency(hits);
 
-  let routing: MailRouting = "secretary";
+  let routing: MailRouting;
   const routingRules = rules.routing;
   if (disposition === "spam") {
     routing =
@@ -195,21 +182,6 @@ export function classifyMail(
     rule_hits: hits,
     triaged_at: new Date().toISOString(),
     sender_known: false,
-  };
-}
-
-export async function parseEmlHeaders(emlPath: string): Promise<ParsedMailHeaders> {
-  const raw = readFileSync(emlPath, "utf-8");
-  const parsed = await simpleParser(raw);
-  const from = parsed.from?.text ?? "unknown";
-  const subject = parsed.subject ?? "(no subject)";
-  const text = (parsed.text ?? "").slice(0, 500);
-  return {
-    from,
-    subject,
-    messageId: parsed.messageId,
-    receivedAt: parsed.date?.toISOString() ?? new Date().toISOString(),
-    textPreview: text,
   };
 }
 

@@ -126,10 +126,11 @@ Secretary Agent は社長の **社外窓口** として、メール下書き・�
 **コマンド:**
 
 ```bash
-orgos secretary mail compose-url --to addr --subject "件名" --body "本文"
-orgos secretary correspondence draft --to addr --subject "件名" --body "..."
-orgos org approval approve --id APR-... --approver "CEO"
-orgos secretary correspondence send --id DRAFT-... --dry-run
+orgos mail outbound mail compose-url --to addr --subject "件名" --body "本文"
+orgos mail outbound correspondence draft --to addr --subject "件名" --body "..."
+orgos org approval approve --id APR-... --approver "CEO" --reviewed
+orgos mail outbound correspondence send --id DRAFT-... --dry-run
+# 後方互換: orgos secretary correspondence * / secretary mail *
 ```
 
 ### FR-TI-07 webhook

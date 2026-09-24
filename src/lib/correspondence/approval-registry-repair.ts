@@ -7,17 +7,14 @@ import {
   saveOrgApprovalRegistry,
 } from "../org/approval/index.js";
 import { listCorrespondenceDrafts } from "./draft.js";
-import { isCorrespondenceApprovalSubject } from "./review.js";
+import type { CorrespondenceApprovalSubjectType } from "./approval-subject.js";
 
 /** Rebuild a missing registry row from an existing correspondence draft. */
 export function buildApprovalFromDraft(draft: CorrespondenceDraft): OrgApprovalRequest {
   if (!draft.approval_id) {
     throw new Error(`Draft ${draft.draft_id} has no approval_id`);
   }
-  if (!isCorrespondenceApprovalSubject(draft.channel === "email" ? "correspondence.email" : "correspondence.slack")) {
-    throw new Error(`Draft ${draft.draft_id} channel ${draft.channel} is not correspondence approval`);
-  }
-  const subjectType = draft.channel === "email" ? "correspondence.email" : "correspondence.slack";
+  const subjectType: CorrespondenceApprovalSubjectType = draft.channel === "email" ? "correspondence.email" : "correspondence.slack";
   const status =
     draft.status === "approved" || draft.status === "sent"
       ? "approved"

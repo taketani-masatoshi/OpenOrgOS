@@ -1,10 +1,7 @@
-import type { ContactLookupMatch } from "../secretary/contact-registry.js";
+import type { ContactLookupMatch } from "../secretary/contact-sources.js";
 import { resolveSenderByEmail } from "../secretary/contact-registry.js";
-import {
-  extractDisplayName,
-  extractEmailAddress,
-  isInternalEmailDomain,
-} from "./internal-domains.js";
+import { isInternalEmailDomain } from "./internal-domains.js";
+import { extractDisplayName, extractEmailAddress } from "./mail-address.js";
 
 export type SenderScope = "external" | "internal" | "peer";
 

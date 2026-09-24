@@ -10,13 +10,14 @@
 
 - 下書き `status: approved`
 - `data/org/pending-approvals.yaml` で `approval.status: approved`
-- **メール初期設定完了** — `orgos secretary mail setup-guide` が ready（未完了時は送信拒否・ガイド表示）
+- **メール初期設定完了** — `orgos mail outbound mail setup-guide` が ready（未完了時は送信拒否・ガイド表示）
 - SMTP 資格情報は **env / records/**（L2 · gitignore）
 
 ## 初期設定（実送信前に必須）
 
 ```bash
-npm run orgos -- secretary mail setup-guide
+npm run orgos -- mail outbound mail setup-guide
+# 後方互換: secretary mail setup-guide
 ```
 
 未完了の典型項目:
@@ -31,14 +32,19 @@ npm run orgos -- secretary mail setup-guide
 
 ## CLI
 
+正本は `mail outbound`。`secretary correspondence` / `secretary mail` は同一実装のエイリアス。
+
 ```bash
 # 1. 文案確認（CEO / approver）
-npm run orgos -- secretary correspondence show --id DRAFT-20260709-001
+npm run orgos -- mail outbound correspondence show --id DRAFT-20260709-001
 
 # 2. 承認（--reviewed 必須 · 上記全文を読んだ後）
 npm run orgos -- org approval approve --id APR-20260709-001 --approver "段燕燕" --reviewed
 
 # 3. 送信（ceo/approver · STEWARD_OPERATOR_AUTH=1 + operator キー）
+npm run orgos -- mail outbound correspondence send --id DRAFT-20260709-001 --operator-id OP-001
+
+# 後方互換
 npm run orgos -- secretary correspondence send --id DRAFT-20260709-001 --operator-id OP-001
 ```
 

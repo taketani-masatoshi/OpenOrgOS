@@ -146,7 +146,7 @@ export async function runGmailSetupWizard(
       token_path,
       from_email: accountEmail,
       account_email: oauth.email,
-      next_command: "orgos secretary correspondence send --id <DRAFT-ID> --operator-id OP-001",
+      next_command: "orgos mail outbound correspondence send --id <DRAFT-ID> --operator-id OP-001",
     };
   } catch (e) {
     return {

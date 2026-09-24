@@ -1,6 +1,5 @@
 import { buildTodayContext } from "../lib/steward-chat/today-context.js";
-import { pushNotifications } from "../lib/notifications/push.js";
-import { buildTodaySummaryForPush } from "../lib/steward-chat/today-context.js";
+import { buildTodaySummaryForPush, pushNotifications } from "../lib/notifications/push.js";
 
 export interface NotificationsTestOptions {
   dryRun?: boolean;

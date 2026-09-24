@@ -95,7 +95,7 @@ Agent 間（Mail Intake → Secretary / Mail Outbound）では handoff に **文
 
 ## 下書き連携
 
-`secretary correspondence draft` は:
+正本 CLI は `mail outbound correspondence draft`。`secretary correspondence draft` は同一実装の後方互換エイリアス。
 
 - `--contact-ref EXT-...` 指定時、正本 `email` を `--to` に反映
 - `--to` が正本と不一致なら **警告**

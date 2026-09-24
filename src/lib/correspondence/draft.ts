@@ -19,7 +19,7 @@ import {
   getCorrespondenceDraftsDir,
 } from "./paths.js";
 import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
-import { recordSecretaryDraftEditIfBodyChanged } from "../scheduling-coordination/quality-signals.js";
+import { getCorrespondenceHooks } from "./hooks.js";
 import { assertOutboundCorrespondenceDraft } from "./claims-assert.js";
 import { assertCorrespondenceStyleLint } from "./style-lint.js";
 import { runCorrespondenceOutboundGates } from "./correspondence-gate-audit.js";
@@ -197,8 +197,6 @@ export function createCorrespondenceDraft(
   return { draft, approvalId };
 }
 
-import { writeVenueBookingHandoff } from "../scheduling-coordination/venue-handoff.js";
-
 function schedulingCaseIdFromDraftNotes(notes?: string): string | undefined {
   return notes?.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
 }
@@ -214,7 +212,7 @@ export function markCorrespondenceDraftApproved(
   }
   const caseId = schedulingCaseIdFromDraftNotes(draft.notes);
   if (caseId) {
-    recordSecretaryDraftEditIfBodyChanged(caseId, draft);
+    getCorrespondenceHooks().onDraftApproved?.(draft, caseId);
   }
   return saveCorrespondenceDraft({ ...draft, status: "approved" });
 }

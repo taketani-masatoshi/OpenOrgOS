@@ -194,7 +194,7 @@ export function sanitizeComposeBody(body: string, claims: CorrespondenceClaim[])
     claims.filter((c) => c.kind === "amount" && c.verified).map((c) => c.value.replace(/,/g, "")),
   );
 
-  let out = body
+  const out = body
     .split(/\n/)
     .filter((line) => {
       if (!hasInv && /在庫|出荷可能/.test(line)) return false;

@@ -11,15 +11,16 @@ import { assertCorrespondenceMailSetupReady } from "./mail-setup-readiness.js";
 import { isDryRunSmtpHost, resolveMailConfig } from "./mail-config.js";
 import { repairMissingApprovalForDraft } from "./approval-registry-repair.js";
 import { assertHumanCorrespondenceApproval, isHumanApproverOperatorId } from "./human-approval.js";
+import { CorrespondenceApprovalGateError } from "./approval-gate-error.js";
+import { assertCorrespondenceStyleLint } from "./style-lint.js";
+import { assertOutboundCorrespondenceDraft } from "./claims-assert.js";
+import { runCorrespondenceOutboundGates } from "./correspondence-gate-audit.js";
+import { handleCorrespondenceCaseSent } from "./case-status.js";
+import { getCorrespondenceHooks } from "./hooks.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
 import { currentDate } from "../utils.js";
 
-export class CorrespondenceApprovalGateError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "CorrespondenceApprovalGateError";
-  }
-}
+export { CorrespondenceApprovalGateError };
 
 export function assertCorrespondenceApproved(draft: CorrespondenceDraft): void {
   if (draft.status === "sent") {
@@ -102,9 +103,6 @@ export async function sendApprovedCorrespondence(opts: {
     );
   }
 
-  const { assertCorrespondenceStyleLint } = await import("./style-lint.js");
-  const { assertOutboundCorrespondenceDraft } = await import("./claims-assert.js");
-  const { runCorrespondenceOutboundGates } = await import("./correspondence-gate-audit.js");
   runCorrespondenceOutboundGates(
     draft,
     () => {
@@ -141,10 +139,7 @@ export async function sendApprovedCorrespondence(opts: {
       draft = markCorrespondenceDraftSent(draft.draft_id, {
         sentBy: opts.operatorId,
       });
-      const { handleSchedulingCorrespondenceSent } = await import(
-        "../scheduling-coordination/lifecycle.js"
-      );
-      handleSchedulingCorrespondenceSent(draft);
+      getCorrespondenceHooks().onCorrespondenceSent?.(draft);
     }
     return { draft, sendResult };
   }
@@ -178,14 +173,8 @@ export async function sendApprovedCorrespondence(opts: {
     sentBy: opts.operatorId,
     companyEventId: event.id,
   });
-  if (draft.notes?.includes("scheduling-case:")) {
-    const { handleSchedulingCorrespondenceSent } = await import(
-      "../scheduling-coordination/lifecycle.js"
-    );
-    handleSchedulingCorrespondenceSent(draft);
-  }
+  getCorrespondenceHooks().onCorrespondenceSent?.(draft);
 
-  const { handleCorrespondenceCaseSent } = await import("./case-status.js");
   handleCorrespondenceCaseSent(draft, { actor: opts.operatorId });
 
   try {
