@@ -48,6 +48,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 ### Fixed
 
 - **日程調整 F1–F4** — CLI propose を `proposeSlotsOntoSchedulingCase` に統一。`SchedulingCaseNotFoundError` 文言一本化。案件 ID / 返信日付の年に注入時計。リマインド期限を `scheduling_reminder_after_hours`（既定72h）に合わせる。
+- **月次締めの消費税ゲート** — `buildConsumptionTaxSummary` に無い `issues` 参照をやめ、プロファイルの blocking 判定と summary 構築の例外だけを見る（`tsc` 修正）。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
  `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
