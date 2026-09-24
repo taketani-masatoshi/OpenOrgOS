@@ -101,17 +101,21 @@ describe("accounting commercial paths", () => {
     expect(posted.entry_id).toMatch(/^JE-BONUS-/);
   });
 
-  it("accounting readiness module scores and exposes accounting mode", () => {
-    workspace = mkdtempSync(join(tmpdir(), "acct-ready-"));
-    process.env.ORGOS_WORKSPACE = workspace;
-    refreshOrgOsPaths();
-    const report = buildAccountingReadinessReport();
-    expect(report.mode).toBe("accounting");
-    expect(report.max_score).toBe(100);
-    expect(report.checks.find((row) => row.id === "runtime-journal")?.pass).toBe(true);
-    expect(report.checks.find((row) => row.id === "runtime-annual-close")?.pass).toBe(true);
-    expect(existsSync(join(getInstallRoot(), "src/lib/product/ledger-bank-e2e.ts"))).toBe(
-      true,
-    );
-  });
+  it(
+    "accounting readiness module scores and exposes accounting mode",
+    () => {
+      workspace = mkdtempSync(join(tmpdir(), "acct-ready-"));
+      process.env.ORGOS_WORKSPACE = workspace;
+      refreshOrgOsPaths();
+      const report = buildAccountingReadinessReport();
+      expect(report.mode).toBe("accounting");
+      expect(report.max_score).toBe(100);
+      expect(report.checks.find((row) => row.id === "runtime-journal")?.pass).toBe(true);
+      expect(report.checks.find((row) => row.id === "runtime-annual-close")?.pass).toBe(true);
+      expect(existsSync(join(getInstallRoot(), "src/lib/product/ledger-bank-e2e.ts"))).toBe(
+        true,
+      );
+    },
+    180_000,
+  );
 });

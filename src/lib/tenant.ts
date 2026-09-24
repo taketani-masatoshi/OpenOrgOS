@@ -3,7 +3,12 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
-import { resolveTenantFromEnv, ORGOS_TENANT_ENV, LEGACY_TENANT_ENV } from "./orgos-cli.js";
+import {
+  resolveTenantFromEnv,
+  setTenantEnv,
+  ORGOS_TENANT_ENV,
+  LEGACY_TENANT_ENV,
+} from "./orgos-cli.js";
 import {
   getInstallRoot,
   getWorkspaceRoot,
@@ -94,6 +99,10 @@ function assertValidTenantId(id: string): string {
 
 export function setTenantId(id: string): void {
   _tenantId = assertValidTenantId(id);
+  // Chat / Wire resolve request tenant from ORGOS_TENANT when Host / X-OrgOS-Tenant
+  // are absent. Keep env in lockstep so session.tenant_id matches the process default
+  // (otherwise matchSessionTenant returns 403 "session tenant mismatch").
+  setTenantEnv(_tenantId);
 }
 
 /** Clear the process-default tenant before switching workspace roots. */
