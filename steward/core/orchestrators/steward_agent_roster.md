@@ -239,8 +239,8 @@ Growth/一般企業 Agent の要約は **Phase 2 で dashboard 自動連携**（
 |------|-----|------|
 | catalog agents | 51 | `steward/core/agents/registry.yaml` |
 | active agents | 50 | registry `status: active` |
-| skills (registry) | 244 | `steward/core/skills/registry.yaml` + modules |
-| runtime: cli | 196 | registry |
+| skills (registry) | 243 | `steward/core/skills/registry.yaml` + modules |
+| runtime: cli | 195 | registry |
 | runtime: agent | 48 | registry（旧 cursor-only 含む） |
 | テナント有効化 | `orgos agent roster show` | `data/operator/agents.yaml` |
 | pulse 対象 | active roster のみ | `orgos agent pulse --all` |

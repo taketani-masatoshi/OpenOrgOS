@@ -364,7 +364,6 @@ Skill id / CLI が指定された
 | `jp_fixed_term_conversion_check` | cli | `human_resources` | `operations labor-contract conversion-check` | jp_labor_contract |
 | `jp_foreign_employment_notice` | cli | `human_resources` | `operations foreign-workers notifications` | jp_visa_employment |
 | `jp_foreign_worker_check` | cli | `human_resources` | `operations foreign-workers check` | jp_visa_employment |
-| `jp_individual_income_tax` | cli | `tax` | `operations tax-individual handoff` | jp_tax_individual |
 | `jp_inspection_list` | cli | `compliance` | `jp-inspection-list` | jp_inspection |
 | `jp_inspection_types` | cli | `compliance` | `jp-inspection-types` | jp_inspection |
 | `jp_invoice_registration` | cli | `tax` | `jp-invoice-registration` | jp_invoice_qualified |

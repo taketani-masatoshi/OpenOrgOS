@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 625
-  static_test_cases: 3043
-  tiered_execution_total: 625
-  catalog_total: 55
-  catalog_cli_registered: 56
+  vitest_total: 616
+  static_test_cases: 3025
+  tiered_execution_total: 616
+  catalog_total: 54
+  catalog_cli_registered: 55
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 16
+  catalog_only: 15
 platform_domains:
   P01_kernel:
     layer: 1
@@ -266,12 +266,6 @@ catalog_modules:
     tests:
       - catalog/jp-tax-modules.test.ts
   jp_tax_corporate:
-    tier: activation_ready
-    coverage_tier: catalog_only
-    cli: true
-    tests:
-      - catalog/jp-tax-modules.test.ts
-  jp_tax_individual:
     tier: activation_ready
     coverage_tier: catalog_only
     cli: true
@@ -797,7 +791,6 @@ tests:
     kind: unit
     catalog_ids:
       - jp_tax_corporate
-      - jp_tax_individual
       - jp_tax_consumption
       - jp_invoice_qualified
       - jp_withholding_statutory
@@ -892,14 +885,6 @@ tests:
   community-readiness.test.ts:
     axis: meta
     kind: meta
-  companies-act-score-acceptance.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  companies-act-statements.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
   company-events-abnormal.test.ts:
     axis: platform
     kind: shared-state
@@ -1109,10 +1094,6 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
-  country-module.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
   csrf-guard.test.ts:
     axis: platform
     kind: unit
@@ -1247,18 +1228,6 @@ tests:
     axis: contract
     kind: contract
   extension-skill-runners.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  external-connector-runtime.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  external-provider-adapters.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  external-reconciliation.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1413,10 +1382,6 @@ tests:
     kind: unit
     domain: P04_wire_stack
   human-approval-context.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  indirect-tax-port.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2543,16 +2508,7 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
-  sole-prop-lane-f-acceptance.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
   standalone-org-demo.test.ts:
-    axis: integration
-    kind: integration
-    domain: P01_kernel
-    integration: I2_protocol_e2e
-  standards-integration.test.ts:
     axis: integration
     kind: integration
     domain: P01_kernel
