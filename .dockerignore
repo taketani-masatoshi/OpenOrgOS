@@ -9,7 +9,9 @@ apps/wire-console/dist-combined
 apps/steward-chat/dist
 data/proposal3-pki
 data/hub-*
-**/records/**
+# L2 vault only — do not use **/records/** (that drops src/lib/compliance/records from the image)
+tenants/**/records/**
+/records/**
 scratch/*
 !scratch/00-README.md
 # Demo image context trim (context = repo root · deploy/demo/Dockerfile)

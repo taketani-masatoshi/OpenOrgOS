@@ -8,7 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
-- **compliance records と Vitest RPC** — `.cursorignore` の Zone C を `tenants/**/records/**` · `/records/**` に絞り、`src/lib/compliance/records/` への Agent Write を回復。registry `RES-PII-RECORDS` を同パスに揃え、`boundaryNeedle` は `tenants/**/records/**` → `records` を返す。Vitest 3 の birpc 60s による `Timeout calling onTaskUpdate` は worker preload（`tests/vitest-birpc-timeout-preload.mjs`）で回避。Vitest 4 へ上げたら preload を削除する（共有 `node_modules` のため本 PR では major 上げしない）。
+- **compliance records と Vitest RPC** — `.cursorignore` / `.dockerignore` の Zone C を `tenants/**/records/**` · `/records/**` に絞り、`src/lib/compliance/records/` への Agent Write と demo イメージビルドを回復。registry `RES-PII-RECORDS` を同パスに揃え、`boundaryNeedle` は scoped vault glob → `records` を返す。Vitest 3 の birpc 60s による `Timeout calling onTaskUpdate` は worker preload（`tests/vitest-birpc-timeout-preload.mjs`）で回避。Vitest 4 へ上げたら preload を削除する（共有 `node_modules` のため本 PR では major 上げしない）。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
