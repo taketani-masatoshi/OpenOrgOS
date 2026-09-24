@@ -10,6 +10,7 @@ import {
   computeBonusDraft,
   saveBonusDraft,
   postBonusDraftJournal,
+  postYearEndSettlements,
 } from "../src/lib/finance/payroll-bonus-yea.js";
 import {
   postPayrollJournalEntry,
@@ -122,17 +123,44 @@ describe("annual payroll evidence and posting", () => {
     expect(() => markYearEndReadyForHandoff("FY2026")).toThrow("incomplete");
     expect(buildPayrollYearEndReadiness("FY2026").ready_for_tax_handoff).toBe(false);
   });
-  it("reconciles all twelve actual payroll journals and hands off without computing settlement", () => {
+  it("reconciles all twelve actual payroll journals and hands off without posting settlement journals", () => {
     source();
+    const before = loadJournalEntries().entries.length;
     const doc = computeYearEndAdjustment("FY2026");
+    expect(loadJournalEntries().entries).toHaveLength(before);
     expect(summarizeYearEndAdjustment(doc).totals.annual_gross_yen).toBe(3360000);
     expect(summarizeYearEndAdjustment(doc).totals.withholding_total_yen).toBe(68640);
     expect(typeof doc.employees[0]?.yea_settlement_yen).toBe("number");
     expect(typeof doc.employees[0]?.annual_tax_yen).toBe("number");
+    expect(doc.employees[0]?.settlement_journal_entry_id).toBeUndefined();
     expect(summarizeYearEndAdjustment(doc).calculation_complete).toBe(true);
+    expect(summarizeYearEndAdjustment(doc).settlements_posted).toBe(false);
     expect(markYearEndReadyForHandoff("FY2026").status).toBe("ready_for_handoff");
     expect(buildPayrollYearEndReadiness("FY2026").ready_for_tax_handoff).toBe(true);
     expect(() => computeYearEndAdjustment("FY2026")).toThrow("cannot be overwritten");
+  });
+  it("posts settlement journals only via postYearEndSettlements with authorizedBy", () => {
+    source();
+    computeYearEndAdjustment("FY2026");
+    expect(() =>
+      postYearEndSettlements({ fiscalYear: "FY2026", authorizedBy: "yea-compute" })
+    ).toThrow("authorizedBy");
+    const posted = postYearEndSettlements({
+      fiscalYear: "FY2026",
+      authorizedBy: "OP-TEST",
+    });
+    const settlement = posted.employees[0]!.yea_settlement_yen!;
+    if (settlement === 0) {
+      expect(summarizeYearEndAdjustment(posted).settlements_posted).toBe(true);
+      return;
+    }
+    expect(posted.employees[0]!.settlement_journal_entry_id).toMatch(/^JE-PAYROLL-YEA-/);
+    expect(summarizeYearEndAdjustment(posted).settlements_posted).toBe(true);
+    expect(
+      loadJournalEntries().entries.some(
+        (e) => e.source?.kind === "payroll" && e.source.event === "yea_settlement"
+      )
+    ).toBe(true);
   });
   it("rejects changing the declared payment date without matching settlement", () => {
     const { path, file } = source();

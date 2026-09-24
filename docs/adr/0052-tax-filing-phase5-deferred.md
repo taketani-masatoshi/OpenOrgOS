@@ -1,6 +1,6 @@
 # ADR 0052: Tax Filing Phase 5 — e-Tax · Return XML · Lodging Ledger
 
-**Status:** Accepted · **Date:** 2026-08-24 · **Updated:** 2026-08-29
+**Status:** Accepted · **Date:** 2026-08-24 · **Updated:** 2026-09-24
 
 ## Context
 
@@ -20,6 +20,8 @@ Phase 5 を **3 サブフェーズ** で defer し、トリガー条件を明文
 
 **OrgOS は 5c の実行を実装しない** — 提出は税理士ワークフロー外注。
 
+**正本一文（実験モジュールとの関係）:** 管轄パックの実験的 `jp_etax` / `jp_eltax` はライフサイクル・証跡・production-gate YAML の足場であり、ADR 0052 Phase 5c（本番提出）の実装や「OrgOS が e-Tax 送信する」決定の撤回ではない。
+
 ## Lodging tax ledger（5d）
 
 `tax-profile.obligation_rhythms` の `mode: from_ledger` は `data/operations/lodging-tax.yaml` の assessments（期間合計）を読む。氏名は出さない。
@@ -29,8 +31,10 @@ Phase 5 を **3 サブフェーズ** で defer し、トリガー条件を明文
 - `tax readiness` 100% は **5a 以前** で達成可能（ギャップ deferred · 機械 warning 解消）。
 - 5b 以降は新指標 `tax filing export readiness`（将来 ADR）を検討 — 本 ADR では定義しない。
 - mal `modules.yaml` JP tax 4 件有効化（Phase 4）は 5b の前提データ整備とは独立。
+- `jp_etax` の合成テスト成功 ≠ 認証完了 ≠ 5c 完了。
 
 ## Related
 
 - ADR [0051-jp-tax-skills-cli-only.md](./0051-jp-tax-skills-cli-only.md) — Phase 2 完了（mal module 有効化）
 - [tax-filing-spec.md](../org-os/tax-filing-spec.md)
+- [finance-tax-international-readiness.md](../product/finance-tax-international-readiness.md) — e-Tax certification テスト defer 方針

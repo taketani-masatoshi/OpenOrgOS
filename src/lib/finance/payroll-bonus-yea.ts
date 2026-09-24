@@ -266,17 +266,6 @@ export function computeYearEndAdjustment(fiscalYear: string) {
           taxCreditsYen: declared.tax_credits_yen,
           otherIncomeYen: declared.other_income_yen,
         });
-        const occurredAt = `${fiscalYearEndDate(fiscalYear, resolveCompanyFiscalYearEndMonth())}T12:00:00.000Z`;
-        const settlementId =
-          settlement.yea_settlement_yen === 0
-            ? undefined
-            : postYearEndWithholdingSettlement({
-                fiscalYear,
-                employeeId: row.employee_id,
-                settlementYen: settlement.yea_settlement_yen,
-                authorizedBy: "yea-compute",
-                occurredAt,
-              });
         return {
           employee_id: row.employee_id,
           annual_gross_yen: row.annual_gross_yen,
@@ -284,7 +273,6 @@ export function computeYearEndAdjustment(fiscalYear: string) {
           social_employee_total_yen: row.social_employee_total_yen,
           annual_tax_yen: settlement.annual_tax_yen,
           yea_settlement_yen: settlement.yea_settlement_yen,
-          settlement_journal_entry_id: settlementId,
         };
       }) ??
       [...new Set(ids)].map((employee_id) => ({
@@ -306,9 +294,53 @@ export function computeYearEndAdjustment(fiscalYear: string) {
   });
 }
 
+/**
+ * Post YEA withholding settlement journals after compute.
+ * Requires finance:reconcile-class authorization (authorizedBy must be a human operator id).
+ * Does not run inside computeYearEndAdjustment.
+ */
+export function postYearEndSettlements(input: {
+  fiscalYear: string;
+  authorizedBy: string;
+}): z.infer<typeof yeaSchema> {
+  return withFinanceMutation(() => {
+    assertJapaneseFinanceEngine();
+    const authorizedBy = input.authorizedBy.trim();
+    if (!authorizedBy || authorizedBy === "yea-compute") {
+      throw new Error("Year-end settlement posting requires an explicit authorizedBy operator");
+    }
+    const doc = loadOrInitYearEndAdjustment(input.fiscalYear);
+    assertYearEndEvidence(doc);
+    if (doc.status === "closed") throw new Error("Closed annual payroll cannot post settlements");
+    const occurredAt = `${fiscalYearEndDate(input.fiscalYear, resolveCompanyFiscalYearEndMonth())}T12:00:00.000Z`;
+    const employees = doc.employees.map((row) => {
+      if (row.settlement_journal_entry_id) return row;
+      if (row.yea_settlement_yen === undefined) {
+        throw new Error(`Missing yea_settlement_yen for ${row.employee_id}`);
+      }
+      if (row.yea_settlement_yen === 0) return row;
+      const settlementId = postYearEndWithholdingSettlement({
+        fiscalYear: input.fiscalYear,
+        employeeId: row.employee_id,
+        settlementYen: row.yea_settlement_yen,
+        authorizedBy,
+        occurredAt,
+      });
+      return { ...row, settlement_journal_entry_id: settlementId };
+    });
+    const next = yeaSchema.parse({
+      ...doc,
+      employees,
+      updated_at: getClock().now().toISOString(),
+    });
+    writeYamlFileAtomic(yeaPath(input.fiscalYear), next);
+    return next;
+  });
+}
+
 /** Chat / Console 向け集計。個人別明細は YAML（gitignore）のみ。 */
 export function summarizeYearEndAdjustment(yea: z.infer<typeof yeaSchema>) {
-  const settlementReady =
+  const calculationComplete =
     yea.blockers.length === 0 &&
     yea.employees.length > 0 &&
     yea.employees.every(
@@ -318,12 +350,20 @@ export function summarizeYearEndAdjustment(yea: z.infer<typeof yeaSchema>) {
         row.annual_tax_yen !== undefined &&
         row.yea_settlement_yen !== undefined
     );
+  const settlementsPosted =
+    calculationComplete &&
+    yea.employees.every(
+      (row) =>
+        row.yea_settlement_yen === 0 || Boolean(row.settlement_journal_entry_id)
+    );
   return {
     fiscal_year: yea.fiscal_year,
     status: yea.status,
     employee_count: yea.employees.length,
     blockers: yea.blockers,
-    calculation_complete: settlementReady,
+    /** true = employment YEA amounts computed from annual source + declaration; not e-file / not journals posted. */
+    calculation_complete: calculationComplete,
+    settlements_posted: settlementsPosted,
     totals: {
       annual_gross_yen:
         yea.blockers.length ||
@@ -337,11 +377,12 @@ export function summarizeYearEndAdjustment(yea: z.infer<typeof yeaSchema>) {
         yea.employees.some((row) => row.withholding_total_yen === undefined)
           ? null
           : yea.employees.reduce((sum, row) => sum + row.withholding_total_yen!, 0),
-      yea_settlement_yen: settlementReady
+      yea_settlement_yen: calculationComplete
         ? yea.employees.reduce((sum, row) => sum + (row.yea_settlement_yen ?? 0), 0)
         : null,
     },
-    note: "個人別明細は year-end-adjustment YAML（gitignore）。e-file 提出はしない。",
+    note:
+      "calculation_complete は給与所得ベースの年調見積完了。精算仕訳は postYearEndSettlements。e-file 提出はしない。",
   };
 }
 

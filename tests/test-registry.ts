@@ -260,6 +260,9 @@ function classifyPlatformDomain(base: string): PlatformDomainId {
   ) {
     return "P03_correspondence_org";
   }
+  if (/^(etax-|efiling-|eltax-|payroll-yea-)/.test(base)) {
+    return "P02_business_data";
+  }
   if (
     /^(company-events-|finance-|broker|invoice|lib\.|yojitsu-|demo-validate|acme-validate|tenant-|classification|integrations-|dashboard|map\.|io\.|deps\.|skill-registry|skills-cli|modules\.|module-production|context-manifest|agent-summaries|validate-protocol|tenant-document|tenant-setup|tenant-guard|regulations|standards|compliance-|control-framework|wave-modules|travel-|language-bridge|venture-|jp-|readiness|extensibility|skeleton|skill-registry|skills-cli|mail-compose|customer-ux-|customer-journey-|ledger-product|commercial-readiness|accounting-bank-|accounting-readiness|stripe-|ledger-guest|ledger-offboard|ledger-mail|productability)/.test(
       base
