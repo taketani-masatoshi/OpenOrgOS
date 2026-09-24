@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import "./composition/register-correspondence-hooks.js";
 import { registerPlatformCommands } from "../cli/registrars/platform.js";
 import { registerOrchestrationCommands } from "../cli/registrars/orchestration.js";
 import { registerExecutiveCommands } from "../cli/registrars/executive.js";

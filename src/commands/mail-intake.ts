@@ -15,8 +15,6 @@ import {
 } from "../lib/correspondence/mail-handoff.js";
 import { loadMailConfig, shouldAutoWireScan } from "../lib/correspondence/mail-config.js";
 import { getCorrespondenceHooks } from "../lib/correspondence/hooks.js";
-/** Side-effect: register scheduling binders for getCorrespondenceHooks(). */
-import "../lib/scheduling-coordination/bind-correspondence-hooks.js";
 
 export {
   parseCeoFieldArgs,

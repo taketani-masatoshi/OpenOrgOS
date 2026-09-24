@@ -28,7 +28,9 @@ export type StyleLintKind =
   | "scheduling_confirm"
   | "generic";
 
-export function inferStyleLintKind(draft: Pick<CorrespondenceDraft, "notes" | "subject">): StyleLintKind {
+export function inferStyleLintKind(
+  draft: Pick<CorrespondenceDraft, "notes" | "subject">
+): StyleLintKind {
   const notes = draft.notes ?? "";
   if (/kind:clarify\b/.test(notes)) return "scheduling_clarify";
   if (/kind:confirm\b/.test(notes)) return "scheduling_confirm";
@@ -219,7 +221,11 @@ export function lintCorrespondenceBody(opts: {
       });
     }
     const areaLine = body.match(/・エリア\s*[:：]\s*(.+)/)?.[1]?.trim();
-    if (areaLine && /店|亭|膳|寮|今半|なだ万|会席|個室/.test(areaLine) && !/駅|区|市|都|府|県|周辺|エリア/.test(areaLine)) {
+    if (
+      areaLine &&
+      /店|亭|膳|寮|今半|なだ万|会席|個室/.test(areaLine) &&
+      !/駅|区|市|都|府|県|周辺|エリア/.test(areaLine)
+    ) {
       issues.push({
         id: "area_looks_like_venue",
         severity: "warning",
@@ -268,7 +274,10 @@ export function lintCorrespondenceBody(opts: {
     }
   }
 
-  if (opts.isMeal && (opts.hasCostLine === false || (opts.hasCostLine !== true && !bodyHasCostLine(body)))) {
+  if (
+    opts.isMeal &&
+    (opts.hasCostLine === false || (opts.hasCostLine !== true && !bodyHasCostLine(body)))
+  ) {
     const mealSeverity: StyleLintSeverity =
       kind === "scheduling_confirm" || kind === "scheduling_proposal" ? "error" : "warning";
     issues.push({
@@ -308,23 +317,22 @@ export function formatStyleLintReport(result: StyleLintResult): string {
 
 export function lintCorrespondenceDraft(
   draft: CorrespondenceDraft,
-  opts?: { locale?: string; companyName?: string; meetingFormat?: "online" | "in_person" | "unspecified" }
+  opts?: {
+    locale?: string;
+    companyName?: string;
+    meetingFormat?: "online" | "in_person" | "unspecified";
+  }
 ): StyleLintResult {
   let meetingFormat = opts?.meetingFormat;
   let isMeal: boolean | undefined;
   let hasCostLine: boolean | undefined;
-  const caseId = draft.notes?.match(/scheduling-case:(SCH-\d{4}-\d{3})/)?.[1];
-  if (caseId) {
-    try {
-      const sch = getCorrespondenceHooks().loadSchedulingCase?.(caseId);
-      meetingFormat = meetingFormat ?? sch?.meeting_format;
-      if (sch) {
-        isMeal = sch.looks_like_meal;
-        hasCostLine = sch.has_cost_line;
-      }
-    } catch {
-      /* optional when not in tenant fixture */
-    }
+  try {
+    const enrichment = getCorrespondenceHooks().enrichDraftStyleContext?.(draft);
+    meetingFormat = meetingFormat ?? enrichment?.meetingFormat;
+    isMeal = enrichment?.isMeal;
+    hasCostLine = enrichment?.hasCostLine;
+  } catch {
+    /* optional when composition root / binder not loaded */
   }
   if (isMeal && /費用\s*[:：]|お一人さま|税込|Cost\s*:/i.test(draft.body)) {
     hasCostLine = true;

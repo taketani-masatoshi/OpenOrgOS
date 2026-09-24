@@ -14,8 +14,6 @@ import {
 } from "../../commands/executive.js";
 import { runStatus } from "../../commands/status.js";
 import { registerMailCommands, registerSecretaryCommands } from "./correspondence.js";
-/** Side-effect: scheduling binders for executive / mail CLI. */
-import "../../lib/scheduling-coordination/bind-correspondence-hooks.js";
 import {
   runSchedulingAutoProcess,
   runSchedulingCancel,
@@ -39,7 +37,9 @@ export function registerExecutiveCommands(program: Command): void {
     .command("executive")
     .description("Secretary executive SoT — calendar · brief (data/executive/)");
 
-  const executiveCalendar = executiveCmd.command("calendar").description("Executive calendar from calendar.yaml");
+  const executiveCalendar = executiveCmd
+    .command("calendar")
+    .description("Executive calendar from calendar.yaml");
   executiveCalendar
     .command("list")
     .description("List events in date range (default: current week)")
@@ -112,7 +112,7 @@ export function registerExecutiveCommands(program: Command): void {
         priority: opts.priority,
         status: opts.status,
         json: opts.json,
-      }),
+      })
     );
   executiveTasks
     .command("add")
@@ -131,7 +131,7 @@ export function registerExecutiveCommands(program: Command): void {
         property: opts.property,
         module: opts.module,
         json: opts.json,
-      }),
+      })
     );
   executiveTasks
     .command("close")
@@ -146,7 +146,7 @@ export function registerExecutiveCommands(program: Command): void {
         notes: opts.notes,
         cancel: opts.cancel,
         json: opts.json,
-      }),
+      })
     );
   executiveTasks
     .command("intake")
@@ -161,13 +161,11 @@ export function registerExecutiveCommands(program: Command): void {
         workOrder: opts.workOrder,
         approval: opts.approval,
         json: opts.json,
-      }),
+      })
     );
   executiveTasks
     .command("import-p0")
-    .description(
-      "One-shot import from docs/company/executive-remaining-tasks.md (default dry-run)",
-    )
+    .description("One-shot import from docs/company/executive-remaining-tasks.md (default dry-run)")
     .option("--file <path>", "Markdown checklist path")
     .option("--write", "Write into tasks.yaml (default dry-run)")
     .option("--dry-run", "Force dry-run even with --write")
@@ -178,7 +176,7 @@ export function registerExecutiveCommands(program: Command): void {
         write: opts.write,
         dryRun: opts.dryRun,
         json: opts.json,
-      }),
+      })
     );
   executiveTasks
     .command("archive")
@@ -310,9 +308,7 @@ export function registerExecutiveCommands(program: Command): void {
     .description("Poll overdue scheduling reminders (independent of mail sync)")
     .option("--at <iso>", "Evaluate as-of timestamp (tests / replay)")
     .option("--json", "JSON output")
-    .action(async (opts) =>
-      runSchedulingReminderPollCommand({ json: opts.json, at: opts.at })
-    );
+    .action(async (opts) => runSchedulingReminderPollCommand({ json: opts.json, at: opts.at }));
 
   schedulingCmd
     .command("confirm")
@@ -363,9 +359,7 @@ export function registerExecutiveCommands(program: Command): void {
     .requiredOption("--id <caseId>", "Case ID")
     .option("--reason <text>", "Cancellation reason")
     .option("--json", "JSON output")
-    .action((opts) =>
-      runSchedulingCancel({ id: opts.id, reason: opts.reason, json: opts.json })
-    );
+    .action((opts) => runSchedulingCancel({ id: opts.id, reason: opts.reason, json: opts.json }));
 
   schedulingCmd
     .command("reschedule")

@@ -9,10 +9,11 @@
 ## CLI
 
 ```bash
-npm run orgos -- secretary correspondence draft \
+npm run orgos -- mail outbound correspondence draft \
   --channel slack --slack-channel general --body "通知文案"
+# 後方互換: secretary correspondence draft
 
-npm run orgos -- org approval approve --id APR-... --approver "CEO"
+npm run orgos -- org approval approve --id APR-... --approver "CEO" --reviewed
 
 npm run orgos -- skills run slack-notify --id DRAFT-...
 ```

@@ -7,28 +7,20 @@ import { getTenantId, getWorkspaceRoot, loadTenantConfig } from "../tenant.js";
 import { todayContextSchema, type TodayContext } from "../../../schemas/steward-chat.js";
 import { join, relative } from "node:path";
 import { existsSync } from "node:fs";
-import { currentDate, formatCurrency, getDocsDir } from "../utils.js";
+import { currentDate, formatCurrency, getDataDir, getDocsDir } from "../utils.js";
 import { getTenantMailMessages } from "../wire-console/human-mail.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
 import { listWirePending } from "../protocol/wire-queue.js";
 import { findPeer, resolvePeerInboundEndpoints } from "../protocol/peers.js";
 import { isEmailWireEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
-import {
-  countHighPriorityTriage,
-  listTriageEntries,
-} from "../correspondence/mail-triage-queue.js";
+import { countHighPriorityTriage, listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import { listSenderIdentificationPending } from "../correspondence/sender-identification.js";
-import {
-  listPendingCeoInlineQuestions,
-} from "../correspondence/ceo-inline-question.js";
+import { listPendingCeoInlineQuestions } from "../correspondence/ceo-inline-question.js";
 import { isCorrespondenceApprovalSubject } from "../correspondence/approval-subject.js";
 import { loadCorrespondenceDraftForApproval } from "../correspondence/review.js";
 import { isTenantConfigApprovalSubject } from "../org/tenant-config-change.js";
 import { getCashflowTodaySummary } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
-import {
-  buildHeadcountView,
-  formatHeadcountTodayLines,
-} from "../hr/headcount-view.js";
+import { buildHeadcountView, formatHeadcountTodayLines } from "../hr/headcount-view.js";
 import {
   buildCompanyOfficersView,
   formatCompanyOfficersTodayLines,
@@ -48,27 +40,31 @@ import {
   buildContractStatusView,
   formatContractStatusTodayLines,
 } from "../contract-status-view.js";
-import {
-  buildSalesPipelineView,
-  formatSalesPipelineTodayLines,
-} from "../sales-pipeline-view.js";
+import { buildSalesPipelineView, formatSalesPipelineTodayLines } from "../sales-pipeline-view.js";
 import {
   buildCustomerSuccessView,
   formatCustomerSuccessTodayLines,
 } from "../customer-success-view.js";
-import {
-  buildSalesInboundView,
-  formatSalesInboundTodayLines,
-} from "../sales-inbound-view.js";
-import {
-  buildSalesOutboundView,
-  formatSalesOutboundTodayLines,
-} from "../sales-outbound-view.js";
+import { buildSalesInboundView, formatSalesInboundTodayLines } from "../sales-inbound-view.js";
+import { buildSalesOutboundView, formatSalesOutboundTodayLines } from "../sales-outbound-view.js";
 import {
   buildIrBriefingView,
   formatIrBriefingTodayLines,
 } from "../investor-relations/briefing-view.js";
 import { listHospitalityOpsDue } from "../../../steward/modules/hospitality/cli/ops-lib.js";
+import { loadExecutiveCalendar } from "../data.js";
+import { buildSecretaryScheduleBrief } from "../secretary/schedule-brief.js";
+
+function loadScheduleHeadline(reportDate: string): string | undefined {
+  const calendarPath = join(getDataDir(), "executive", "calendar.yaml");
+  if (!existsSync(calendarPath)) return undefined;
+  try {
+    const events = loadExecutiveCalendar().events;
+    return buildSecretaryScheduleBrief({ date: reportDate, events }).headline;
+  } catch {
+    return undefined;
+  }
+}
 
 function repoRelativePath(path: string): string {
   return relative(getWorkspaceRoot(), path).replace(/\\/g, "/");
@@ -184,9 +180,7 @@ export function buildTodayContext(): TodayContext {
   const tenant = getTenantId();
   const company = loadTenantConfig();
 
-  const p0Tasks = report.highUrgencyTasks
-    .filter((t) => t.importance === "high")
-    .slice(0, 3);
+  const p0Tasks = report.highUrgencyTasks.filter((t) => t.importance === "high").slice(0, 3);
 
   let hospitalityOpsDue: ReturnType<typeof listHospitalityOpsDue> = [];
   try {
@@ -220,7 +214,9 @@ export function buildTodayContext(): TodayContext {
     .filter((approval) => {
       if (isTenantConfigApprovalSubject(approval.subject_type)) return true;
       if (!isCorrespondenceApprovalSubject(approval.subject_type)) return true;
-      return loadCorrespondenceDraftForApproval(approval)?.notes?.includes("scheduling-case:") === true;
+      return (
+        loadCorrespondenceDraftForApproval(approval)?.notes?.includes("scheduling-case:") === true
+      );
     })
     .map((a) => ({
       id: a.approval_id,
@@ -237,10 +233,12 @@ export function buildTodayContext(): TodayContext {
           : undefined,
     }));
 
-  const inbox = listPendingInbox().slice(0, 10).map((i) => ({
-    id: i.id,
-    title: i.title,
-  }));
+  const inbox = listPendingInbox()
+    .slice(0, 10)
+    .map((i) => ({
+      id: i.id,
+      title: i.title,
+    }));
 
   const escalatePending = listWorkOrders("pending").length;
   const cooRelay = listCooRelayInbox();
@@ -253,7 +251,12 @@ export function buildTodayContext(): TodayContext {
   const cf = report.cashFlow;
 
   const dashboardPath = join(getDocsDir(), "reports", "dashboard", `${currentDate()}.md`);
-  const executivePath = join(getDocsDir(), "reports", "executive-notes", `${currentDate()}-dashboard-sync.md`);
+  const executivePath = join(
+    getDocsDir(),
+    "reports",
+    "executive-notes",
+    `${currentDate()}-dashboard-sync.md`
+  );
 
   let cashflowMeta: ReturnType<typeof getCashflowTodaySummary> = {};
   try {
@@ -337,7 +340,7 @@ export function buildTodayContext(): TodayContext {
       preview_path: item.approval_id
         ? `/chat/v1/approvals/${encodeURIComponent(item.approval_id)}/scheduling-preview`
         : undefined,
-      action_kind: item.approval_id ? "approve" as const : "answer" as const,
+      action_kind: item.approval_id ? ("approve" as const) : ("answer" as const),
       pending_participants: c.participants.filter((p) => p.response === "pending").length,
     }));
 
@@ -368,6 +371,7 @@ export function buildTodayContext(): TodayContext {
     scheduling_cases_active_count: countActiveSchedulingCases(),
     scheduling_cases_action_count: schedulingPending.length,
     scheduling_cases_pending: schedulingPending,
+    schedule_headline: loadScheduleHeadline(currentDate()),
     escalate_pending_count: escalatePending,
     agent_coo_relay_count: cooRelay.length,
     agent_coo_relay: cooRelay.slice(0, 8).map((m) => ({
@@ -431,9 +435,7 @@ export function buildTodayContext(): TodayContext {
 }
 
 export function formatTodayContextMarkdown(ctx: TodayContext): string {
-  const actionableWire = ctx.wire_pending.filter(
-    (item) => item.can_approve && item.approval_id
-  );
+  const actionableWire = ctx.wire_pending.filter((item) => item.can_approve && item.approval_id);
   const approvalIds = new Set([
     ...ctx.approvals.map((item) => item.id),
     ...actionableWire.map((item) => item.approval_id!),
@@ -463,6 +465,9 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
     `**結論:** 判断 ${decisionCount} 件 · 承認 ${approvalCount} 件 · 再試行 ${retryCount} 件`,
     `**次の操作:** ${decisionCount + approvalCount + retryCount === 0 ? "ありません" : "以下の Chat 操作だけ実行できます"}`,
   ];
+  if (ctx.schedule_headline) {
+    lines.push(`**予定:** ${ctx.schedule_headline}`);
+  }
 
   try {
     const officers = buildCompanyOfficersView();
@@ -500,7 +505,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       ctx.agent_roster_operational.length
         ? ctx.agent_roster_operational.map((a) => a.id).join(", ")
         : "—"
-    }`,
+    }`
   );
   if (ctx.agent_roster_developer_count > 0) {
     lines.push(
@@ -558,7 +563,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       "",
       "## 営業KPI（loadSalesPipeline · 決定論 · L1）",
       ...formatSalesPipelineTodayLines(salesView),
-      "- 商談件数 · 加重パイプライン · 期限アラートは Today / 決定論パスで述べてよい。担当者連絡先は出さない。",
+      "- 商談件数 · 加重パイプライン · 期限アラートは Today / 決定論パスで述べてよい。担当者連絡先は出さない。"
     );
   } catch {
     /* tenant without sales pipeline */
@@ -570,7 +575,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       "",
       "## 顧客KPI（loadCustomerAccounts · 決定論 · L1）",
       ...formatCustomerSuccessTodayLines(csView),
-      "- 顧客数 · ヘルス · 更新期日 · drift は Today / 決定論パスで述べてよい。顧客連絡先は出さない。",
+      "- 顧客数 · ヘルス · 更新期日 · drift は Today / 決定論パスで述べてよい。顧客連絡先は出さない。"
     );
   } catch {
     /* tenant without customer accounts */
@@ -582,7 +587,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       "",
       "## インバウンド問合せKPI（loadSalesInquiries · 決定論 · L1）",
       ...formatSalesInboundTodayLines(inboundView),
-      "- 問合せ件数 · 未対応 · 初動 SLA は Today / 決定論パスで述べてよい。差出人メール · 本文は出さない。",
+      "- 問合せ件数 · 未対応 · 初動 SLA は Today / 決定論パスで述べてよい。差出人メール · 本文は出さない。"
     );
   } catch {
     /* tenant without inbound inquiries */
@@ -594,7 +599,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       "",
       "## アウトバウンド施策KPI（loadSalesOutboundCampaigns · 決定論 · L1）",
       ...formatSalesOutboundTodayLines(outboundView),
-      "- 施策件数 · active · 接触率は Today / 決定論パスで述べてよい。リスト連絡先 · 本文は出さない。",
+      "- 施策件数 · active · 接触率は Today / 決定論パスで述べてよい。リスト連絡先 · 本文は出さない。"
     );
   } catch {
     /* tenant without outbound campaigns */
@@ -607,7 +612,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
         "",
         "## IR KPI（data/investor-relations · 決定論 · L1）",
         ...formatIrBriefingTodayLines(irView),
-        "- cap table 行数 · 開示予定 · 資料件数は Today / 決定論パスで述べてよい。L2 連絡先値は出さない。",
+        "- cap table 行数 · 開示予定 · 資料件数は Today / 決定論パスで述べてよい。L2 連絡先値は出さない。"
       );
     }
   } catch {

@@ -56,8 +56,6 @@ import {
   answerCeoInline,
 } from "../../correspondence/ceo-inline-question.js";
 import { applyCeoInlineAnswerSideEffects } from "../../correspondence/ceo-inline-answer.js";
-/** Side-effect: scheduling binders for CEO answer / send hooks. */
-import "../../scheduling-coordination/bind-correspondence-hooks.js";
 import {
   flushWitnessPendingFromChat,
   registerWitnessFromChat,

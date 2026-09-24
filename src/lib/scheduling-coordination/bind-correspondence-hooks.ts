@@ -105,6 +105,17 @@ export function ensureSchedulingCorrespondenceHooks(): void {
   bound = true;
   registerCorrespondenceHooks({
     loadSchedulingCase: toContext,
+    enrichDraftStyleContext: (draft: CorrespondenceDraft) => {
+      const caseId = draft.notes?.match(/scheduling-case:(SCH-\d{4}-\d{3})/)?.[1];
+      if (!caseId) return undefined;
+      const sch = toContext(caseId);
+      if (!sch) return undefined;
+      return {
+        meetingFormat: sch.meeting_format,
+        isMeal: sch.looks_like_meal,
+        hasCostLine: sch.has_cost_line,
+      };
+    },
     onSchedulingCaseSent: ({ caseId, reminderDueAt }) => {
       const sch = findSchedulingCase(caseId);
       if (!sch) return;

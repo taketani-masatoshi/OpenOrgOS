@@ -8,8 +8,6 @@ import {
 } from "../lib/correspondence/ceo-inline-question.js";
 import { applyCeoInlineAnswerSideEffects } from "../lib/correspondence/ceo-inline-answer.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
-/** Side-effect: scheduling binders for CEO answer side effects. */
-import "../lib/scheduling-coordination/bind-correspondence-hooks.js";
 
 /** `--field <fieldId> <value>` を argv から抽出（繰り返し可） */
 export function parseCeoFieldArgs(argv: readonly string[]): Record<string, string> {

@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { existsSync, createReadStream, statSync } from "node:fs";
 import { extname, join } from "node:path";
+import "../composition/register-correspondence-hooks.js";
 import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
 import { hydrateStripeEnvFromStore } from "../product/stripe-secrets-store.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
@@ -20,10 +21,7 @@ import {
   isRequestTenantRequired,
   resolveTenantFromRequest,
 } from "../product/ledger-control-plane.js";
-import {
-  matchSessionTenant,
-  resolveLoginTenantId,
-} from "../console-auth/session-tenant.js";
+import { matchSessionTenant, resolveLoginTenantId } from "../console-auth/session-tenant.js";
 
 export const STEWARD_CHAT_SPA_DIST = join(process.cwd(), "apps", "steward-chat", "dist");
 
@@ -79,7 +77,7 @@ async function handleRequest(
   host: string,
   fallbackPort: number,
   req: IncomingMessage,
-  res: ServerResponse,
+  res: ServerResponse
 ): Promise<void> {
   const url = new URL(req.url ?? "/", `http://${host}`);
   const pathname = url.pathname;
@@ -114,11 +112,7 @@ async function handleRequest(
       }
       authTenant = match.tenantId;
     }
-    if (
-      isRequestTenantRequired() &&
-      !loginTenant &&
-      pathname.startsWith("/chat/v1/auth/")
-    ) {
+    if (isRequestTenantRequired() && !loginTenant && pathname.startsWith("/chat/v1/auth/")) {
       json(res, 400, {
         ok: false,
         error: "X-OrgOS-Tenant or tenant host required (ORGOS_REQUIRE_REQUEST_TENANT=1)",
@@ -159,7 +153,7 @@ async function handleRequest(
       handleChatApi(req, res, pathname, method, {
         user,
         sessionToken: sessionTokenFromRequest(req),
-      }),
+      })
     );
     if (handled) return;
     json(res, 404, { error: "not found" });
@@ -198,8 +192,7 @@ export async function startStewardChatServerAsync(
   });
 
   const addr = server.address();
-  const actualPort =
-    typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+  const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
   const base = `http://${host}:${actualPort}`;
   return {
     url: base,
@@ -209,7 +202,9 @@ export async function startStewardChatServerAsync(
 }
 
 /** @deprecated Prefer startStewardChatServerAsync when port may be 0 (tests). */
-export function startStewardChatServer(opts: StewardChatServerOptions = {}): StewardChatServerHandle {
+export function startStewardChatServer(
+  opts: StewardChatServerOptions = {}
+): StewardChatServerHandle {
   assertProdAuthReady("chat");
   hydrateStripeEnvFromStore();
   const host = opts.host ?? process.env.STEWARD_CHAT_HOST?.trim() ?? "127.0.0.1";

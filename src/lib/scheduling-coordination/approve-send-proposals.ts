@@ -1,15 +1,14 @@
+import { auditCliMutation, requireCliHumanApproval } from "../console-auth/cli-operator.js";
 import {
-  auditCliMutation,
-  requireCliHumanApproval,
-} from "../console-auth/cli-operator.js";
-import { loadCorrespondenceDraft, markCorrespondenceDraftApproved } from "../correspondence/draft.js";
+  loadCorrespondenceDraft,
+  markCorrespondenceDraftApproved,
+} from "../correspondence/draft.js";
 import { sendApprovedCorrespondence } from "../correspondence/send-gate.js";
 import { assertCorrespondenceReviewAcknowledged } from "../correspondence/review.js";
 import { humanApproveOrgApproval } from "../org/approval/approve.js";
 import { findOrgApproval } from "../org/approval/index.js";
 import { findSchedulingCase } from "./store.js";
-/** Side-effect: scheduling binders for send after approve. */
-import "./bind-correspondence-hooks.js";
+import { ensureSchedulingCorrespondenceHooks } from "./bind-correspondence-hooks.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 
 export interface ApproveSendSchedulingProposalsOptions {
@@ -30,6 +29,7 @@ function listPendingProposalDraftIds(caseRow: SchedulingCase): string[] {
 export async function approveAndSendSchedulingProposals(
   opts: ApproveSendSchedulingProposalsOptions
 ): Promise<string[]> {
+  ensureSchedulingCorrespondenceHooks();
   const caseRow = findSchedulingCase(opts.caseId);
   if (!caseRow) throw new Error(`Scheduling case ${opts.caseId} not found`);
 
@@ -48,7 +48,10 @@ export async function approveAndSendSchedulingProposals(
     const pending = findOrgApproval(draft.approval_id);
     if (!pending) throw new Error(`Approval ${draft.approval_id} not found`);
 
-    assertCorrespondenceReviewAcknowledged({ approval: pending, reviewed: opts.reviewed !== false });
+    assertCorrespondenceReviewAcknowledged({
+      approval: pending,
+      reviewed: opts.reviewed !== false,
+    });
     humanApproveOrgApproval({
       approvalId: draft.approval_id,
       approverId: approverName,

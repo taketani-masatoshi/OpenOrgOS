@@ -553,4 +553,20 @@ export function registerMailCommands(program: Command): void {
 
   const outboundMail = outboundCmd.command("mail").description("Mail config · archive");
   registerMailArchiveCommands(outboundMail, "List correspondence mail archive");
+  outboundMail
+    .command("compose-url")
+    .description("Build Gmail compose URL (no API send · human clicks to send)")
+    .requiredOption("--to <email>", "Recipient")
+    .requiredOption("--subject <text>", "Subject")
+    .requiredOption("--body <text>", "Body")
+    .option("--cc <email>", "CC")
+    .action((opts) => {
+      const url = buildGmailComposeUrl({
+        to: opts.to,
+        subject: opts.subject,
+        body: opts.body,
+        cc: opts.cc,
+      });
+      console.log(url);
+    });
 }

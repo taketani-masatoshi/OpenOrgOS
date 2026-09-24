@@ -11,8 +11,8 @@ import {
 } from "../../src/lib/correspondence/paths.js";
 import { upsertTriageEntry } from "../../src/lib/correspondence/mail-triage-queue.js";
 import { clearSecretaryDraftToneCacheForTests } from "../../src/lib/secretary/tenant-behavior.js";
-/** Side-effect: scheduling binders for correspondence hooks in fixtures. */
-import "../../src/lib/scheduling-coordination/bind-correspondence-hooks.js";
+/** Composition: correspondence ↔ scheduling hooks for fixtures. */
+import "../../src/lib/composition/register-correspondence-hooks.js";
 
 export const SCHEDULING_FIXTURE_DIR = join(
   process.cwd(),
