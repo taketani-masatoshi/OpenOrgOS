@@ -1,0 +1,61 @@
+# Official printed yen only — NTA 令和7年分 青色申告決算書（一般用）の書き方 / 貸借対照表作成の手引き設例.
+# Source: https://www.nta.go.jp/taxes/shiraberu/shinkoku/tebiki/2025/pdf/037.pdf
+# Related BS handguide (same worked example yen): https://www.nta.go.jp/taxes/shiraberu/shinkoku/tebiki/2025/pdf/046.pdf
+# Do not invent yen. Do not copy yen from implementation output.
+# ② is opening inventory. Expenses run ⑧ 租税公課 through ㉚ 雑費. ㉛ 経費計 = 6599400.
+source:
+  label: 国税庁 令和7年分 青色申告決算書（一般用）の書き方 / 貸借対照表作成の手引き設例
+  url: https://www.nta.go.jp/taxes/shiraberu/shinkoku/tebiki/2025/pdf/037.pdf
+books_totals:
+  売上: 39280000
+  仕入: 27487000
+  期首商品棚卸高: 0
+  租税公課: 385000
+  水道光熱費: 224000
+  旅費交通費: 148000
+  通信費: 167000
+  広告宣伝費: 105000
+  接待交際費: 163000
+  損害保険料: 105000
+  修繕費: 259000
+  消耗品費: 378000
+  減価償却費: 1571400
+  福利厚生費: 173000
+  給料賃金: 2625000
+  利子割引料: 128000
+  地代家賃: 120000
+  雑費: 48000
+  貸倒引当金繰戻額: 64460
+  貸倒引当金繰入額: 74140
+  専従者給与: 1200000
+# Official page pin: print mark + label + yen (no copyrighted body text).
+lines:
+  - { print: "①", label: 売上, amount_yen: 39280000 }
+  - { print: "②", label: 期首商品棚卸高, amount_yen: 0 }
+  - { print: "③", label: 仕入, amount_yen: 27487000 }
+  - { print: "⑧", label: 租税公課, amount_yen: 385000 }
+  - { print: "⑨", label: 荷造運賃, amount_yen: 0 }
+  - { print: "⑩", label: 水道光熱費, amount_yen: 224000 }
+  - { print: "⑪", label: 旅費交通費, amount_yen: 148000 }
+  - { print: "⑫", label: 通信費, amount_yen: 167000 }
+  - { print: "⑬", label: 広告宣伝費, amount_yen: 105000 }
+  - { print: "⑭", label: 接待交際費, amount_yen: 163000 }
+  - { print: "⑮", label: 損害保険料, amount_yen: 105000 }
+  - { print: "⑯", label: 修繕費, amount_yen: 259000 }
+  - { print: "⑰", label: 消耗品費, amount_yen: 378000 }
+  - { print: "⑱", label: 減価償却費, amount_yen: 1571400 }
+  - { print: "⑲", label: 福利厚生費, amount_yen: 173000 }
+  - { print: "⑳", label: 給料賃金, amount_yen: 2625000 }
+  - { print: "㉑", label: 外注工賃, amount_yen: 0 }
+  - { print: "㉒", label: 利子割引料, amount_yen: 128000 }
+  - { print: "㉓", label: 地代家賃, amount_yen: 120000 }
+  - { print: "㉔", label: 貸倒金, amount_yen: 0 }
+  - { print: "㉕", label: "", amount_yen: 0 }
+  - { print: "㉖", label: "", amount_yen: 0 }
+  - { print: "㉗", label: "", amount_yen: 0 }
+  - { print: "㉘", label: "", amount_yen: 0 }
+  - { print: "㉙", label: "", amount_yen: 0 }
+  - { print: "㉚", label: 雑費, amount_yen: 48000 }
+  - { print: "㉛", label: 経費計, amount_yen: 6599400 }
+  - { print: 専従者給与, label: 専従者給与, amount_yen: 1200000 }
+  - { print: 所得, label: 青色申告特別控除前の所得金額, amount_yen: 3983920 }

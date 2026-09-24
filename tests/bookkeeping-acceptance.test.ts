@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runIsolatedBookkeepingAcceptance } from "../src/lib/product/ledger-bookkeeping-acceptance.js";
+import { runIsolatedBookkeepingAcceptance } from "../src/lib/finance/acceptance/bookkeeping-acceptance.js";
 
 describe("bookkeeping acceptance", () => {
   it(

@@ -70,6 +70,27 @@ describe("tenant provision clean (Phase 1)", () => {
     expect(
       existsSync(join(workspace, "tenants/clean-ceo-001/data/finance/opening-balances.yaml")),
     ).toBe(false);
+    const defaultForm =
+      readFileSync(join(workspace, "tenants/clean-ceo-001/tenant.yaml"), "utf-8").match(
+        /^entity_form:\s*(\S+)/m,
+      )?.[1];
+    expect(defaultForm).toBe("kk");
+  });
+
+  it("provisionLedgerTenant writes sole_proprietorship when entityForm is set", () => {
+    freshWorkspace();
+    provisionLedgerTenant({
+      tenantId: "clean-sole-001",
+      companyName: "Clean Sole",
+      adminEmail: "owner@clean-sole.example",
+      plan: "business",
+      entityForm: "sole_proprietorship",
+    });
+    const form = readFileSync(
+      join(workspace, "tenants/clean-sole-001/tenant.yaml"),
+      "utf-8",
+    ).match(/^entity_form:\s*(\S+)/m)?.[1];
+    expect(form).toBe("sole_proprietorship");
   });
 
   it("provisionLedgerTenant is idempotent for CEO and does not overwrite finance", () => {

@@ -18,7 +18,7 @@ import { getSessionUser, sessionTokenFromRequest } from "../wire-console/auth/se
 import { runWithTenantIdAsync } from "../tenant.js";
 import {
   isRequestTenantRequired,
-  resolveTenantFromRequest,
+  resolveExplicitTenantFromRequest,
 } from "../product/ledger-control-plane.js";
 import {
   matchSessionTenant,
@@ -103,11 +103,13 @@ async function handleRequest(
   }
 
   {
+    // Env ORGOS_TENANT is process-global; only header/host may assert a tenant vs session.
+    const explicitTenant = resolveExplicitTenantFromRequest(req);
     const loginTenant = resolveLoginTenantId(req);
     const sessionUser = getSessionUser(sessionTokenFromRequest(req));
     let authTenant = loginTenant;
     if (sessionUser && pathname.startsWith("/chat/v1/auth/")) {
-      const match = matchSessionTenant(sessionUser, loginTenant);
+      const match = matchSessionTenant(sessionUser, explicitTenant);
       if (!match.ok) {
         json(res, match.status, { ok: false, error: match.error });
         return;
@@ -116,7 +118,7 @@ async function handleRequest(
     }
     if (
       isRequestTenantRequired() &&
-      !loginTenant &&
+      !explicitTenant &&
       pathname.startsWith("/chat/v1/auth/")
     ) {
       json(res, 400, {
@@ -150,7 +152,7 @@ async function handleRequest(
   if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
     const user = requireChatAuth(req, res);
     if (!user) return;
-    const match = matchSessionTenant(user, resolveTenantFromRequest(req));
+    const match = matchSessionTenant(user, resolveExplicitTenantFromRequest(req));
     if (!match.ok) {
       json(res, match.status, { ok: false, error: match.error });
       return;

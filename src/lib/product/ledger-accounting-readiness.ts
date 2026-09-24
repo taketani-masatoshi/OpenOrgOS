@@ -12,7 +12,7 @@ import { runWithTenantId } from "../tenant.js";
 import {
   runIsolatedAccountingAcceptance,
   type AccountingAcceptanceResult,
-} from "./ledger-accounting-acceptance.js";
+} from "../finance/acceptance/accounting-acceptance.js";
 import { buildFleetHealthReport } from "./ledger-fleet-health.js";
 import { listActiveLedgerProductTenantIds } from "./ledger-product-tenant.js";
 
@@ -142,10 +142,28 @@ export function buildAccountingReadinessChecks(
         sourceIncludes("apps/steward-chat/src/TaxHandoffPage.tsx", ["e-Tax 提出不可"]),
     },
     {
+      id: "official-filing-gate",
+      gate: "A2",
+      label: "e-Tax/eLTAX gate refuses sockets and fixture XSD",
+      weight: 3,
+      pass:
+        sourceIncludes("src/lib/finance/filing/official-receipt.ts", [
+          "does not open a connection",
+          "tests/fixtures",
+          "recordOfficialFilingReceipt",
+          "scoreOfficialFilingReceipt",
+        ]) &&
+        sourceIncludes("docs/org-os/tax-filing-spec.md", [
+          "ソケットは開かない",
+          "使い捨て gitignore",
+        ]),
+      detail: "Product-complete refuse/score path; statutory 充足 stays separate",
+    },
+    {
       id: "tax-scope-disclosed",
       gate: "A2",
       label: "Statutory filing exclusions are explicit",
-      weight: 4,
+      weight: 1,
       pass: sourceIncludes("docs/org-os/general-ledger-spec.md", [
         "法人税等の確定仕訳",
         "法定申告書の完成",
@@ -187,6 +205,6 @@ export function buildAccountingReadinessReport() {
         "税理士または代表者による最終確認・署名",
       ],
     },
-    note: "スコープ限定会計readiness。100点は法定申告や電子提出の完了を意味しません。",
+    note: "スコープ限定会計readiness。official-filing-gate は製品拒否ゲートの有無。100点は法定申告や電子提出の完了を意味しません（fleet/pilot 必須ではない）。",
   };
 }

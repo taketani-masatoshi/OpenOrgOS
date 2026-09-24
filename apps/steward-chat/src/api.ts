@@ -2502,6 +2502,34 @@ export async function postLedgerBankReconcileBulkExact(): Promise<{
   });
 }
 
+
+export async function fetchTaxLinesRead(): Promise<{
+  ok: boolean;
+  submission: string;
+  boundary: string;
+  filing: {
+    scores: Record<string, number>;
+    statutory_filing_met: boolean;
+    socket_opens: boolean;
+    receipt_file_present: boolean;
+    note: string;
+  };
+  lines: Array<{ id: string; label: string; status: string; detail: string }>;
+  pin_diff_rows: Array<{ id: string; label: string; diff_empty: boolean; note: string }>;
+}> {
+  return chatApi("/chat/v1/tax/lines-read");
+}
+
+export async function fetchTaxFilingScore(): Promise<{
+  ok: boolean;
+  scores: Record<string, number>;
+  statutory_filing_met: boolean;
+  socket_opens: boolean;
+  note: string;
+}> {
+  return chatApi("/chat/v1/tax/filing-score");
+}
+
 export async function fetchTaxReadiness(): Promise<{
   ok: boolean;
   ready_for_handoff: boolean;

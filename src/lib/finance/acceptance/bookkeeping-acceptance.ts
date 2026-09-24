@@ -11,21 +11,21 @@ import {
   loadJournalEntries,
   postExpenseClaimJournal,
   saveJournalEntries,
-} from "../finance/expense-claim-journal.js";
-import { reverseJournalEntry } from "../finance/journal-reverse.js";
-import { buildTrialBalance } from "../finance/ledger/trial-balance.js";
+} from "../expense-claim-journal.js";
+import { reverseJournalEntry } from "../journal-reverse.js";
+import { buildTrialBalance } from "../ledger/trial-balance.js";
 import {
   buildOpeningBalancesFromTrialBalance,
   loadOpeningBalances,
   openingBalancesReconcileIssues,
   saveOpeningBalances,
-} from "../finance/ledger/opening-balance.js";
-import { resolveJournalSourceAccounts } from "../finance/journal-source-accounts.js";
-import { getDataDir } from "../utils.js";
-import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
-import { getTenantsDir, refreshOrgOsPaths } from "../orgos-paths.js";
-import { provisionLedgerTenant } from "./ledger-provision.js";
-import { ensureLedgerDemoChartOfAccounts } from "./ledger-coa-ensure.js";
+} from "../ledger/opening-balance.js";
+import { resolveJournalSourceAccounts } from "../journal-source-accounts.js";
+import { getDataDir } from "../../utils.js";
+import { clearTenantId, getTenantId, setTenantId } from "../../tenant.js";
+import { getTenantsDir, refreshOrgOsPaths } from "../../orgos-paths.js";
+import { provisionLedgerTenant } from "../../product/ledger-provision.js";
+import { ensureLedgerDemoChartOfAccounts } from "../../product/ledger-coa-ensure.js";
 
 export type BookkeepingCheck = {
   id: string;

@@ -1,0 +1,40 @@
+# Development fixture yen for Companies Act acceptance empty-diff.
+# Labels/articles: src/lib/finance/ledger/companies-act-ordinance-pin.ts (SSOT).
+# amounts[i] aligns with COMPANIES_ACT_ORDINANCE_LABEL_PIN[i]; null = note (no yen).
+# Books scenario: capital 300000 / revenue 100000 / sga 40000 / tax 10000 / dividend 20000.
+amounts:
+  - 330000 # 流動資産
+  - 0 # 固定資産
+  - 0 # 繰延資産
+  - 0 # 流動負債
+  - 0 # 固定負債
+  - 300000 # 資本金
+  - 0 # 資本剰余金
+  - 30000 # 利益剰余金
+  - 0 # 自己株式
+  - 0 # 評価・換算差額等
+  - 0 # 新株予約権
+  - 100000 # 売上高
+  - 0 # 売上原価
+  - 100000 # 売上総利益金額
+  - 40000 # 販売費及び一般管理費
+  - 60000 # 営業利益金額
+  - 0 # 営業外収益
+  - 0 # 営業外費用
+  - 60000 # 経常利益金額
+  - 0 # 特別利益
+  - 0 # 特別損失
+  - 60000 # 税引前当期純利益金額
+  - 10000 # 法人税等
+  - 50000 # 当期純利益金額
+  - 0 # 当期首残高
+  - 20000 # 剰余金の配当
+  - 50000 # 当期純利益金額
+  - 30000 # 当期末残高
+  - null # 継続企業の前提に関する注記
+  - null # 重要な会計方針に係る事項に関する注記
+  - null # 表示方法の変更に関する注記
+  - null # 税効果会計に関する注記
+  - null # 関連当事者との取引に関する注記
+  - null # 一株当たり情報に関する注記
+  - null # 重要な後発事象に関する注記

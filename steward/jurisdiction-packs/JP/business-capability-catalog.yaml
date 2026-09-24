@@ -526,6 +526,17 @@ modules:
     priority: P0
     official_urls:
       - https://www.nta.go.jp/
+  - id: jp_tax_individual
+    name_ja: 個人の青色申告と所得税
+    status: partial
+    tier: activation_ready
+    pack: jurisdiction-packs/JP
+    agent_proxy: tax
+    categories:
+      - tax_finance
+    priority: P1
+    official_urls:
+      - https://www.nta.go.jp/taxes/shiraberu/shinkoku/kojin_jigyo/index.htm
   - id: jp_tax_consumption
     name_ja: 消費税申告
     status: partial
@@ -755,6 +766,16 @@ skills:
     priority: P0
     cli_command: tax-filing-prep
     module_id: jp_tax_corporate
+  - id: jp_individual_income_tax
+    name_ja: 個人の青色申告決算書と所得税
+    status: partial
+    runtime: cli
+    agent_id: tax
+    categories:
+      - tax_finance
+    priority: P1
+    cli_command: tax-individual
+    module_id: jp_tax_individual
   - id: variance_analysis
     name_ja: 予実差異分析
     status: implemented
@@ -1210,14 +1231,14 @@ summary:
     total: 13
   modules:
     implemented: 21
-    partial: 16
+    partial: 17
     planned: 9
-    total: 46
+    total: 47
   skills:
     implemented: 16
-    partial: 16
+    partial: 17
     planned: 18
-    total: 50
+    total: 51
   p0_gaps:
     - human_resources Agent 未実装（就業規則 · 社保 · 給与）
     - jp_statutory_meetings モジュール未実装

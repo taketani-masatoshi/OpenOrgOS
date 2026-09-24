@@ -1,37 +1,20 @@
 import { describe, expect, it } from "vitest";
-import {
-  listIsoStandardIds,
-  getIsoStandardIndexPath,
-  STEWARD_ISO_DIR,
-} from "../src/lib/standards.js";
-import { existsSync } from "node:fs";
+import { bcp47Schema, bicSchema, e164PhoneSchema, ibanSchema, isPostalCode, leiSchema, standardAddressSchema, unLocodeSchema } from "../schemas/standards.js";
 
-describe("steward/standards/iso", () => {
-  it("lists ISO standard folders", () => {
-    const ids = listIsoStandardIds();
-    expect(ids).toEqual([
-      "ISO-13485",
-      "ISO-14001",
-      "ISO-20000",
-      "ISO-21401",
-      "ISO-22000",
-      "ISO-22301",
-      "ISO-27001",
-      "ISO-37000",
-      "ISO-37001",
-      "ISO-45001",
-      "ISO-50001",
-      "ISO-9001",
-    ]);
+describe("international standards", () => {
+  it("validates common identifiers", () => {
+    expect(e164PhoneSchema.parse("+819012345678")).toBe("+819012345678");
+    expect(bcp47Schema.parse("ja-JP")).toBe("ja-JP");
+    expect(bicSchema.parse("DEUTDEFF")).toBe("DEUTDEFF");
+    expect(leiSchema.parse("5493001KJTIIGC8Y1R12")).toBe("5493001KJTIIGC8Y1R12");
+    expect(unLocodeSchema.parse("JP TYO".replace(" ", ""))).toBe("JPTYO");
   });
 
-  it("has index doc per standard", () => {
-    for (const id of listIsoStandardIds()) {
-      expect(existsSync(getIsoStandardIndexPath(id))).toBe(true);
-    }
-  });
-
-  it("iso dir exists", () => {
-    expect(existsSync(STEWARD_ISO_DIR)).toBe(true);
+  it("validates IBAN checksum and country postal rules", () => {
+    expect(ibanSchema.parse("GB82 WEST 1234 5698 7654 32")).toBe("GB82WEST12345698765432");
+    expect(isPostalCode("JP", "100-0001")).toBe(true);
+    expect(isPostalCode("US", "10001-1234")).toBe(true);
+    expect(isPostalCode("JP", "12345")).toBe(false);
+    expect(standardAddressSchema.parse({ country_code: "JP", subdivision_code: "JP-13", postal_code: "100-0001", un_locode: "JPTYO" }).country_code).toBe("JP");
   });
 });

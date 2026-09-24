@@ -3,7 +3,6 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { refreshOrgOsPaths } from "../src/lib/orgos-paths.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { provisionLedgerTenant } from "../src/lib/product/ledger-provision.js";
@@ -60,7 +59,7 @@ describe("customer UX paths", () => {
     const checklist = buildMonthCloseChecklist("2026-06");
     expect(checklist.items.find((i) => i.id === "bank-imported")).toMatchObject({
       pass: true,
-      detail: "no bank file",
+      detail: "no bank",
     });
     expect(Array.isArray(checklist.integrity_errors)).toBe(true);
   });

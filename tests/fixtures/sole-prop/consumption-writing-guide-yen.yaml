@@ -1,0 +1,36 @@
+# Official printed yen only — from NTA writing guide 令和7年11月 (一般用).
+# Same published pamphlet as the corporate general return; sole-prop uses the same form arithmetic.
+# Source: https://www.nta.go.jp/publication/pamph/shohi/kaisei/yoshiki/pdf/202411_01.pdf
+# Inclusive inputs printed in the guide (not row outputs): 203878000 (6.24%) and 135400000 (7.8%).
+# Do not invent exclusive bases. Do not copy yen from implementation output.
+source:
+  label: 国税庁 消費税及び地方消費税の申告書（一般用）の書き方（令和7年11月作成）
+  url: https://www.nta.go.jp/publication/pamph/shohi/kaisei/yoshiki/pdf/202411_01.pdf
+inclusive_inputs:
+  taxable_sales_8_yen: 203878000
+  taxable_sales_10_yen: 135400000
+rows:
+  - sheet: schedule_1_3
+    line: "①-1A"
+    amount_yen: 188775925
+  - sheet: schedule_1_3
+    line: "①-1B"
+    amount_yen: 123090909
+  - sheet: schedule_1_3
+    line: "①A"
+    amount_yen: 188775000
+  - sheet: schedule_1_3
+    line: "①B"
+    amount_yen: 123090000
+  - sheet: schedule_1_3
+    line: "②A"
+    amount_yen: 11779560
+  - sheet: schedule_1_3
+    line: "②B"
+    amount_yen: 9601020
+  - sheet: return_page1
+    line: "①"
+    amount_yen: 311865000
+  - sheet: return_page1
+    line: "②"
+    amount_yen: 21380580

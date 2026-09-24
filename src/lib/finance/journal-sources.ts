@@ -11,8 +11,9 @@ import { lastDayOfMonth } from "./fiscal-year.js";
 import {
   shouldSkipInvoiceJournal,
 } from "./ledger/invoice-mpl-dedupe.js";
+import { allocateCloseEntryId } from "./monthly-close-transaction.js";
 
-const SKIP_EXPENSE_CATEGORIES = new Set(["depreciation", "loan_payment", "capex"]);
+const SKIP_EXPENSE_CATEGORIES = new Set(["depreciation", "loan_payment", "capex", "payroll"]);
 const CASH_PL_TYPES = new Set(["revenue", "expense"]);
 
 function categoryEntrySlug(category: string): string {
@@ -200,7 +201,9 @@ export function postMonthlyPlJournalEntries(input: {
     const accountCode = coa.category_mapping.revenue[bucket.category as never];
     if (!accountCode || !isPlAccountType(coa, accountCode)) continue;
     const sameCategory = revenueBuckets.filter((row) => row.category === bucket.category).length;
-    const entryId = monthlyPlEntryId(input.period, "REV", bucket, sameCategory);
+    const entryId = allocateCloseEntryId(
+      monthlyPlEntryId(input.period, "REV", bucket, sameCategory),
+    );
     const taxCategory = monthlyPlTaxCategory("revenue", bucket.category);
     appendJournalEntry({
       entry_id: entryId,
@@ -230,7 +233,9 @@ export function postMonthlyPlJournalEntries(input: {
     const accountCode = coa.category_mapping.expense[bucket.category as never];
     if (!accountCode || !isPlAccountType(coa, accountCode)) continue;
     const sameCategory = expenseBuckets.filter((row) => row.category === bucket.category).length;
-    const entryId = monthlyPlEntryId(input.period, "EXP", bucket, sameCategory);
+    const entryId = allocateCloseEntryId(
+      monthlyPlEntryId(input.period, "EXP", bucket, sameCategory),
+    );
     const taxCategory = monthlyPlTaxCategory("expense", bucket.category);
     appendJournalEntry({
       entry_id: entryId,
@@ -273,7 +278,7 @@ export function postPayrollJournalEntry(input: {
   const withholding = input.withholdingYen ?? Math.round(gross * 0.1);
   const social = input.socialEmployerYen ?? Math.round(gross * 0.15);
   const net = gross - withholding;
-  const entryId = `JE-PAYROLL-${input.period}`;
+  const entryId = allocateCloseEntryId(`JE-PAYROLL-${input.period}`);
 
   appendJournalEntry({
     entry_id: entryId,
@@ -419,17 +424,20 @@ export function postSalesInvoiceJournalEntry(input: {
   const accounts = resolveJournalSourceAccounts();
   const entryId = `JE-INV-${input.invoiceId}`;
   const taxCategory = input.taxCategory ?? "taxable_10";
+  const counterpartyId = input.propertyId ?? input.invoiceId;
   const lines: {
     account_code: string;
     debit_yen: number;
     credit_yen: number;
     tax_category: typeof taxCategory | "out_of_scope";
+    counterparty_id?: string;
   }[] = [
     {
       account_code: input.arAccountCode ?? accounts.accounts_receivable,
       debit_yen: input.amountYen,
       credit_yen: 0,
       tax_category: "out_of_scope",
+      counterparty_id: counterpartyId,
     },
   ];
 

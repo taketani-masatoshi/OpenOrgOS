@@ -4,10 +4,12 @@ import YAML from "yaml";
 import { z } from "zod";
 import type { FixedAsset } from "../../../schemas/finance/types.js";
 import { loadFixedAssets } from "../data.js";
-import { ROOT_DIR } from "../utils.js";
+import { getResolvedJurisdiction } from "../jurisdiction.js";
+import { getInstallRoot } from "../orgos-paths.js";
 import { appendJournalEntry } from "./expense-claim-journal.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
+import { allocateCloseEntryId } from "./monthly-close-transaction.js";
 
 const MONTHS_PER_YEAR = 12;
 
@@ -38,19 +40,19 @@ export type DepreciationScheduleLine = {
 };
 
 function readRatesFile(): z.output<typeof depreciationRatesSchema> {
-  const path = join(
-    ROOT_DIR,
-    "steward/jurisdiction-packs/JP/seed/depreciation-rates-2026.yaml",
-  );
-  if (!existsSync(path)) {
-    return depreciationRatesSchema.parse({
-      version: 1,
-      declining_balance_rates: [],
-    });
+  const empty = depreciationRatesSchema.parse({
+    version: 1,
+    declining_balance_rates: [],
+  });
+  let path: string;
+  try {
+    const { pack } = getResolvedJurisdiction();
+    path = join(getInstallRoot(), pack.pack_root, "seed/depreciation-rates-2026.yaml");
+  } catch {
+    return empty;
   }
-  return depreciationRatesSchema.parse(
-    YAML.parse(readFileSync(path, "utf-8")) as unknown,
-  );
+  if (!existsSync(path)) return empty;
+  return depreciationRatesSchema.parse(YAML.parse(readFileSync(path, "utf-8")) as unknown);
 }
 
 function monthsInService(asset: FixedAsset, period: string): boolean {
@@ -215,7 +217,7 @@ export function postDepreciationJournalEntries(input: {
   const schedule = buildDepreciationSchedule(input.period);
   const posted: string[] = [];
   for (const line of schedule) {
-    const entryId = `JE-DEP-${line.asset_id}-${input.period}`;
+    const entryId = allocateCloseEntryId(`JE-DEP-${line.asset_id}-${input.period}`);
     appendJournalEntry({
       entry_id: entryId,
       occurred_at: `${lastDayOfMonth(input.period)}T00:00:00.000Z`,

@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 608
-  static_test_cases: 2802
-  tiered_execution_total: 608
-  catalog_total: 46
-  catalog_cli_registered: 47
+  vitest_total: 631
+  static_test_cases: 2943
+  tiered_execution_total: 631
+  catalog_total: 47
+  catalog_cli_registered: 48
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 7
+  catalog_only: 8
 platform_domains:
   P01_kernel:
     layer: 1
@@ -224,6 +224,12 @@ catalog_modules:
     tests:
       - catalog/jp-tax-modules.test.ts
   jp_tax_corporate:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-tax-modules.test.ts
+  jp_tax_individual:
     tier: activation_ready
     coverage_tier: catalog_only
     cli: true
@@ -708,6 +714,7 @@ tests:
     kind: unit
     catalog_ids:
       - jp_tax_corporate
+      - jp_tax_individual
       - jp_tax_consumption
       - jp_invoice_qualified
       - jp_withholding_statutory
@@ -797,6 +804,14 @@ tests:
   community-readiness.test.ts:
     axis: meta
     kind: meta
+  companies-act-score-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  companies-act-statements.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   company-events-abnormal.test.ts:
     axis: platform
     kind: shared-state
@@ -902,6 +917,14 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  consumption-tax-return-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  consumption-tax-return-rows.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   context-manifest.test.ts:
     axis: platform
     kind: unit
@@ -915,6 +938,10 @@ tests:
     kind: unit
     domain: P01_kernel
   control-reconcile.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  corporate-local-tax-acceptance.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1006,6 +1033,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  country-module.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   csrf-guard.test.ts:
     axis: platform
     kind: unit
@@ -1143,6 +1174,18 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  external-connector-runtime.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  external-provider-adapters.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  external-reconciliation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   final-accounts-close.test.ts:
     axis: platform
     kind: unit
@@ -1152,6 +1195,18 @@ tests:
     kind: unit
     domain: P02_business_data
   finance-briefing.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-export-baseline.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-filing-product-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-official-filing-receipt.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
@@ -1297,6 +1352,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  indirect-tax-port.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   integrations-schema.test.ts:
     axis: platform
     kind: unit
@@ -1377,6 +1436,10 @@ tests:
     kind: unit
     domain: P01_kernel
   journal-audit-backfill.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  journal-display-columns.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1673,6 +1736,14 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  monthly-close-lifecycle.integration.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  monthly-close-transaction.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   monthly-pl-journal.test.ts:
     axis: platform
     kind: unit
@@ -1819,6 +1890,10 @@ tests:
     axis: meta
     kind: meta
   outbox-permissions-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  owner-capital-display.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2420,7 +2495,28 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  sole-prop-consumption-tax.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sole-prop-income-tax-coverage.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sole-prop-lane-f-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sole-prop-monthly-cashbook.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   standalone-org-demo.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I2_protocol_e2e
+  standards-integration.test.ts:
     axis: integration
     kind: integration
     domain: P01_kernel
@@ -2430,6 +2526,10 @@ tests:
     kind: unit
     domain: P01_kernel
   statutory-filing-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  statutory-notes-skeleton.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

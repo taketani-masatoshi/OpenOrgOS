@@ -6,8 +6,30 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **月次締め責務分離（P0.3）** — ゲート評価 `monthly-close-gates.ts` · 締め仕訳 `monthly-close-posts.ts` · オーケストレータは原子性のみ。公開 API は `monthly-close.js` から再エクスポート。
+- **月次締め原子性（P0）** — preflight（締め仕訳前）でゲート失敗時は仕訳ゼロ。postflight 失敗時は当該試行の新規仕訳のみ `-ABORT` 逆仕訳。状態は `monthly-close.YYYY-MM.state.yaml`。給与カテゴリは月次PL→買掛に載せない。前月未ロック・bs_class 不足のメッセージを明示。非JP間接税は skip（JP申告成功扱いにしない）。
+- **経費精算 integrity 分割** — `expense-claim-integrity.ts`（migrate · validate）。本体は起票〜精算のライフサイクルに集中。
+- **法人税調整モジュール分割** — `corporate-tax-annex.ts`（共有型・行）· `schedule4-pin.ts` · `schedule1-pin.ts` · `tax-adjustment.ts`（評価本体）。公開 API は `tax-adjustment.js` から再エクスポート。
+- **法人地方税ピン分割** — `corporate-local-tax-pin.ts`（都分割・均等割記載例）と計算本体を分離。
+- **月次締め銀行突合分割** — `monthly-close-bank.ts`。
+- **個人消費税スコア分割** — `sole-prop-consumption-score.ts`。
+- **会社計算規則ピン** — 条例見出しは製品 `companies-act-ordinance-pin.ts` 正本。fixture は金額配列のみ。
+- **会社計算規則の開発採点** — 条例見出し＋開発 fixture 円の空差分で 12。公式印刷円は運用／法定側。
+- **tax-filing-spec** — Policy B / 厳格ラダーの履歴節を削除し、開発完了軸に一本化。
+
+### Notes
+
+- e-Tax / eLTAX の法定充足は引き続き gitignore 実受付が必要。
+
 ### Added
 
+- **月次締めの銀行・証跡・排他** — 現金台帳があるテナントは明細なしで月を閉じない。当月の現金預金増減と明細純額が違うとロックしない。次月の締めは直前月の銀行と試算表の hash を再計算する。既にロックした月の再締めは拒否し、再ロックは unlock の理由と直前証跡の hash を残す。
+- **月次の銀行突合** — 開始残高が当月の試算表に初めて載る分は現金の動きに数えない。明細がその金額の入金だけだと、月はロックしない。
+- **会社法の計算書類** — 非公開・会計監査人非設置の貸借・損益・株主資本等変動・第98条2項1号の注記・利益準備金を、手計算の金額で採点する。0 の区分も残し、特別利益と特別損失を分ける。利益準備金は仕訳にしない。税額 XML と年度決算ゲートは変えない。
+- **個人事業の元入金・青色申告決算書・所得税** — 法人の別表とは別の行対応と所得税の速算。顧問ドラフトのみで、e-Tax には出さない。
+- **間接税の法域ポート** — 帳簿エンジンは共通のまま、月次締めの消費税ゲートは pack の `indirect_tax_family` 経由。日本の消費税計算は `JP` + `vat_credit` だけ。他法域は日本の税率・税区分必須・別表・適格請求書チェックを走らせない。減価償却率表は pack seed にあるときだけ読む。ADR 0078。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
@@ -19,6 +41,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **個人事業の青色申告特別控除** — 帳簿が揃っていれば 55 万円を所得から引く。65 万円は提出証跡があるときだけ。決算書の元入金は期首残高で、当年の所得と二重にしない。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

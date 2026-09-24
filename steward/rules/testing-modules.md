@@ -11,16 +11,16 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 
 | 指標 | 値 |
 |------|-----|
-| Vitest テストファイル | **608**（`tests/**/*.test.ts` · registry 含む） |
-| テストケース（静的 `it`/`test` **2802**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
-| 業務 catalog module | **46**（readiness.yaml 正本 · core + JP pack） |
+| Vitest テストファイル | **631**（`tests/**/*.test.ts` · registry 含む） |
+| テストケース（静的 `it`/`test` **2943**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
+| 業務 catalog module | **47**（readiness.yaml 正本 · core + JP pack） |
 | production_ready | **32** |
 | skeleton | **1**（`jp_permit_registry`） |
-| CLI 登録（`MODULE_CLI_BUNDLES`） | **47** |
+| CLI 登録（`MODULE_CLI_BUNDLES`） | **48** |
 | catalog coverage gap | **0** |
 | catalog dedicated (+ full) | **30** |
 | catalog bundled | **9** |
-| catalog_only | **7** |
+| catalog_only | **8** |
 
 整合テスト: [`tests/testing-registry.test.ts`](../tests/testing-registry.test.ts) · [`tests/testing-modules-doc-sync.test.ts`](../tests/testing-modules-doc-sync.test.ts)
 
@@ -126,6 +126,17 @@ npm run test:platform -- P04_wire_stack
 - 同一 workspace 上での shard 並列は **非推奨**（fixture race）
 - stale lock: `orgos doctor --repair`（または `rm -rf tests/.fixture-restore.lock`）
 - テナント runtime 生成物: [tenant-runtime-artifacts.md](../../docs/org-os/tenant-runtime-artifacts.md)
+
+### 7.0 e-Tax / eLTAX 提出ゲート試験
+
+- 試験ファイル: `tests/finance-official-filing-receipt.test.ts`
+- 製品ゲート通し: `tests/finance-filing-product-gate.test.ts`（filing-score 0 · confirm 無し拒否 · LLM 拒否 · fixture XSD 拒否 · 任意ローカル XSD）
+- 個人現金出納帳ピン分離: `tests/sole-prop-monthly-cashbook.test.ts`
+- 決算書開発ピン: `tests/companies-act-score-acceptance.test.ts`（製品条例ピン＋fixture 金額配列の空差分で 12）
+- **政府へ送らない**（ソケット非開通）。採点試験は一時ディレクトリに `.gitignore` で `/records/` を置いた使い捨てルートだけ使う
+- tip の `records/finance/official-filing-receipt.yaml` に偽番号を書いて法定充足にしない
+- 現状確認 CLI: `orgos tax filing-score`（受付が無い間は 0）
+- 正本: [tax-filing-spec.md](../../docs/org-os/tax-filing-spec.md) · ADR [0052](../../docs/adr/0052-tax-filing-phase5-deferred.md)
 
 ### 7.2 全件 `npm test`（305 files · 直列 · 10 分超のことあり）
 

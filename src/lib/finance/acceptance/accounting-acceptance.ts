@@ -6,17 +6,17 @@
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { closeAccountingYear, listFiscalYearMonths } from "../finance/annual-close.js";
+import { closeAccountingYear, listFiscalYearMonths } from "../annual-close.js";
 import { runValidateReport } from "../../commands/validate.js";
-import { resolveCompanyFiscalYearEndMonth } from "../finance/fiscal-year.js";
-import { closeAccountingMonth } from "../finance/monthly-close.js";
-import { getDataDir } from "../utils.js";
-import { writeYamlFileAtomic } from "../yaml-atomic.js";
-import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
-import { getTenantsDir, refreshOrgOsPaths } from "../orgos-paths.js";
-import { runBankImportReconcileE2E } from "./ledger-bank-e2e.js";
-import { provisionLedgerTenant } from "./ledger-provision.js";
-import { seedLedgerDemoYear } from "./ledger-seed-demo-year.js";
+import { resolveCompanyFiscalYearEndMonth } from "../fiscal-year.js";
+import { closeAccountingMonth, monthCashGlDelta } from "../monthly-close.js";
+import { getDataDir } from "../../utils.js";
+import { writeYamlFileAtomic } from "../../yaml-atomic.js";
+import { clearTenantId, getTenantId, setTenantId } from "../../tenant.js";
+import { getTenantsDir, refreshOrgOsPaths } from "../../orgos-paths.js";
+import { runBankImportReconcileE2E } from "../../product/ledger-bank-e2e.js";
+import { provisionLedgerTenant } from "../../product/ledger-provision.js";
+import { seedLedgerDemoYear } from "../../product/ledger-seed-demo-year.js";
 
 export type AccountingAcceptanceStep = {
   pass: boolean;
@@ -36,6 +36,9 @@ const NOT_RUN: AccountingAcceptanceStep = { pass: false, detail: "not run" };
 export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
   const originalWorkspace = process.env.ORGOS_WORKSPACE;
   const originalSkipBackup = process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK;
+  const originalDeferValidate = process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE;
+  // Defer per-month validate during 12× close; run one validate after the year.
+  // See docs/org-os/general-ledger-spec.md § ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE.
   const originalConsoleLog = console.log;
   const originalTenant = (() => {
     try {
@@ -56,6 +59,8 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
   try {
     process.env.ORGOS_WORKSPACE = workspace;
     process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = "1";
+    // One validate after all months (below) — per-month full validate is ~1min each.
+    process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE = "1";
     console.log = () => undefined;
     refreshOrgOsPaths();
     const tenantId = "accounting-acceptance";
@@ -83,14 +88,18 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
     if (!result.bank_reconcile.pass) return result;
 
     const months = listFiscalYearMonths(fiscalYear, resolveCompanyFiscalYearEndMonth());
+    // Bank rows must match GL cash movement (bank-gl-tieout). Dummy amount:1 fails close.
     writeYamlFileAtomic(join(getDataDir(), "finance", "bank-statements.yaml"), {
-      entries: months.map((month, index) => ({
-        id: `BS-ACCEPTANCE-${String(index + 1).padStart(2, "0")}`,
-        date: `${month}-15`,
-        direction: "inflow",
-        amount: 1,
-        status: "matched",
-      })),
+      entries: months.map((month, index) => {
+        const glDelta = monthCashGlDelta(month);
+        return {
+          id: `BS-ACCEPTANCE-${String(index + 1).padStart(2, "0")}`,
+          date: `${month}-15`,
+          direction: glDelta < 0 ? "outflow" : "inflow",
+          amount: Math.abs(glDelta),
+          status: "matched",
+        };
+      }),
     });
     const monthly = months.map((month) =>
       closeAccountingMonth({
@@ -145,6 +154,8 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
     else process.env.ORGOS_WORKSPACE = originalWorkspace;
     if (originalSkipBackup == null) delete process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK;
     else process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK = originalSkipBackup;
+    if (originalDeferValidate == null) delete process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE;
+    else process.env.ORGOS_MONTHLY_CLOSE_DEFER_VALIDATE = originalDeferValidate;
     console.log = originalConsoleLog;
     refreshOrgOsPaths();
     clearTenantId();

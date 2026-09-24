@@ -10,6 +10,8 @@ export const periodLockEvidenceSchema = z.object({
   bank_reconciliation_sha256: z.string().regex(/^[a-f0-9]{64}$/),
   trial_balance_sha256: z.string().regex(/^[a-f0-9]{64}$/),
   gate_results_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  /** Present on locks created after the bank-evidence gate. Older rows omit it. */
+  operator_id: z.string().min(1).optional(),
   can_lock: z.literal(true),
   gate_results: z.array(
     z.object({
@@ -27,6 +29,8 @@ export const periodLockEntrySchema = z.object({
   at: z.string().min(1),
   by: z.string().min(1),
   reason: z.string().optional(),
+  /** Hash of the evidence on the lock this row supersedes. Set on unlock and the following relock. */
+  prior_evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   evidence: periodLockEvidenceSchema.optional(),
 });
 

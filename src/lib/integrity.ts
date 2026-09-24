@@ -40,7 +40,7 @@ import { loadMailConfig } from "./correspondence/mail-config.js";
 import { getMailConfigPath } from "./correspondence/paths.js";
 import { loadMailTriageQueue } from "./correspondence/mail-triage-queue.js";
 import { resolveImapCredentials } from "./correspondence/imap-credentials.js";
-import { validateExpenseClaimsIntegrity } from "./finance/expense-claim.js";
+import { validateExpenseClaimsIntegrity } from "./finance/expense-claim-integrity.js";
 import { journalIntegrityIssues, loadJournalEntries } from "./finance/expense-claim-journal.js";
 import { validateDepreciationConsistency } from "./finance/depreciation.js";
 import { trialBalanceIntegrityIssues } from "./finance/ledger/trial-balance.js";
