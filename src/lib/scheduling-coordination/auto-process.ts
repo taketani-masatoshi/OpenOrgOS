@@ -1,12 +1,11 @@
 import { listSchedulingCases } from "./store.js";
-import { processAllScheduleMails, type ProcessScheduleMailResult } from "./process-mail.js";
+import { processAllScheduleMails } from "./process-mail.js";
+import type { ProcessScheduleMailResult } from "./mail-reply.js";
 import { advanceSchedulingWorkflow, refreshSchedulingReminder } from "./workflow.js";
 import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
 import { listTriageEntries } from "../correspondence/mail-triage-queue.js";
-import {
-  ensureSchedulingCorrespondenceDrafts,
-  reconcileSchedulingCorrespondence,
-} from "./lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
+import { reconcileSchedulingCorrespondence } from "./correspondence-sent.js";
 
 export interface ScheduleAutoProcessResult {
   processed: number;

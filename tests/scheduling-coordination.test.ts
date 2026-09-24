@@ -10,7 +10,6 @@ import {
   upsertSchedulingCase,
   findSchedulingCase,
 } from "../src/lib/scheduling-coordination/store.js";
-import { proposeExecutiveSlots } from "../src/lib/scheduling-coordination/slots.js";
 import { applyNextAction } from "../src/lib/scheduling-coordination/next-action.js";
 import { parseScheduleReplyText } from "../src/lib/scheduling-coordination/reply-parse.js";
 import { interpretScheduleReply } from "../src/lib/scheduling-coordination/reply-interpret.js";
@@ -24,18 +23,18 @@ import {
 } from "../src/lib/scheduling-coordination/chat-intent.js";
 import {
   processScheduleMailEntry,
-  linkMailToCase,
 } from "../src/lib/scheduling-coordination/process-mail.js";
+import { linkMailToCase } from "../src/lib/scheduling-coordination/mail-intake.js";
 import { upsertTriageEntry } from "../src/lib/correspondence/mail-triage-queue.js";
 import { saveMailInterpretation } from "../src/lib/correspondence/mail-interpretation.js";
 import { mailInterpretationResultSchema } from "../schemas/correspondence/mail-interpretation.js";
 import { buildTodayContext } from "../src/lib/steward-chat/today-context.js";
 import {
-  assertSchedulingCaseConfirmable,
   runSchedulingNew,
   runSchedulingPropose,
   runSchedulingRespond,
 } from "../src/commands/scheduling-coordination.js";
+import { assertSchedulingCaseConfirmable } from "../src/lib/scheduling-coordination/case-mutations.js";
 
 const tenantId = "test-scheduling-coordination";
 
@@ -139,7 +138,7 @@ describe("schedule_coordination", () => {
         start: "2026-08-20T14:00",
         end: "2026-08-20T15:00",
       },
-    ]);
+    ], new Date());
     expect(parsed.response).toBe("accept");
     expect(parsed.accepted_slot_ids).toContain("SLOT-001");
   });

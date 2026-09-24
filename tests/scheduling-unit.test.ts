@@ -38,7 +38,7 @@ describe("scheduling pure unit behavior", () => {
     const parsed = parseScheduleReplyText(
       "どちらも検討します。別の日も可能です。",
       schedulingCase().proposed_slots
-    );
+    , new Date());
     expect(parsed.response).toBe("unknown");
     expect(parsed.needs_review).toBe(true);
   });

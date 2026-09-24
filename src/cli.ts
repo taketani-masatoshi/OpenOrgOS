@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 import "./bootstrap-tenant.js";
 import { refreshOrgOsPaths } from "./lib/orgos-paths.js";
-
-refreshOrgOsPaths();
-/** Composition: correspondence ↔ scheduling hooks (single import). */
+import { registerDomainAdapters } from "./lib/bootstrap/domain-adapters.js";
 import "./lib/composition/register-correspondence-hooks.js";
 import { Command } from "commander";
 import { registerPlatformCommands } from "./cli/registrars/platform.js";
@@ -18,6 +16,9 @@ import {
   ORGOS_TENANT_ENV,
   LEGACY_TENANT_ENV,
 } from "./lib/orgos-cli.js";
+
+refreshOrgOsPaths();
+registerDomainAdapters();
 
 maybeWarnLegacyCli();
 

@@ -5,10 +5,10 @@ import {
   type SchedulingCase,
   type SchedulingCasesFile,
   type SchedulingParticipant,
-  type SchedulingProposedSlot,
 } from "../../../schemas/executive/scheduling-cases.js";
 import { loadRegistryFile, writeYamlFile } from "../utils.js";
 import { getSchedulingCasesPath } from "./paths.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 export function loadSchedulingCases(): SchedulingCasesFile {
   return loadRegistryFile(getSchedulingCasesPath(), schedulingCasesFileSchema, () =>
@@ -74,7 +74,7 @@ export function updateSchedulingCase(
 ): SchedulingCase {
   const file = loadSchedulingCases();
   const idx = file.cases.findIndex((c) => c.id === id);
-  if (idx < 0) throw new Error(`Scheduling case ${id} not found`);
+  if (idx < 0) throw new SchedulingCaseNotFoundError(id);
   const current = file.cases[idx]!;
   if (current.revision !== expectedRevision) {
     throw new SchedulingRevisionConflictError(id, expectedRevision, current.revision);
@@ -106,8 +106,8 @@ export function listSchedulingCases(opts?: {
   return cases.slice(0, limit);
 }
 
-export function nextSchedulingCaseId(cases: SchedulingCase[]): string {
-  const year = new Date().getFullYear();
+export function nextSchedulingCaseId(cases: SchedulingCase[], now: Date = new Date()): string {
+  const year = now.getFullYear();
   const prefix = `SCH-${year}-`;
   let max = 0;
   for (const c of cases) {
@@ -128,14 +128,8 @@ export function nextParticipantId(participants: SchedulingParticipant[]): string
   return `PART-${String(max + 1).padStart(3, "0")}`;
 }
 
-export function nextSlotId(slots: SchedulingProposedSlot[]): string {
-  let max = 0;
-  for (const s of slots) {
-    const m = s.id.match(/^SLOT-(\d{3})$/);
-    if (m) max = Math.max(max, parseInt(m[1]!, 10));
-  }
-  return `SLOT-${String(max + 1).padStart(3, "0")}`;
-}
+/** @deprecated Prefer importing from `./slots.js` — re-export for existing callers. */
+export { nextSlotId } from "./slots.js";
 
 export function ensureSchedulingCasesFile(): boolean {
   return existsSync(getSchedulingCasesPath());

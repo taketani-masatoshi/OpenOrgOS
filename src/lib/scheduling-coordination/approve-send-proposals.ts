@@ -10,6 +10,7 @@ import { findOrgApproval } from "../org/approval/index.js";
 import { findSchedulingCase } from "./store.js";
 import { ensureSchedulingCorrespondenceHooks } from "./bind-correspondence-hooks.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 export interface ApproveSendSchedulingProposalsOptions {
   caseId: string;
@@ -31,7 +32,7 @@ export async function approveAndSendSchedulingProposals(
 ): Promise<string[]> {
   ensureSchedulingCorrespondenceHooks();
   const caseRow = findSchedulingCase(opts.caseId);
-  if (!caseRow) throw new Error(`Scheduling case ${opts.caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(opts.caseId);
 
   const draftIds = listPendingProposalDraftIds(caseRow);
   if (!draftIds.length) {

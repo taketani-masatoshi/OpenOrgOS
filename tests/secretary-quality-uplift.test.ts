@@ -10,7 +10,7 @@ import {
 } from "../src/lib/scheduling-coordination/venue-gate.js";
 import { applyNextAction } from "../src/lib/scheduling-coordination/next-action.js";
 import { SCHEDULE_VENUE_PENDING } from "../src/lib/scheduling-coordination/ceo-gates.js";
-import { findCaseForMailEntry } from "../src/lib/scheduling-coordination/process-mail.js";
+import { findCaseForMailEntry } from "../src/lib/scheduling-coordination/mail-match.js";
 import { schedulingCaseSchema } from "../schemas/executive/scheduling-cases.js";
 import { upsertSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
 import { lintCorrespondenceBody } from "../src/lib/correspondence/style-lint.js";
@@ -35,26 +35,26 @@ import {
   buildSecretaryQualityTodaySummary,
 } from "../src/lib/scheduling-coordination/quality-signals.js";
 import {
-  caseNeedsVenueReservationForConfirm,
   SCHEDULE_VENUE_RESERVATION_PENDING,
 } from "../src/lib/scheduling-coordination/venue-gate.js";
+import { resolveCaseNeedsVenueReservationForConfirm } from "../src/lib/scheduling-coordination/judgment-context.js";
 import { writeYamlFile as writeYaml } from "../src/lib/utils.js";
 import { getVenueReservationsPath } from "../src/lib/venue-booking/paths.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/correspondence-drafts.js";
 import { advanceSchedulingWorkflow } from "../src/lib/scheduling-coordination/workflow.js";
 import { findSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
 import {
   confirmVenueReservation,
   reserveVenue,
 } from "../src/lib/venue-booking/reserve.js";
-import { handleSchedulingCorrespondenceSent } from "../src/lib/scheduling-coordination/lifecycle.js";
+import { handleSchedulingCorrespondenceSent } from "../src/lib/scheduling-coordination/correspondence-sent.js";
 import {
   hasUnsentSchedulingDraft,
   schedulingCaseNeedsTodayAttention,
 } from "../src/lib/scheduling-coordination/today-attention.js";
 import { buildSchedulingTodayItem } from "../src/lib/scheduling-coordination/today-summary.js";
 import { assertCorrespondenceStyleLint } from "../src/lib/correspondence/style-lint.js";
-import { schedulingCaseLooksLikeMeal } from "../src/lib/scheduling-coordination/draft-text.js";
+import { schedulingCaseLooksLikeMeal } from "../src/lib/scheduling-coordination/meal-cost.js";
 import { buildSchedulingCeoChoices } from "../src/lib/scheduling-coordination/ceo-choice.js";
 import {
   hasNamedVenue,
@@ -587,7 +587,7 @@ describe("secretary quality uplift P5–P7", () => {
       next_action: "send_confirmation",
     });
 
-    expect(caseNeedsVenueReservationForConfirm(caseRow)).toBe(false);
+    expect(resolveCaseNeedsVenueReservationForConfirm(caseRow)).toBe(false);
 
     const text = buildSchedulingDraftText(caseRow, "confirm", caseRow.participants[0]!);
     expect(text.body).toMatch(/ご予約番号: HP-12345/);
@@ -620,7 +620,7 @@ describe("secretary quality uplift P5–P7", () => {
       ceo_intake_confirmed: true,
       next_action: "send_confirmation",
     });
-    expect(caseNeedsVenueReservationForConfirm(row)).toBe(true);
+    expect(resolveCaseNeedsVenueReservationForConfirm(row)).toBe(true);
     expect(row.exception_reason).toBe(SCHEDULE_VENUE_RESERVATION_PENDING);
     expect(row.next_action).toBe("none");
   });

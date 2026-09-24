@@ -1,6 +1,6 @@
 /**
  * Single composition entry for correspondence ↔ scheduling hooks.
  * Import once from CLI · Steward Chat server · test fixtures.
- * Do not re-import bind-correspondence-hooks from leaf commands.
+ * Internally registers domain adapters (ADR 0079) and bridges the hooks API.
  */
 import "../scheduling-coordination/bind-correspondence-hooks.js";

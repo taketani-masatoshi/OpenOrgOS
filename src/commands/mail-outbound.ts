@@ -212,7 +212,7 @@ export async function runCorrespondenceSend(opts: CorrespondenceSendCliOptions):
 }
 
 export function runCorrespondenceStyleLint(opts: { id: string; json?: boolean }): void {
-  const result = lintCorrespondenceDraft(loadCorrespondenceDraft(opts.id));
+  const result = lintCorrespondenceDraft(opts.id);
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
     return;

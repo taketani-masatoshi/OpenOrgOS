@@ -1,6 +1,8 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
+import { registerDomainAdapters } from "../bootstrap/domain-adapters.js";
+import "../composition/register-correspondence-hooks.js";
 import {
   clearSessionCookie,
   destroySession,
@@ -384,6 +386,7 @@ function fallbackHtml(): string {
 export function startWireConsoleServer(
   options: WireConsoleServerOptions = {}
 ): Promise<WireConsoleServerHandle> {
+  registerDomainAdapters();
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 0;
 

@@ -1,14 +1,15 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { currentDate } from "../utils.js";
-import { applyNextAction } from "./next-action.js";
-import { proposeExecutiveSlots, type SlotTimePreference } from "./slots.js";
+import { resolveNextAction } from "./judgment-context.js";
+import type { SlotTimePreference } from "./slots.js";
+import { proposeExecutiveSlotsFromWorkspace } from "./slots-workspace.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
-import { schedulingCaseLooksLikeMeal } from "./draft-text.js";
-import { ensureSchedulingCorrespondenceDrafts } from "./lifecycle.js";
+import { schedulingCaseLooksLikeMeal } from "./meal-cost.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 /**
- * Generate calendar slots onto a scheduling case and refresh next_action.
- * Used by CLI `propose` and post-clarify auto path.
+ * Generate calendar slots onto a scheduling case after venue clarify is sent.
  */
 export function proposeSlotsOntoSchedulingCase(
   caseId: string,
@@ -22,7 +23,7 @@ export function proposeSlotsOntoSchedulingCase(
   }
 ): SchedulingCase {
   const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(caseId);
   if (!caseRow.ceo_intake_confirmed || caseRow.exception_reason === "schedule_intake_pending") {
     throw new Error(
       `Cannot propose ${caseId}: CEO intake pending (purpose / meeting format)`
@@ -35,7 +36,7 @@ export function proposeSlotsOntoSchedulingCase(
 
   const refreshDrafts = opts?.refreshDrafts ?? caseRow.proposed_slots.length > 0;
 
-  const slots = proposeExecutiveSlots({
+  const slots = proposeExecutiveSlotsFromWorkspace({
     from: opts?.from ?? caseRow.search_from ?? currentDate(),
     to: opts?.to ?? caseRow.search_to,
     count: opts?.count ?? 3,
@@ -45,7 +46,7 @@ export function proposeSlotsOntoSchedulingCase(
   });
 
   let updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
+    resolveNextAction({
       ...caseRow,
       proposed_slots: slots,
       correspondence: refreshDrafts

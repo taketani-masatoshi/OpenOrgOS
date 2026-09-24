@@ -9,17 +9,17 @@ import { listCorrespondenceDrafts } from "../correspondence/draft.js";
 import { findUnanimousAcceptedSlot } from "./slots.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { syncSchedulingCaseCalendar } from "./calendar-write.js";
-import { applyNextAction } from "./next-action.js";
+import { mutateSchedulingCase } from "./case-command.js";
 import { findOperatorByApproverName, findOperatorById } from "../org/operators.js";
 import {
   buildSchedulingCeoChoices,
   resolveSchedulingCeoChoice,
 } from "./ceo-choice.js";
-import {
-  ensureSchedulingCorrespondenceDrafts,
-  recordSchedulingLifecycleEvent,
-  sendSchedulingConfirmationsAuthorizedByCeo,
-} from "./lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
+import { recordSchedulingLifecycleEvent } from "./lifecycle-events.js";
+import { sendSchedulingConfirmationsAuthorizedByCeo } from "./delegated-send.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
+import { formatSchedulingCaseTag } from "./draft-tag.js";
 
 export const SCHEDULING_MAIL_PREFIX = "scheduling:";
 
@@ -153,7 +153,7 @@ export async function confirmSchedulingCaseFromCeo(
   }
 ): Promise<SchedulingCase> {
   const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Case ${caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(caseId);
   const synced = await syncSchedulingCaseCalendar(caseId, slotId, {
     pushGoogle: opts?.pushCalendar !== false,
   });
@@ -177,67 +177,30 @@ export async function applySchedulingCeoAnswer(
   if (!caseId || question.status !== "answered" || !question.answers) return undefined;
 
   const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Case ${caseId} not found`);
+  if (!caseRow) throw new SchedulingCaseNotFoundError(caseId);
 
   const choice = resolveSchedulingCeoChoice(question, caseRow);
   const authorize = resolveCeoAuthorizeFromAnswer(question.answered_by);
 
   switch (choice.kind) {
     case "manual_coordination":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) =>
-        applyNextAction({
-          ...current,
-          status: "needs_review",
-          next_action: "none",
-          ceo_question_id: undefined,
-          exception_reason: "schedule_manual_coordination",
-          updated_at: new Date().toISOString(),
-        })
-      );
+      return mutateSchedulingCase(caseId, { type: "ceoManual" });
     case "cancel":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) =>
-        applyNextAction({
-          ...current,
-          status: "cancelled",
-          next_action: "none",
-          proposed_slots: [],
-          pending_slot_id: undefined,
-          ceo_question_id: undefined,
-          exception_reason: undefined,
-          updated_at: new Date().toISOString(),
-        })
-      );
+      return mutateSchedulingCase(caseId, { type: "ceoCancel" });
     case "repropose":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) =>
-        applyNextAction({
-          ...current,
-          status: "proposing",
-          proposed_slots: [],
-          pending_slot_id: undefined,
-          ceo_question_id: undefined,
-          exception_reason: undefined,
-          updated_at: new Date().toISOString(),
-        })
-      );
+      return mutateSchedulingCase(caseId, { type: "ceoRepropose" });
     case "confirm_slot":
       return confirmSchedulingCaseFromCeo(caseId, choice.slotId, {
         pushCalendar: true,
         ceoAuthorize: authorize,
       });
     case "invalid":
-      return updateSchedulingCase(caseRow.id, caseRow.revision, (current) => ({
-        ...current,
-        status: "needs_review",
-        next_action: "none",
-        ceo_question_id: undefined,
-        exception_reason: "schedule_invalid_ceo_choice",
-        updated_at: new Date().toISOString(),
-      }));
+      return mutateSchedulingCase(caseId, { type: "ceoInvalid" });
   }
 }
 
 export function findPendingApprovalForCase(caseId: string): string | undefined {
-  const prefix = `scheduling-case:${caseId}`;
+  const prefix = formatSchedulingCaseTag(caseId);
   const drafts = listCorrespondenceDrafts({ status: "pending_approval", channel: "email" });
   const match = drafts.find((d) => d.notes?.includes(prefix) && d.approval_id);
   return match?.approval_id;

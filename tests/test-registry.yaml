@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 614
-  static_test_cases: 2899
-  tiered_execution_total: 614
+  vitest_total: 623
+  static_test_cases: 2942
+  tiered_execution_total: 623
   catalog_total: 47
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -2282,6 +2282,10 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  scheduling-architecture.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-ceo-choice.test.ts:
     axis: platform
     kind: unit
@@ -2291,6 +2295,10 @@ tests:
     kind: unit
     domain: P01_kernel
   scheduling-chat.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-cli-render.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2311,11 +2319,31 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-fix-f1-propose.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-fix-f2-not-found.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-fix-f3-year-clock.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-fix-f4-reminder-hours.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-mail-poller.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
   scheduling-mail.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-module-characterization.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2339,6 +2367,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-safety-net.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-secretary-flow.test.ts:
     axis: platform
     kind: unit
@@ -2348,6 +2380,10 @@ tests:
     kind: unit
     domain: P01_kernel
   scheduling-tenant-behavior.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-transitions.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

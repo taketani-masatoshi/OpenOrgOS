@@ -1,18 +1,14 @@
-import type {
-  SchedulingCase,
-  SchedulingParticipant,
-} from "../../schemas/executive/scheduling-cases.js";
+import type { SchedulingCase } from "../../schemas/executive/scheduling-cases.js";
 import {
   auditCliMutation,
+  getCliOperatorContext,
   requireCliDataWrite,
   requireCliSchedulingApproval,
 } from "../lib/console-auth/cli-operator.js";
-import { getCliOperatorContext } from "../lib/console-auth/cli-operator.js";
 import { confirmSchedulingCaseFromCeo } from "../lib/scheduling-coordination/ceo-confirm.js";
-import { applyNextAction, nextActionLabel } from "../lib/scheduling-coordination/next-action.js";
-import { proposeExecutiveSlots } from "../lib/scheduling-coordination/slots.js";
+import { nextActionLabel } from "../lib/scheduling-coordination/next-action.js";
 import {
-  listReminderTargets,
+  listSchedulingDraftPreviewTargets,
   resolveSchedulingRecipients,
 } from "../lib/scheduling-coordination/recipients.js";
 import {
@@ -21,61 +17,41 @@ import {
   formatSchedulingCaseSummary,
   type SchedulingDraftKind,
 } from "../lib/scheduling-coordination/draft-text.js";
-import {
-  linkMailToCase,
-  processAllScheduleMails,
-} from "../lib/scheduling-coordination/process-mail.js";
+import { processAllScheduleMails } from "../lib/scheduling-coordination/process-mail.js";
+import { linkMailToCase } from "../lib/scheduling-coordination/mail-intake.js";
 import { runScheduleCoordinationAutoProcess } from "../lib/scheduling-coordination/auto-process.js";
 import { runSchedulingReminderPoll } from "../lib/scheduling-coordination/reminder-poller.js";
+import { findSchedulingCase, listSchedulingCases } from "../lib/scheduling-coordination/store.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../lib/scheduling-coordination/correspondence-drafts.js";
 import {
-  advanceSchedulingWorkflow,
-} from "../lib/scheduling-coordination/workflow.js";
+  assertSchedulingCaseConfirmable,
+  cancelSchedulingCase,
+  closeSchedulingCase,
+  markSchedulingCaseSlotConfirmed,
+  openSchedulingCase,
+  parseSchedulingParticipantArg,
+  proposeSchedulingCaseSlots,
+  recordSchedulingParticipantResponse,
+  rescheduleSchedulingCase,
+} from "../lib/scheduling-coordination/case-mutations.js";
+import { SchedulingCaseNotFoundError } from "../lib/scheduling-coordination/errors.js";
 import {
-  findSchedulingCase,
-  insertSchedulingCase,
-  listSchedulingCases,
-  loadSchedulingCases,
-  nextParticipantId,
-  nextSchedulingCaseId,
-  updateSchedulingCase,
-} from "../lib/scheduling-coordination/store.js";
-import { currentDate } from "../lib/utils.js";
-import {
-  ensureSchedulingCorrespondenceDrafts,
-  recordSchedulingLifecycleEvent,
-} from "../lib/scheduling-coordination/lifecycle.js";
+  formatSchedulingEmptyList,
+  formatSchedulingListLine,
+  formatSchedulingNewResult,
+  formatSchedulingProposeResult,
+  formatSchedulingRespondResult,
+} from "./scheduling-coordination-render.js";
 
+export type { SchedulingParticipantInput } from "../lib/scheduling-coordination/case-mutations.js";
 
-export interface SchedulingParticipantInput {
-  name: string;
-  email?: string;
-  role?: "internal" | "external";
-  contactRef?: string;
-}
-
-function parseParticipantArg(raw: string): SchedulingParticipantInput {
-  const parts = raw.split("|").map((p) => p.trim());
-  return {
-    name: parts[0] ?? raw,
-    email: parts[1] || undefined,
-    role: (parts[2] as "internal" | "external") || "external",
-    contactRef: parts[3] || undefined,
-  };
-}
-
-function buildParticipants(inputs: SchedulingParticipantInput[]): SchedulingParticipant[] {
-  const participants: SchedulingParticipant[] = [];
-  for (const input of inputs) {
-    participants.push({
-      id: nextParticipantId(participants),
-      name: input.name,
-      email: input.email,
-      contact_ref: input.contactRef,
-      role: input.role ?? "external",
-      response: "pending",
-    });
+function requireSchedulingCase(id: string): SchedulingCase {
+  const caseRow = findSchedulingCase(id);
+  if (!caseRow) {
+    console.error(new SchedulingCaseNotFoundError(id).message);
+    process.exit(1);
   }
-  return participants;
+  return caseRow;
 }
 
 export function runSchedulingList(opts: { status?: string; json?: boolean; active?: boolean }): void {
@@ -90,23 +66,17 @@ export function runSchedulingList(opts: { status?: string; json?: boolean; activ
   }
 
   if (!cases.length) {
-    console.log("(no scheduling cases)");
+    console.log(formatSchedulingEmptyList());
     return;
   }
 
   for (const c of cases) {
-    console.log(
-      `${c.id} · ${c.title} · ${c.status} · next=${nextActionLabel(c.next_action)} · participants=${c.participants.length}`
-    );
+    console.log(formatSchedulingListLine(c));
   }
 }
 
 export function runSchedulingShow(opts: { id: string; json?: boolean }): void {
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) {
-    console.error(`Case ${opts.id} not found`);
-    process.exit(1);
-  }
+  const caseRow = requireSchedulingCase(opts.id);
   if (opts.json) {
     console.log(JSON.stringify(caseRow, null, 2));
     return;
@@ -130,36 +100,22 @@ export function runSchedulingNew(opts: {
   json?: boolean;
 }): void {
   requireCliDataWrite({ command: "executive scheduling new", permission: "scheduling:write" });
-  const file = loadSchedulingCases();
-  const now = new Date().toISOString();
-  const participants = buildParticipants(opts.participant.map(parseParticipantArg));
-  const caseRow = applyNextAction({
-    id: nextSchedulingCaseId(file.cases),
+  const caseRow = openSchedulingCase({
     title: opts.title,
-    status: "open",
-    created_at: now,
-    updated_at: now,
-    participants,
-    proposed_slots: [],
-    duration_minutes: opts.duration ?? 60,
-    search_from: opts.from,
-    search_to: opts.to,
-    meeting_format: opts.meetingFormat,
+    participants: opts.participant.map(parseSchedulingParticipantArg),
+    durationMinutes: opts.duration,
+    searchFrom: opts.from,
+    searchTo: opts.to,
+    meetingFormat: opts.meetingFormat,
     location: opts.location,
-    mail_thread_ids: [],
-    next_action: "propose_slots",
   });
-  insertSchedulingCase(caseRow);
-  recordSchedulingLifecycleEvent(caseRow.id, "created", "cli");
   auditCliMutation("executive scheduling new", caseRow.id);
 
   if (opts.json) {
     console.log(JSON.stringify(caseRow, null, 2));
     return;
   }
-  console.log(`✓ ${caseRow.id} · ${caseRow.title}`);
-  console.log(`  next: ${nextActionLabel(caseRow.next_action)}`);
-  console.log(`  run: orgos executive scheduling propose --id ${caseRow.id}`);
+  console.log(formatSchedulingNewResult(caseRow));
 }
 
 export function runSchedulingPropose(opts: {
@@ -170,45 +126,20 @@ export function runSchedulingPropose(opts: {
   json?: boolean;
 }): void {
   requireCliDataWrite({ command: "executive scheduling propose", permission: "scheduling:write" });
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) {
-    console.error(`Case ${opts.id} not found`);
-    process.exit(1);
-  }
-
-  const slots = proposeExecutiveSlots({
-    from: opts.from ?? caseRow.search_from ?? currentDate(),
-    to: opts.to ?? caseRow.search_to,
-    count: opts.count ?? 3,
-    durationMinutes: caseRow.duration_minutes,
-    existingSlots: caseRow.proposed_slots,
+  requireSchedulingCase(opts.id);
+  const updated = proposeSchedulingCaseSlots({
+    id: opts.id,
+    from: opts.from,
+    to: opts.to,
+    count: opts.count,
   });
-
-  let updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      proposed_slots: slots,
-      status: slots.length ? "proposing" : caseRow.status,
-      updated_at: new Date().toISOString(),
-    })
-  );
-  if (updated.next_action === "send_proposal") {
-    updated = ensureSchedulingCorrespondenceDrafts(updated.id, "proposal");
-  }
-  if (updated.next_action === "ceo_confirm") {
-    updated = advanceSchedulingWorkflow(updated.id);
-  }
   auditCliMutation("executive scheduling propose", updated.id);
 
   if (opts.json) {
     console.log(JSON.stringify(updated, null, 2));
     return;
   }
-  console.log(`✓ ${updated.id} · ${slots.length} slots`);
-  for (const s of slots) {
-    console.log(`  ${s.id}: ${s.label}`);
-  }
-  console.log(`  next: ${nextActionLabel(updated.next_action)}`);
+  console.log(formatSchedulingProposeResult(updated));
 }
 
 export function runSchedulingRespond(opts: {
@@ -222,47 +153,23 @@ export function runSchedulingRespond(opts: {
   json?: boolean;
 }): void {
   requireCliDataWrite({ command: "executive scheduling respond", permission: "scheduling:write" });
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) {
-    console.error(`Case ${opts.id} not found`);
-    process.exit(1);
-  }
-
-  const participants = caseRow.participants.map((p) => {
-    const matchEmail = opts.email && p.email?.toLowerCase() === opts.email.toLowerCase();
-    const matchId = opts.participant && p.id === opts.participant;
-    if (!matchEmail && !matchId) return p;
-    return {
-      ...p,
-      response: opts.response,
-      accepted_slot_id: opts.slotId ?? p.accepted_slot_id,
-      response_note: opts.note ?? p.response_note,
-      responded_at: new Date().toISOString(),
-      responded_mail_id: opts.mailId ?? p.responded_mail_id,
-    };
+  requireSchedulingCase(opts.id);
+  const updated = recordSchedulingParticipantResponse({
+    id: opts.id,
+    email: opts.email,
+    participantId: opts.participant,
+    response: opts.response,
+    slotId: opts.slotId,
+    mailId: opts.mailId,
+    note: opts.note,
   });
-
-  let status = caseRow.status;
-  if (status === "open" || status === "proposing") status = "awaiting_responses";
-
-  let updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      participants,
-      status,
-      updated_at: new Date().toISOString(),
-    })
-  );
-  if (updated.next_action === "ceo_confirm") {
-    updated = advanceSchedulingWorkflow(updated.id);
-  }
   auditCliMutation("executive scheduling respond", updated.id);
 
   if (opts.json) {
     console.log(JSON.stringify(updated, null, 2));
     return;
   }
-  console.log(`✓ ${updated.id} · next=${nextActionLabel(updated.next_action)}`);
+  console.log(formatSchedulingRespondResult(updated));
 }
 
 export function runSchedulingLinkMail(opts: { id: string; mailId: string; json?: boolean }): void {
@@ -300,23 +207,6 @@ export async function runSchedulingProcess(opts: {
   }
 }
 
-export function assertSchedulingCaseConfirmable(
-  caseRow: SchedulingCase,
-  slotId: string
-): void {
-  if (!caseRow.proposed_slots.some((slot) => slot.id === slotId)) {
-    throw new Error(`Slot ${slotId} does not belong to case ${caseRow.id}`);
-  }
-  const unanswered = caseRow.participants.filter(
-    (participant) => participant.response === "pending"
-  );
-  if (unanswered.length > 0) {
-    throw new Error(
-      `Cannot confirm ${caseRow.id}: ${unanswered.length} participant(s) have not answered`
-    );
-  }
-}
-
 export async function runSchedulingConfirm(opts: {
   id: string;
   slotId: string;
@@ -325,11 +215,7 @@ export async function runSchedulingConfirm(opts: {
   json?: boolean;
 }): Promise<void> {
   requireCliSchedulingApproval("executive scheduling confirm");
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) {
-    console.error(`Case ${opts.id} not found`);
-    process.exit(1);
-  }
+  const caseRow = requireSchedulingCase(opts.id);
   assertSchedulingCaseConfirmable(caseRow, opts.slotId);
 
   if (opts.writeCalendar) {
@@ -356,14 +242,7 @@ export async function runSchedulingConfirm(opts: {
     return;
   }
 
-  const updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      status: "confirmed",
-      pending_slot_id: opts.slotId,
-      updated_at: new Date().toISOString(),
-    })
-  );
+  const updated = markSchedulingCaseSlotConfirmed(opts.id, opts.slotId);
   auditCliMutation("executive scheduling confirm", opts.id);
   if (opts.json) {
     console.log(JSON.stringify(updated, null, 2));
@@ -379,11 +258,7 @@ export function runSchedulingDraft(opts: {
   participant?: string;
   json?: boolean;
 }): void {
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) {
-    console.error(`Case ${opts.id} not found`);
-    process.exit(1);
-  }
+  const caseRow = requireSchedulingCase(opts.id);
 
   const kind = opts.kind ?? draftKindForNextAction(caseRow);
   if (!kind) {
@@ -391,25 +266,7 @@ export function runSchedulingDraft(opts: {
     process.exit(1);
   }
 
-  const targets =
-    kind !== "reminder"
-      ? caseRow.participants.filter(
-          (participant) =>
-            participant.role === "external" &&
-            (!opts.participant || participant.id === opts.participant)
-        )
-      : opts.participant
-        ? caseRow.participants.filter(
-            (p) =>
-              p.id === opts.participant &&
-              caseRow.reminder_targets.includes(p.id) &&
-              !caseRow.reminder_history.some(
-                (r) =>
-                  r.proposal_revision === caseRow.proposal_revision &&
-                  r.participant_id === p.id
-              )
-          )
-        : listReminderTargets(caseRow);
+  const targets = listSchedulingDraftPreviewTargets(caseRow, kind, opts.participant);
 
   if (opts.writeDraft) {
     requireCliDataWrite({ command: "executive scheduling draft", permission: "scheduling:write" });
@@ -449,24 +306,12 @@ export function runSchedulingDraft(opts: {
     if (recipients.cc) console.log(`Cc: ${recipients.cc}`);
     return;
   }
-
 }
 
 export function runSchedulingClose(opts: { id: string; json?: boolean }): void {
   requireCliDataWrite({ command: "executive scheduling close", permission: "scheduling:write" });
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) {
-    console.error(`Case ${opts.id} not found`);
-    process.exit(1);
-  }
-  const updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      status: "closed",
-      next_action: "none",
-      updated_at: new Date().toISOString(),
-    })
-  );
+  requireSchedulingCase(opts.id);
+  const updated = closeSchedulingCase(opts.id);
   auditCliMutation("executive scheduling close", opts.id);
   if (opts.json) {
     console.log(JSON.stringify(updated, null, 2));
@@ -477,53 +322,16 @@ export function runSchedulingClose(opts: { id: string; json?: boolean }): void {
 
 export function runSchedulingCancel(opts: { id: string; reason?: string; json?: boolean }): void {
   requireCliDataWrite({ command: "executive scheduling cancel", permission: "scheduling:write" });
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) throw new Error(`Case ${opts.id} not found`);
-  updateSchedulingCase(caseRow.id, caseRow.revision, () => ({
-    ...caseRow,
-    status: "cancelled",
-    next_action: "none",
-    exception_reason: opts.reason,
-    updated_at: new Date().toISOString(),
-  }));
-  const updated = recordSchedulingLifecycleEvent(caseRow.id, "cancelled", "cli");
-  auditCliMutation("executive scheduling cancel", caseRow.id);
+  const updated = cancelSchedulingCase(opts.id, opts.reason);
+  auditCliMutation("executive scheduling cancel", opts.id);
   if (opts.json) console.log(JSON.stringify(updated, null, 2));
 }
 
 export function runSchedulingReschedule(opts: { id: string; json?: boolean }): void {
   requireCliDataWrite({ command: "executive scheduling reschedule", permission: "scheduling:write" });
-  const caseRow = findSchedulingCase(opts.id);
-  if (!caseRow) throw new Error(`Case ${opts.id} not found`);
-  const participants = caseRow.participants.map((participant) => ({
-    ...participant,
-    response: "pending" as const,
-    accepted_slot_id: undefined,
-    response_note: undefined,
-    responded_at: undefined,
-    responded_mail_id: undefined,
-  }));
-  const updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      status: "proposing",
-      participants,
-      proposed_slots: [],
-      proposal_revision: caseRow.proposal_revision + 1,
-      pending_slot_id: undefined,
-      calendar_sync: "not_requested",
-      calendar_sync_error: undefined,
-      calendar_synced_at: undefined,
-      reminder_due_at: undefined,
-      reminder_targets: [],
-      ceo_question_id: undefined,
-      exception_reason: undefined,
-      updated_at: new Date().toISOString(),
-    })
-  );
-  recordSchedulingLifecycleEvent(updated.id, "rescheduled", "cli");
+  const updated = rescheduleSchedulingCase(opts.id);
   auditCliMutation("executive scheduling reschedule", updated.id);
-  if (opts.json) console.log(JSON.stringify(findSchedulingCase(updated.id), null, 2));
+  if (opts.json) console.log(JSON.stringify(updated, null, 2));
 }
 
 export async function runSchedulingAutoProcess(opts: { json?: boolean }): Promise<void> {

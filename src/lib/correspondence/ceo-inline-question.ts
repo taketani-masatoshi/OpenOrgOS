@@ -5,6 +5,8 @@ import {
   type CeoInlineQueue,
 } from "../../../schemas/correspondence/ceo-inline-question.js";
 import { loadRegistryFile, writeYamlFile, getDataDir } from "../utils.js";
+import { findSenderIdentification } from "./sender-identification-queue.js";
+import { confirmSenderFromCeo } from "./sender-identification.js";
 
 export function getCeoInlineQueuePath(): string {
   return join(getDataDir(), "executive", "ceo-inline-questions.yaml");
@@ -104,6 +106,43 @@ export function answerCeoInline(
   queue.questions[idx] = updated;
   saveCeoInlineQueue(queue);
   return updated;
+}
+
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
+
+/** CEO 回答後の副作用 — sender identification 等へ反映 */
+export async function applyCeoInlineAnswerSideEffects(
+  question: CeoInlineQuestion
+): Promise<void> {
+  if (question.status !== "answered" || !question.answers) return;
+
+  const handled = await requireCorrespondenceDomainAdapters().onCeoAnswer(question);
+  if (handled) return;
+
+  const idEntry = findSenderIdentification(question.mail_id);
+  if (!idEntry || (idEntry.status !== "pending_ceo" && idEntry.status !== "pending_enrichment")) {
+    return;
+  }
+
+  const answers = question.answers;
+  const name =
+    answers.sender_name?.trim() ||
+    answers.name?.trim() ||
+    answers.note?.trim()?.split(/[·,、]/)[0]?.trim();
+  if (!name) return;
+
+  const yes = (v?: string) => v === "yes" || v === "はい" || v === "true";
+  confirmSenderFromCeo({
+    mailId: question.mail_id,
+    name,
+    org: answers.org?.trim() || answers.organization?.trim(),
+    department: answers.department?.trim(),
+    role: answers.role?.trim(),
+    relationship: answers.relationship?.trim(),
+    notes: answers.note?.trim() || answers.schedule_note?.trim() || answers.p0_priority?.trim(),
+    webSearchTrusted: yes(answers.web_search_trusted) || yes(answers.interpret_confirm),
+    confirmedBy: question.answered_by,
+  });
 }
 
 export function formatCeoInlineForToday(q: CeoInlineQuestion): string {

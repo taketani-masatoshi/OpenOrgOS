@@ -19,7 +19,7 @@ import {
   getCorrespondenceDraftsDir,
 } from "./paths.js";
 import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
-import { getCorrespondenceHooks } from "./hooks.js";
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
 import { assertOutboundCorrespondenceDraft } from "./claims-assert.js";
 import { assertCorrespondenceStyleLint } from "./style-lint.js";
 import { runCorrespondenceOutboundGates } from "./correspondence-gate-audit.js";
@@ -197,10 +197,6 @@ export function createCorrespondenceDraft(
   return { draft, approvalId };
 }
 
-function schedulingCaseIdFromDraftNotes(notes?: string): string | undefined {
-  return notes?.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
-}
-
 export function markCorrespondenceDraftApproved(
   draftId: string,
 ): CorrespondenceDraft {
@@ -210,10 +206,7 @@ export function markCorrespondenceDraftApproved(
       `Draft ${draftId} status is ${draft.status}, expected pending_approval`,
     );
   }
-  const caseId = schedulingCaseIdFromDraftNotes(draft.notes);
-  if (caseId) {
-    getCorrespondenceHooks().onDraftApproved?.(draft, caseId);
-  }
+  requireCorrespondenceDomainAdapters().onDraftApproved(draft);
   return saveCorrespondenceDraft({ ...draft, status: "approved" });
 }
 

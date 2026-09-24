@@ -11,16 +11,16 @@ import { assertCorrespondenceMailSetupReady } from "./mail-setup-readiness.js";
 import { isDryRunSmtpHost, resolveMailConfig } from "./mail-config.js";
 import { repairMissingApprovalForDraft } from "./approval-registry-repair.js";
 import { assertHumanCorrespondenceApproval, isHumanApproverOperatorId } from "./human-approval.js";
-import { CorrespondenceApprovalGateError } from "./approval-gate-error.js";
-import { assertCorrespondenceStyleLint } from "./style-lint.js";
-import { assertOutboundCorrespondenceDraft } from "./claims-assert.js";
-import { runCorrespondenceOutboundGates } from "./correspondence-gate-audit.js";
-import { handleCorrespondenceCaseSent } from "./case-status.js";
-import { getCorrespondenceHooks } from "./hooks.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
 import { currentDate } from "../utils.js";
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
 
-export { CorrespondenceApprovalGateError };
+export class CorrespondenceApprovalGateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CorrespondenceApprovalGateError";
+  }
+}
 
 export function assertCorrespondenceApproved(draft: CorrespondenceDraft): void {
   if (draft.status === "sent") {
@@ -93,6 +93,8 @@ export async function sendApprovedCorrespondence(opts: {
   operatorId: string;
   dryRun?: boolean;
 }): Promise<SendApprovedCorrespondenceResult> {
+  // Fail closed before any SMTP / side effects if bootstrap forgot adapters.
+  const adapters = requireCorrespondenceDomainAdapters();
   let draft = syncDraftApprovedFromRegistry(opts.draftId);
   assertCorrespondenceApproved(draft);
 
@@ -103,6 +105,9 @@ export async function sendApprovedCorrespondence(opts: {
     );
   }
 
+  const { assertCorrespondenceStyleLint } = await import("./style-lint.js");
+  const { assertOutboundCorrespondenceDraft } = await import("./claims-assert.js");
+  const { runCorrespondenceOutboundGates } = await import("./correspondence-gate-audit.js");
   runCorrespondenceOutboundGates(
     draft,
     () => {
@@ -135,11 +140,11 @@ export async function sendApprovedCorrespondence(opts: {
   }
 
   if (opts.dryRun) {
-    if (draft.notes?.includes("scheduling-case:")) {
+    if (adapters.notesMentionDomainCase(draft.notes)) {
       draft = markCorrespondenceDraftSent(draft.draft_id, {
         sentBy: opts.operatorId,
       });
-      getCorrespondenceHooks().onCorrespondenceSent?.(draft);
+      adapters.onDraftSent(draft, { dryRun: true });
     }
     return { draft, sendResult };
   }
@@ -173,8 +178,11 @@ export async function sendApprovedCorrespondence(opts: {
     sentBy: opts.operatorId,
     companyEventId: event.id,
   });
-  getCorrespondenceHooks().onCorrespondenceSent?.(draft);
+  if (adapters.notesMentionDomainCase(draft.notes)) {
+    adapters.onDraftSent(draft, { dryRun: false });
+  }
 
+  const { handleCorrespondenceCaseSent } = await import("./case-status.js");
   handleCorrespondenceCaseSent(draft, { actor: opts.operatorId });
 
   try {

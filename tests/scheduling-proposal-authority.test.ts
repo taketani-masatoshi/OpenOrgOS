@@ -1,9 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { processScheduleMailEntry } from "../src/lib/scheduling-coordination/process-mail.js";
-import {
-  ensureSchedulingCorrespondenceDrafts,
-  maybeAutoSendAuthorizedProposals,
-} from "../src/lib/scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/correspondence-drafts.js";
+import { maybeAutoSendAuthorizedProposals } from "../src/lib/scheduling-coordination/delegated-send.js";
 import { findSchedulingCase, upsertSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
 import {
   clearOperatorsRegistryCacheForTests,

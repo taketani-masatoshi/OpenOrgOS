@@ -1,11 +1,12 @@
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
+import { loadCorrespondenceDraft } from "./draft.js";
 import { bodyContainsMeasurementPlaceholder } from "./measurement-ref.js";
 import {
   loadCorrespondenceStyle,
   resolveCorrespondenceLocale,
   type CorrespondenceStyle,
 } from "./style-resolve.js";
-import { getCorrespondenceHooks } from "./hooks.js";
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
 
 export type StyleLintSeverity = "error" | "warning";
 
@@ -28,9 +29,7 @@ export type StyleLintKind =
   | "scheduling_confirm"
   | "generic";
 
-export function inferStyleLintKind(
-  draft: Pick<CorrespondenceDraft, "notes" | "subject">
-): StyleLintKind {
+export function inferStyleLintKind(draft: Pick<CorrespondenceDraft, "notes" | "subject">): StyleLintKind {
   const notes = draft.notes ?? "";
   if (/kind:clarify\b/.test(notes)) return "scheduling_clarify";
   if (/kind:confirm\b/.test(notes)) return "scheduling_confirm";
@@ -221,11 +220,7 @@ export function lintCorrespondenceBody(opts: {
       });
     }
     const areaLine = body.match(/・エリア\s*[:：]\s*(.+)/)?.[1]?.trim();
-    if (
-      areaLine &&
-      /店|亭|膳|寮|今半|なだ万|会席|個室/.test(areaLine) &&
-      !/駅|区|市|都|府|県|周辺|エリア/.test(areaLine)
-    ) {
+    if (areaLine && /店|亭|膳|寮|今半|なだ万|会席|個室/.test(areaLine) && !/駅|区|市|都|府|県|周辺|エリア/.test(areaLine)) {
       issues.push({
         id: "area_looks_like_venue",
         severity: "warning",
@@ -274,10 +269,7 @@ export function lintCorrespondenceBody(opts: {
     }
   }
 
-  if (
-    opts.isMeal &&
-    (opts.hasCostLine === false || (opts.hasCostLine !== true && !bodyHasCostLine(body)))
-  ) {
+  if (opts.isMeal && (opts.hasCostLine === false || (opts.hasCostLine !== true && !bodyHasCostLine(body)))) {
     const mealSeverity: StyleLintSeverity =
       kind === "scheduling_confirm" || kind === "scheduling_proposal" ? "error" : "warning";
     issues.push({
@@ -316,23 +308,20 @@ export function formatStyleLintReport(result: StyleLintResult): string {
 }
 
 export function lintCorrespondenceDraft(
-  draft: CorrespondenceDraft,
-  opts?: {
-    locale?: string;
-    companyName?: string;
-    meetingFormat?: "online" | "in_person" | "unspecified";
-  }
+  draftId: string,
+  opts?: { locale?: string; companyName?: string; meetingFormat?: "online" | "in_person" | "unspecified" }
 ): StyleLintResult {
+  const draft = loadCorrespondenceDraft(draftId);
   let meetingFormat = opts?.meetingFormat;
   let isMeal: boolean | undefined;
   let hasCostLine: boolean | undefined;
   try {
-    const enrichment = getCorrespondenceHooks().enrichDraftStyleContext?.(draft);
-    meetingFormat = meetingFormat ?? enrichment?.meetingFormat;
-    isMeal = enrichment?.isMeal;
-    hasCostLine = enrichment?.hasCostLine;
+    const ctx = requireCorrespondenceDomainAdapters().styleLintContext(draft);
+    meetingFormat = meetingFormat ?? ctx.meetingFormat;
+    isMeal = ctx.isMeal;
+    hasCostLine = ctx.hasCostLine;
   } catch {
-    /* optional when composition root / binder not loaded */
+    /* optional when adapters not registered in isolated unit fixtures */
   }
   if (isMeal && /費用\s*[:：]|お一人さま|税込|Cost\s*:/i.test(draft.body)) {
     hasCostLine = true;

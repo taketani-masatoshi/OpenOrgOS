@@ -11,7 +11,7 @@ import { injectAndProcessScheduleAcceptReply } from "../src/lib/scheduling-coord
 import { approveAndSendSchedulingProposals } from "../src/lib/scheduling-coordination/approve-send-proposals.js";
 import { findSchedulingCase, upsertSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
 import { schedulingCase } from "./helpers/scheduling-fixture.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/lifecycle.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/correspondence-drafts.js";
 import { rotateOperatorKeyRecord, ensureOperatorAuthEnv } from "../src/lib/org/operator-keys.js";
 import { saveOperatorRegistry, clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { setCliOperatorContext } from "../src/lib/console-auth/cli-operator.js";

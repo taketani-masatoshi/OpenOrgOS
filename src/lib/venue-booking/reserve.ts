@@ -6,8 +6,8 @@ import {
   type VenueReservationRequestInput,
 } from "../../../schemas/venue-booking.js";
 import { findSchedulingCase, updateSchedulingCase } from "../scheduling-coordination/store.js";
-import { applyNextAction } from "../scheduling-coordination/next-action.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/lifecycle.js";
+import { resolveNextAction } from "../scheduling-coordination/judgment-context.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/correspondence-drafts.js";
 import { loadOrgApprovalRegistry } from "../org/approval/registry.js";
 import {
   assertHotpepperExternalRefShape,
@@ -300,7 +300,7 @@ export async function confirmVenueReservation(
     const sch = findSchedulingCase(updated.scheduling_case_id);
     if (sch) {
       const linked = updateSchedulingCase(sch.id, sch.revision, (c) =>
-        applyNextAction({
+        resolveNextAction({
           ...c,
           venue_reservation_id: updated.id,
           venue_provider: updated.provider_id,

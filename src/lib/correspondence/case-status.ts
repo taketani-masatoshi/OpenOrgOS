@@ -9,23 +9,15 @@ import {
   saveSalesInquiries,
   saveSalesPipeline,
 } from "../data.js";
-import { getCorrespondenceHooks } from "./hooks.js";
 import { currentDate } from "../utils.js";
 import { appendAuditEvent } from "../audit-log.js";
+import {
+  requireCorrespondenceDomainAdapters,
+  type CorrespondenceCaseKind,
+  type CorrespondenceCaseRef,
+} from "./domain-adapters.js";
 
-export type CorrespondenceCaseKind = "inquiry" | "deal" | "scheduling";
-
-export interface CorrespondenceCaseRef {
-  kind: CorrespondenceCaseKind;
-  id: string;
-  status: string;
-  next_action?: string;
-  next_action_due?: string;
-  mail_thread_ids: string[];
-  gmail_thread_ids: string[];
-  company?: string;
-  subject?: string;
-}
+export type { CorrespondenceCaseKind, CorrespondenceCaseRef };
 
 export function parseCaseRefFromDraft(
   draft: Pick<CorrespondenceDraft, "inquiry_id" | "deal_id" | "notes">,
@@ -42,7 +34,8 @@ export function parseCaseRefFromDraft(
     /\bcase:(INQ-\d{4}-\d{3}|DEAL-\d{4}-\d{3}|SCH-\d{4}-\d{3})\b/,
   )?.[1];
   if (fromNotes) return loadCorrespondenceCaseRef(fromNotes);
-  const sch = draft.notes?.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
+  const adapters = requireCorrespondenceDomainAdapters();
+  const sch = adapters.parseCaseIdFromNotes(draft.notes);
   if (sch) return loadCorrespondenceCaseRef(sch);
   return undefined;
 }
@@ -59,18 +52,7 @@ export function loadCorrespondenceCaseRef(id: string): CorrespondenceCaseRef | u
     return dealToRef(deal);
   }
   if (id.startsWith("SCH-")) {
-    const sch = getCorrespondenceHooks().loadSchedulingCase?.(id);
-    if (!sch) return undefined;
-    return {
-      kind: "scheduling",
-      id: sch.id,
-      status: sch.status,
-      next_action: sch.next_action,
-      next_action_due: sch.reminder_due_at?.slice(0, 10),
-      mail_thread_ids: sch.mail_thread_ids,
-      gmail_thread_ids: [],
-      subject: sch.title,
-    };
+    return requireCorrespondenceDomainAdapters().caseRef(id);
   }
   return undefined;
 }
@@ -164,10 +146,7 @@ export function handleCorrespondenceCaseSent(
   }
 
   if (caseRef.kind === "scheduling") {
-    getCorrespondenceHooks().onSchedulingCaseSent?.({
-      caseId: caseRef.id,
-      reminderDueAt: due,
-    });
+    requireCorrespondenceDomainAdapters().onFollowUpDue(caseRef.id, due);
     return loadCorrespondenceCaseRef(caseRef.id);
   }
 

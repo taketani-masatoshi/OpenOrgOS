@@ -13,7 +13,7 @@ import { sendInboundSlackDigest } from "./slack-notify.js";
 import { findSenderIdentification } from "./sender-identification-queue.js";
 import { findMailInterpretation } from "./mail-interpretation.js";
 import { findCeoInlineQuestionByMailId } from "./ceo-inline-question.js";
-import { getCorrespondenceHooks } from "./hooks.js";
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
 
 export async function notifyMailTriageHighPriority(ids: string[]): Promise<number> {
   if (!ids.length) return 0;
@@ -99,9 +99,20 @@ function formatCeoInlineSection(mailId: string): string[] {
 }
 
 function formatSchedulingSection(entry: MailTriageEntry): string[] {
-  return (
-    getCorrespondenceHooks().formatSchedulingHandoffSection?.(entry) ?? ["（該当なし）"]
-  );
+  try {
+    const section = requireCorrespondenceDomainAdapters().handoffSection(entry);
+    if (section.length) return section;
+  } catch {
+    /* adapters optional for isolated markdown fixtures */
+  }
+  if (!entry.scheduling_case_id) {
+    const interp = findMailInterpretation(entry.id);
+    if (interp?.intent === "schedule") {
+      return ["- intent: schedule · **案件未紐付け**"];
+    }
+    return ["（該当なし）"];
+  }
+  return [`- case: ${entry.scheduling_case_id}`];
 }
 
 function formatRecommendedActions(entry: MailTriageEntry): string[] {
@@ -119,8 +130,16 @@ function formatRecommendedActions(entry: MailTriageEntry): string[] {
   if (interp?.action_required && entry.routing === "secretary") {
     actions.push("秘書が返信下書きの作成を検討");
   }
-  const schedulingActions = getCorrespondenceHooks().recommendSchedulingActions?.(entry);
-  if (schedulingActions?.length) actions.push(...schedulingActions);
+  try {
+    actions.push(...requireCorrespondenceDomainAdapters().handoffActions(entry));
+  } catch {
+    /* optional */
+  }
+  if (!entry.scheduling_case_id && interp?.intent === "schedule") {
+    actions.push(
+      "日程意図 — 既存案件へ `orgos executive scheduling link-mail` または `executive scheduling process --all`"
+    );
+  }
   if (entry.importance === "p0" || entry.urgency === "immediate") {
     actions.push("高優先度 — 当日対応の検討");
   }

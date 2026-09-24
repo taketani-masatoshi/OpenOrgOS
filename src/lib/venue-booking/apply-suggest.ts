@@ -1,7 +1,7 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { requireCliHumanApproval, auditCliMutation } from "../console-auth/cli-operator.js";
-import { applyNextAction } from "../scheduling-coordination/next-action.js";
-import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/lifecycle.js";
+import { resolveNextAction } from "../scheduling-coordination/judgment-context.js";
+import { ensureSchedulingCorrespondenceDrafts } from "../scheduling-coordination/correspondence-drafts.js";
 import { findSchedulingCase, updateSchedulingCase } from "../scheduling-coordination/store.js";
 import {
   formatVenueSuggestionLines,
@@ -68,7 +68,7 @@ export function applyVenueSuggestToSchedulingCase(opts: {
   ];
 
   let updated = updateSchedulingCase(caseRow.id, caseRow.revision, (row) =>
-    applyNextAction({
+    resolveNextAction({
       ...row,
       location: lines.firstPick,
       venue_options,

@@ -2,7 +2,7 @@ import { syncMailReceive } from "./mail-receive-sync.js";
 import { loadMailConfig, shouldAutoWireScan } from "./mail-config.js";
 import { triageUnprocessedMail } from "./mail-triage.js";
 import { notifyMailTriageHighPriority } from "./mail-handoff.js";
-import { getCorrespondenceHooks } from "./hooks.js";
+import { requireCorrespondenceDomainAdapters } from "./domain-adapters.js";
 
 export interface MailReceivePollerHandle {
   start(): void;
@@ -22,11 +22,9 @@ export function createMailReceivePoller(opts?: MailReceivePollerOptions): MailRe
   async function pollOnce(): Promise<void> {
     if (running) return;
     running = true;
-    let fetched = 0;
-    let autoScheduleCoordination = false;
+    let fetchedAndTriaged = false;
     try {
       const result = await syncMailReceive();
-      fetched = result.fetched;
       const config = loadMailConfig();
       if (
         result.fetched > 0 &&
@@ -36,7 +34,7 @@ export function createMailReceivePoller(opts?: MailReceivePollerOptions): MailRe
         if (config?.receive?.notify_high_priority !== false && triage.highPriorityIds.length) {
           await notifyMailTriageHighPriority(triage.highPriorityIds);
         }
-        autoScheduleCoordination = config?.receive?.auto_schedule_coordination !== false;
+        fetchedAndTriaged = true;
       }
       if (shouldAutoWireScan(config)) {
         const { scanMailReceivedForWire } = await import("../protocol/email-wire-ingest.js");
@@ -45,11 +43,10 @@ export function createMailReceivePoller(opts?: MailReceivePollerOptions): MailRe
     } finally {
       running = false;
     }
-    await getCorrespondenceHooks().afterMailReceiveCycle?.({
-      fetched,
-      autoScheduleCoordination,
-      now: opts?.now?.() ?? new Date(),
-    });
+    await requireCorrespondenceDomainAdapters().onMailPoll(
+      opts?.now?.() ?? new Date(),
+      { fetchedAndTriaged }
+    );
   }
 
   return {

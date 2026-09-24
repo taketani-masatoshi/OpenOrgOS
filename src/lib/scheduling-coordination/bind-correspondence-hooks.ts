@@ -1,153 +1,91 @@
 /**
- * Registers scheduling handlers on correspondence hooks.
- * Import this module once from composition roots (CLI · Chat · fixtures).
- * Hooks auto-bind on getCorrespondenceHooks() — do not scatter ensure() calls.
+ * Bridges main's correspondence hooks API to domain adapters (ADR 0079).
+ * Composition roots import register-correspondence-hooks once.
  */
-import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
-import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
-import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triage.js";
 import {
   registerCorrespondenceHooks,
   registerCorrespondenceHooksBinder,
   setCorrespondenceHooksResetHook,
   type SchedulingCaseContext,
 } from "../correspondence/hooks.js";
-import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
-import { runScheduleCoordinationAutoProcess } from "./auto-process.js";
-import { applySchedulingCeoAnswer } from "./ceo-confirm.js";
-import { schedulingCaseHasCostLine, schedulingCaseLooksLikeMeal } from "./draft-text.js";
-import { handleSchedulingCorrespondenceSent } from "./lifecycle.js";
+import {
+  requireCorrespondenceDomainAdapters,
+  resetCorrespondenceDomainAdaptersForTests,
+} from "../correspondence/domain-adapters.js";
+import {
+  registerDomainAdapters,
+  resetDomainAdaptersRegistrationForTests,
+} from "../bootstrap/domain-adapters.js";
 import { nextActionLabel } from "./next-action.js";
-import { applyScheduleIntakeAnswer } from "./process-mail.js";
-import { recordSecretaryDraftEditIfBodyChanged } from "./quality-signals.js";
-import { runSchedulingReminderPoll } from "./reminder-poller.js";
-import { findSchedulingCase, updateSchedulingCase } from "./store.js";
-
-function toContext(id: string): SchedulingCaseContext | undefined {
-  const sch = findSchedulingCase(id);
-  if (!sch) return undefined;
-  return {
-    id: sch.id,
-    title: sch.title,
-    status: sch.status,
-    next_action: sch.next_action,
-    next_action_label: nextActionLabel(sch.next_action),
-    reminder_due_at: sch.reminder_due_at,
-    mail_thread_ids: sch.mail_thread_ids ?? [],
-    meeting_format: sch.meeting_format,
-    looks_like_meal: schedulingCaseLooksLikeMeal(sch),
-    has_cost_line: schedulingCaseHasCostLine(sch),
-  };
-}
-
-function formatSchedulingHandoffSection(entry: MailTriageEntry): string[] | undefined {
-  if (!entry.scheduling_case_id) {
-    const interp = findMailInterpretation(entry.id);
-    if (interp?.intent === "schedule") {
-      return ["- intent: schedule · **案件未紐付け**"];
-    }
-    return undefined;
-  }
-  const sch = findSchedulingCase(entry.scheduling_case_id);
-  if (!sch) return [`- case: ${entry.scheduling_case_id}（未找到）`];
-  return [
-    `- case: **${sch.id}** · ${sch.title}`,
-    `- status: ${sch.status} · next: ${nextActionLabel(sch.next_action)}`,
-    entry.schedule_reply_parsed ? "- 返信パース: 済" : "- 返信パース: 未",
-  ];
-}
-
-function recommendSchedulingActions(entry: MailTriageEntry): string[] | undefined {
-  const actions: string[] = [];
-  const interp = findMailInterpretation(entry.id);
-  if (entry.scheduling_case_id) {
-    const sch = findSchedulingCase(entry.scheduling_case_id);
-    if (sch) {
-      actions.push(
-        `日程調整案件 ${sch.id} · 次: ${nextActionLabel(sch.next_action)} · \`orgos executive scheduling draft --id ${sch.id} --write-draft\``
-      );
-    }
-  } else if (interp?.intent === "schedule") {
-    actions.push(
-      "日程意図 — 既存案件へ `orgos executive scheduling link-mail` または `executive scheduling process --all`"
-    );
-  }
-  return actions.length ? actions : undefined;
-}
-
-function isScheduleIntakeQuestion(question: CeoInlineQuestion): boolean {
-  return (
-    question.mail_id.startsWith("schedule-intake:") ||
-    question.mail_id.startsWith("schedule-intake-case:")
-  );
-}
-
-function isSchedulingCaseQuestion(question: CeoInlineQuestion): boolean {
-  return Boolean(question.scheduling_case_id) || question.mail_id.startsWith("scheduling:");
-}
-
-async function onCeoInlineAnswered(question: CeoInlineQuestion): Promise<boolean> {
-  if (isScheduleIntakeQuestion(question)) {
-    await applyScheduleIntakeAnswer(question);
-    return true;
-  }
-  if (isSchedulingCaseQuestion(question)) {
-    await applySchedulingCeoAnswer(question);
-    return true;
-  }
-  return false;
-}
+import type { SchedulingNextAction } from "../../../schemas/executive/scheduling-cases.js";
 
 let bound = false;
 
-export function ensureSchedulingCorrespondenceHooks(): void {
+function bindFromDomainAdapters(): void {
   if (bound) return;
   bound = true;
+  registerDomainAdapters();
+  const adapters = requireCorrespondenceDomainAdapters();
+
   registerCorrespondenceHooks({
-    loadSchedulingCase: toContext,
-    enrichDraftStyleContext: (draft: CorrespondenceDraft) => {
-      const caseId = draft.notes?.match(/scheduling-case:(SCH-\d{4}-\d{3})/)?.[1];
-      if (!caseId) return undefined;
-      const sch = toContext(caseId);
-      if (!sch) return undefined;
+    loadSchedulingCase(id): SchedulingCaseContext | undefined {
+      const ref = adapters.caseRef(id);
+      if (!ref || ref.kind !== "scheduling") return undefined;
       return {
-        meetingFormat: sch.meeting_format,
-        isMeal: sch.looks_like_meal,
-        hasCostLine: sch.has_cost_line,
+        id: ref.id,
+        title: ref.subject ?? ref.id,
+        status: ref.status,
+        next_action: ref.next_action ?? "none",
+        next_action_label: nextActionLabel(
+          (ref.next_action ?? "none") as SchedulingNextAction
+        ),
+        reminder_due_at: ref.next_action_due,
+        mail_thread_ids: ref.mail_thread_ids ?? [],
+        meeting_format: undefined,
+        looks_like_meal: false,
+        has_cost_line: false,
       };
     },
-    onSchedulingCaseSent: ({ caseId, reminderDueAt }) => {
-      const sch = findSchedulingCase(caseId);
-      if (!sch) return;
-      updateSchedulingCase(sch.id, sch.revision, (current) => ({
-        ...current,
-        reminder_due_at: reminderDueAt,
-      }));
+    enrichDraftStyleContext(draft) {
+      return adapters.styleLintContext(draft);
     },
-    onDraftApproved: (draft: CorrespondenceDraft, caseId: string) => {
-      recordSecretaryDraftEditIfBodyChanged(caseId, draft);
+    onSchedulingCaseSent({ caseId, reminderDueAt }) {
+      adapters.onFollowUpDue(caseId, reminderDueAt);
     },
-    onCorrespondenceSent: (draft: CorrespondenceDraft) => {
-      if (draft.notes?.includes("scheduling-case:")) {
-        handleSchedulingCorrespondenceSent(draft);
-      }
+    onDraftApproved(draft) {
+      adapters.onDraftApproved(draft);
     },
-    formatSchedulingHandoffSection,
-    recommendSchedulingActions,
-    onCeoInlineAnswered,
-    afterMailReceiveCycle: async ({ fetched, autoScheduleCoordination, now }) => {
-      if (fetched > 0 && autoScheduleCoordination) {
-        await runScheduleCoordinationAutoProcess();
-      }
-      await runSchedulingReminderPoll(now);
+    onCorrespondenceSent(draft) {
+      adapters.onDraftSent(draft, { dryRun: false });
+    },
+    formatSchedulingHandoffSection(entry) {
+      const lines = adapters.handoffSection(entry);
+      return lines.length ? lines : undefined;
+    },
+    recommendSchedulingActions(entry) {
+      const lines = adapters.handoffActions(entry);
+      return lines.length ? lines : undefined;
+    },
+    onCeoInlineAnswered(question) {
+      return adapters.onCeoAnswer(question);
+    },
+    async afterMailReceiveCycle(opts) {
+      if (!opts.autoScheduleCoordination) return;
+      await adapters.onMailPoll(opts.now, {
+        fetchedAndTriaged: opts.fetched > 0,
+      });
     },
   });
 }
 
-/** Test isolation — allows re-bind after resetCorrespondenceHooksForTests. */
-export function resetSchedulingCorrespondenceHooksBindingForTests(): void {
+registerCorrespondenceHooksBinder(bindFromDomainAdapters);
+setCorrespondenceHooksResetHook(() => {
   bound = false;
-}
+  resetDomainAdaptersRegistrationForTests();
+  resetCorrespondenceDomainAdaptersForTests();
+});
 
-registerCorrespondenceHooksBinder(ensureSchedulingCorrespondenceHooks);
-setCorrespondenceHooksResetHook(resetSchedulingCorrespondenceHooksBindingForTests);
+/** Idempotent ensure for callers that previously imported ensureSchedulingCorrespondenceHooks. */
+export function ensureSchedulingCorrespondenceHooks(): void {
+  bindFromDomainAdapters();
+}

@@ -1,5 +1,4 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
-import { findVenueReservation } from "../venue-booking/store.js";
 
 /** CEO 中間ゲート — 店舗名未確定（提案/確定前） */
 export const SCHEDULE_VENUE_PENDING = "schedule_venue_pending";
@@ -114,15 +113,15 @@ export function caseNeedsVenueReservationForConfirm(
   caseRow: Pick<
     SchedulingCase,
     "meeting_format" | "status" | "venue_reservation_id" | "location"
-  >
+  >,
+  venueReservation?: { status: string; external_ref?: string | null } | null
 ): boolean {
   if (caseRow.meeting_format !== "in_person") return false;
   if (caseRow.status !== "confirmed" && caseRow.status !== "notifying") return false;
   if (!hasNamedVenue(caseRow.location)) return false;
   if (!caseRow.venue_reservation_id) return true;
-  const vr = findVenueReservation(caseRow.venue_reservation_id);
-  if (!vr) return true;
-  return vr.status !== "confirmed" || !vr.external_ref?.trim();
+  if (!venueReservation) return true;
+  return venueReservation.status !== "confirmed" || !venueReservation.external_ref?.trim();
 }
 
 /** 会場案メモ（notes）に A/B/C が揃っているか（先読み 3 案 · レガシー） */

@@ -17,6 +17,10 @@ import {
 import { isHumanApproverOperatorId } from "../correspondence/human-approval.js";
 import { boundApproverId } from "../org/operators.js";
 import { getTenantId } from "../tenant.js";
+import {
+  notesMentionSchedulingCase,
+  schedulingCorrespondenceBatchKey,
+} from "../scheduling-coordination/draft-tag.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
 import {
@@ -40,11 +44,7 @@ export interface ChatWireApproveResult {
 }
 
 function schedulingBatchKey(notes: string | undefined): string | undefined {
-  if (!notes?.includes("scheduling-case:")) return undefined;
-  const caseId = notes.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
-  const kind = notes.match(/\bkind:(proposal|reminder|confirm)\b/)?.[1];
-  const revision = notes.match(/\brevision:(\d+)\b/)?.[1];
-  return caseId && kind && revision ? `${caseId}:${kind}:${revision}` : undefined;
+  return schedulingCorrespondenceBatchKey(notes);
 }
 
 function loadSchedulingApprovalBatch(approvalId: string) {
@@ -54,7 +54,7 @@ function loadSchedulingApprovalBatch(approvalId: string) {
   }
   const selected = loadCorrespondenceDraftForApproval(approval);
   const key = schedulingBatchKey(selected?.notes);
-  if (!selected || !selected.notes?.includes("scheduling-case:")) {
+  if (!selected || !notesMentionSchedulingCase(selected.notes)) {
     throw new Error(
       `Approval ${approvalId} is not scheduling correspondence and cannot be reviewed via Chat`
     );

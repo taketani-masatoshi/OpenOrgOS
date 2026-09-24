@@ -2,6 +2,7 @@ import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases
 import { SCHEDULE_VENUE_RESERVATION_PENDING } from "./ceo-gates.js";
 import { findPendingApprovalForCase } from "./ceo-confirm.js";
 import { listCorrespondenceDrafts } from "../correspondence/draft.js";
+import { formatSchedulingCaseTag } from "./draft-tag.js";
 
 /** Unsent correspondence for current proposal revision */
 export function hasUnsentSchedulingDraft(caseRow: SchedulingCase): boolean {
@@ -27,7 +28,7 @@ export function schedulingCaseNeedsTodayAttention(caseRow: SchedulingCase): bool
   if (hasUnsentSchedulingDraft(caseRow)) return true;
   if (findPendingApprovalForCase(caseRow.id)) return true;
   // Pending approval drafts may exist before correspondence record is linked
-  const prefix = `scheduling-case:${caseRow.id}`;
+  const prefix = formatSchedulingCaseTag(caseRow.id);
   return listCorrespondenceDrafts({ status: "pending_approval", channel: "email" }).some((d) =>
     d.notes?.includes(prefix)
   );

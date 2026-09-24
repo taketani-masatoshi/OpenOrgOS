@@ -1,9 +1,11 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { resolveMailConfig } from "../correspondence/mail-config.js";
+import { mutateSchedulingCase } from "./case-command.js";
 import { ensureSchedulingCeoConfirmQuestion } from "./ceo-confirm.js";
-import { ensureSchedulingCorrespondenceDrafts } from "./lifecycle.js";
-import { applyNextAction } from "./next-action.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./correspondence-drafts.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 function reminderDelayMs(): number {
   return resolveMailConfig().receive.scheduling_reminder_after_hours * 60 * 60 * 1000;
@@ -14,7 +16,7 @@ export function refreshSchedulingReminder(
   now = new Date()
 ): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   if (
     current.status !== "awaiting_responses" ||
     !current.participants.some((p) => p.response === "pending")
@@ -43,13 +45,10 @@ export function refreshSchedulingReminder(
   ) {
     return current;
   }
-  return updateSchedulingCase(current.id, current.revision, (row) =>
-    applyNextAction({
-      ...row,
-      reminder_due_at: dueAt,
-      reminder_targets: targets,
-      updated_at: now.toISOString(),
-    })
+  return mutateSchedulingCase(
+    caseId,
+    { type: "reminderRefresh", dueAt, targets },
+    { now }
   );
 }
 
@@ -60,28 +59,17 @@ export function markSchedulingReminderDrafted(
   now = new Date()
 ): SchedulingCase {
   const current = findSchedulingCase(caseId);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
   const duplicate = current.reminder_history.some(
     (r) =>
       r.proposal_revision === current.proposal_revision &&
       r.participant_id === participantId
   );
   if (duplicate) return current;
-  return updateSchedulingCase(current.id, current.revision, (row) =>
-    applyNextAction({
-      ...row,
-      reminder_history: [
-        ...row.reminder_history,
-        {
-          proposal_revision: row.proposal_revision,
-          participant_id: participantId,
-          drafted_at: now.toISOString(),
-          draft_id: draftId,
-        },
-      ],
-      reminder_targets: row.reminder_targets.filter((id) => id !== participantId),
-      updated_at: now.toISOString(),
-    })
+  return mutateSchedulingCase(
+    caseId,
+    { type: "reminderDrafted", participantId, draftId },
+    { now }
   );
 }
 
@@ -92,14 +80,16 @@ export function markSchedulingReminderDrafted(
  */
 export function advanceSchedulingWorkflow(caseId: string, now = new Date()): SchedulingCase {
   const current = refreshSchedulingReminder(caseId, now);
-  if (!current) throw new Error(`Scheduling case ${caseId} not found`);
-  const next = applyNextAction(current);
+  if (!current) throw new SchedulingCaseNotFoundError(caseId);
+  const next = resolveNextAction(current);
   const persisted =
-    next.status === current.status && next.next_action === current.next_action
+    next.status === current.status &&
+    next.next_action === current.next_action &&
+    next.exception_reason === current.exception_reason
       ? current
       : updateSchedulingCase(current.id, current.revision, () => ({
           ...next,
-          updated_at: new Date().toISOString(),
+          updated_at: now.toISOString(),
         }));
 
   if (persisted.next_action === "send_clarify") {

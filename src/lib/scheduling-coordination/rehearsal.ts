@@ -4,17 +4,18 @@ import {
   setCliOperatorContext,
 } from "../console-auth/cli-operator.js";
 import { authenticateOperator } from "../console-auth/operator-rbac.js";
-import { answerCeoInline, loadCeoInlineQueue } from "../correspondence/ceo-inline-question.js";
-import { applyCeoInlineAnswerSideEffects } from "../correspondence/ceo-inline-answer.js";
-import { ensureSchedulingCorrespondenceHooks } from "./bind-correspondence-hooks.js";
+import {
+  answerCeoInline,
+  applyCeoInlineAnswerSideEffects,
+  loadCeoInlineQueue,
+} from "../correspondence/ceo-inline-question.js";
 import { approveAndSendSchedulingProposals } from "./approve-send-proposals.js";
 import { injectAndProcessScheduleAcceptReply } from "./inject-schedule-reply-mail.js";
 import {
   assertSchedulingRehearsalComplete,
   type RehearsalAssertionReport,
 } from "./rehearsal-assertions.js";
-import { applyNextAction } from "./next-action.js";
-import { proposeExecutiveSlots } from "./slots.js";
+import { openSchedulingCase, proposeSchedulingCaseSlots } from "./case-mutations.js";
 import {
   collectOperationalReadinessIssues,
   ensureOperatorAuthEnv,
@@ -22,23 +23,8 @@ import {
 import { withRehearsalMailOverlayAsync } from "./rehearsal-mail-overlay.js";
 import { formatSchedulingCaseSummary } from "./draft-text.js";
 import { advanceSchedulingWorkflow } from "./workflow.js";
-import {
-  ensureSchedulingCorrespondenceDrafts,
-  recordSchedulingLifecycleEvent,
-} from "./lifecycle.js";
-import {
-  findSchedulingCase,
-  insertSchedulingCase,
-  loadSchedulingCases,
-  nextParticipantId,
-  nextSchedulingCaseId,
-  updateSchedulingCase,
-} from "./store.js";
-import { currentDate } from "../utils.js";
-import type {
-  SchedulingCase,
-  SchedulingParticipant,
-} from "../../../schemas/executive/scheduling-cases.js";
+import { findSchedulingCase } from "./store.js";
+import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 
 export interface SchedulingRehearsalParticipant {
   name: string;
@@ -74,20 +60,6 @@ const DEFAULT_PARTICIPANTS: SchedulingRehearsalParticipant[] = [
   { name: "テストB", email: "test-b@scheduling.mal" },
 ];
 
-function buildParticipants(inputs: SchedulingRehearsalParticipant[]): SchedulingParticipant[] {
-  const participants: SchedulingParticipant[] = [];
-  for (const input of inputs) {
-    participants.push({
-      id: nextParticipantId(participants),
-      name: input.name,
-      email: input.email,
-      role: "external",
-      response: "pending",
-    });
-  }
-  return participants;
-}
-
 function prepareOperatorContext(operatorId: string): void {
   ensureOperatorAuthEnv(operatorId);
   const auth = authenticateOperator({
@@ -101,63 +73,21 @@ function prepareOperatorContext(operatorId: string): void {
 }
 
 function createCase(opts: SchedulingRehearsalOptions): SchedulingCase {
-  requireCliDataWrite({
-    command: "executive scheduling rehearsal",
-    permission: "scheduling:write",
-  });
-  const file = loadSchedulingCases();
-  const now = new Date().toISOString();
-  const caseRow = applyNextAction({
-    id: nextSchedulingCaseId(file.cases),
+  requireCliDataWrite({ command: "executive scheduling rehearsal", permission: "scheduling:write" });
+  const caseRow = openSchedulingCase({
     title: opts.title ?? "CLIフルリハーサル",
-    status: "open",
-    created_at: now,
-    updated_at: now,
-    participants: buildParticipants(opts.participants ?? DEFAULT_PARTICIPANTS),
-    proposed_slots: [],
-    duration_minutes: 60,
-    search_from: opts.from ?? "2026-07-16",
-    search_to: opts.to ?? "2026-07-28",
-    mail_thread_ids: [],
-    next_action: "propose_slots",
+    participants: opts.participants ?? DEFAULT_PARTICIPANTS,
+    searchFrom: opts.from ?? "2026-07-16",
+    searchTo: opts.to ?? "2026-07-28",
+    actor: "cli",
   });
-  insertSchedulingCase(caseRow);
-  recordSchedulingLifecycleEvent(caseRow.id, "created", "cli");
   auditCliMutation("executive scheduling rehearsal", caseRow.id);
   return caseRow;
 }
 
 function proposeCase(caseId: string): SchedulingCase {
-  requireCliDataWrite({
-    command: "executive scheduling rehearsal",
-    permission: "scheduling:write",
-  });
-  const caseRow = findSchedulingCase(caseId);
-  if (!caseRow) throw new Error(`Case ${caseId} not found`);
-
-  const slots = proposeExecutiveSlots({
-    from: caseRow.search_from ?? currentDate(),
-    to: caseRow.search_to,
-    count: 3,
-    durationMinutes: caseRow.duration_minutes,
-    existingSlots: caseRow.proposed_slots,
-  });
-
-  let updated = updateSchedulingCase(caseRow.id, caseRow.revision, () =>
-    applyNextAction({
-      ...caseRow,
-      proposed_slots: slots,
-      status: slots.length ? "proposing" : caseRow.status,
-      updated_at: new Date().toISOString(),
-    })
-  );
-  if (updated.next_action === "send_proposal") {
-    updated = ensureSchedulingCorrespondenceDrafts(updated.id, "proposal");
-  }
-  if (updated.next_action === "ceo_confirm") {
-    updated = advanceSchedulingWorkflow(updated.id);
-  }
-  return updated;
+  requireCliDataWrite({ command: "executive scheduling rehearsal", permission: "scheduling:write" });
+  return proposeSchedulingCaseSlots({ id: caseId });
 }
 
 async function answerCeoForCase(caseId: string, operatorId: string): Promise<string> {
@@ -167,11 +97,7 @@ async function answerCeoForCase(caseId: string, operatorId: string): Promise<str
   if (!question) throw new Error(`No pending CEO question for ${caseId}`);
 
   requireCliDataWrite({ command: "executive scheduling rehearsal", permission: "escalate:plan" });
-  const updated = answerCeoInline(
-    question.id,
-    { schedule_ceo_choice: "はい（確定・通知送信）" },
-    operatorId
-  );
+  const updated = answerCeoInline(question.id, { schedule_ceo_choice: "はい（確定・通知送信）" }, operatorId);
   await applyCeoInlineAnswerSideEffects(updated);
   return question.id;
 }
@@ -179,7 +105,6 @@ async function answerCeoForCase(caseId: string, operatorId: string): Promise<str
 export async function runSchedulingRehearsalCore(
   opts: SchedulingRehearsalOptions
 ): Promise<SchedulingRehearsalResult> {
-  ensureSchedulingCorrespondenceHooks();
   const operatorId = opts.operatorId ?? "OP-001";
   const steps: string[] = [];
   const processedMailIds: string[] = [];

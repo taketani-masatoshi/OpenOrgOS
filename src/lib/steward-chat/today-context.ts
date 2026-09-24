@@ -19,6 +19,7 @@ import { listPendingCeoInlineQuestions } from "../correspondence/ceo-inline-ques
 import { isCorrespondenceApprovalSubject } from "../correspondence/approval-subject.js";
 import { loadCorrespondenceDraftForApproval } from "../correspondence/review.js";
 import { isTenantConfigApprovalSubject } from "../org/tenant-config-change.js";
+import { notesMentionSchedulingCase } from "../scheduling-coordination/draft-tag.js";
 import { getCashflowTodaySummary } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
 import { buildHeadcountView, formatHeadcountTodayLines } from "../hr/headcount-view.js";
 import {
@@ -214,8 +215,8 @@ export function buildTodayContext(): TodayContext {
     .filter((approval) => {
       if (isTenantConfigApprovalSubject(approval.subject_type)) return true;
       if (!isCorrespondenceApprovalSubject(approval.subject_type)) return true;
-      return (
-        loadCorrespondenceDraftForApproval(approval)?.notes?.includes("scheduling-case:") === true
+      return notesMentionSchedulingCase(
+        loadCorrespondenceDraftForApproval(approval)?.notes
       );
     })
     .map((a) => ({

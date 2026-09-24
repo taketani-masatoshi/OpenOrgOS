@@ -8,8 +8,9 @@ import {
   pushEventToGoogleCalendar,
 } from "../google-calendar-push.js";
 import { getExecutiveDir, writeYamlFile } from "../utils.js";
-import { applyNextAction } from "./next-action.js";
+import { resolveNextAction } from "./judgment-context.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
+import { SchedulingCaseNotFoundError } from "./errors.js";
 
 function nextCalendarEventId(events: CalendarEvent[]): string {
   const max = events.reduce((current, event) => {
@@ -60,7 +61,7 @@ export function ensureCalendarEventForCase(
   }
 
   const updated = updateSchedulingCase(latest.id, latest.revision, (current) =>
-    applyNextAction({
+    resolveNextAction({
       ...current,
       status: "confirmed",
       pending_slot_id: slotId,
@@ -73,13 +74,24 @@ export function ensureCalendarEventForCase(
   return { caseRow: updated, event };
 }
 
+/**
+ * Local calendar.yaml write, then optional Google Calendar push.
+ *
+ * Ordering (intentional · do not collapse into one transaction):
+ * 1. Ensure EVT-* exists in calendar.yaml and link case → pending/syncing
+ * 2. Push to Google when configured; on success mark synced and keep google_event_id / meet_url
+ * 3. On push failure: case stays confirmed with calendar_sync=failed (local event retained)
+ *
+ * Retries call this again; synced+google_event_id short-circuits. This is not a
+ * cross-process lock — only store.ts revision guards concurrent YAML writers in-process.
+ */
 export async function syncSchedulingCaseCalendar(
   caseId: string,
   slotId: string,
   opts?: { pushGoogle?: boolean }
 ): Promise<SchedulingCase> {
   const initial = findSchedulingCase(caseId);
-  if (!initial) throw new Error(`Case ${caseId} not found`);
+  if (!initial) throw new SchedulingCaseNotFoundError(caseId);
   const ensured = ensureCalendarEventForCase(initial, slotId);
   if (opts?.pushGoogle === false) return ensured.caseRow;
 
@@ -102,7 +114,7 @@ export async function syncSchedulingCaseCalendar(
     const config = loadGoogleCalendarConfig();
     if (!config) {
       return updateSchedulingCase(syncing.id, syncing.revision, (current) =>
-        applyNextAction({
+        resolveNextAction({
           ...current,
           calendar_sync: "synced",
           calendar_sync_error: undefined,
@@ -129,7 +141,7 @@ export async function syncSchedulingCaseCalendar(
     );
     saveCalendar(events);
     return updateSchedulingCase(syncing.id, syncing.revision, (current) =>
-      applyNextAction({
+      resolveNextAction({
         ...current,
         calendar_sync: "synced",
         calendar_sync_error: undefined,
@@ -140,7 +152,7 @@ export async function syncSchedulingCaseCalendar(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     updateSchedulingCase(syncing.id, syncing.revision, (current) =>
-      applyNextAction({
+      resolveNextAction({
         ...current,
         status: "confirmed",
         calendar_sync: "failed",

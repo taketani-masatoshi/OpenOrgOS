@@ -62,6 +62,32 @@ export function resolveSchedulingRecipients(
   };
 }
 
+export function listSchedulingDraftPreviewTargets(
+  caseRow: SchedulingCase,
+  kind: SchedulingDraftKind,
+  participantId?: string
+): SchedulingParticipant[] {
+  if (kind !== "reminder") {
+    return caseRow.participants.filter(
+      (participant) =>
+        participant.role === "external" && (!participantId || participant.id === participantId)
+    );
+  }
+  if (participantId) {
+    return caseRow.participants.filter(
+      (participant) =>
+        participant.id === participantId &&
+        caseRow.reminder_targets.includes(participant.id) &&
+        !caseRow.reminder_history.some(
+          (record) =>
+            record.proposal_revision === caseRow.proposal_revision &&
+            record.participant_id === participant.id
+        )
+    );
+  }
+  return listReminderTargets(caseRow);
+}
+
 export function listReminderTargets(caseRow: SchedulingCase): SchedulingParticipant[] {
   const eligible = new Set(caseRow.reminder_targets);
   return caseRow.participants.filter(
