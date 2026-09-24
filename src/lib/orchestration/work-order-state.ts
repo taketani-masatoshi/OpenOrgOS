@@ -7,6 +7,7 @@ import {
 } from "../../../schemas/routing.js";
 import type { QueueEventType } from "../../../schemas/queue.js";
 import { appendAuditEvent } from "../audit-log.js";
+import { utcDateCompact } from "../agents/utc-date.js";
 import { pushQueueEvent } from "../queue-db.js";
 import { loadHandoff, writeHandoffFiles } from "../routing.js";
 import { relayWorkOrderComplete } from "../agent-reporting.js";
@@ -58,7 +59,11 @@ export interface TransitionContext {
   eventPayload?: Record<string, unknown>;
 }
 
-export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: TransitionContext = {}): Handoff {
+export function transitionWorkOrder(
+  id: string,
+  to: HandoffStatus,
+  ctx: TransitionContext = {}
+): Handoff {
   const handoff = loadHandoff(id);
   assertTransitionAllowed(handoff.status, to);
 
@@ -97,7 +102,10 @@ export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: Transiti
     ...handoff,
     status: to,
     dispatch: nextDispatch,
-    completion_notes: to === "completed" ? (ctx.completionNotes ?? handoff.completion_notes) : handoff.completion_notes,
+    completion_notes:
+      to === "completed"
+        ? (ctx.completionNotes ?? handoff.completion_notes)
+        : handoff.completion_notes,
   });
 
   writeHandoffFiles(updated, undefined, { audit: false });
@@ -155,7 +163,7 @@ export function reopenWorkOrderViaState(id: string): Handoff {
 }
 
 export function newOrchestrationTraceId(): string {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const date = utcDateCompact();
   const suffix = Math.random().toString(36).slice(2, 8);
   return `TRC-${date}-${suffix}`;
 }

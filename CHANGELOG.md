@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **Agent 基盤モジュール境界（ADR 0082）** — `src/lib/agents/**` へ分割し、依存方向契約テストと CLI 面スナップショットを追加。公開 facade（`agent-*.ts` 等）は維持。着手条件付き領域は [agent-infra-gated-followups.md](docs/org-os/agent-infra-gated-followups.md)。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
@@ -19,6 +20,9 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **MCP HTTP** — SSE セッションの Bearer を `createStewardMcpServer({ token })` 経由でツール実行と監査 operator に渡す（stdio は従来どおり）。
+- **AIA scheduler** — `getSharedAiaScheduler()` をテナント ID ごとの singleton にし、Steward Chat のテナント切替で実行件数が漏れないようにする。
+- **Agent readiness** — 定義ファイル有無の判定を install root 基準の絶対パスで行い、cwd 依存を解消。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

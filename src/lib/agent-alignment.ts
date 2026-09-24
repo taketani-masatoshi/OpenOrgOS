@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadAgentCapabilityManifest } from "./agent-capability.js";
 import { loadAgentCatalog, resolveAgentId } from "./agent-catalog.js";
+import { agentDefinitionRelPath } from "./agents/definition.js";
 import { validateTenantAgentRoster } from "./agent-roster.js";
 import { loadChainPolicy } from "./agent-reporting.js";
 import { loadRoutingRegistry } from "./routing.js";
@@ -24,7 +25,7 @@ export function validateAgentAlignment(): AgentAlignmentIssue[] {
   const routeById = new Map(routes.map((route) => [route.id, route]));
 
   for (const agent of Object.values(catalog.agents)) {
-    const definitionPath = join(ROOT_DIR, agent.path);
+    const definitionPath = join(ROOT_DIR, agentDefinitionRelPath(agent.id));
     if (!existsSync(definitionPath)) {
       issues.push({ source: "definition", message: `${agent.id}: missing ${agent.path}` });
       continue;
@@ -35,10 +36,16 @@ export function validateAgentAlignment(): AgentAlignmentIssue[] {
     if (agent.class === "advisor") {
       const definition = readFileSync(definitionPath, "utf-8");
       if (agent.access.write.length) {
-        issues.push({ source: "catalog", message: `${agent.id}: advisor write access must be empty` });
+        issues.push({
+          source: "catalog",
+          message: `${agent.id}: advisor write access must be empty`,
+        });
       }
       if (!/read-only|Read-only|書込禁止/.test(definition)) {
-        issues.push({ source: "definition", message: `${agent.id}: advisor definition must state read-only` });
+        issues.push({
+          source: "definition",
+          message: `${agent.id}: advisor definition must state read-only`,
+        });
       }
       for (const path of agent.access.read) {
         if (!definition.includes(path)) {
@@ -58,7 +65,10 @@ export function validateAgentAlignment(): AgentAlignmentIssue[] {
     for (const routeId of capability.route_ids) {
       const route = routeById.get(routeId);
       if (!route) {
-        issues.push({ source: "capability", message: `${capability.id}: unknown route ${routeId}` });
+        issues.push({
+          source: "capability",
+          message: `${capability.id}: unknown route ${routeId}`,
+        });
       } else if (route.agent !== capability.id) {
         issues.push({
           source: "capability",
@@ -102,7 +112,8 @@ export function validateAgentAlignment(): AgentAlignmentIssue[] {
     issues.push({ source: "chain", message: "reporting hub and executive must be distinct" });
   }
   for (const id of chain.excluded_from_field) {
-    if (!ids.has(id)) issues.push({ source: "chain", message: `excluded_from_field: unknown ${id}` });
+    if (!ids.has(id))
+      issues.push({ source: "chain", message: `excluded_from_field: unknown ${id}` });
   }
 
   for (const message of validateTenantAgentRoster()) {

@@ -1,25 +1,16 @@
 import type { Handoff, HandoffStatus } from "../../../schemas/routing.js";
 import type { WorkKind } from "../../../schemas/dispatch-tower.js";
 import { listHandoffs } from "../routing.js";
-import {
-  buildPlanGraph,
-  retryableFailedWorkOrders,
-  syncDependencyStatuses,
-} from "./plan-graph.js";
-import {
-  getWorkOrderDispatch,
-  isClosedWorkOrder,
-} from "./work-order-state.js";
+import { buildPlanGraph, retryableFailedWorkOrders, syncDependencyStatuses } from "./plan-graph.js";
+import { getWorkOrderDispatch, isClosedWorkOrder } from "./work-order-state.js";
 
 export type BoardColumn = "todo" | "waiting" | "active" | "attention" | "done";
 
-export const BOARD_COLUMNS: BoardColumn[] = [
-  "attention",
-  "todo",
-  "waiting",
-  "active",
-  "done",
-];
+export const BOARD_COLUMNS: BoardColumn[] = ["attention", "todo", "waiting", "active", "done"];
+
+export function isCancellableWorkOrder(node: Pick<Handoff, "status">): boolean {
+  return node.status === "pending" || node.status === "waiting";
+}
 
 export function statusToBoardColumn(status: HandoffStatus | string): BoardColumn {
   switch (status) {
@@ -40,7 +31,9 @@ export function statusToBoardColumn(status: HandoffStatus | string): BoardColumn
   }
 }
 
-export function resolveWorkOrderTitle(handoff: Pick<Handoff, "id" | "subject" | "context">): string {
+export function resolveWorkOrderTitle(
+  handoff: Pick<Handoff, "id" | "subject" | "context">
+): string {
   const subject = handoff.subject?.trim();
   if (subject) return subject;
   const text = handoff.context?.text?.trim();
@@ -84,6 +77,15 @@ export interface BoardPlanCounts {
   running: number;
 }
 
+export function countBoardCards(cards: BoardCard[]): BoardPlanCounts {
+  return {
+    total: cards.length,
+    done: cards.filter((c) => c.closed).length,
+    attention: cards.filter((c) => c.column === "attention" && !c.closed).length,
+    running: cards.filter((c) => c.column === "active").length,
+  };
+}
+
 export interface BoardPlanSummary {
   id: string;
   title: string;
@@ -93,7 +95,7 @@ export interface BoardPlanSummary {
 }
 
 function isLeafWorkOrder(node: Handoff): boolean {
-  return node.task_type === "implement" && !(node.child_ids?.length);
+  return node.task_type === "implement" && !node.child_ids?.length;
 }
 
 function buildCardFromNode(
@@ -101,20 +103,21 @@ function buildCardFromNode(
   rootId: string,
   graph: ReturnType<typeof buildPlanGraph>,
   waveIndex: number,
-  retryableIds: Set<string>,
+  retryableIds: Set<string>
 ): BoardCard {
   const dispatch = getWorkOrderDispatch(node);
+  const display = enrichHandoffDisplayFields(node);
   return {
     id: node.id,
     rootId,
-    title: resolveWorkOrderTitle(node),
-    column: statusToBoardColumn(node.status),
+    title: display.title,
+    column: display.column,
     status: node.status,
     agent: node.to_agent,
-    work_kind: node.work_kind ?? null,
-    due_date: node.due_date,
-    assignee: node.assignee_operator_id ?? node.assignee_employee_id,
-    blocked_on: node.blocked_on,
+    work_kind: display.work_kind,
+    due_date: display.due_date,
+    assignee: display.assignee,
+    blocked_on: display.blocked_on,
     depends_on: node.depends_on.map((depId) => {
       const dep = graph.nodes.get(depId);
       return {
@@ -124,7 +127,7 @@ function buildCardFromNode(
     }),
     wave: waveIndex + 1,
     retryable: retryableIds.has(node.id),
-    cancellable: node.status === "pending" || node.status === "waiting",
+    cancellable: isCancellableWorkOrder(node),
     closed: isClosedWorkOrder(node),
     finished_at: dispatch.finished_at,
   };
@@ -152,12 +155,7 @@ export function buildBoardPlanSummary(rootId: string): BoardPlanSummary {
     cards.push(buildCardFromNode(root, rootId, graph, 0, retryableIds));
   }
 
-  const counts: BoardPlanCounts = {
-    total: cards.length,
-    done: cards.filter((c) => c.closed).length,
-    attention: cards.filter((c) => c.column === "attention" && !c.closed).length,
-    running: cards.filter((c) => c.column === "active").length,
-  };
+  const counts: BoardPlanCounts = countBoardCards(cards);
 
   const openCards = cards.filter((c) => !c.closed);
   const status: "active" | "completed" =
@@ -177,7 +175,9 @@ export function listPlanRoots(includeCompleted: boolean): {
   completed_roots: string[];
 } {
   const implement = listHandoffs().filter((h) => h.task_type === "implement" && !h.parent_id);
-  const active_roots = [...new Set(implement.filter((h) => h.status !== "completed").map((h) => h.id))].sort();
+  const active_roots = [
+    ...new Set(implement.filter((h) => h.status !== "completed").map((h) => h.id)),
+  ].sort();
   const completed_roots = includeCompleted
     ? [...new Set(implement.filter((h) => h.status === "completed").map((h) => h.id))].sort()
     : [];
@@ -222,19 +222,12 @@ function filterPlanCards(plan: BoardPlanSummary, options: BoardListOptions): Boa
   return {
     ...plan,
     status: openCards.length === 0 && cards.length > 0 ? "completed" : "active",
-    counts: {
-      total: cards.length,
-      done: cards.filter((c) => c.closed).length,
-      attention: cards.filter((c) => c.column === "attention" && !c.closed).length,
-      running: cards.filter((c) => c.column === "active").length,
-    },
+    counts: countBoardCards(cards),
     cards,
   };
 }
 
-export function buildOrchestrationBoardList(
-  options: BoardListOptions | boolean = {},
-): {
+export function buildOrchestrationBoardList(options: BoardListOptions | boolean = {}): {
   plans: BoardPlanSummary[];
   active_roots: string[];
   completed_roots: string[];
@@ -245,7 +238,9 @@ export function buildOrchestrationBoardList(
   const includeCompleted = opts.includeCompleted ?? false;
   const view = opts.view ?? "incomplete";
 
-  const { active_roots, completed_roots } = listPlanRoots(includeCompleted || view !== "incomplete");
+  const { active_roots, completed_roots } = listPlanRoots(
+    includeCompleted || view !== "incomplete"
+  );
   const rootIds =
     includeCompleted || view !== "incomplete"
       ? [...new Set([...active_roots, ...completed_roots])].sort()

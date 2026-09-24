@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 608
-  static_test_cases: 2802
-  tiered_execution_total: 608
+  vitest_total: 614
+  static_test_cases: 2844
+  tiered_execution_total: 614
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -497,6 +497,14 @@ tests:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
+  agent-infra-dependency-direction.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-infra-fixes-abc.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
   agent-module-inventory.test.ts:
     axis: platform
     kind: unit
@@ -513,6 +521,10 @@ tests:
     axis: meta
     kind: meta
   agent-portability.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-readiness-axes.test.ts:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
@@ -754,6 +766,10 @@ tests:
     kind: unit
     domain: P01_kernel
   classification.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  cli-agent-infra-surface-contract.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1638,6 +1654,10 @@ tests:
     kind: unit
     domain: P05_console_layer
   mcp-steward.test.ts:
+    axis: platform
+    kind: unit
+    domain: P05_console_layer
+  mcp-tools-dispatch.test.ts:
     axis: platform
     kind: unit
     domain: P05_console_layer
@@ -2639,6 +2659,10 @@ tests:
     kind: unit
     domain: P01_kernel
   stripe-webhook.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tasks-priority-mapping.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

@@ -1,18 +1,15 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import YAML from "yaml";
-import { z } from "zod";
-import { aiaRunRecordSchema, type AiaRunRecord } from "../../../schemas/aia-runtime.js";
+import {
+  aiaQueueFileSchema,
+  type AiaQueueFile,
+  type AiaRunRecord,
+} from "../../../schemas/aia-runtime.js";
 import { tenantDataPath } from "../tenant.js";
 import { writeYamlFile } from "../utils.js";
 
-const aiaQueueFileSchema = z.object({
-  schema: z.literal("orgos.aia.queue.v1"),
-  runs: z.array(aiaRunRecordSchema).default([]),
-  queue_order: z.array(z.string()).default([]),
-});
-
-export type AiaQueueFile = z.output<typeof aiaQueueFileSchema>;
+export type { AiaQueueFile };
 
 export function aiaQueuePath(): string {
   return tenantDataPath("org", "aia-queue.yaml");

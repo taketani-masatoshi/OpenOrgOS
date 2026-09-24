@@ -4,12 +4,7 @@ import type { AgentId } from "../../schemas/classification.js";
 import type { RelayStatus } from "../../schemas/agent-reporting.js";
 import type { Handoff } from "../../schemas/routing.js";
 import { getCatalogAgent } from "./agent-catalog.js";
-import {
-  ackRelay,
-  listMissions,
-  loadMission,
-  type AgentMission,
-} from "./agent-reporting.js";
+import { ackRelay, listMissions, type AgentMission } from "./agent-reporting.js";
 import { listWorkOrders } from "./escalate.js";
 import { getWorkspaceRoot } from "./orgos-paths.js";
 import { getDocsReportsDir } from "./utils.js";
@@ -56,10 +51,7 @@ function agentLabel(agentId: AgentId): string {
   return entry?.name_ja?.trim() || entry?.name?.trim() || agentId;
 }
 
-function toInboxItem(
-  mission: AgentMission,
-  woById: Map<string, Handoff>
-): AgentInboxItem {
+function toInboxItem(mission: AgentMission, woById: Map<string, Handoff>): AgentInboxItem {
   const workOrderId = mission.order?.linked_work_order_id;
   const wo = workOrderId ? woById.get(workOrderId) : undefined;
   const summaryPath = mission.report?.summary_path
@@ -93,7 +85,9 @@ function isPendingOrder(mission: AgentMission, woById: Map<string, Handoff>): bo
   if (mission.status === "cancelled" || mission.status === "completed") return false;
   const workOrderId = mission.order?.linked_work_order_id;
   if (!workOrderId) {
-    return mission.type === "order" && (mission.status === "ordered" || mission.status === "in_progress");
+    return (
+      mission.type === "order" && (mission.status === "ordered" || mission.status === "in_progress")
+    );
   }
   const wo = woById.get(workOrderId);
   if (!wo) return true;
@@ -152,9 +146,13 @@ export function formatAgentInboxMarkdown(
     "",
   ];
 
-  if (snapshot.for === "secretary" && snapshot.items.length === 0 && snapshot.pending_orders.length === 0) {
+  if (
+    snapshot.for === "secretary" &&
+    snapshot.items.length === 0 &&
+    snapshot.pending_orders.length === 0
+  ) {
     lines.push(
-      "秘書スコープは `order.from_actor === \"secretary\"` の案件のみです。",
+      '秘書スコープは `order.from_actor === "secretary"` の案件のみです。',
       "Steward 受信箱（全 field agent 報告）とは別軸です。",
       ""
     );
@@ -245,11 +243,4 @@ export function ackAgentInboxItem(missionId: string, notes?: string): AgentInbox
   const updated = ackRelay({ missionId, role: "steward", notes });
   const woById = new Map(listWorkOrders("all").map((wo) => [wo.id, wo]));
   return toInboxItem(updated, woById);
-}
-
-/** Load a single mission as an inbox item (throws if missing). */
-export function getAgentInboxItem(missionId: string): AgentInboxItem {
-  const mission = loadMission(missionId);
-  const woById = new Map(listWorkOrders("all").map((wo) => [wo.id, wo]));
-  return toInboxItem(mission, woById);
 }

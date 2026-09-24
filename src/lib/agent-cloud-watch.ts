@@ -34,7 +34,7 @@ export async function runCloudWatch(options: CloudWatchOptions = {}): Promise<nu
         if (wo.status === "completed") continue;
         console.log(`→ cloud dispatch ${woId}`);
         if (isCloudDispatchReady()) {
-          await runDispatch(woId, { parallel: options.parallel ?? 3, runtime: "cloud" } as never);
+          await runDispatch(woId, { parallel: options.parallel ?? 3, runtime: "cloud" });
         } else {
           buildDispatchManifest(woId);
           console.log(`  manifest only (cloud not configured)`);

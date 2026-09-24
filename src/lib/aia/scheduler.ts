@@ -1,86 +1,36 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  aiaRuntimeFileSchema,
+  aiaRunWorkspaceRelPath,
+  isActiveAiaRunState,
   type AiaRunRecord,
   type AiaRunState,
   type AiaRuntimeFile,
 } from "../../../schemas/aia-runtime.js";
-import { loadLlmWorkersConfig } from "../llm-pool/registry.js";
-import { getWorkerInflight } from "../llm-pool/stats.js";
-import { getCatalogAgent } from "../agent-catalog.js";
-import { loadModuleManifest, resolveModuleSecurity } from "../modules.js";
-import { tenantDataPath } from "../tenant.js";
-import { readYamlFile, writeYamlFile } from "../utils.js";
+import { getTenantId, tenantDataPath } from "../tenant.js";
+import { hydrateAiaQueueState, persistAiaQueueState, saveAiaQueueFile } from "./queue-store.js";
+import { loadAiaRuntimeConfig } from "./runtime-config.js";
 import {
-  hydrateAiaQueueState,
-  persistAiaQueueState,
-  saveAiaQueueFile,
-} from "./queue-store.js";
+  llmPoolHasCapacity,
+  resolveConcurrentJobsLimit,
+  resolveModuleIdForAgent,
+  type AiaAdmissionRequest,
+  type AiaAdmissionResult,
+} from "./admission.js";
 
-const DEFAULT_RUNTIME: AiaRuntimeFile = aiaRuntimeFileSchema.parse({
-  schema: "orgos.aia.runtime.v1",
-});
+export {
+  aiaRuntimeConfigPath,
+  loadAiaRuntimeConfig,
+  saveAiaRuntimeConfig,
+  persistAiaMetrics,
+} from "./runtime-config.js";
 
-export function aiaRuntimeConfigPath(): string {
-  return tenantDataPath("org", "aia-runtime.yaml");
-}
-
-export function loadAiaRuntimeConfig(): AiaRuntimeFile {
-  const path = aiaRuntimeConfigPath();
-  if (!existsSync(path)) return DEFAULT_RUNTIME;
-  return readYamlFile(path, aiaRuntimeFileSchema);
-}
-
-export function saveAiaRuntimeConfig(config: AiaRuntimeFile): string {
-  const path = aiaRuntimeConfigPath();
-  writeYamlFile(path, config);
-  return path;
-}
-
-function llmPoolHasCapacity(): boolean {
-  const config = loadLlmWorkersConfig();
-  let max = 0;
-  let inflight = 0;
-  for (const worker of config.workers) {
-    if (!worker.enabled) continue;
-    max += worker.max_inflight;
-    inflight += getWorkerInflight(worker.id);
-  }
-  return max === 0 || inflight < max;
-}
-
-export function resolveModuleIdForAgent(agentId: string): string | undefined {
-  const entry = getCatalogAgent(agentId);
-  const binds = entry?.binds_modules;
-  if (Array.isArray(binds) && binds.length > 0) return binds[0];
-  if (loadModuleManifest(agentId)) return agentId;
-  return undefined;
-}
-
-export function resolveConcurrentJobsLimit(agentId: string): number {
-  const moduleId = resolveModuleIdForAgent(agentId);
-  if (!moduleId) {
-    return loadAiaRuntimeConfig().max_concurrent_aia;
-  }
-  const manifest = loadModuleManifest(moduleId);
-  const explicit = manifest?.security?.limits?.concurrent_jobs;
-  if (explicit && explicit > 0) return explicit;
-  const trust = resolveModuleSecurity(moduleId).trust_class;
-  if (trust === "third_party") return 1;
-  return loadAiaRuntimeConfig().max_concurrent_aia;
-}
-
-export type AiaAdmissionRequest = {
-  run_id: string;
-  agent_id: string;
-  module_id?: string;
-  work_order_id?: string;
-};
-
-export type AiaAdmissionResult =
-  | { admitted: true; run: AiaRunRecord; workspace_relpath: string }
-  | { admitted: false; reason: string; queued?: boolean };
+export {
+  resolveModuleIdForAgent,
+  resolveConcurrentJobsLimit,
+  type AiaAdmissionRequest,
+  type AiaAdmissionResult,
+} from "./admission.js";
 
 export class AiaScheduler {
   private readonly config: AiaRuntimeFile;
@@ -107,9 +57,7 @@ export class AiaScheduler {
   }
 
   private activeCount(): number {
-    return [...this.runs.values()].filter((r) =>
-      ["admitted", "running", "merging"].includes(r.state),
-    ).length;
+    return [...this.runs.values()].filter((r) => isActiveAiaRunState(r.state)).length;
   }
 
   get runningCount(): number {
@@ -118,9 +66,7 @@ export class AiaScheduler {
 
   countRunningForModule(moduleId: string): number {
     return [...this.runs.values()].filter(
-      (r) =>
-        r.module_id === moduleId &&
-        ["admitted", "running", "merging"].includes(r.state),
+      (r) => r.module_id === moduleId && isActiveAiaRunState(r.state)
     ).length;
   }
 
@@ -134,7 +80,7 @@ export class AiaScheduler {
     const queued = [...this.runs.values()].filter((r) => r.state === "queued").length;
     const running = this.runningCount;
     const moduleRejects = [...this.runs.values()].filter(
-      (r) => r.fail_reason === "concurrent_jobs_exceeded",
+      (r) => r.fail_reason === "concurrent_jobs_exceeded"
     ).length;
     return {
       aia_running: running,
@@ -145,7 +91,7 @@ export class AiaScheduler {
 
   tryAdmit(req: AiaAdmissionRequest): AiaAdmissionResult {
     const existing = this.runs.get(req.run_id);
-    if (existing && ["admitted", "running", "merging"].includes(existing.state)) {
+    if (existing && isActiveAiaRunState(existing.state)) {
       return {
         admitted: true,
         run: existing,
@@ -153,11 +99,13 @@ export class AiaScheduler {
       };
     }
     if (existing?.state === "queued") {
-      return this.promoteQueuedRun(req.run_id) ?? {
-        admitted: false,
-        reason: "still queued",
-        queued: true,
-      };
+      return (
+        this.promoteQueuedRun(req.run_id) ?? {
+          admitted: false,
+          reason: "still queued",
+          queued: true,
+        }
+      );
     }
     if (existing) {
       return { admitted: false, reason: `run ${req.run_id} already tracked` };
@@ -174,7 +122,7 @@ export class AiaScheduler {
         module_id: moduleId,
         work_order_id: req.work_order_id,
         state: "queued",
-        workspace_relpath: `data/scratch/aia-runs/${req.run_id}`,
+        workspace_relpath: aiaRunWorkspaceRelPath(req.run_id),
         queued_at: now,
         fail_reason: blockReason,
       };
@@ -196,7 +144,7 @@ export class AiaScheduler {
   private blockReason(
     agentId: string,
     moduleId: string | undefined,
-    moduleLimit: number,
+    moduleLimit: number
   ): string | null {
     if (moduleId && this.countRunningForModule(moduleId) >= moduleLimit) {
       return `module ${moduleId} concurrent_jobs limit (${moduleLimit}) reached`;
@@ -211,7 +159,7 @@ export class AiaScheduler {
   }
 
   private admitNow(req: AiaAdmissionRequest, moduleId?: string): AiaAdmissionResult {
-    const workspaceRel = `data/scratch/aia-runs/${req.run_id}`;
+    const workspaceRel = aiaRunWorkspaceRelPath(req.run_id);
     ensureAiaRunWorkspace(req.run_id);
     const now = new Date().toISOString();
     const run: AiaRunRecord = {
@@ -238,7 +186,7 @@ export class AiaScheduler {
     const blockReason = this.blockReason(
       run.agent_id,
       run.module_id,
-      resolveConcurrentJobsLimit(run.agent_id),
+      resolveConcurrentJobsLimit(run.agent_id)
     );
     if (blockReason) {
       return { admitted: false, reason: blockReason, queued: true };
@@ -250,7 +198,7 @@ export class AiaScheduler {
         module_id: run.module_id,
         work_order_id: run.work_order_id,
       },
-      run.module_id,
+      run.module_id
     );
   }
 
@@ -291,6 +239,7 @@ export class AiaScheduler {
   }
 }
 
+/** writeFileSync site — keep in this file (canonical-write-baseline). */
 export function ensureAiaRunWorkspace(runId: string): string {
   const dir = tenantDataPath("scratch", "aia-runs", runId);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -305,57 +254,41 @@ export function gcAiaRunWorkspace(runId: string): void {
 
 export function createAiaScheduler(
   config?: AiaRuntimeFile,
-  opts?: { hydrate?: boolean },
+  opts?: { hydrate?: boolean }
 ): AiaScheduler {
   return new AiaScheduler(config, opts);
 }
 
-let sharedScheduler: AiaScheduler | undefined;
+const sharedSchedulersByTenant = new Map<string, AiaScheduler>();
 
-/** Process-wide singleton for dispatch admission (ADR 0040). */
+/** Per-tenant singleton for dispatch admission (ADR 0040). */
 export function getSharedAiaScheduler(): AiaScheduler {
-  if (!sharedScheduler) {
-    sharedScheduler = createAiaScheduler();
+  const tenantId = getTenantId();
+  let scheduler = sharedSchedulersByTenant.get(tenantId);
+  if (!scheduler) {
+    scheduler = createAiaScheduler();
+    sharedSchedulersByTenant.set(tenantId, scheduler);
   }
-  return sharedScheduler;
+  return scheduler;
 }
 
 export function resetAiaSchedulerForTests(): void {
-  sharedScheduler = undefined;
+  sharedSchedulersByTenant.clear();
   saveAiaQueueFile({ schema: "orgos.aia.queue.v1", runs: [], queue_order: [] });
 }
 
 /** Drop in-process singleton without wiping persisted queue (restart simulation). */
 export function detachAiaSchedulerSingletonForTests(): void {
-  sharedScheduler = undefined;
-}
-
-export function reloadSharedAiaSchedulerFromDisk(): AiaScheduler {
-  sharedScheduler = createAiaScheduler(undefined, { hydrate: true });
-  return sharedScheduler;
-}
-
-export function persistAiaMetrics(scheduler: AiaScheduler): void {
-  const path = aiaRuntimeConfigPath();
-  const config = loadAiaRuntimeConfig();
-  const next = {
-    ...config,
-    metrics: {
-      ...config.metrics,
-      ...scheduler.metrics(),
-    },
-  };
-  writeYamlFile(path, next);
+  sharedSchedulersByTenant.clear();
 }
 
 /** Wait synchronously for admission (dispatch path). */
 export function admitWithBackoff(
   scheduler: AiaScheduler,
   req: AiaAdmissionRequest,
-  opts?: { maxWaitMs?: number; intervalMs?: number },
+  opts?: { maxWaitMs?: number; intervalMs?: number }
 ): AiaAdmissionResult {
-  const maxWait =
-    opts?.maxWaitMs ?? scheduler.runtimeConfig.queue_timeout_seconds * 1000;
+  const maxWait = opts?.maxWaitMs ?? scheduler.runtimeConfig.queue_timeout_seconds * 1000;
   const interval = opts?.intervalMs ?? 50;
   const deadline = Date.now() + maxWait;
   while (Date.now() < deadline) {
@@ -372,10 +305,4 @@ export function admitWithBackoff(
     admitted: false,
     reason: `admission timeout after ${maxWait}ms`,
   };
-}
-
-export function readAiaRunManifest(runId: string): unknown | null {
-  const manifestPath = join(tenantDataPath("scratch", "aia-runs", runId), "manifest.json");
-  if (!existsSync(manifestPath)) return null;
-  return JSON.parse(readFileSync(manifestPath, "utf-8"));
 }

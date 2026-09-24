@@ -19,7 +19,7 @@ import {
   retryFailedWorkOrders,
 } from "../lib/orchestration/orchestrate-actions.js";
 import { parseDependsSpec, resolvePlanRoot } from "../lib/orchestration/plan-graph.js";
-import { proposeOrchestrationPlan } from "../lib/orchestration/llm-planner.js";
+import { proposeOrchestrationPlan } from "../lib/orchestration/plan-proposal.js";
 import { setTenantId } from "../lib/tenant.js";
 import { auditCliMutation, requireCliOperator } from "../lib/console-auth/cli-operator.js";
 
@@ -118,8 +118,8 @@ export function runOrchestratePlan(opts: OrchestratePlanOptions): void {
             depends: opts.depends ?? [],
           },
           null,
-          2,
-        ),
+          2
+        )
       );
       return;
     }
@@ -149,7 +149,9 @@ export function runOrchestratePlan(opts: OrchestratePlanOptions): void {
     for (const spec of opts.depends) {
       console.log(`- ${spec}`);
     }
-    console.log("\nPersist with `orchestrate plan --write --depends ...` or `orchestrate run --depends ...`.");
+    console.log(
+      "\nPersist with `orchestrate plan --write --depends ...` or `orchestrate run --depends ...`."
+    );
   }
 
   if (plan.agents.length === 0) process.exit(1);

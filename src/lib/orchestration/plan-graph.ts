@@ -1,10 +1,6 @@
 import type { Handoff, HandoffStatus } from "../../../schemas/routing.js";
 import { loadHandoff, loadHandoffChildren } from "../routing.js";
-import {
-  getWorkOrderDispatch,
-  transitionWorkOrder,
-  WORK_ORDER_CANCEL_BLOCK_REASON,
-} from "./work-order-state.js";
+import { isCancelledWorkOrder, transitionWorkOrder } from "./work-order-state.js";
 
 export interface PlanGraph {
   rootId: string;
@@ -64,9 +60,7 @@ function detectCycle(nodes: Map<string, Handoff>): void {
 }
 
 export function computeWaves(nodes: Map<string, Handoff>): string[][] {
-  const ids = [...nodes.values()]
-    .filter((node) => !(node.child_ids?.length))
-    .map((node) => node.id);
+  const ids = [...nodes.values()].filter((node) => !node.child_ids?.length).map((node) => node.id);
   const depth = new Map<string, number>();
 
   function nodeDepth(id: string, stack: Set<string>): number {
@@ -92,9 +86,7 @@ export function computeWaves(nodes: Map<string, Handoff>): string[][] {
   const maxDepth = Math.max(0, ...depth.values());
   const waves: string[][] = [];
   for (let wave = 0; wave <= maxDepth; wave += 1) {
-    const layer = ids
-      .filter((id) => depth.get(id) === wave)
-      .sort((a, b) => a.localeCompare(b));
+    const layer = ids.filter((id) => depth.get(id) === wave).sort((a, b) => a.localeCompare(b));
     if (layer.length) waves.push(layer);
   }
   return waves;
@@ -131,9 +123,9 @@ export function readyWorkOrders(graph: PlanGraph): Handoff[] {
       (node) =>
         node.status === "pending" &&
         node.task_type === "implement" &&
-        !(node.child_ids?.length) &&
+        !node.child_ids?.length &&
         dependenciesCompleted(graph, node) &&
-        !dependenciesFailed(graph, node),
+        !dependenciesFailed(graph, node)
     )
     .sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -150,7 +142,7 @@ export function retryableFailedWorkOrders(graph: PlanGraph): Handoff[] {
 
 export function blockedByFailure(graph: PlanGraph): Handoff[] {
   const failedIds = new Set(
-    [...graph.nodes.values()].filter((node) => node.status === "failed").map((node) => node.id),
+    [...graph.nodes.values()].filter((node) => node.status === "failed").map((node) => node.id)
   );
   if (!failedIds.size) return [];
 
@@ -160,7 +152,9 @@ export function blockedByFailure(graph: PlanGraph): Handoff[] {
     changed = false;
     for (const node of graph.nodes.values()) {
       if (blocked.has(node.id)) continue;
-      const blockedDep = node.depends_on.some((depId) => failedIds.has(depId) || blocked.has(depId));
+      const blockedDep = node.depends_on.some(
+        (depId) => failedIds.has(depId) || blocked.has(depId)
+      );
       if (blockedDep) {
         blocked.add(node.id);
         changed = true;
@@ -169,13 +163,10 @@ export function blockedByFailure(graph: PlanGraph): Handoff[] {
   }
 
   return [...graph.nodes.values()]
-    .filter((node) => blocked.has(node.id) && node.status !== "completed" && node.status !== "blocked")
+    .filter(
+      (node) => blocked.has(node.id) && node.status !== "completed" && node.status !== "blocked"
+    )
     .sort((a, b) => a.id.localeCompare(b.id));
-}
-
-function isCancelledBlock(node: Handoff): boolean {
-  const dispatch = getWorkOrderDispatch(node);
-  return dispatch.last_error === WORK_ORDER_CANCEL_BLOCK_REASON;
 }
 
 export function syncParentPlanStatus(graph: PlanGraph): Handoff | undefined {
@@ -184,7 +175,7 @@ export function syncParentPlanStatus(graph: PlanGraph): Handoff | undefined {
 
   const children = root.child_ids
     .map((id) => graph.nodes.get(id) ?? loadHandoff(id))
-    .filter((node) => node.task_type === "implement" && !(node.child_ids?.length));
+    .filter((node) => node.task_type === "implement" && !node.child_ids?.length);
 
   if (children.length === 0) return undefined;
 
@@ -214,7 +205,10 @@ export function syncDependencyStatuses(graph: PlanGraph): Handoff[] {
   for (const node of graph.nodes.values()) {
     if (node.task_type !== "implement") continue;
 
-    if (dependenciesFailed(graph, node) && !["failed", "completed", "blocked"].includes(node.status)) {
+    if (
+      dependenciesFailed(graph, node) &&
+      !["failed", "completed", "blocked"].includes(node.status)
+    ) {
       const next = transitionWorkOrder(node.id, "blocked", {
         error: "upstream dependency failed",
         skipQueueEvent: true,
@@ -227,7 +221,7 @@ export function syncDependencyStatuses(graph: PlanGraph): Handoff[] {
     if (
       node.status === "blocked" &&
       node.depends_on.length > 0 &&
-      !isCancelledBlock(node) &&
+      !isCancelledWorkOrder(node) &&
       dependenciesCompleted(graph, node) &&
       !dependenciesFailed(graph, node)
     ) {
@@ -263,6 +257,26 @@ export function syncDependencyStatuses(graph: PlanGraph): Handoff[] {
   if (parent) updated.push(parent);
 
   return updated;
+}
+
+/** Ready DAG nodes, or pending/dispatched fallback when the wave is empty. */
+export function resolveRunnableWorkOrders(id: string): Handoff[] {
+  const rootId = resolvePlanRoot(id);
+  const graph = buildPlanGraph(rootId);
+  syncDependencyStatuses(graph);
+  const ready = readyWorkOrders(graph);
+  if (ready.length > 0) return ready;
+
+  const root = loadHandoff(id);
+  const candidates = root.child_ids?.length
+    ? loadHandoffChildren(root)
+    : root.task_type === "implement" || root.id.startsWith("IMP-")
+      ? [root]
+      : null;
+  if (!candidates) {
+    throw new Error(`${id} is not an implement work order or parent`);
+  }
+  return candidates.filter((w) => w.status === "pending" || w.status === "dispatched");
 }
 
 export function parseDependsSpec(specs: string[]): Map<string, string[]> {

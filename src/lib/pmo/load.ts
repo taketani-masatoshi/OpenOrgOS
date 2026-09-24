@@ -42,6 +42,10 @@ function isProjectFileName(name: string): boolean {
   return /^PRJ-[A-Z0-9-]+\.ya?ml$/.test(name);
 }
 
+export function isPortfolioFileName(name: string): boolean {
+  return name === "portfolio.yaml" || name === "portfolio.yml";
+}
+
 export function loadPmoPortfolio(): LoadedPmo {
   const yamlFiles = yamlFilesInPmoDir();
   if (yamlFiles.length === 0) {
@@ -54,7 +58,7 @@ export function loadPmoPortfolio(): LoadedPmo {
 
   for (const abs of yamlFiles) {
     const name = basename(abs);
-    if (name === "portfolio.yaml" || name === "portfolio.yml") {
+    if (isPortfolioFileName(name)) {
       portfolio = readYamlFile(abs, pmoPortfolioFileSchema);
       continue;
     }
@@ -74,10 +78,7 @@ export function collectPmoSchemaErrors(): PmoSchemaIssue[] {
   if (yamlFiles.length === 0) return [];
 
   const errors: PmoSchemaIssue[] = [];
-  const hasPortfolio = yamlFiles.some((f) => {
-    const name = basename(f);
-    return name === "portfolio.yaml" || name === "portfolio.yml";
-  });
+  const hasPortfolio = yamlFiles.some((f) => isPortfolioFileName(basename(f)));
   if (!hasPortfolio) {
     errors.push({
       file: PMO_PORTFOLIO_REL,
@@ -89,7 +90,7 @@ export function collectPmoSchemaErrors(): PmoSchemaIssue[] {
     const name = basename(abs);
     const rel = `${PMO_DIR_REL}/${name}`;
     try {
-      if (name === "portfolio.yaml" || name === "portfolio.yml") {
+      if (isPortfolioFileName(name)) {
         readYamlFile(abs, pmoPortfolioFileSchema);
         continue;
       }
