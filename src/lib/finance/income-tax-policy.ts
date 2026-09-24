@@ -74,6 +74,43 @@ function bracketTaxYen(taxableYen: number): number {
   return Math.max(0, raw);
 }
 
+/**
+ * Progressive income tax + reconstruction on an already-formed taxable base.
+ * Shared by employment YEA and sole-prop advisor paths; callers assemble the base.
+ */
+export function computeJpIncomeTaxOnTaxableBase(input: {
+  taxableBeforeFloorYen: number;
+  creditsYen: number;
+}): {
+  taxable_yen: number;
+  income_tax_yen: number;
+  reconstruction_yen: number;
+  annual_tax_yen: number;
+} {
+  assertJapaneseFinanceEngine();
+  if (
+    ![input.taxableBeforeFloorYen, input.creditsYen].every(
+      (n) => Number.isSafeInteger(n) && n >= 0
+    )
+  ) {
+    throw new Error("Invalid income-tax taxable base");
+  }
+  const taxableYen = floorTaxableIncomeYen(input.taxableBeforeFloorYen);
+  const bracket = bracketTaxYen(taxableYen);
+  if (input.creditsYen > bracket) throw new Error("credits exceed income tax");
+  const incomeTaxYen = bracket - input.creditsYen;
+  const reconstructionYen = Math.floor(
+    (incomeTaxYen * JP_INCOME_TAX_POLICY.reconstruction_rate.numerator) /
+      JP_INCOME_TAX_POLICY.reconstruction_rate.denominator
+  );
+  return {
+    taxable_yen: taxableYen,
+    income_tax_yen: incomeTaxYen,
+    reconstruction_yen: reconstructionYen,
+    annual_tax_yen: incomeTaxYen + reconstructionYen,
+  };
+}
+
 export function calculateSolePropIncomeTaxAmounts(
   input: IncomeTaxAmountInput
 ): IncomeTaxAmountResult {
@@ -99,27 +136,30 @@ export function calculateSolePropIncomeTaxAmounts(
     0,
     input.businessIncomeAfterBlueYen + input.otherIncomeYen - input.deductionsYen
   );
-  const taxableYen = floorTaxableIncomeYen(taxableBefore);
-  const bracket = bracketTaxYen(taxableYen);
-  if (input.creditsYen > bracket) return { ok: false, errors: ["credits exceed income tax"] };
-  const beforeFloor = bracket - input.creditsYen;
-  const incomeTaxYen = beforeFloor;
-  const reconstructionYen = Math.floor(
-    (incomeTaxYen * JP_INCOME_TAX_POLICY.reconstruction_rate.numerator) /
-      JP_INCOME_TAX_POLICY.reconstruction_rate.denominator
-  );
+  let tax: ReturnType<typeof computeJpIncomeTaxOnTaxableBase>;
+  try {
+    tax = computeJpIncomeTaxOnTaxableBase({
+      taxableBeforeFloorYen: taxableBefore,
+      creditsYen: input.creditsYen,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      errors: [error instanceof Error ? error.message : String(error)],
+    };
+  }
   const remainingYen =
-    incomeTaxYen + reconstructionYen - input.withholdingYen - input.prepaymentYen;
+    tax.annual_tax_yen - input.withholdingYen - input.prepaymentYen;
   return {
     ok: true,
     other_income_yen: input.otherIncomeYen,
     income_deductions_yen: input.deductionsYen,
     taxable_before_thousand_floor_yen: taxableBefore,
-    taxable_yen: taxableYen,
-    income_tax_before_floor_yen: beforeFloor,
+    taxable_yen: tax.taxable_yen,
+    income_tax_before_floor_yen: tax.income_tax_yen,
     credits_yen: input.creditsYen,
-    income_tax_yen: incomeTaxYen,
-    reconstruction_yen: reconstructionYen,
+    income_tax_yen: tax.income_tax_yen,
+    reconstruction_yen: tax.reconstruction_yen,
     withholding_yen: input.withholdingYen,
     prepayment_yen: input.prepaymentYen,
     remaining_yen: remainingYen,

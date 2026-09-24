@@ -28,14 +28,16 @@
 
 payments の必須項目：journal_entry_id（計上）、payment_journal_entry_id（支払）、paid_on、gross_yen、withholding_yen、social_employee_yen、social_employer_yen。
 
-現行照合は単一従業員の計上・支払仕訳が一対一で、同一年内に全額支払う範囲を対象にする。未払給与、年またぎ支払、複数従業員の一括振込、前職分、現物給与等はこの契約だけで処理できない。支払仕訳との照合は銀行明細の真正性・消込完了の証明ではない。引継ぎ可能は会計資料の照合結果であり、年税額確定・提出可能を意味しない。API の calculation_complete は false。
+現行照合は従業員別の計上・支払仕訳が一対一で、同一年内に全額支払う範囲を対象にする（従業員別仕訳があれば複数従業員可）。未払給与、年またぎ支払、複数従業員の一括振込、前職分、現物給与等はこの契約だけで処理できない。支払仕訳との照合は銀行明細の真正性・消込完了の証明ではない。
 
-## 次の実装・検証課題
+### `calculation_complete` の意味（正本）
 
-1. 日本給与の従業員別履歴・未払/一括支払・控除申告を統合し、年税額確定と還付追徴を実装。給与・減価償却を有効にした年度全体の受入検証を追加。
-2. 消費税の共通対応・経過措置、法定償却率と定率法、旧締めデータ移行を完成。現在の停止条件を制度実装と混同しない。
-3. 国・事業体・適用日・通貨・届出の明示設定と能力判定を整備。各国の一次資料に基づく税務エンジン・検証事例を追加。OÜ・ジョージア事業主・日本個人・LLC は別の受入基準を持つ。
-4. e-Tax/eLTAX および各国申告経路、証跡保全、実銀行・実テナントの受入を検証。合成テストで代替しない。
+`summarizeYearEndAdjustment().calculation_complete === true` は次を意味するだけである:
+
+1. 年間給与証憑と `yea-declarations` が揃い blockers が空
+2. 従業員ごとに **給与所得パス**（給与所得控除 → 課税所得 → 所得税+復興税）で `annual_tax_yen` / `yea_settlement_yen` が見積済み
+
+意味しないこと: e-file 提出可能、法定年税額確定、精算仕訳起票済み。精算仕訳は `postYearEndSettlements`（API: `POST /chat/v1/tax/yea/post-settlement`）のみ。`settlements_posted` で区別する。引継ぎ可能（`ready_for_tax_handoff`）は会計資料の照合結果であり、提出可能ではない。
 
 ## 2026-09-24 残債対応（弱い点）
 
@@ -51,7 +53,8 @@ payments の必須項目：journal_entry_id（計上）、payment_journal_entry_
 1. **従業員別給与・年税額・還付追徴**
    - `payroll` 仕訳 source に `employee_id` / `event`（accrual|payment|yea_settlement）
    - 従業員別 ID: `JE-PAYROLL-{period}-{employeeId}`
-   - `yea-declarations/FY####.yaml` + `computeAnnualSalarySettlement` で年税額と還付/追徴を確定し、必要時に精算仕訳を起票
+   - `yea-declarations/FY####.yaml` + `computeAnnualSalarySettlement`（給与専用。sole-prop ワークシートは使わない）
+   - 精算仕訳は `postYearEndSettlements` のみ（compute は見積のみ）
    - 従業員別仕訳があれば複数従業員の年間証憑を許可
 
 2. **消費税共通按分・経過措置・法定定率法**
@@ -62,5 +65,24 @@ payments の必須項目：journal_entry_id（計上）、payment_journal_entry_
 3. **外国エンジン能力ゲート + e-Tax/eLTAX**
    - `indirect-tax/capability.ts`: EE/GE/US は `filing: false` のまま識別
    - `jp_etax` / `jp_eltax` モジュールと `src/lib/etax`・`eltax`・`efiling`・CLI を取り込み。eLTAX は手続拒否のまま。本番提出は認定ゲート前に fail-closed
+   - ADR 0052: **実験的 `jp_etax` は Phase 5c（本番提出）を実装しない** — ライフサイクル・証跡・gate YAML の実験面のみ。OrgOS コアの「5c を実行しない」決定は変わらない
 
-実テナントは変更していない。push は行っていない。
+ブランチ `cursor/finance-tax-remediation-2026-09` は origin へ push 済み（2026-09-24）。実テナント YAML は変更していない。
+
+## e-Tax / certification テスト方針（正本）
+
+| 状態 | ファイル | 方針 |
+|---|---|---|
+| **登録済（本ブランチ）** | `etax-phase1` · `etax-lifecycle-e2e` · `etax-accounting-bridge` · `efiling-core` · `efiling-production-gate` · `eltax-lifecycle` | `test-registry` に載せ、CI が拾う |
+| **意図的未取込** | worktree 由来 `etax-foundation` · `etax-production-gate` · `eltax-foundation` | ADR 0052 Phase 5c / NTA 送信試験の前提が揃うまで本線へコピーしない。欠落は「未実装」ではなく **defer** |
+| **合成テストの限界** | 上記すべて | COM bind · 国税庁送信試験 · production-gate certified の代替にしない |
+
+取りこぼし対応は「今すぐ移植」ではなく、registry 同期 + 上表の defer 明記とする。
+
+## 未対応リスト（現状）
+
+1. 未払・年またぎ・一括振込・前職・現物給与の年間証憑契約拡張
+2. 消費税の制度面の残（旧締め移行、実テナント証憑の受入）
+3. EE / GE / US の一次資料ベース税務エンジン（現状は `filing: false` ゲートのみ）
+4. e-Tax 本番提出（ADR 0052 5c · 人間/税理士）と foundation/production-gate テストの本線化
+5. 実銀行・実テナント受入（合成 fixture では代替しない）

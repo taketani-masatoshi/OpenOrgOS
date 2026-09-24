@@ -16,6 +16,7 @@ import {
   saveBonusDraft,
   markYearEndReadyForHandoff,
   postBonusDraftJournal,
+  postYearEndSettlements,
   summarizeYearEndAdjustment,
 } from "../../finance/payroll-bonus-yea.js";
 import { resolveDefaultFiscalYear } from "../../finance/fiscal-year.js";
@@ -194,6 +195,26 @@ export async function handleTaxApi(
       const body = (await readJsonLimited(req)) as { fiscal_year?: string };
       const fy = body.fiscal_year?.trim() || resolveDefaultFiscalYear();
       const yea = computeYearEndAdjustment(fy);
+      json(res, 200, { ok: true, yea: summarizeYearEndAdjustment(yea) });
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/yea/post-settlement" && method === "POST") {
+    if (!requireBudgetSurfacePermission(user, "finance:reconcile", res)) return true;
+    try {
+      const body = (await readJsonLimited(req)) as { fiscal_year?: string };
+      const fy = body.fiscal_year?.trim() || resolveDefaultFiscalYear();
+      const actor = resolveBudgetActor(user);
+      const yea = postYearEndSettlements({
+        fiscalYear: fy,
+        authorizedBy: actor.operator_id,
+      });
       json(res, 200, { ok: true, yea: summarizeYearEndAdjustment(yea) });
     } catch (error) {
       json(res, 422, {

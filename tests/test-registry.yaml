@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 612
-  static_test_cases: 2822
-  tiered_execution_total: 612
+  vitest_total: 631
+  static_test_cases: 2927
+  tiered_execution_total: 631
   catalog_total: 47
   catalog_cli_registered: 48
   catalog_gap: 0
@@ -683,6 +683,16 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  catalog/jp-eltax.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_eltax
+  catalog/jp-etax.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_etax
   catalog/jp-inspection.test.ts:
     axis: catalog
     kind: unit
@@ -1021,6 +1031,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  country-module.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   csrf-guard.test.ts:
     axis: platform
     kind: unit
@@ -1114,10 +1128,22 @@ tests:
   eco-production-evidence.test.ts:
     axis: meta
     kind: meta
+  efiling-core.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  efiling-production-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   electronic-ledger.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
+  eltax-lifecycle.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   escalate.test.ts:
     axis: integration
     kind: integration
@@ -1127,6 +1153,19 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  etax-accounting-bridge.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  etax-lifecycle-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P02_business_data
+    integration: I2_protocol_e2e
+  etax-phase1.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   executive-cli.test.ts:
     axis: platform
     kind: unit
@@ -1158,6 +1197,18 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  external-connector-runtime.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  external-provider-adapters.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  external-reconciliation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   final-accounts-close.test.ts:
     axis: platform
     kind: unit
@@ -1166,7 +1217,23 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  finance-audit-annual-regression.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-audit-regression.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   finance-briefing.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-jurisdiction-safety.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-remaining-debt.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
@@ -1879,7 +1946,7 @@ tests:
   payroll-yea-compute.test.ts:
     axis: platform
     kind: unit
-    domain: P01_kernel
+    domain: P02_business_data
   pdf-esign-digidoc.test.ts:
     axis: platform
     kind: unit
@@ -2156,6 +2223,14 @@ tests:
     kind: unit
     domain: P01_kernel
   receipt-qr.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  reconciliation-recovery.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  reconciliation-safety.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2444,6 +2519,11 @@ tests:
     kind: unit
     domain: P01_kernel
   standalone-org-demo.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I2_protocol_e2e
+  standards-integration.test.ts:
     axis: integration
     kind: integration
     domain: P01_kernel

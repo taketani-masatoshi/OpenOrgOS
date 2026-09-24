@@ -1,14 +1,14 @@
 /**
- * Annual salary withholding settlement (年末調整の還付・追徴).
- * Requires annual payroll evidence plus an explicit declaration file.
- * Does not e-file.
+ * Employment year-end withholding settlement (年末調整の還付・追徴見積).
+ * Builds 給与所得 → 課税所得 → 所得税+復興税 using the employment income path.
+ * Does not e-file. Settlement journals are posted only via postYearEndSettlements.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
 import { getDataDir } from "../utils.js";
-import { calculateSolePropIncomeTaxAmounts } from "./income-tax-policy.js";
+import { computeJpIncomeTaxOnTaxableBase } from "./income-tax-policy.js";
 import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
 
 const yen = z.number().int().nonnegative().safe();
@@ -20,7 +20,7 @@ const declarationSchema = z.object({
     .array(
       z.object({
         employee_id: z.string().min(1),
-        /** 基礎控除など給与所得控除以外の所得控除合計（明示）。 */
+        /** 給与所得控除以外の所得控除合計（基礎控除・扶養等の明示合計）。 */
         income_deductions_yen: yen,
         /** 税額控除（明示）。なければ 0。 */
         tax_credits_yen: yen,
@@ -51,7 +51,7 @@ export type AnnualSalarySettlement = {
   taxable_yen: number;
   annual_tax_yen: number;
   withholding_total_yen: number;
-  /** Positive = 追徴, negative = 還付. */
+  /** Positive = 追徴, negative = 還付. Ledger amounts only until posted. */
   yea_settlement_yen: number;
 };
 
@@ -80,6 +80,10 @@ export function readYeaDeclaration(fiscalYear: string): YeaDeclaration | null {
   return parsed;
 }
 
+/**
+ * Employment YEA settlement estimate from annual gross, employee social insurance,
+ * explicit deductions/credits, and recorded withholding — not a sole-prop worksheet.
+ */
 export function computeAnnualSalarySettlement(
   input: AnnualSalarySettlementInput
 ): AnnualSalarySettlement {
@@ -102,23 +106,21 @@ export function computeAnnualSalarySettlement(
   const afterSocial = input.annualGrossYen - input.socialEmployeeTotalYen;
   const salaryDeduction = computeAnnualSalaryIncomeDeduction(afterSocial);
   const salaryIncome = Math.max(0, afterSocial - salaryDeduction);
-  const tax = calculateSolePropIncomeTaxAmounts({
-    businessIncomeAfterBlueYen: salaryIncome,
-    otherIncomeYen: input.otherIncomeYen,
-    deductionsYen: input.incomeDeductionsYen,
+  const taxableBefore = Math.max(
+    0,
+    salaryIncome + input.otherIncomeYen - input.incomeDeductionsYen
+  );
+  const tax = computeJpIncomeTaxOnTaxableBase({
+    taxableBeforeFloorYen: taxableBefore,
     creditsYen: input.taxCreditsYen,
-    withholdingYen: 0,
-    prepaymentYen: 0,
   });
-  if (!tax.ok) throw new Error(`Annual salary tax incomplete: ${tax.errors.join(",")}`);
-  const annualTax = tax.income_tax_yen + tax.reconstruction_yen;
   return {
     employee_id: input.employeeId,
     salary_income_yen: salaryIncome,
     salary_income_deduction_yen: salaryDeduction,
     taxable_yen: tax.taxable_yen,
-    annual_tax_yen: annualTax,
+    annual_tax_yen: tax.annual_tax_yen,
     withholding_total_yen: input.withholdingTotalYen,
-    yea_settlement_yen: annualTax - input.withholdingTotalYen,
+    yea_settlement_yen: tax.annual_tax_yen - input.withholdingTotalYen,
   };
 }

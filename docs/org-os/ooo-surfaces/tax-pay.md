@@ -19,6 +19,8 @@
 | `POST /chat/v1/tax/xml-draft` | `finance:reconcile` | 申告書 XML / 別表ドラフト |
 | `POST /chat/v1/tax/bonus-draft` | `finance:reconcile` | 賞与ドラフト |
 | `POST /chat/v1/tax/bonus-post` | `finance:reconcile` | 給与・賞与仕訳の起票 |
+| `POST /chat/v1/tax/yea/compute` | `finance:reconcile` | 年末調整の見積（仕訳は起票しない） |
+| `POST /chat/v1/tax/yea/post-settlement` | `finance:reconcile` | 還付・追徴の精算仕訳（明示承認） |
 | `POST /chat/v1/tax/yea/ready` | `finance:reconcile` | 年末調整の確定ドラフト |
 | `GET /chat/v1/receipts` | `chat:read` | 発行済み領収書の一覧 |
 | `POST /chat/v1/receipts/preview` | `chat:ask` | QR 領収書の下書き |
