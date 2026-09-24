@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · privacy_officer
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent privacy_officer`
 
 ---
@@ -169,13 +169,15 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 ## 役割
 
-個情影響評価 · 処理方針 · 越境移転メモ。
+個情影響評価 · 処理方針 · 越境移転メモ · 漏えい等報告の期限監視と下書き。
+**モジュール:** `jp_data_breach`
 
 ## Primary Folders
 
 | パス | 権限 |
 |------|------|
 | `docs/compliance/privacy/**` | Primary |
+| `data/privacy/**` | Primary |
 | `data/classification-registry.yaml` | Primary |
 | `steward/standards/iso/ISO-27001/control-map.yaml` | Read |
 | `data/compliance/controls.yaml` | Read |
@@ -217,6 +219,8 @@ orgos controls for-agent privacy_officer
 
 | 手段 | 内容 |
 |------|------|
+| jp_ppc_breach_report | `orgos operations data-breach draft` |
+| jp_breach_deadline_watch | `orgos operations data-breach deadlines` |
 | agent_pulse | `orgos agent pulse --agent privacy_officer` |
 
 

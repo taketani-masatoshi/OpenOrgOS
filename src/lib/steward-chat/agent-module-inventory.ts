@@ -171,7 +171,18 @@ function toAgentRow(
   };
 }
 
-export function buildAgentModuleInventory(): AgentModuleInventory {
+export interface BuildAgentModuleInventoryOptions {
+  /**
+   * When false, skip per-module readiness / task lookups (used by unit tests).
+   * Production callers leave the default (true) so CEO inventory shows gaps.
+   */
+  enrichReadiness?: boolean;
+}
+
+export function buildAgentModuleInventory(
+  opts: BuildAgentModuleInventoryOptions = {},
+): AgentModuleInventory {
+  const enrichReadiness = opts.enrichReadiness !== false;
   const loaded = loadTenantAgentRoster();
   const rosterIds = new Set(
     uniqueResolvedIds([
@@ -221,22 +232,27 @@ export function buildAgentModuleInventory(): AgentModuleInventory {
   });
   agents_available.sort((a, b) => a.label.localeCompare(b.label, "ja"));
 
+  const maybeEnrich = (row: ModuleInventoryRow): ModuleInventoryRow =>
+    enrichReadiness ? enrichModuleRow(row) : row;
+
   const modules_installed: ModuleInventoryRow[] = tenantModules
-    .map((mod) => enrichModuleRow({
-      id: mod.id,
-      label: moduleLabel(mod.id),
-      notes: moduleNotes(mod.id, mod.notes),
-      installed: true,
-      enabled: mod.enabled === true,
-      tier: getModuleTier(mod.id),
-      pending: pendingModules.get(mod.id),
-    }))
+    .map((mod) =>
+      maybeEnrich({
+        id: mod.id,
+        label: moduleLabel(mod.id),
+        notes: moduleNotes(mod.id, mod.notes),
+        installed: true,
+        enabled: mod.enabled === true,
+        tier: getModuleTier(mod.id),
+        pending: pendingModules.get(mod.id),
+      }),
+    )
     .sort(sortModulesByReadiness);
 
   const modules_catalog: ModuleInventoryRow[] = listTenantScopeCatalogModuleIds()
     .filter((id) => !installedIds.has(id))
     .map((id) =>
-      enrichModuleRow({
+      maybeEnrich({
         id,
         label: moduleLabel(id),
         notes: moduleNotes(id),

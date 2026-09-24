@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · procurement
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-09-19 · **Tenant:** mal
+> **Generated:** 2026-09-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent procurement`
 
 ---
@@ -169,7 +169,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 ## 役割
 
-ベンダー選定 · 見積比較 · 発注下書き · REG-004 稟議。
+ベンダー選定 · 見積比較 · 発注下書き · REG-004 稟議 · 取適法（旧下請法）点検。
+**モジュール:** `jp_subcontractor_act`
 
 ## Primary Folders
 
@@ -210,6 +211,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 | 手段 | 内容 |
 |------|------|
+| jp_subcontractor_scope | `orgos operations subcontract scope` |
+| jp_subcontractor_checklist | `orgos operations subcontract check` |
 | agent_pulse | `orgos agent pulse --agent procurement` |
 
 
