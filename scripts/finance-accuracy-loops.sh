@@ -41,10 +41,14 @@ run_loop1() {
   : >"$log"
   for i in $(seq 1 "$ROUNDS"); do
     echo "=== Loop1 round $i/$ROUNDS $(date -Iseconds) ===" >>"$log"
+    # Vitest global setup can rewrite tenant fixtures; serialize against loop2/3.
+    acquire_lock
     if ! npx vitest run --maxWorkers=1 tests/payroll-jp.test.ts >>"$log" 2>&1; then
+      release_lock
       echo "FAIL loop1 round $i" >>"$log"
       return 1
     fi
+    release_lock
     echo "OK loop1 round $i" >>"$log"
   done
   echo "LOOP1_PASS $ROUNDS" >>"$log"
