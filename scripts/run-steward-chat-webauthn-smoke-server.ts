@@ -25,6 +25,7 @@ async function main(): Promise<void> {
   delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
   delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
   process.env.STEWARD_CHAT_AUTH = "1";
+  process.env.ORGOS_SESSION_PERSIST = process.env.ORGOS_SESSION_PERSIST ?? "1";
   process.env.ORGOS_SETTLEMENT_STEPUP = "1";
   process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET =
     "steward-chat-webauthn-smoke-settlement-secret";

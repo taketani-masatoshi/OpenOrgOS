@@ -15,6 +15,8 @@ services:
       - orgos-test-node-modules:/app/node_modules
     environment:
       CI: "true"
+      GITHUB_ACTIONS: "true"
+      ORGOS_TEST_DISPOSABLE_ROOT: "/app"
     command: ["npm", "test"]
 
   smoke:
@@ -28,6 +30,8 @@ services:
       - orgos-test-node-modules:/app/node_modules
     environment:
       CI: "true"
+      GITHUB_ACTIONS: "true"
+      ORGOS_TEST_DISPOSABLE_ROOT: "/app"
       ORGOS_DOCKER_INSTALL_PLAYWRIGHT: "1"
       WIRE_CONSOLE_SMOKE_PORT: "9472"
       WIRE_CONSOLE_WEBAUTHN_SMOKE_PORT: "9473"

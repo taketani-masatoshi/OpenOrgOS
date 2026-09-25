@@ -6,13 +6,14 @@ async function login(page: import("@playwright/test").Page): Promise<void> {
   const shell = page.getByRole("navigation", { name: "Operator Console" });
   if (await shell.isVisible().catch(() => false)) return;
 
-  const pass = page.getByRole("textbox", { name: "パスワード" });
-  if (await pass.count()) {
-    await pass.fill("orgos-dev");
-  } else {
-    await page.getByLabel("パスワード", { exact: true }).fill("orgos-dev");
+  const operator = page.locator("#orgos-login-operator");
+  const pass = page.locator("#orgos-login-password");
+  await expect(operator.or(pass).first()).toBeVisible({ timeout: 15_000 });
+  if (await operator.isVisible().catch(() => false)) {
+    await operator.fill("OP-001");
   }
-  await page.getByRole("button", { name: "入る", exact: true }).click();
+  await pass.fill("orgos-dev");
+  await page.locator("#orgos-login-submit").click();
   await expect(shell).toBeVisible({
     timeout: 15_000,
   });
