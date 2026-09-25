@@ -266,8 +266,11 @@
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_consumption_refund` — `modules.yaml` 未登録 · **読まない**
 - `jp_cosmetics_mah` — `modules.yaml` 未登録 · **読まない**
+- `jp_eltax` — `modules.yaml` 未登録 · **読まない**
+- `jp_etax` — `modules.yaml` 未登録 · **読まない**
 - `jp_payroll` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
+- `jp_tax_individual` — `modules.yaml` 未登録 · **読まない**
 - `real_estate_brokerage` — `modules.yaml` 未登録 · **読まない**
 - `software_outsourcing` — `modules.yaml` 未登録 · **読まない**
 - `venue_booking` — `modules.yaml` 未登録 · **読まない**

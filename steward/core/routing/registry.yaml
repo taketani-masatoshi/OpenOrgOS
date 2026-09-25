@@ -196,6 +196,22 @@ routes:
         - apply change
       paths: []
 
+  - id: regulation-module-scaffold
+    description: モジュール規程ワークフローの草案 scaffold
+    agent: compliance
+    skill: regulation_module_scaffold
+    priority: 72
+    resource_paths:
+      - regulations.yaml
+      - docs/company/regulations/
+    match:
+      keywords:
+        - regulation draft
+        - regulation scaffold
+        - 規程草案
+        - fork_family
+      paths: []
+
   - id: hospitality-sync-derived
     description: 旅館公開 YAML · ゲスト MD マーカー同期
     agent: hospitality

@@ -1,0 +1,11 @@
+{
+  "accounts": [
+    {
+      "provider": "stripe",
+      "account_id": "acct_demo",
+      "endpoint": "https://api.stripe.com",
+      "api_token": "replace-with-secret",
+      "webhook_secret": "replace-with-whsec"
+    }
+  ]
+}

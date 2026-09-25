@@ -218,6 +218,7 @@ npm run orgos -- skills run monthly-close
 | pmo-project | `project_management` | `pmo_portfolio` |
 | pmo-risks | `project_management` | `pmo_risks` |
 | pmo-show | `project_management` | `pmo_show` |
+| regulation-module-scaffold | `compliance` | `regulation_module_scaffold` |
 | sales-forecast | `sales_lead` | `sales_forecast_prep` |
 | sales-outbound | `sales_outbound` | `sales_outbound_list_review` |
 | sales-pipeline | `sales_lead` | `sales_pipeline_review` |
@@ -361,9 +362,11 @@ Skill id / CLI が指定された
 | `jp_consumption_tax_return` | cli | `tax` | `jp-consumption-tax-return` | jp_tax_consumption |
 | `jp_corporate_tax_return` | cli | `tax` | `jp-corporate-tax-return` | jp_tax_corporate |
 | `jp_employment_contract_draft` | cli | `human_resources` | `operations labor-contract draft` | jp_labor_contract |
+| `jp_etax_spec_status` | cli | `tax` | `etax-spec-status` | jp_etax |
 | `jp_fixed_term_conversion_check` | cli | `human_resources` | `operations labor-contract conversion-check` | jp_labor_contract |
 | `jp_foreign_employment_notice` | cli | `human_resources` | `operations foreign-workers notifications` | jp_visa_employment |
 | `jp_foreign_worker_check` | cli | `human_resources` | `operations foreign-workers check` | jp_visa_employment |
+| `jp_individual_income_tax` | cli | `tax` | `tax-individual` | jp_tax_individual |
 | `jp_inspection_list` | cli | `compliance` | `jp-inspection-list` | jp_inspection |
 | `jp_inspection_types` | cli | `compliance` | `jp-inspection-types` | jp_inspection |
 | `jp_invoice_registration` | cli | `tax` | `jp-invoice-registration` | jp_invoice_qualified |

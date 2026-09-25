@@ -1,3 +1,6 @@
+import { writeYamlFileAtomic } from "../yaml-atomic.js";
+import { withFinanceMutation } from "./reconciliation-transaction.js";
+import { assertMonthUnlockedForDate } from "./period-lock.js";
 /**
  * HTTP-facing bank statement CSV import (shared with CLI parsers).
  */
@@ -5,7 +8,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { bankStatementFileSchema } from "../../../schemas/jp-bank-corporate.js";
-import { getDataDir, writeYamlFile } from "../utils.js";
+import { getDataDir } from "../utils.js";
 import { getInstallRoot } from "../orgos-paths.js";
 import {
   buildBankStatementEntries,
@@ -36,7 +39,7 @@ export type BankCsvEncoding = "utf-8" | "shift_jis" | "auto";
  */
 export function decodeBankCsvBytes(
   bytes: Uint8Array,
-  encoding: BankCsvEncoding = "auto",
+  encoding: BankCsvEncoding = "auto"
 ): { text: string; encoding_used: "utf-8" | "shift_jis" } {
   const asUtf8 = () => new TextDecoder("utf-8", { fatal: false }).decode(bytes);
   const asSjis = () => {
@@ -73,17 +76,14 @@ export function decodeBankCsvBytes(
 /** Decode base64 CSV payload (browser ArrayBuffer upload path). */
 export function decodeBankCsvBase64(
   base64: string,
-  encoding: BankCsvEncoding = "auto",
+  encoding: BankCsvEncoding = "auto"
 ): { text: string; encoding_used: "utf-8" | "shift_jis" } {
   const buf = Buffer.from(base64.replace(/^data:[^;]+;base64,/, ""), "base64");
   return decodeBankCsvBytes(new Uint8Array(buf), encoding);
 }
 
 /** Remap arbitrary CSV headers into OrgOS canonical bank CSV. */
-export function applyBankCsvColumnMapping(
-  csvText: string,
-  mapping: BankCsvColumnMapping,
-): string {
+export function applyBankCsvColumnMapping(csvText: string, mapping: BankCsvColumnMapping): string {
   const lines = csvText
     .split(/\r?\n/u)
     .map((line) => line.trim())
@@ -93,9 +93,7 @@ export function applyBankCsvColumnMapping(
   }
   const header = splitCsvLine(lines[0]!);
   const indexOf = (name: string): number => {
-    const i = header.findIndex(
-      (h) => h.trim().toLowerCase() === name.trim().toLowerCase(),
-    );
+    const i = header.findIndex((h) => h.trim().toLowerCase() === name.trim().toLowerCase());
     if (i < 0) {
       throw new Error(`必須列「${name}」が CSV ヘッダにありません`);
     }
@@ -105,9 +103,7 @@ export function applyBankCsvColumnMapping(
   const descIdx = indexOf(mapping.description);
   const dirIdx = mapping.direction ? indexOf(mapping.direction) : -1;
   const signedIdx = mapping.signed_amount ? indexOf(mapping.signed_amount) : -1;
-  const withdrawIdx = mapping.withdrawal_amount
-    ? indexOf(mapping.withdrawal_amount)
-    : -1;
+  const withdrawIdx = mapping.withdrawal_amount ? indexOf(mapping.withdrawal_amount) : -1;
   const depositIdx = mapping.deposit_amount ? indexOf(mapping.deposit_amount) : -1;
   const amountIdx =
     mapping.amount && !mapping.withdrawal_amount && !mapping.deposit_amount
@@ -118,20 +114,16 @@ export function applyBankCsvColumnMapping(
   const refIdx = mapping.reference ? indexOf(mapping.reference) : -1;
   const cpIdx = mapping.counterparty ? indexOf(mapping.counterparty) : -1;
 
-  const out = [
-    "date,direction,amount,category,description,account_id,reference,counterparty",
-  ];
+  const out = ["date,direction,amount,category,description,account_id,reference,counterparty"];
   for (let r = 1; r < lines.length; r += 1) {
     const cells = splitCsvLine(lines[r]!);
     let direction: "inflow" | "outflow";
     let amount: number;
     if (withdrawIdx >= 0 || depositIdx >= 0) {
-      const withdraw = withdrawIdx >= 0
-        ? Number(String(cells[withdrawIdx] ?? "").replace(/,/g, ""))
-        : 0;
-      const deposit = depositIdx >= 0
-        ? Number(String(cells[depositIdx] ?? "").replace(/,/g, ""))
-        : 0;
+      const withdraw =
+        withdrawIdx >= 0 ? Number(String(cells[withdrawIdx] ?? "").replace(/,/g, "")) : 0;
+      const deposit =
+        depositIdx >= 0 ? Number(String(cells[depositIdx] ?? "").replace(/,/g, "")) : 0;
       if (deposit > 0 && withdraw <= 0) {
         direction = "inflow";
         amount = deposit;
@@ -169,11 +161,11 @@ export function applyBankCsvColumnMapping(
       cells[dateIdx] ?? "",
       direction,
       String(amount),
-      catIdx >= 0 ? cells[catIdx] ?? "other" : "other",
+      catIdx >= 0 ? (cells[catIdx] ?? "other") : "other",
       cells[descIdx] ?? "",
-      acctIdx >= 0 ? cells[acctIdx] ?? "BANK-001" : "BANK-001",
-      refIdx >= 0 ? cells[refIdx] ?? "" : "",
-      cpIdx >= 0 ? cells[cpIdx] ?? "" : "",
+      acctIdx >= 0 ? (cells[acctIdx] ?? "BANK-001") : "BANK-001",
+      refIdx >= 0 ? (cells[refIdx] ?? "") : "",
+      cpIdx >= 0 ? (cells[cpIdx] ?? "") : "",
     ];
     out.push(row.map(csvEscape).join(","));
   }
@@ -231,9 +223,7 @@ export function readBankCsvTemplateText(): string {
 }
 
 /** Guess column mapping from Japanese / English bank CSV headers. */
-export function guessBankCsvColumnMapping(
-  csvText: string,
-): BankCsvColumnMapping {
+export function guessBankCsvColumnMapping(csvText: string): BankCsvColumnMapping {
   const first = csvText
     .split(/\r?\n/u)
     .map((l) => l.trim())
@@ -248,26 +238,14 @@ export function guessBankCsvColumnMapping(
   }
   const headers = splitCsvLine(first).map((h) => h.trim());
   const find = (...aliases: string[]): string | undefined => {
-    const hit = headers.find((h) =>
-      aliases.some((a) => h.toLowerCase() === a.toLowerCase()),
-    );
+    const hit = headers.find((h) => aliases.some((a) => h.toLowerCase() === a.toLowerCase()));
     return hit;
   };
-  const date =
-    find("date", "取引日", "日付", "勘定日", "振込日", "年月日") ?? "date";
-  const amount =
-    find("amount", "金額", "取引金額", "出金額", "入金額") ?? "amount";
+  const date = find("date", "取引日", "日付", "勘定日", "振込日", "年月日") ?? "date";
+  const amount = find("amount", "金額", "取引金額", "出金額", "入金額") ?? "amount";
   const description =
-    find("description", "摘要", "内容", "取引内容", "備考", "明細") ??
-    "description";
-  const direction = find(
-    "direction",
-    "入出金",
-    "区分",
-    "取引区分",
-    "借貸",
-    "入払区分",
-  );
+    find("description", "摘要", "内容", "取引内容", "備考", "明細") ?? "description";
+  const direction = find("direction", "入出金", "区分", "取引区分", "借貸", "入払区分");
   const signed = find("signed_amount", "signed", "増減");
   const withdrawal = find("出金額", "withdrawal", "withdrawal_amount");
   const deposit = find("入金額", "deposit", "deposit_amount");
@@ -282,7 +260,7 @@ export function guessBankCsvColumnMapping(
   };
 }
 
-export function importBankStatementCsvText(input: {
+function importBankStatementCsvTextUnlocked(input: {
   csvText: string;
   write?: boolean;
   dry_run?: boolean;
@@ -312,7 +290,7 @@ export function importBankStatementCsvText(input: {
     rows = parseBankStatementCsv(csvText);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`銀行 CSV の形式エラー: ${msg}`);
+    throw new Error(`銀行 CSV の形式エラー: ${msg}`, { cause: error });
   }
   const built = buildBankStatementEntries(rows, {
     adapter: input.adapter ?? "generic-csv",
@@ -332,8 +310,9 @@ export function importBankStatementCsvText(input: {
       preview_rows: preview_rows.slice(0, 3),
     };
   }
+  for (const row of built.entries) assertMonthUnlockedForDate(row.date);
   mkdirSync(join(getDataDir(), "finance"), { recursive: true });
-  let file = existsSync(path)
+  const file = existsSync(path)
     ? bankStatementFileSchema.parse(YAML.parse(readFileSync(path, "utf-8")))
     : bankStatementFileSchema.parse({
         currency: "JPY",
@@ -342,7 +321,7 @@ export function importBankStatementCsvText(input: {
       });
   const merged = mergeBankStatementEntries(file, built.entries, built.batch);
   if (!merged.duplicate_batch) {
-    writeYamlFile(path, merged.file);
+    writeYamlFileAtomic(path, merged.file);
   }
   return {
     added: merged.added,
@@ -352,4 +331,10 @@ export function importBankStatementCsvText(input: {
     entry_ids: built.entries.map((row) => row.id),
     dry_run: false,
   };
+}
+
+export function importBankStatementCsvText(
+  input: Parameters<typeof importBankStatementCsvTextUnlocked>[0]
+): ReturnType<typeof importBankStatementCsvTextUnlocked> {
+  return withFinanceMutation(() => importBankStatementCsvTextUnlocked(input));
 }

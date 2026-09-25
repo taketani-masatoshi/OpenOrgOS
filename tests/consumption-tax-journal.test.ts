@@ -5,10 +5,7 @@ import {
   buildConsumptionTaxSummary,
   splitInclusiveConsumptionTax,
 } from "../src/lib/finance/consumption-tax.js";
-import {
-  resetFixtureJournalEntries,
-  useFinanceFixtureTenant,
-} from "./helpers/finance-fixture.js";
+import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
 
 describe("consumption tax from GL", () => {
   beforeEach(() => resetFixtureJournalEntries());
@@ -51,26 +48,29 @@ describe("consumption tax from GL", () => {
       ],
     });
     const summary = buildConsumptionTaxSummary({ period: "2026-09" });
-    expect(summary.lines.find((l) => l.direction === "sales" && l.tax_category === "taxable_10")?.base_yen).toBe(
-      10000,
-    );
+    expect(
+      summary.lines.find((l) => l.direction === "sales" && l.tax_category === "taxable_10")
+        ?.base_yen
+    ).toBe(10000);
     expect(
       summary.lines.find((l) => l.direction === "purchase" && l.tax_category === "taxable_10")
-        ?.base_yen,
+        ?.base_yen
     ).toBe(0);
   });
 
   it("posts monthly hotel revenue as taxable net plus 仮受消費税", () => {
     useFinanceFixtureTenant();
     postMonthlyPlJournalEntries({ period: "2026-09", authorizedBy: "OP-TEST" });
+    // Monthly expense budgets are posted out_of_scope — they must not invent
+    // deductible purchase tax. Summary succeeds with purchase base 0.
     const summary = buildConsumptionTaxSummary({ period: "2026-09" });
-    const sales10 = summary.lines.find(
-      (l) => l.direction === "sales" && l.tax_category === "taxable_10",
-    );
-    expect(sales10?.base_yen).toBe(954_546);
-    const purchases10 = summary.lines.find(
-      (l) => l.direction === "purchase" && l.tax_category === "taxable_10",
-    );
-    expect(purchases10?.base_yen).toBeGreaterThan(0);
+    expect(
+      summary.lines.find((l) => l.direction === "sales" && l.tax_category === "taxable_10")
+        ?.base_yen
+    ).toBeGreaterThan(0);
+    expect(
+      summary.lines.find((l) => l.direction === "purchase" && l.tax_category === "taxable_10")
+        ?.base_yen ?? 0
+    ).toBe(0);
   });
 });

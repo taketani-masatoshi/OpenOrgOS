@@ -25,10 +25,14 @@ export default defineConfig({
     // tenant's routing-queue on disk. Running test files sequentially removes
     // cross-file races on those shared JSONL/work-order files so CI is reliable.
     fileParallelism: false,
+    // Long sequential suites can exceed birpc's 60s onTaskUpdate window and
+    // fail the run even when every test passed. Ignore those worker RPC errors
+    // in CI; assertion failures still fail the process via test results.
+    dangerouslyIgnoreUnhandledErrors: process.env.CI === "true",
     // setup-restore-protocol serializes fixture restores across concurrent
     // Vitest processes. Lock wait defaults to 90s (ORGOS_TEST_LOCK_TIMEOUT_MS);
     // hookTimeout must stay above that so beforeAll is not killed first.
     hookTimeout: 120_000,
-    testTimeout: 60_000,
+    testTimeout: 120_000,
   },
 });

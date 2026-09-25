@@ -1,10 +1,38 @@
 version: 1
 fiscal_year_label: FY2026
 declining_balance_rates:
+  - useful_life_years: 3
+    rate_pct: 63.3
+    revised_rate_pct: 100.0
+    guarantee_rate_pct: 0.04243
+  - useful_life_years: 4
+    rate_pct: 50.0
+    revised_rate_pct: 100.0
+    guarantee_rate_pct: 0.0625
+  - useful_life_years: 5
+    rate_pct: 40.0
+    revised_rate_pct: 40.0
+    guarantee_rate_pct: 0.108
+  - useful_life_years: 6
+    rate_pct: 33.3
+    revised_rate_pct: 33.4
+    guarantee_rate_pct: 0.09911
+  - useful_life_years: 10
+    rate_pct: 20.0
+    revised_rate_pct: 20.1
+    guarantee_rate_pct: 0.09911
+  - useful_life_years: 15
+    rate_pct: 13.4
+    revised_rate_pct: 13.5
+    guarantee_rate_pct: 0.09911
+  - useful_life_years: 20
+    rate_pct: 10.0
+    revised_rate_pct: 10.1
+    guarantee_rate_pct: 0.09911
   - useful_life_years: 47
     rate_pct: 4.3
     revised_rate_pct: 4.7
     guarantee_rate_pct: 0.108
 notes: |
   定率法の償却率は国税庁「耐用年数別償却率表」相当の seed。
-  実務の最終判断は税理士確認。
+  未登録の耐用年数は推定せず拒否する。実務の最終判断は税理士確認。

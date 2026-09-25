@@ -1,0 +1,5 @@
+{
+  "accounts": [
+    { "provider": "stripe", "account_id": "acct_demo", "label": "Demo Stripe", "currency": "JPY", "enabled": true }
+  ]
+}

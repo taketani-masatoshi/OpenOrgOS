@@ -49,17 +49,21 @@ export function payrollAccrualPaymentReadinessIssues(input?: {
   const issues: StatutoryReadinessIssue[] = [];
   const entries = loadJournalEntries().entries;
   for (const entry of entries) {
-    const match = entry.entry_id.match(/^JE-PAYROLL-(\d{4}-\d{2})$/);
+    const match = entry.entry_id.match(/^JE-PAYROLL-(\d{4}-\d{2})(?:-(.+))?$/);
     if (!match) continue;
+    if (entry.entry_id.includes("-PAY-") || entry.entry_id.includes("-YEA-")) continue;
     const period = match[1]!;
+    const employeeSuffix = match[2] ? `-${match[2]}` : "";
     const elapsedOn = lastDayOfMonth(period);
     if (elapsedOn > asOf) continue;
-    const paid = entries.some((row) => row.entry_id === `JE-PAYROLL-PAY-${period}`);
+    const paid = entries.some(
+      (row) => row.entry_id === `JE-PAYROLL-PAY-${period}${employeeSuffix}`
+    );
     if (!paid) {
       issues.push({
         level: "warning",
         domain: "payroll",
-        message: `payroll accrual posted for ${period} but no JE-PAYROLL-PAY-${period}`,
+        message: `payroll accrual posted for ${period}${employeeSuffix} but no JE-PAYROLL-PAY-${period}${employeeSuffix}`,
       });
     }
   }

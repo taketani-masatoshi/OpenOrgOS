@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,7 +22,7 @@ const SENDER_URI = "steward://tenant/security-sender";
 const PROXY_IP = "203.0.113.7";
 
 function openssl(cwd: string, ...args: string[]): void {
-  execFileSync("openssl", args, { cwd, stdio: "ignore" });
+  execFileSync("openssl", args, { cwd, stdio: "pipe" });
 }
 
 function generateTlsFixtures(dir: string): {
@@ -44,14 +44,16 @@ function generateTlsFixtures(dir: string): {
     "req", "-newkey", "rsa:2048", "-nodes",
     "-keyout", "server.key", "-out", "server.csr", "-subj", "/CN=127.0.0.1"
   );
-  execFileSync(
-    "openssl",
-    [
-      "x509", "-req", "-in", "server.csr", "-CA", "ca.crt", "-CAkey", "ca.key",
-      "-CAcreateserial", "-out", "server.crt", "-days", "1",
-      "-extfile", "/dev/stdin",
-    ],
-    { cwd: dir, input: "subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\n", stdio: ["pipe", "ignore", "ignore"] }
+  writeFileSync(
+    join(dir, "server.ext"),
+    "subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\n",
+    "utf8"
+  );
+  openssl(
+    dir,
+    "x509", "-req", "-in", "server.csr", "-CA", "ca.crt", "-CAkey", "ca.key",
+    "-CAcreateserial", "-out", "server.crt", "-days", "1",
+    "-extfile", "server.ext"
   );
 
   for (const [name, uri] of [
@@ -63,18 +65,16 @@ function generateTlsFixtures(dir: string): {
       "req", "-newkey", "rsa:2048", "-nodes",
       "-keyout", `${name}.key`, "-out", `${name}.csr`, "-subj", `/CN=${name}`
     );
-    execFileSync(
-      "openssl",
-      [
-        "x509", "-req", "-in", `${name}.csr`, "-CA", "ca.crt", "-CAkey", "ca.key",
-        "-CAserial", "ca.srl", "-out", `${name}.crt`, "-days", "1",
-        "-extfile", "/dev/stdin",
-      ],
-      {
-        cwd: dir,
-        input: `subjectAltName=URI:${uri}\nextendedKeyUsage=clientAuth\n`,
-        stdio: ["pipe", "ignore", "ignore"],
-      }
+    writeFileSync(
+      join(dir, `${name}.ext`),
+      `subjectAltName=URI:${uri}\nextendedKeyUsage=clientAuth\n`,
+      "utf8"
+    );
+    openssl(
+      dir,
+      "x509", "-req", "-in", `${name}.csr`, "-CA", "ca.crt", "-CAkey", "ca.key",
+      "-CAserial", "ca.srl", "-out", `${name}.crt`, "-days", "1",
+      "-extfile", `${name}.ext`
     );
   }
 

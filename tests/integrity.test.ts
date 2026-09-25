@@ -3,21 +3,26 @@ import { runIntegrityChecks, integrityErrorsOnly } from "../src/lib/integrity.js
 import { computeDataHealth } from "../src/lib/data-health.js";
 import { validateAll } from "../src/lib/data.js";
 import { syncContractsCsv } from "../src/lib/sync-csv.js";
+import { setTenantId } from "../src/lib/tenant.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 describe("integrity", () => {
   it("passes schema validation on repo data", () => {
+    setTenantId("demo");
     const result = validateAll();
     expect(result.ok).toBe(true);
   }, 15_000);
 
   it("has no integrity errors on repo data", () => {
+    // Product CI pins ORGOS_TENANT=demo; mal carries date-sensitive payroll remittance accruals.
+    setTenantId("demo");
     const errors = integrityErrorsOnly(runIntegrityChecks());
     expect(errors).toHaveLength(0);
   });
 
   it("links loans to contracts and properties", () => {
+    setTenantId("demo");
     const issues = runIntegrityChecks();
     const loanIssues = issues.filter((i) => i.file.includes("loans.yaml") && i.level === "error");
     expect(loanIssues).toHaveLength(0);
@@ -26,6 +31,7 @@ describe("integrity", () => {
 
 describe("data health", () => {
   it("scores at least 75% maturity (mal reference tenant)", () => {
+    setTenantId("mal");
     const report = computeDataHealth();
     expect(report.overall).toBeGreaterThanOrEqual(75);
     expect(["A", "B", "C"]).toContain(report.grade);
@@ -34,6 +40,7 @@ describe("data health", () => {
 
 describe("sync contracts csv", () => {
   it("generates csv matching contract count", () => {
+    setTenantId("mal");
     const path = syncContractsCsv();
     const content = readFileSync(path, "utf-8");
     const lines = content.trim().split("\n");

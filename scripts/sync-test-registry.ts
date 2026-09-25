@@ -35,6 +35,14 @@ testingModules = testingModules
     `$1${registry.stats.catalog_gap}$2`
   )
   .replace(
+    /(\|\s*業務 catalog module\s*\|\s*\*\*)\d+(\*\*)/,
+    `$1${registry.stats.catalog_total}$2`
+  )
+  .replace(
+    /(業務 module catalog id（)\d+(）)/,
+    `$1${registry.stats.catalog_total}$2`
+  )
+  .replace(
     /(\|\s*catalog dedicated \(\+ full\)\s*\|\s*\*\*)\d+(\*\*)/,
     `$1${registry.stats.catalog_dedicated}$2`
   )

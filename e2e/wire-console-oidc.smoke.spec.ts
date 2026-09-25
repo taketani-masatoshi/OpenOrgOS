@@ -19,13 +19,13 @@ test.describe("wire console oidc smoke", () => {
     const fixture = loadOidcSmokeFixture();
     await page.goto("/");
 
-    await expect(page.getByLabel("OIDC id_token")).toBeVisible();
-    await page.getByLabel("OIDC id_token").fill(fixture.id_token);
-    await page.getByLabel("Operator").fill(fixture.operator_id);
-    await page.getByLabel("Approver").fill(fixture.approver_id);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page.getByLabel("OIDC トークン")).toBeVisible();
+    await page.getByLabel("OIDC トークン").fill(fixture.id_token);
+    await page.getByLabel("オペレーター").fill(fixture.operator_id);
+    await page.getByLabel("承認者").fill(fixture.approver_id);
+    await page.getByRole("button", { name: "入る", exact: true }).click();
 
-    await expect(page.getByRole("link", { name: "Wire", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "相手組織", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
       { timeout: 15_000 }

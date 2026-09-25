@@ -100,6 +100,7 @@ describe("invoice vs JE-MPL dedupe", () => {
       invoiceId: "PROP-002-2026-09",
       amountYen: 110000,
       propertyId: "PROP-002",
+      counterpartyId: "CP-PROP-002",
       occurredAt: "2026-09-01T00:00:00.000Z",
       authorizedBy: "test",
     });
@@ -112,6 +113,7 @@ describe("invoice vs JE-MPL dedupe", () => {
       invoiceId: "PROP-001-2026-09",
       amountYen: 110000,
       propertyId: "PROP-001",
+      counterpartyId: "CP-PROP-001",
       occurredAt: "2026-09-01T00:00:00.000Z",
       authorizedBy: "test",
     });

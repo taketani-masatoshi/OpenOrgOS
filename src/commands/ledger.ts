@@ -1,24 +1,15 @@
 import { readFileSync } from "node:fs";
 import YAML from "yaml";
-import {
-  appendJournalEntry,
-  loadJournalEntries,
-} from "../lib/finance/expense-claim-journal.js";
+import { appendJournalEntry, loadJournalEntries } from "../lib/finance/expense-claim-journal.js";
 import {
   buildOpeningBalancesFromTrialBalance,
   saveOpeningBalances,
 } from "../lib/finance/ledger/opening-balance.js";
 import { loadYojitsuFyPlan } from "../lib/data.js";
-import {
-  buildGeneralLedger,
-  listJournalEntries,
-} from "../lib/finance/ledger/general-ledger.js";
+import { buildGeneralLedger, listJournalEntries } from "../lib/finance/ledger/general-ledger.js";
 import { buildMonthlyReconcileReport } from "../lib/finance/ledger/monthly-reconcile.js";
 import { buildTrialBalance } from "../lib/finance/ledger/trial-balance.js";
-import {
-  journalEntrySchema,
-  journalSourceSchema,
-} from "../../schemas/finance/journal-entry.js";
+import { journalEntrySchema, journalSourceSchema } from "../../schemas/finance/journal-entry.js";
 import { backfillJournalTaxCategories } from "../lib/finance/journal-tax-backfill.js";
 import { backfillJournalAuditTrail } from "../lib/finance/journal-audit-backfill.js";
 import { postDepreciationJournalEntries } from "../lib/finance/depreciation.js";
@@ -79,9 +70,7 @@ export function runLedgerJournalList(opts: {
   }
   console.log(`# 仕訳一覧 (${entries.length})\n`);
   for (const entry of entries) {
-    console.log(
-      `${entry.entry_id} · ${entry.occurred_at.slice(0, 10)} · ${entry.description}`,
-    );
+    console.log(`${entry.entry_id} · ${entry.occurred_at.slice(0, 10)} · ${entry.description}`);
   }
 }
 
@@ -180,7 +169,7 @@ export function runLedgerPostSource(opts: {
       auditCliMutation("ledger post monthly-pl", id);
     }
     console.log(
-      `✓ posted ${depPosted.length} depreciation + ${posted.length} monthly P/L entries for ${opts.month}`,
+      `✓ posted ${depPosted.length} depreciation + ${posted.length} monthly P/L entries for ${opts.month}`
     );
     return;
   }
@@ -201,7 +190,7 @@ export function runLedgerPostSource(opts: {
       obligation !== "consumption_tax"
     ) {
       throw new Error(
-        "--obligation withholding | social_insurance | consumption_tax is required (or --from-calendar)",
+        "--obligation withholding | social_insurance | consumption_tax is required (or --from-calendar)"
       );
     }
     const posted = postRemittanceJournalEntry({
@@ -294,11 +283,11 @@ export function runLedgerGl(opts: {
     return;
   }
   console.log(
-    `# ${ledger.account_code} ${ledger.account_name} · ending ${ledger.ending_balance_yen.toLocaleString()} JPY\n`,
+    `# ${ledger.account_code} ${ledger.account_name} · ending ${ledger.ending_balance_yen.toLocaleString()} JPY\n`
   );
   for (const line of ledger.lines) {
     console.log(
-      `${line.occurred_at.slice(0, 10)} ${line.entry_id} D${line.debit_yen} C${line.credit_yen} bal=${line.running_balance_yen}`,
+      `${line.occurred_at.slice(0, 10)} ${line.entry_id} D${line.debit_yen} C${line.credit_yen} bal=${line.running_balance_yen}`
     );
   }
 }
@@ -318,7 +307,7 @@ export function runLedgerTrialBalance(opts: {
   console.log("| --- | ---: | ---: | ---: |");
   for (const row of report.rows) {
     console.log(
-      `| ${row.account_code} ${row.account_name} | ${row.debit_total_yen} | ${row.credit_total_yen} | ${row.balance_yen} |`,
+      `| ${row.account_code} ${row.account_name} | ${row.debit_total_yen} | ${row.credit_total_yen} | ${row.balance_yen} |`
     );
   }
   if (report.issues.length) {
@@ -327,10 +316,7 @@ export function runLedgerTrialBalance(opts: {
   }
 }
 
-export function runLedgerMonthlyReconcile(opts: {
-  month: string;
-  json?: boolean;
-}): void {
+export function runLedgerMonthlyReconcile(opts: { month: string; json?: boolean }): void {
   const report = buildMonthlyReconcileReport({ month: opts.month });
   if (opts.json) {
     printJson(report);
@@ -339,15 +325,12 @@ export function runLedgerMonthlyReconcile(opts: {
   console.log(`# 月次突合 ${opts.month} · balanced=${report.balanced}\n`);
   for (const diff of report.diffs) {
     console.log(
-      `${diff.category} (${diff.account_code}): monthly=${diff.monthly_pl_yen} trial=${diff.trial_balance_yen} delta=${diff.delta_yen}`,
+      `${diff.category} (${diff.account_code}): monthly=${diff.monthly_pl_yen} trial=${diff.trial_balance_yen} delta=${diff.delta_yen}`
     );
   }
 }
 
-export function runLedgerJournalBackfillTax(opts: {
-  dryRun?: boolean;
-  json?: boolean;
-}): void {
+export function runLedgerJournalBackfillTax(opts: { dryRun?: boolean; json?: boolean }): void {
   requireCliDataWrite({
     command: "ledger journal backfill-tax",
     permission: "finance:reconcile",
@@ -358,14 +341,11 @@ export function runLedgerJournalBackfillTax(opts: {
     return;
   }
   console.log(
-    `tax_category backfill: ${result.updated_entries} entries, ${result.updated_lines} lines${result.dry_run ? " (dry-run)" : ""}`,
+    `tax_category backfill: ${result.updated_entries} entries, ${result.updated_lines} lines${result.dry_run ? " (dry-run)" : ""}`
   );
 }
 
-export function runLedgerJournalBackfillAudit(opts: {
-  dryRun?: boolean;
-  json?: boolean;
-}): void {
+export function runLedgerJournalBackfillAudit(opts: { dryRun?: boolean; json?: boolean }): void {
   requireCliDataWrite({
     command: "ledger journal backfill-audit",
     permission: "finance:reconcile",
@@ -376,7 +356,7 @@ export function runLedgerJournalBackfillAudit(opts: {
     return;
   }
   console.log(
-    `audit trail backfill: ${result.updated_entries} entries${result.dry_run ? " (dry-run)" : ""}`,
+    `audit trail backfill: ${result.updated_entries} entries${result.dry_run ? " (dry-run)" : ""}`
   );
 }
 
@@ -402,9 +382,7 @@ export function runLedgerOpeningBalanceGenerate(opts: {
       : fiscalYearEndDate(opts.fiscalYear, endMonth));
   const nextFy = nextFiscalYear(opts.fiscalYear);
   const periodStart =
-    opts.periodStart ??
-    (yojitsu?.period_from?.slice(0, 7) ??
-      fiscalYearStartMonth(nextFy, endMonth));
+    opts.periodStart ?? yojitsu?.period_from?.slice(0, 7) ?? fiscalYearStartMonth(nextFy, endMonth);
   const file = buildOpeningBalancesFromTrialBalance({
     fiscalYear: opts.fiscalYear,
     asOf,
@@ -419,7 +397,7 @@ export function runLedgerOpeningBalanceGenerate(opts: {
     saveOpeningBalances(file);
   }
   console.log(
-    `✓ opening balances ${opts.fiscalYear}: ${file.lines.length} lines${opts.dryRun ? " (dry-run)" : ""}`,
+    `✓ opening balances ${opts.fiscalYear}: ${file.lines.length} lines${opts.dryRun ? " (dry-run)" : ""}`
   );
 }
 
@@ -488,7 +466,7 @@ export function runLedgerSubsidiary(opts: {
   console.log(`# 補助元帳 ${report.account_code} ${report.account_name}`);
   for (const line of report.lines) {
     console.log(
-      `${line.counterparty_id}: ${line.balance_yen.toLocaleString()} (${line.days_outstanding ?? 0}d)`,
+      `${line.counterparty_id}: ${line.balance_yen.toLocaleString()} (${line.days_outstanding ?? 0}d)`
     );
   }
 }
@@ -589,7 +567,7 @@ export function runLedgerDenchoSearch(opts: {
       `${hit.occurred_at.slice(0, 10)} ${hit.entry_id} ${hit.account_code} ` +
         `D${hit.debit_yen} C${hit.credit_yen}` +
         (hit.counterparty_id ? ` cp=${hit.counterparty_id}` : "") +
-        ` — ${hit.description}`,
+        ` — ${hit.description}`
     );
   }
 }
@@ -602,6 +580,8 @@ export function runLedgerDenchoCheck(opts: { json?: boolean }): void {
   }
   console.log("# 電子帳簿コンプライアンス");
   console.log(`entries: ${report.entry_count}`);
+  console.log(`verification: ${report.verification_status}`);
+  for (const gap of report.verification_gaps) console.log(`unverified: ${gap}`);
   console.log(`append_only: ${report.append_only_ok}`);
   console.log(`search_ok: ${report.search_index_ok}`);
   if (report.issues.length === 0) {

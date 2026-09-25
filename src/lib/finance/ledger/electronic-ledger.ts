@@ -41,6 +41,8 @@ export type ElectronicLedgerComplianceReport = {
   missing_audit_trail: string[];
   reversal_without_target: string[];
   append_only_ok: boolean;
+  verification_status: "unverified";
+  verification_gaps: string[];
   search_index_ok: boolean;
   issues: string[];
 };
@@ -49,12 +51,7 @@ function lineAmount(debit: number, credit: number): number {
   return Math.max(debit, credit);
 }
 
-function matchesAmount(
-  debit: number,
-  credit: number,
-  min?: number,
-  max?: number,
-): boolean {
+function matchesAmount(debit: number, credit: number, min?: number, max?: number): boolean {
   const amount = lineAmount(debit, credit);
   if (min != null && amount < min) return false;
   if (max != null && amount > max) return false;
@@ -63,7 +60,7 @@ function matchesAmount(
 
 /** 電子帳簿保存法向け仕訳検索（日付・金額・取引先・科目・摘要）。 */
 export function searchElectronicLedger(
-  input: ElectronicLedgerSearchInput = {},
+  input: ElectronicLedgerSearchInput = {}
 ): ElectronicLedgerSearchHit[] {
   const limit = input.limit ?? 200;
   const hits: ElectronicLedgerSearchHit[] = [];
@@ -75,30 +72,17 @@ export function searchElectronicLedger(
     if (input.from && date < input.from) continue;
     if (input.to && date > input.to) continue;
     if (input.entryId && entry.entry_id !== input.entryId) continue;
-    if (
-      descNeedle &&
-      !entry.description.toLowerCase().includes(descNeedle)
-    ) {
+    if (descNeedle && !entry.description.toLowerCase().includes(descNeedle)) {
       continue;
     }
 
     for (let lineIndex = 0; lineIndex < entry.lines.length; lineIndex++) {
       const line = entry.lines[lineIndex]!;
       if (input.accountCode && line.account_code !== input.accountCode) continue;
-      if (
-        input.counterpartyId &&
-        line.counterparty_id !== input.counterpartyId
-      ) {
+      if (input.counterpartyId && line.counterparty_id !== input.counterpartyId) {
         continue;
       }
-      if (
-        !matchesAmount(
-          line.debit_yen,
-          line.credit_yen,
-          input.minAmountYen,
-          input.maxAmountYen,
-        )
-      ) {
+      if (!matchesAmount(line.debit_yen, line.credit_yen, input.minAmountYen, input.maxAmountYen)) {
         continue;
       }
       hits.push({
@@ -118,9 +102,7 @@ export function searchElectronicLedger(
     }
   }
 
-  return hits
-    .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
-    .slice(0, limit);
+  return hits.sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)).slice(0, limit);
 }
 
 /** validate / CLI 用の電子帳簿コンプライアンスチェック。 */
@@ -150,28 +132,23 @@ export function buildElectronicLedgerComplianceReport(): ElectronicLedgerComplia
   }
 
   if (missing_audit_trail.length > 0) {
-    issues.push(
-      `${missing_audit_trail.length} entries missing posted_at/posted_by`,
-    );
+    issues.push(`${missing_audit_trail.length} entries missing posted_at/posted_by`);
   }
   if (reversal_without_target.length > 0) {
-    issues.push(
-      `${reversal_without_target.length} reversals without reversal_of target`,
-    );
+    issues.push(`${reversal_without_target.length} reversals without reversal_of target`);
   }
-
-  const probe = searchElectronicLedger({
-    from: "2000-01-01",
-    to: "2099-12-31",
-    limit: 1,
-  });
 
   return {
     entry_count: file.entries.length,
     missing_audit_trail,
     reversal_without_target,
-    append_only_ok: true,
-    search_index_ok: file.entries.length === 0 || probe.length >= 0,
+    append_only_ok: false,
+    search_index_ok: false,
+    verification_status: "unverified",
+    verification_gaps: [
+      "Historical immutability has no independently verified baseline",
+      "Search compliance requires independent date/amount/counterparty acceptance evidence",
+    ],
     issues,
   };
 }

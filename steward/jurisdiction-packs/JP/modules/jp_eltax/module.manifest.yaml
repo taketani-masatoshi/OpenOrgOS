@@ -1,0 +1,9 @@
+id: jp_eltax
+required_seeds: []
+activation_seeds:
+  - packages.yaml.example
+notes: eLTAX channel. Procedures UNSUPPORTED. NOT FOR PRODUCTION. Not an e-Tax certification. 規程不要（送信チャネル）
+cli_commands: []
+security:
+  limits:
+    concurrent_jobs: 1

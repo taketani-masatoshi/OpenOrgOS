@@ -1,0 +1,14 @@
+id: jp_tax_individual
+required_seeds: []
+activation_seeds:
+  - blue-return-line-map.yaml.example
+  - 00-README.md
+notes: 個人事業の青色申告決算書（一般用）と所得税の顧問ドラフト。別表は使わない。提出はしない。規程不要（顧問ドラフトのみ · 法人税務規程 REG-031 は適用外）
+cli_commands:
+  - accounts
+  - kessan
+  - income-tax
+  - handoff
+security:
+  limits:
+    concurrent_jobs: 1

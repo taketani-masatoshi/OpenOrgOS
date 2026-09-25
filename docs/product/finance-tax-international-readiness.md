@@ -1,0 +1,88 @@
+# 会計・税務の実運用強化 — 2026-09-23 継続記録
+
+現在は一任可能とは判定しない。日本向けの計算・統制を修正中であり、外国制度の実装、実データ受入、申告接続の確認は別途必要。テスト成功を法定申告の完成と扱わない。
+
+## ユーザー指定の対象と順序
+
+| 順序 | 対象 | 確認済み | 未確定・実装前提にしない事項 |
+|---|---|---|---|
+| 1 | 日本株式会社 | 法人形態 | 実テナントの届出・事業年度・税務設定 |
+| 2 | エストニア OÜ | 法人形態 OÜ | 税務居住地、VAT 登録、取引範囲・恒久的施設 |
+| 3 | ジョージア個人事業主 | 小規模事業者資格あり | 資格の有効期間、対象業務、所得源泉、VAT 登録 |
+| 4 | 日本個人事業主 | 個人事業 | 青色申告・消費税等の実際の届出 |
+| 5 | 米国 LLC | LLC を予定 | 設立州、事業州、所有者数、税務分類は全て未定 |
+
+この表は開発対象の記録であり、実テナント設定や税務判断ではない。米国 pack の既定値 C 法人・DE を、この LLC の確定情報として使わない。
+
+## 今回の修正
+
+- 給与仕訳の手取りを総額−源泉税−従業員社会保険とし、社会保険預り額には労使双方を含める。必要金額を省略した割合推定は拒否。
+- 賞与の固定割合による税・社会保険推定を廃止。明示額・従業員・根拠参照を必須とする。これは確認額の仕訳機能であり、賞与税額の自動算定ではない。保存・仕訳処理を共通排他で保護し、賞与ファイルを原子的に保存する。
+- 年末調整の月額×12推定を廃止。年間資料がなければ金額は null、引継ぎ不可。閲覧はファイルを書かない。確定済み資料を compute で上書きしない。
+- 年間資料を給与計上・支払仕訳と照合し、重複・漏れ・取消・金額不一致・日付不一致を拒否。照合した内容のハッシュを保持し、資料変更後は引継ぎ可能と表示しない。
+- 日本向け給与・消費税・年末調整を外国テナントで実行しない。間接税エンジン未実装を月次締め成功として扱わない。明示的な間接税なしは区別する。
+
+## 年間給与資料の現行契約と限界
+
+`data/finance/payroll-annual-source/YYYY.yaml` は version 1、calendar_year、currency JPY、employees を持つ。従業員ごとに employee_id、coverage_months（給与なしの月も含め12か月）、payments を記録する。
+
+payments の必須項目：journal_entry_id（計上）、payment_journal_entry_id（支払）、paid_on、gross_yen、withholding_yen、social_employee_yen、social_employer_yen。
+
+現行照合は従業員別の計上・支払仕訳が一対一で、同一年内に全額支払う範囲を対象にする（従業員別仕訳があれば複数従業員可）。未払給与、年またぎ支払、複数従業員の一括振込、前職分、現物給与等はこの契約だけで処理できない。支払仕訳との照合は銀行明細の真正性・消込完了の証明ではない。
+
+### `calculation_complete` の意味（正本）
+
+`summarizeYearEndAdjustment().calculation_complete === true` は次を意味するだけである:
+
+1. 年間給与証憑と `yea-declarations` が揃い blockers が空
+2. 従業員ごとに **給与所得パス**（給与所得控除 → 課税所得 → 所得税+復興税）で `annual_tax_yen` / `yea_settlement_yen` が見積済み
+
+意味しないこと: e-file 提出可能、法定年税額確定、精算仕訳起票済み。精算仕訳は `postYearEndSettlements`（API: `POST /chat/v1/tax/yea/post-settlement`）のみ。`settlements_posted` で区別する。引継ぎ可能（`ready_for_tax_handoff`）は会計資料の照合結果であり、提出可能ではない。
+
+## 2026-09-24 残債対応（弱い点）
+
+- JP エンジン入口を `assertJapaneseFinanceEngine` に集約。所得税額・償却・青色申告・年間給与証憑も外国テナントでは拒否。
+- `assertJpTaxProfile` は同一判定を再利用し、既存の `jp tax profile required` メッセージを維持。
+- 定率法の推定計算テストを廃止し、検証済み期首がない限り拒否する契約に合わせた。
+- 消費税の共通対応・経過措置は、曖昧な「証憑不足」ではなく明示エラーで停止。
+- 会社単位給与仕訳から複数従業員の年間証憑を作る経路を拒否。一括支払仕訳も拒否。
+- `test:finance` に管轄安全・消込復旧の回帰を登録。`.worktrees/` を gitignore。
+
+## 2026-09-24 大きい残債の実装
+
+1. **従業員別給与・年税額・還付追徴**
+   - `payroll` 仕訳 source に `employee_id` / `event`（accrual|payment|yea_settlement）
+   - 従業員別 ID: `JE-PAYROLL-{period}-{employeeId}`
+   - `yea-declarations/FY####.yaml` + `computeAnnualSalarySettlement`（給与専用。sole-prop ワークシートは使わない）
+   - 精算仕訳は `postYearEndSettlements` のみ（compute は見積のみ）
+   - 従業員別仕訳があれば複数従業員の年間証憑を許可
+
+2. **消費税共通按分・経過措置・法定定率法**
+   - `consumption-tax-period-evidence/{period}.yaml` で課税売上割合・経過措置適格を明示
+   - 証憑があるときだけ common / nonqualified_80|50 を控除
+   - 定率法は期首簿価・保証額・改定取得価額と JP pack seed の償却率で月次計算。未登録耐用年数は拒否
+
+3. **外国エンジン能力ゲート + e-Tax/eLTAX**
+   - `indirect-tax/capability.ts`: EE/GE/US は `filing: false` のまま識別
+   - `jp_etax` / `jp_eltax` モジュールと `src/lib/etax`・`eltax`・`efiling`・CLI を取り込み。eLTAX は手続拒否のまま。本番提出は認定ゲート前に fail-closed
+   - ADR 0052: **実験的 `jp_etax` は Phase 5c（本番提出）を実装しない** — ライフサイクル・証跡・gate YAML の実験面のみ。OrgOS コアの「5c を実行しない」決定は変わらない
+
+ブランチ `cursor/finance-tax-remediation-2026-09` は origin へ push 済み（2026-09-24）。実テナント YAML は変更していない。
+
+## e-Tax / certification テスト方針（正本）
+
+| 状態 | ファイル | 方針 |
+|---|---|---|
+| **登録済（本ブランチ）** | `etax-phase1` · `etax-lifecycle-e2e` · `etax-accounting-bridge` · `efiling-core` · `efiling-production-gate` · `eltax-lifecycle` | `test-registry` に載せ、CI が拾う |
+| **意図的未取込** | worktree 由来 `etax-foundation` · `etax-production-gate` · `eltax-foundation` | ADR 0052 Phase 5c / NTA 送信試験の前提が揃うまで本線へコピーしない。欠落は「未実装」ではなく **defer** |
+| **合成テストの限界** | 上記すべて | COM bind · 国税庁送信試験 · production-gate certified の代替にしない |
+
+取りこぼし対応は「今すぐ移植」ではなく、registry 同期 + 上表の defer 明記とする。
+
+## 未対応リスト（現状）
+
+1. 未払・年またぎ・一括振込・前職・現物給与の年間証憑契約拡張
+2. 消費税の制度面の残（旧締め移行、実テナント証憑の受入）
+3. EE / GE / US の一次資料ベース税務エンジン（現状は `filing: false` ゲートのみ）
+4. e-Tax 本番提出（ADR 0052 5c · 人間/税理士）と foundation/production-gate テストの本線化
+5. 実銀行・実テナント受入（合成 fixture では代替しない）

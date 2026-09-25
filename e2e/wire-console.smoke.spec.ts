@@ -5,11 +5,11 @@ test.describe("wire console smoke", () => {
     page,
   }) => {
     await page.goto("/");
-    await page.getByLabel("Dev passkey").fill("orgos-dev");
-    await page.getByLabel("Approver").fill("テスト承認者");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.locator("#orgos-login-password").fill("orgos-dev");
+    await page.locator("#orgos-login-approver").fill("テスト承認者");
+    await page.locator("#orgos-login-submit").click();
 
-    await expect(page.getByRole("link", { name: "Wire", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "相手組織", exact: true })).toHaveAttribute(
       "aria-current",
       "page"
     );

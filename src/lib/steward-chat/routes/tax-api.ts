@@ -8,10 +8,7 @@ import { requireChatPermission } from "../../console-auth/rbac.js";
 import { readJsonLimited } from "../../http/read-json-limited.js";
 import { buildTaxReadinessReport } from "../../product/ledger-tax-readiness.js";
 import { writeCorporateTaxXmlDraft } from "../../finance/jp-corporate-tax-xml.js";
-import {
-  buildTaxHandoffPackage,
-  taxModuleBoundaryNote,
-} from "../../tax/tax-handoff-package.js";
+import { buildTaxHandoffPackage, taxModuleBoundaryNote } from "../../tax/tax-handoff-package.js";
 import {
   buildPayrollYearEndReadiness,
   computeBonusDraft,
@@ -19,6 +16,7 @@ import {
   saveBonusDraft,
   markYearEndReadyForHandoff,
   postBonusDraftJournal,
+  postYearEndSettlements,
   summarizeYearEndAdjustment,
 } from "../../finance/payroll-bonus-yea.js";
 import { resolveDefaultFiscalYear } from "../../finance/fiscal-year.js";
@@ -45,7 +43,7 @@ export async function handleTaxApi(
   res: ServerResponse,
   pathname: string,
   method: string,
-  user: WireConsoleUser,
+  user: WireConsoleUser
 ): Promise<boolean> {
   if (!pathname.startsWith("/chat/v1/tax/")) return false;
 
@@ -138,6 +136,10 @@ export async function handleTaxApi(
       const body = (await readJsonLimited(req)) as {
         period?: string;
         gross_yen?: number;
+        withholding_yen?: number;
+        social_employee_yen?: number;
+        social_employer_yen?: number;
+        evidence_refs?: string[];
         employee_id?: string;
       };
       if (!body.period?.trim() || !Number.isFinite(body.gross_yen)) {
@@ -148,6 +150,10 @@ export async function handleTaxApi(
         period: body.period,
         grossYen: Number(body.gross_yen),
         employeeId: body.employee_id,
+        withholdingYen: body.withholding_yen,
+        socialEmployeeYen: body.social_employee_yen,
+        socialEmployerYen: body.social_employer_yen,
+        evidenceRefs: body.evidence_refs,
       });
       saveBonusDraft(run);
       json(res, 200, { ok: true, run });
@@ -184,11 +190,31 @@ export async function handleTaxApi(
   }
 
   if (pathname === "/chat/v1/tax/yea/compute" && method === "POST") {
-    if (!requireChatPermission(user, "chat:ask", res)) return true;
+    if (!requireBudgetSurfacePermission(user, "finance:reconcile", res)) return true;
     try {
       const body = (await readJsonLimited(req)) as { fiscal_year?: string };
       const fy = body.fiscal_year?.trim() || resolveDefaultFiscalYear();
       const yea = computeYearEndAdjustment(fy);
+      json(res, 200, { ok: true, yea: summarizeYearEndAdjustment(yea) });
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/yea/post-settlement" && method === "POST") {
+    if (!requireBudgetSurfacePermission(user, "finance:reconcile", res)) return true;
+    try {
+      const body = (await readJsonLimited(req)) as { fiscal_year?: string };
+      const fy = body.fiscal_year?.trim() || resolveDefaultFiscalYear();
+      const actor = resolveBudgetActor(user);
+      const yea = postYearEndSettlements({
+        fiscalYear: fy,
+        authorizedBy: actor.operator_id,
+      });
       json(res, 200, { ok: true, yea: summarizeYearEndAdjustment(yea) });
     } catch (error) {
       json(res, 422, {
@@ -235,6 +261,8 @@ export async function handleTaxApi(
       const body = (await readJsonLimited(req)) as {
         month?: string;
         gross_yen?: number;
+        health_standard_remuneration_yen?: number;
+        pension_standard_remuneration_yen?: number;
         dependents?: number;
       };
       const month = String(body.month ?? "").trim();
@@ -249,6 +277,8 @@ export async function handleTaxApi(
         run: computePayrollMonth({
           month,
           grossYen,
+          healthStandardRemunerationYen: body.health_standard_remuneration_yen,
+          pensionStandardRemunerationYen: body.pension_standard_remuneration_yen,
           dependents: Number.isFinite(dependents) ? dependents : 0,
         }),
       });

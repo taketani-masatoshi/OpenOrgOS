@@ -107,6 +107,7 @@ describe("invoice generate (MAL bancho)", () => {
     const result = await runInvoiceGenerate({
       moduleId: "rental",
       propertyId: "PROP-001",
+      counterpartyId: "PROP-001",
       from: "2099-01",
       to: "2099-01",
       fiscalYear: "FY2099",
@@ -139,6 +140,7 @@ describe("invoice generate (MAL kamezawa hospitality)", () => {
     const result = await runInvoiceGenerate({
       moduleId: "hospitality",
       propertyId: "PROP-002",
+      counterpartyId: "PROP-002",
       from: "2099-01",
       to: "2099-01",
       fiscalYear: "FY2099",

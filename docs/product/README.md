@@ -32,13 +32,15 @@
 |------|------|
 | [managed-single-tenant-runbook.md](managed-single-tenant-runbook.md) | プロビジョン〜本番 |
 | [security-overview.md](security-overview.md) | 顧客向けセキュリティ概要 |
-| [pricing.md](pricing.md) | プラン案（法人） |
-| [legal/terms-of-service-draft.md](legal/terms-of-service-draft.md) | 利用規約正本 |
-| [legal/dpa-draft.md](legal/dpa-draft.md) | DPA 正本 |
+| [pricing.md](pricing.md) | 公開価格（法人・招待制契約） |
+| [legal/terms-of-service.md](legal/terms-of-service.md) | 利用規約正本 |
+| [legal/dpa.md](legal/dpa.md) | DPA 正本 |
 | [sla.md](sla.md) | SLA（P2） |
 | [customer-admin.md](customer-admin.md) | 顧客 admin |
 | [fleet-operations.md](fleet-operations.md) | 5 社フリート運用 |
 | [onboarding.md](onboarding.md) | オンボーディングチェックリスト |
+| [customer-journey-evidence.md](customer-journey-evidence.md) | 顧客業務の完走経路と証跡区分 |
+| [customer-pilot-measurement.md](customer-pilot-measurement.md) | 完走率・作業時間・支援負担・訂正の測定と集計 |
 | [control-plane.md](control-plane.md) | 共有コントロールプレーン（P3） |
 | [deploy/product/stripe.md](../../deploy/product/stripe.md) | Stripe 設定 |
 
@@ -92,3 +94,9 @@ orgos ledger product stripe-status
 | `readiness` | 製品層 P0–P4（実装・パイロット骨格） |
 | `readiness --commercial` | 有料顧客受入ゲート C0–C3（課金 live・復旧 drill・監視等） |
 | `readiness --accounting` | 経理実務受入ゲート A0–A3（通年帳簿・銀行・締め・税務 handoff） |
+
+### 証拠の読み方
+
+readiness のスコアは実装・自動検証の成熟度を示すもので、本番実証や顧客継続利用を意味しません。顧客業務の完走状況は [customer-journey-evidence.md](customer-journey-evidence.md) の区分で確認します。
+
+- [消込トランザクションの障害復旧](reconciliation-recovery.md): 承認者認証、復旧記録、失敗後の再実行。

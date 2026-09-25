@@ -15,14 +15,14 @@ test.describe("wire console settlement passkey smoke", () => {
     await expect(page.getByRole("button", { name: "Touch ID で入る" })).toBeVisible();
     await page.getByRole("button", { name: "Touch ID で入る" }).click();
 
-    await expect(page.getByRole("link", { name: "Wire", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "相手組織", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
       { timeout: 15_000 },
     );
 
     await page.goto("/settings/");
-    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "ログイン PassKey（Mac Touch ID）" })).toBeVisible();
     await expandSettingsSection(page, "決済 PassKey（iPhone）");
 
     await page.getByRole("button", { name: "iPhone で登録" }).click();

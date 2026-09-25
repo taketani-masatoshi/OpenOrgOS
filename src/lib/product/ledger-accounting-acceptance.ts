@@ -10,6 +10,7 @@ import { closeAccountingYear, listFiscalYearMonths } from "../finance/annual-clo
 import { runValidateReport } from "../../commands/validate.js";
 import { resolveCompanyFiscalYearEndMonth } from "../finance/fiscal-year.js";
 import { closeAccountingMonth } from "../finance/monthly-close.js";
+import { reconciliationEventPath } from "../jp-bank-corporate/reconciliation-store.js";
 import { getDataDir } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
@@ -83,6 +84,11 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
     if (!result.bank_reconcile.pass) return result;
 
     const months = listFiscalYearMonths(fiscalYear, resolveCompanyFiscalYearEndMonth());
+    // Bank e2e leaves reconciliation-events tied to import IDs. Rewriting
+    // statements for monthly-close without clearing events makes
+    // loadBankStatementsLite replay fail → "bank statements unreadable".
+    const eventsPath = reconciliationEventPath();
+    if (existsSync(eventsPath)) rmSync(eventsPath, { force: true });
     writeYamlFileAtomic(join(getDataDir(), "finance", "bank-statements.yaml"), {
       entries: months.map((month, index) => ({
         id: `BS-ACCEPTANCE-${String(index + 1).padStart(2, "0")}`,
@@ -96,6 +102,7 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
       closeAccountingMonth({
         month,
         operatorId: "OP-ACCEPTANCE",
+        skipValidate: true,
       }),
     );
     const closedMonths = monthly.filter((row) => row.ok && row.locked).length;

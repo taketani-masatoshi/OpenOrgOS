@@ -33,6 +33,8 @@ import { jp_inspectionCli } from "../../steward/jurisdiction-packs/JP/modules/jp
 import { jp_minpakuCli } from "../../steward/jurisdiction-packs/JP/modules/jp_minpaku/cli/register.js";
 import { jp_permit_applicationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_permit_application/cli/register.js";
 import { jp_tax_corporateCli } from "../../steward/jurisdiction-packs/JP/modules/jp_tax_corporate/cli/register.js";
+import { jp_tax_individualCli } from "../../steward/jurisdiction-packs/JP/modules/jp_tax_individual/cli/register.js";
+import { jp_etaxCli } from "../../steward/jurisdiction-packs/JP/modules/jp_etax/cli/register.js";
 import { jp_tax_consumptionCli } from "../../steward/jurisdiction-packs/JP/modules/jp_tax_consumption/cli/register.js";
 import { jp_consumption_refundCli } from "../../steward/jurisdiction-packs/JP/modules/jp_consumption_refund/cli/register.js";
 import { jp_invoice_qualifiedCli } from "../../steward/jurisdiction-packs/JP/modules/jp_invoice_qualified/cli/register.js";
@@ -100,6 +102,8 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   jp_minpakuCli,
   jp_permit_applicationCli,
   jp_tax_corporateCli,
+  jp_tax_individualCli,
+  jp_etaxCli,
   jp_tax_consumptionCli,
   jp_consumption_refundCli,
   jp_invoice_qualifiedCli,

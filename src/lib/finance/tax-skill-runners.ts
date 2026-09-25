@@ -15,6 +15,9 @@ import {
   formatInvoiceRegistrationMarkdown,
   formatQualifiedInvoiceIssuanceMarkdown,
 } from "./invoice-qualified.js";
+import { buildSolePropBlueReturn } from "./sole-prop-blue-return.js";
+import { buildSolePropIncomeTaxReturnDraft } from "./sole-prop-income-tax-return.js";
+import { resolveDefaultFiscalYear } from "./fiscal-year.js";
 import { currentDate } from "../utils.js";
 
 export function runJpCorporateTaxReturnSkill(_opts: SkillRunOptions): void {
@@ -23,6 +26,19 @@ export function runJpCorporateTaxReturnSkill(_opts: SkillRunOptions): void {
   runTaxGaps({});
   console.log("");
   runTaxDepreciation({});
+}
+
+/** Advisor drafts only — never submits to e-Tax. */
+export function runJpIndividualIncomeTaxSkill(opts: SkillRunOptions): void {
+  const fyHint =
+    typeof opts.period === "string" && /^FY\d{4}$/i.test(opts.period)
+      ? opts.period
+      : undefined;
+  const fy = resolveDefaultFiscalYear(fyHint);
+  console.log(JSON.stringify(buildSolePropBlueReturn(fy), null, 2));
+  console.log("");
+  console.log(JSON.stringify(buildSolePropIncomeTaxReturnDraft(fy), null, 2));
+  console.log("提出は人間。このコマンドは送信しない。");
 }
 
 export function runJpConsumptionTaxReturnSkill(opts: SkillRunOptions): void {

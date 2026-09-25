@@ -24,7 +24,7 @@ test.describe("passkey settings stability (wire)", () => {
 
     await page.goto("/");
     await page.getByRole("button", { name: "Touch ID で入る" }).click();
-    await expect(page.getByRole("link", { name: "Wire", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "相手組織", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
       { timeout: 15_000 },
@@ -34,7 +34,7 @@ test.describe("passkey settings stability (wire)", () => {
     credentialHits = 0;
 
     await page.goto("/settings/");
-    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
+    await expect(page.getByRole("heading", { name: "ログイン PassKey（Mac Touch ID）" })).toBeVisible({
       timeout: 15_000,
     });
     await expect.poll(() => credentialHits, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
@@ -61,6 +61,6 @@ test.describe("passkey settings stability (wire)", () => {
       page.getByRole("heading", { name: "PassKey 設定の前に Community でログイン" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Touch ID で入る" })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "ログイン PassKey（Mac Touch ID）" })).toHaveCount(0);
   });
 });

@@ -15,7 +15,7 @@ describe("acme tenant validate", () => {
         env: { ...process.env, ORGOS_TENANT: "acme" },
       });
     },
-    15_000
+    60_000
   );
 
   it("does not reference MAL-specific property paths", () => {

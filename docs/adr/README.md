@@ -66,6 +66,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0077](0077-workflow-structure-discussion-gate.md) | Workflow 構成議論ゲート（evaluate · WFS · APR） | Accepted |
 | [0078](0078-correspondence-hooks-composition.md) | Correspondence hooks の composition 境界（binder · 黙殺防止） | Accepted |
 | [0079](0079-correspondence-domain-adapters.md) | Correspondence domain adapters（日程調整依存逆転） | Accepted |
+| [0080](0080-ledger-tax-jurisdiction-port.md) | 帳簿は共通、間接税は法域ポート | Accepted |
 
 ## 新規 ADR
 

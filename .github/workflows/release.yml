@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   build-package:
+    needs: release-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +69,13 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - run: npm run test:customer-journey
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-customer-journey-evidence
+          path: test-results/customer-journey/
+          if-no-files-found: error
       - run: npx playwright install --with-deps chromium
       - run: npm run steward-chat:release-check
 

@@ -56,8 +56,11 @@ test.describe("steward chat webauthn smoke", () => {
     configHits = 0;
     credentialHits = 0;
 
-    await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
+    await page.getByRole("link", { name: "設定" }).click();
+    await expect(page.getByRole("heading", { name: "設定", exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole("heading", { name: /ログイン PassKey/ })).toBeVisible({
       timeout: 15_000,
     });
     await expect.poll(() => credentialHits, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
@@ -89,8 +92,11 @@ test.describe("steward chat webauthn smoke", () => {
       timeout: 15_000,
     });
 
-    await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
+    await page.getByRole("link", { name: "設定" }).click();
+    await expect(page.getByRole("heading", { name: "設定", exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole("heading", { name: /ログイン PassKey/ })).toBeVisible({
       timeout: 15_000,
     });
     await expandSettingsSection(page, "決済 PassKey（iPhone）");

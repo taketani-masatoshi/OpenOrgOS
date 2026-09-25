@@ -17,6 +17,7 @@ describe("remittance journals", () => {
       authorizedBy: "OP-TEST",
       grossYen: 100000,
       withholdingYen: 10000,
+      socialEmployeeYen: 14000,
       socialEmployerYen: 15000,
     });
     const posted = postRemittanceJournalEntry({

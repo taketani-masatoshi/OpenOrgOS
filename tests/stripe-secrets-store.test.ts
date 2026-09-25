@@ -12,7 +12,10 @@ import {
   saveStripeSecrets,
   stripeSecretsFilePath,
 } from "../src/lib/product/stripe-secrets-store.js";
-import { isStripeBillingCommercialReady } from "../src/lib/product/stripe-ops.js";
+import {
+  isStripeBillingCommercialReady,
+  isStripeBillingLiveReady,
+} from "../src/lib/product/stripe-ops.js";
 
 describe("stripe secrets store", () => {
   const env = { ...process.env };
@@ -53,10 +56,13 @@ describe("stripe secrets store", () => {
 
     expect(process.env.STRIPE_SECRET_KEY).toBe("sk_test_example_key");
     expect(process.env.STRIPE_WEBHOOK_SECRET).toBe("whsec_example_secret");
-    expect(isStripeBillingCommercialReady()).toBe(true);
+    expect(isStripeBillingLiveReady()).toBe(true);
+    expect(isStripeBillingCommercialReady()).toBe(false);
 
     const snapshot = buildStripeSettingsSnapshot();
     expect(snapshot.mode).toBe("test");
+    expect(snapshot.live_ready).toBe(true);
+    expect(snapshot.commercial_ready).toBe(false);
     expect(snapshot.secret_key_hint).toContain("sk_test_");
     expect(snapshot.secret_key_hint).not.toContain("example_key");
   });

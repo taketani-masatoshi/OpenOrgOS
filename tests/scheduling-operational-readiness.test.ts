@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { homedir } from "node:os";
 import YAML from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -75,6 +75,7 @@ describe("scheduling operational readiness", () => {
         },
       ],
     });
+    mkdirSync(dirname(keyPath), { recursive: true });
     writeFileSync(keyPath, "readiness-op-001\n", { mode: 0o600 });
   });
 

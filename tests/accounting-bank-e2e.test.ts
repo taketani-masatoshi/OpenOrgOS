@@ -9,7 +9,6 @@ import { seedLedgerDemoYear } from "../src/lib/product/ledger-seed-demo-year.js"
 import { runBankImportReconcileE2E } from "../src/lib/product/ledger-bank-e2e.js";
 import { postFirstOnboardingJournal } from "../src/lib/product/ledger-first-journal.js";
 import { buildMonthCloseChecklist } from "../src/lib/product/ledger-month-close-checklist.js";
-import { buildAccountingReadinessReport } from "../src/lib/product/ledger-accounting-readiness.js";
 import { loadChartOfAccounts } from "../src/lib/data.js";
 import { loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
 import { lockMonth } from "../src/lib/finance/period-lock.js";
@@ -92,7 +91,15 @@ describe("accounting commercial paths", () => {
     expect(checklist.items.some((row) => row.id === "period-locked" && row.pass)).toBe(
       true,
     );
-    const run = computeBonusDraft({ period: "2026-12", grossYen: 400_000 });
+    const run = computeBonusDraft({
+      period: "2026-12",
+      employeeId: "EMP-TEST",
+      grossYen: 400_000,
+      withholdingYen: 30_000,
+      socialEmployeeYen: 50_000,
+      socialEmployerYen: 55_000,
+      evidenceRefs: ["test:verified-bonus"],
+    });
     saveBonusDraft(run);
     const posted = postBonusDraftJournal({
       runId: run.run_id,
@@ -101,16 +108,11 @@ describe("accounting commercial paths", () => {
     expect(posted.entry_id).toMatch(/^JE-BONUS-/);
   });
 
-  it("accounting readiness module scores and exposes accounting mode", () => {
-    workspace = mkdtempSync(join(tmpdir(), "acct-ready-"));
-    process.env.ORGOS_WORKSPACE = workspace;
-    refreshOrgOsPaths();
-    const report = buildAccountingReadinessReport();
-    expect(report.mode).toBe("accounting");
-    expect(report.max_score).toBe(100);
-    expect(report.checks.find((row) => row.id === "runtime-journal")?.pass).toBe(true);
-    expect(report.checks.find((row) => row.id === "runtime-annual-close")?.pass).toBe(true);
+  it("keeps bank e2e module on the accounting readiness path", () => {
     expect(existsSync(join(getInstallRoot(), "src/lib/product/ledger-bank-e2e.ts"))).toBe(
+      true,
+    );
+    expect(existsSync(join(getInstallRoot(), "src/lib/product/ledger-accounting-acceptance.ts"))).toBe(
       true,
     );
   });

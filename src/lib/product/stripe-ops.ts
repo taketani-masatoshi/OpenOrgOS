@@ -69,9 +69,11 @@ export function isStripeBillingLiveReady(): boolean {
   return ops.status === "configured" && (ops.mode === "test" || ops.mode === "live");
 }
 
-/** Commercial claim: real secrets required — attestation alone is not enough. */
+/** Live commercial gate: staging keys and attestation alone cannot pass. */
 export function isStripeBillingCommercialReady(): boolean {
-  return stripeSecretConfigured() && stripeWebhookSecretConfigured();
+  return (
+    stripeSecretConfigured() && detectStripeMode() === "live" && stripeWebhookSecretConfigured()
+  );
 }
 
 export function isProductionEnv(): boolean {
@@ -108,7 +110,7 @@ export function buildStripeBillingStatus() {
 
 export function stripeBillingNextSteps(
   mode: "stub" | "test" | "live" = detectStripeMode(),
-  ops: StripeOpsRecord = loadStripeOps(),
+  ops: StripeOpsRecord = loadStripeOps()
 ): string[] {
   const steps: string[] = [];
   if (!stripeSecretConfigured()) {
@@ -120,7 +122,9 @@ export function stripeBillingNextSteps(
     steps.push("Set STRIPE_WEBHOOK_SECRET and point Stripe to /chat/v1/product/stripe/webhook");
   }
   if (ops.status !== "configured") {
-    steps.push("Run orgos ledger product stripe-attest after keys are in env (secrets stay out of git)");
+    steps.push(
+      "Run orgos ledger product stripe-attest after keys are in env (secrets stay out of git)"
+    );
   }
   if (isProductionEnv() && mode !== "live") {
     steps.push("ORGOS_ENV=production rejects stub Checkout — live keys required");
@@ -134,7 +138,7 @@ export function stripeBillingNextSteps(
 /** Same text as Console `next_steps`, for doctor / commercial readiness. */
 export function stripeNextStepsDetail(
   mode: "stub" | "test" | "live" = detectStripeMode(),
-  ops: StripeOpsRecord = loadStripeOps(),
+  ops: StripeOpsRecord = loadStripeOps()
 ): string {
   return stripeBillingNextSteps(mode, ops).join(" · ");
 }
@@ -144,9 +148,7 @@ export function stripeNextStepsDetail(
  */
 export function attestStripeBilling(input?: { note?: string }): StripeOpsRecord {
   if (!stripeSecretConfigured() || !stripeWebhookSecretConfigured()) {
-    throw new Error(
-      "STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be set before attesting",
-    );
+    throw new Error("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be set before attesting");
   }
   const record = stripeOpsSchema.parse({
     version: 1,

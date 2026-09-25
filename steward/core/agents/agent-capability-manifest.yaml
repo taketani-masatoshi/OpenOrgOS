@@ -37,6 +37,7 @@ agents:
     route_ids:
       - compliance-controls
       - compliance-permit
+      - regulation-module-scaffold
     skills:
       - iso_control_review
       - jp_carbon_neutral_show
@@ -993,6 +994,8 @@ agents:
       - jp_consumption_refund_show
       - jp_consumption_tax_return
       - jp_corporate_tax_return
+      - jp_etax_spec_status
+      - jp_individual_income_tax
       - jp_invoice_registration
       - jp_qualified_invoice_issue
       - jp_withholding_payment

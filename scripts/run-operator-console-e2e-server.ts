@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   process.env.ORGOS_TENANT = process.env.ORGOS_TENANT ?? "demo";
   process.env.WIRE_CONSOLE_DEV_PASSKEY = process.env.WIRE_CONSOLE_DEV_PASSKEY ?? "orgos-dev";
   process.env.ORGOS_LLM_MOCK = process.env.ORGOS_LLM_MOCK ?? "1";
-  process.env.ORGOS_SESSION_PERSIST = process.env.ORGOS_SESSION_PERSIST ?? "0";
+  process.env.ORGOS_SESSION_PERSIST = process.env.ORGOS_SESSION_PERSIST ?? "1";
   process.env.STEWARD_CHAT_AUTH = process.env.STEWARD_CHAT_AUTH ?? "1";
   process.env.ORGOS_CSRF = process.env.ORGOS_CSRF ?? "0";
   process.env.ORGOS_RATE_LIMIT = process.env.ORGOS_RATE_LIMIT ?? "0";

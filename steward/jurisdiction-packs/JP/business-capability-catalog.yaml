@@ -576,6 +576,17 @@ modules:
     priority: P0
     official_urls:
       - https://www.nta.go.jp/
+  - id: jp_tax_individual
+    name_ja: 個人の青色申告と所得税
+    status: partial
+    tier: activation_ready
+    pack: jurisdiction-packs/JP
+    agent_proxy: tax
+    categories:
+      - tax_finance
+    priority: P1
+    official_urls:
+      - https://www.nta.go.jp/taxes/shiraberu/shinkoku/kojin_jigyo/index.htm
   - id: jp_tax_consumption
     name_ja: 消費税申告
     status: partial
@@ -812,6 +823,16 @@ skills:
     priority: P0
     cli_command: tax-filing-prep
     module_id: jp_tax_corporate
+  - id: jp_individual_income_tax
+    name_ja: 個人の青色申告決算書と所得税
+    status: partial
+    runtime: cli
+    agent_id: tax
+    categories:
+      - tax_finance
+    priority: P1
+    cli_command: tax-individual
+    module_id: jp_tax_individual
   - id: variance_analysis
     name_ja: 予実差異分析
     status: implemented
@@ -1359,14 +1380,14 @@ summary:
     total: 17
   modules:
     implemented: 21
-    partial: 24
+    partial: 25
     planned: 1
-    total: 46
+    total: 47
   skills:
     implemented: 17
-    partial: 31
+    partial: 32
     planned: 10
-    total: 58
+    total: 59
   p0_gaps:
     - jp_social_insurance · jp_payroll は集計 CLI まで実装（算定基礎届・年末調整の提出は未実装）
     - 税務モジュールは申告書 XML ドラフトまで — e-Tax 提出は未実装（tax-filing-spec 参照）

@@ -8,7 +8,12 @@ describe("jp_payroll CLI privacy", () => {
     setTenantId("mal");
     const payroll = loadPayroll();
     const gross = payroll.employee_payroll?.monthly_gross_jpy ?? 0;
-    const result = computePayrollMonth({ month: "2026-09", grossYen: gross });
+    const result = computePayrollMonth({
+      month: "2026-09",
+      grossYen: gross,
+      healthStandardRemunerationYen: 300_000,
+      pensionStandardRemunerationYen: 300_000,
+    });
     const output = JSON.stringify(result);
     for (const officer of payroll.officers ?? []) {
       expect(output).not.toContain(officer.name);

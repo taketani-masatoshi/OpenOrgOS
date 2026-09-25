@@ -32,6 +32,7 @@ export const statementSectionSchema = z.enum([
   "sga",
   "non_operating_income",
   "non_operating_expense",
+  "extraordinary_gain",
   "extraordinary",
   "income_tax",
 ]);
@@ -61,6 +62,8 @@ export const chartAccountSchema = z.object({
   bs_class: z.enum(["current", "noncurrent"]).optional(),
   /** Equity statement column. Retained earnings may also be inferred from journal_source_accounts. */
   equity_class: z.enum(["capital", "capital_surplus", "retained"]).optional(),
+  /** Posted legal reserve. Absent means the reserve balance is zero. */
+  statutory_role: z.enum(["legal_reserve"]).optional(),
   /** Cash-flow role. Prefix matching is not a substitute. */
   cf_role: z
     .enum(["cash", "receivable", "payable", "fixed_asset", "loan", "equity"])
@@ -82,6 +85,10 @@ export const journalSourceAccountsSchema = z.object({
   depreciation_expense: z.string().regex(/^\d{4}$/),
   accumulated_depreciation: z.string().regex(/^\d{4}$/),
   retained_earnings: z.string().regex(/^\d{4}$/),
+  /** Sole-prop capital. Must not replace retained_earnings. */
+  owner_capital: z.string().regex(/^\d{4}$/).optional(),
+  owner_drawings: z.string().regex(/^\d{4}$/).optional(),
+  owner_advances: z.string().regex(/^\d{4}$/).optional(),
   consumption_tax_payable: z.string().regex(/^\d{4}$/).optional(),
   consumption_tax_receivable: z.string().regex(/^\d{4}$/).optional(),
   lodging_tax_payable: z.string().regex(/^\d{4}$/).optional(),
