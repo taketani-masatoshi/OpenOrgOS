@@ -3,7 +3,7 @@ required_seeds: []
 activation_seeds:
   - packages.yaml.example
   - submissions.yaml.example
-notes: skeleton — NTA e-Tax KSK2 integration. EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION. Tax calculation stays in jp_tax_* modules (ADR 0078).
+notes: skeleton — NTA e-Tax KSK2 integration. EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION. Tax calculation stays in jp_tax_* modules (ADR 0078). 規程不要（送信チャネル · 社内税務規程は jp_tax_*）
 cli_commands:
   - spec
   - build
