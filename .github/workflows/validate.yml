@@ -111,13 +111,13 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run wire-console:build
-      - run: playwright test e2e/wire-console.smoke.spec.ts
+      - run: npx playwright test e2e/wire-console.smoke.spec.ts
         env:
           WIRE_CONSOLE_SMOKE_PORT: "9472"
-      - run: playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts
+      - run: npx playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts
         env:
           WIRE_CONSOLE_WEBAUTHN_SMOKE_PORT: "9473"
-      - run: playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts
+      - run: npx playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts
         env:
           WIRE_CONSOLE_OIDC_SMOKE_PORT: "9474"
       - run: npm run wire-console:release-check

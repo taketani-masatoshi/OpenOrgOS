@@ -43,6 +43,6 @@ deploy/operator-console
 deploy/protocol-api
 deploy/protocol-relay
 deploy/protocol-outbox
-deploy/test
+# Keep deploy/test in context — Dockerfile COPY needs entrypoint.sh
 **/*.test.ts
 **/*.spec.ts

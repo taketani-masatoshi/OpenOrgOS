@@ -57,7 +57,7 @@ test.describe("operator console combined", () => {
     await login(page);
     await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "Wire" })
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "相手組織" })
     ).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "経営" })
@@ -97,7 +97,7 @@ test.describe("operator console combined", () => {
     };
     page.on("request", onAuthMe);
 
-    await page.getByRole("link", { name: "Wire" }).click();
+    await page.getByRole("link", { name: "相手組織" }).click();
     await page.waitForURL("**/wire/**");
     await expect(page.getByRole("button", { name: "承認待ち" })).toBeVisible({
       timeout: 15_000,
@@ -158,7 +158,7 @@ test.describe("operator console combined", () => {
   test("org chart shows company units as a table", async ({ page }) => {
     await login(page);
     await page.goto("/org/");
-    await expect(page.getByRole("heading", { name: /株式会社MAL|組織/ })).toBeVisible({
+    await expect(page.getByRole("heading", { name: /デモ株式会社|株式会社MAL|組織/ })).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.getByText("取締役会").first()).toBeVisible();
@@ -200,7 +200,7 @@ test.describe("operator console combined", () => {
     await expect(page.getByLabel("表示言語")).toBeHidden();
     await expandSettingsSection(page, "言語");
     await expect(page.getByLabel("表示言語")).toHaveValue("ja");
-    await expandSettingsSection(page, "ログイン PassKey");
+    await expandSettingsSection(page, "ログイン PassKey（Mac Touch ID）");
     await expect(page.getByText("Touch ID でコンソールに入り直す鍵です。")).toBeVisible();
   });
 

@@ -57,7 +57,7 @@ test.describe("steward chat webauthn smoke", () => {
     credentialHits = 0;
 
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
+    await expect(page.getByRole("heading", { name: "ログイン PassKey（Mac Touch ID）" })).toBeVisible({
       timeout: 15_000,
     });
     await expect.poll(() => credentialHits, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
@@ -90,7 +90,7 @@ test.describe("steward chat webauthn smoke", () => {
     });
 
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
+    await expect(page.getByRole("heading", { name: "ログイン PassKey（Mac Touch ID）" })).toBeVisible({
       timeout: 15_000,
     });
     await expandSettingsSection(page, "決済 PassKey（iPhone）");
