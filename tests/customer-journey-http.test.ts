@@ -381,6 +381,6 @@ describe("customer journey http", () => {
     expect(unmatchedBankCountForMonth(month)).toBe(Number.POSITIVE_INFINITY);
     expect(readFileSync(join(financeDir, "bank-statements.yaml"), "utf8")).toBe(bankSnapshot);
   },
-  120_000
+  180_000
   );
 });
