@@ -29,3 +29,9 @@ regulations:
     enabled: false
   - id: REG-016
     enabled: false
+  - id: REG-025
+    enabled: true
+    notes: jp_medical_device On · QMS
+  - id: REG-026
+    enabled: true
+    notes: jp_medical_device On · GVP
