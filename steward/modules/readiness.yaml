@@ -131,6 +131,16 @@ modules:
     tier: activation_ready
     notes: 個人の青色申告決算書（一般用）と所得税の顧問ドラフト · operations tax-individual ·
       別表は使わない。提出は未対応のため production_ready ではない
+  jp_etax:
+    tier: activation_ready
+    notes: >-
+      NTA e-Tax KSK2（RHO0010）· operations etax / orgos etax ·
+      production submit は gate 完了まで禁止。skill jp_etax_spec_status
+  jp_eltax:
+    tier: activation_ready
+    notes: >-
+      地方税 eLTAX チャネル · 手続は UNSUPPORTED · e-Tax とは別モジュール ·
+      production 提出禁止。CLI 未登録（catalog_only）
   jp_tax_consumption:
     tier: activation_ready
     notes: 消費税区分チェック · operations tax-consumption CLI（check/calc/eligibility）·

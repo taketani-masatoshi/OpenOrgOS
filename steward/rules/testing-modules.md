@@ -17,11 +17,11 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 | production_ready | **32** |
 | activation_ready | **23** |
 | skeleton | **0** |
-| CLI 登録（`MODULE_CLI_BUNDLES`） | **56** |
+| CLI 登録（`MODULE_CLI_BUNDLES`） | **57** |
 | catalog coverage gap | **0** |
 | catalog dedicated (+ full) | **30** |
 | catalog bundled | **9** |
-| catalog_only | **17** |
+| catalog_only | **19** |
 
 整合テスト: [`tests/testing-registry.test.ts`](../tests/testing-registry.test.ts) · [`tests/testing-modules-doc-sync.test.ts`](../tests/testing-modules-doc-sync.test.ts)
 

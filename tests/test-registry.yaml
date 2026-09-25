@@ -6,12 +6,12 @@ stats:
   vitest_total: 654
   static_test_cases: 3290
   tiered_execution_total: 654
-  catalog_total: 56
-  catalog_cli_registered: 56
+  catalog_total: 58
+  catalog_cli_registered: 57
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 17
+  catalog_only: 19
 platform_domains:
   P01_kernel:
     layer: 1
@@ -153,12 +153,24 @@ catalog_modules:
     cli: true
     tests:
       - catalog/jp-data-breach.test.ts
+  jp_eltax:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/jp-eltax.test.ts
   jp_employment_rules:
     tier: activation_ready
     coverage_tier: catalog_only
     cli: true
     tests:
       - catalog/jp-employment-rules.test.ts
+  jp_etax:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-etax.test.ts
   jp_inspection:
     tier: activation_ready
     coverage_tier: dedicated
