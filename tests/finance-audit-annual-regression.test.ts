@@ -1,9 +1,10 @@
-if (process.env.ORGOS_TEST_DISPOSABLE_ROOT !== process.cwd())
-  throw new Error("Use python3 scripts/run-finance-audit.py for disposable audit tests");
 import { importBankStatementCsvText } from "../src/lib/finance/bank-statement-import-service.js";
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+const financeAuditEnabled =
+  process.env.ORGOS_TEST_DISPOSABLE_ROOT === process.cwd();
 import {
   appendJournalEntry,
   loadJournalEntries,
@@ -119,7 +120,7 @@ function lockPreparedYear(): string[] {
   return months;
 }
 
-describe("annual close acceptance", () => {
+describe.skipIf(!financeAuditEnabled)("annual close acceptance", () => {
   beforeEach(() => {
     resetFixtureJournalEntries();
     applyFixtureStatementRoles();

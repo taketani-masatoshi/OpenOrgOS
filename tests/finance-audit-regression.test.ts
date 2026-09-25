@@ -1,10 +1,11 @@
-if (process.env.ORGOS_TEST_DISPOSABLE_ROOT !== process.cwd())
-  throw new Error("Use python3 scripts/run-finance-audit.py for disposable audit tests");
 // Regression cases for the 2026-09-22 accounting audit; synthetic fixtures only.
 import { describe, it, expect } from "vitest";
 import { writeFileSync, readFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
+
+const financeAuditEnabled =
+  process.env.ORGOS_TEST_DISPOSABLE_ROOT === process.cwd();
 import {
   appendJournalEntry,
   loadJournalEntries,
@@ -57,7 +58,7 @@ function post(id: string, lines: unknown[]) {
   return appendJournalEntry(entry(id, lines) as never);
 }
 
-describe("accounting audit regressions", () => {
+describe.skipIf(!financeAuditEnabled)("accounting audit regressions", () => {
   it("C1: nets sales and reversals", () => {
     resetFixtureJournalEntries();
     post("JE-SALE", [
