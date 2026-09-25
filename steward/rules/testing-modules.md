@@ -13,10 +13,10 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 |------|-----|
 | Vitest テストファイル | **654**（`tests/**/*.test.ts` · registry 含む） |
 | テストケース（静的 `it`/`test` **3290**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
-| 業務 catalog module | **55**（readiness.yaml 正本 · core + JP pack） |
+| 業務 catalog module | **58**（readiness.yaml 正本 · core + JP pack） |
 | production_ready | **32** |
-| activation_ready | **23** |
-| skeleton | **0** |
+| activation_ready | **25** |
+| skeleton | **1** |
 | CLI 登録（`MODULE_CLI_BUNDLES`） | **57** |
 | catalog coverage gap | **0** |
 | catalog dedicated (+ full) | **30** |
@@ -33,7 +33,7 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 |----|------|-----------------|
 | **Contract / Meta** | extensibility · modules · readiness · os100 等 | `npm run test:contract` |
 | **Platform** | `src/lib/` 6 ドメイン | `npm run test:platform` |
-| **Catalog** | 業務 module catalog id（55） | `npm run test:catalog` |
+| **Catalog** | 業務 module catalog id（58） | `npm run test:catalog` |
 | **Integration** | CLI subprocess · protocol E2E · mal 共有 queue | `npm run test:integration` |
 | **Full gate** | 全件 | `npm test`（CI 正本） |
 | **Tiered** | 上記を依存順 | `npm run test:tiered` |
