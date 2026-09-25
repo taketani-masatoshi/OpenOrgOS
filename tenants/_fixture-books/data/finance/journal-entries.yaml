@@ -1,21 +1,73 @@
 version: 1
 entries:
-  - entry_id: JE-GUARD-001
-    occurred_at: 2026-09-15T00:00:00.000Z
-    description: guard test
+  - entry_id: JE-MPL-2026-09-REV-RENT
+    occurred_at: 2026-09-30T12:00:00.000Z
+    description: Monthly P/L revenue rent 2026-09
     source:
-      kind: manual
-      authorized_by: ceo
-    posted_at: 2026-08-29T10:25:35.018Z
-    posted_by: ceo
+      kind: closing
+      period: 2026-09
+      adjustment_id: monthly-pl-rev-rent
+    posted_at: 2026-09-25T03:58:45.210Z
+    posted_by: system
     evidence_refs:
-      - test:guard
+      - monthly:2026-09
+      - category:rent
     lines:
-      - account_code: "1100"
-        debit_yen: 1
+      - account_code: "1150"
+        debit_yen: 100000
         credit_yen: 0
+        counterparty_id: PROP-001
         tax_category: out_of_scope
       - account_code: "4100"
         debit_yen: 0
-        credit_yen: 1
+        credit_yen: 100000
+        tax_category: non_taxable
+  - entry_id: JE-MPL-2026-09-REV-HOTEL-REVENUE
+    occurred_at: 2026-09-30T12:00:00.000Z
+    description: Monthly P/L revenue hotel_revenue 2026-09
+    source:
+      kind: closing
+      period: 2026-09
+      adjustment_id: monthly-pl-rev-hotel_revenue
+    posted_at: 2026-09-25T03:58:45.248Z
+    posted_by: system
+    evidence_refs:
+      - monthly:2026-09
+      - category:hotel_revenue
+    lines:
+      - account_code: "1150"
+        debit_yen: 1050000
+        credit_yen: 0
+        counterparty_id: PROP-002
+        tax_category: out_of_scope
+      - account_code: "4200"
+        debit_yen: 0
+        credit_yen: 954546
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2160"
+        debit_yen: 0
+        credit_yen: 95454
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-09-EXP-OTHER-PROPERTY
+    occurred_at: 2026-09-30T12:00:00.000Z
+    description: Monthly P/L expense other_property 2026-09
+    source:
+      kind: closing
+      period: 2026-09
+      adjustment_id: monthly-pl-exp-other_property
+    posted_at: 2026-09-25T03:58:45.283Z
+    posted_by: system
+    evidence_refs:
+      - monthly:2026-09
+      - category:other_property
+    lines:
+      - account_code: "5200"
+        debit_yen: 496750
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "2110"
+        debit_yen: 0
+        credit_yen: 496750
+        counterparty_id: PROP-002
         tax_category: out_of_scope

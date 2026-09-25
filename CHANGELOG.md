@@ -31,6 +31,9 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **JP 社内規程（会計・税務）雛形の増強** — 経理（REG-027）· 経費精算（REG-005）を起草スタイル準拠で拡充。モジュール連動の REG-031〜034（法人税務準備 · 消費税務 · 適格請求書 · 源泉・法定調書）をカタログ追加。提出・e-Tax は人間/税理士権限のまま。
 - **取適法（旧下請法）モジュール** — `jp_subcontractor_act` を `activation_ready` で追加。適用対象判定（`jp_subcontractor_scope`）と禁止行為点検（`jp_subcontractor_checklist`）。一次資料は公取委 https://www.jftc.go.jp/toriteki/ 。行政提出は人間。
 - **JP 未実装モジュール 8 件** — 株主総会・取締役会、就業規則・36協定、労働条件通知、取適法（旧下請法）、個情漏えい報告、在留・外国人雇用、宅建業、特許出願を `activation_ready` の CLI + seed として追加。人事・法務・知財・ガバナンス・購買・個情・行政の Agent に bind。提出・届出は人間。
+- **会社法の計算書類** — 非公開・会計監査人非設置の貸借・損益・株主資本等変動・第98条2項1号の注記・利益準備金を、手計算の金額で採点する。0 の区分も残し、特別利益と特別損失を分ける。利益準備金は仕訳にしない。税額 XML と年度決算ゲートは変えない。
+- **個人事業の元入金・青色申告決算書・所得税** — 法人の別表とは別の行対応と所得税の速算。顧問ドラフトのみで、e-Tax には出さない。
+- **間接税の法域ポート** — 帳簿エンジンは共通のまま、月次締めの消費税ゲートは pack の `indirect_tax_family` 経由。日本の消費税計算は `JP` + `vat_credit` だけ。他法域は日本の税率・税区分必須・別表・適格請求書チェックを走らせない。減価償却率表は pack seed にあるときだけ読む。ADR 0080。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
@@ -49,8 +52,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 - **日程調整 F1–F4** — CLI propose を `proposeSlotsOntoSchedulingCase` に統一。`SchedulingCaseNotFoundError` 文言一本化。案件 ID / 返信日付の年に注入時計。リマインド期限を `scheduling_reminder_after_hours`（既定72h）に合わせる。
 - **月次締めの消費税ゲート** — `buildConsumptionTaxSummary` に無い `issues` 参照をやめ、プロファイルの blocking 判定と summary 構築の例外だけを見る（`tsc` 修正）。
+- **個人事業の青色申告特別控除** — 帳簿が揃っていれば 55 万円を所得から引く。65 万円は提出証跡があるときだけ。決算書の元入金は期首残高で、当年の所得と二重にしない。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
- `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 - **日程調整 workflow** — `advanceSchedulingWorkflow` が `exception_reason` のみの変化も保存し、`updated_at` に注入した `now` を使う。

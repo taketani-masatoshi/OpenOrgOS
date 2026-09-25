@@ -55,6 +55,8 @@ export WIRE_CONSOLE_WEBAUTHN_ORIGIN=https://ledger.acme.example.com
 
 正本: `deploy/product/docker-compose.ledger.yaml`
 
+デプロイ元の Core checkout は **`origin/main` の配信済み tip**（またはその annotated tag）に固定する。傘 OOO の旧 submodule pin（例: `4090a741`）や未マージの remediation ブランチを本番 compose のソースにしない。
+
 ```bash
 cd deploy/product
 export ORGOS_TENANT=acme-corp

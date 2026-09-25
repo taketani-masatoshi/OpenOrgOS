@@ -7,6 +7,7 @@ import { join } from "node:path";
 import type { JournalEntry } from "../../../schemas/finance/journal-entry.js";
 import { loadChartOfAccounts } from "../data.js";
 import { getDataDir } from "../utils.js";
+import { jpIndirectTaxEngineInstalled } from "./indirect-tax/family.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 
 function sha256Bytes(buf: Buffer): string {
@@ -24,6 +25,7 @@ export function assertJournalAccountsExist(entry: JournalEntry): void {
 }
 
 export function assertPlTaxCategories(entry: JournalEntry): void {
+  if (!jpIndirectTaxEngineInstalled()) return;
   const coa = loadChartOfAccounts();
   const types = new Map(coa.accounts.map((account) => [account.code, account.type]));
   for (const line of entry.lines) {

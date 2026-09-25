@@ -21,6 +21,7 @@ legal_system:
 regulations_catalog: regulations/catalog.yaml
 regulations_templates_dir: regulations/templates
 tax_profile_schema: us
+indirect_tax_family: sales_tax
 
 corporate_core:
   officer_comp: REG-US-001

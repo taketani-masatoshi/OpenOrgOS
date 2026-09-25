@@ -1,6 +1,8 @@
 # OrgOS Ledger — 価格（法人向け・公開）
 
-**ステータス:** 公開価格 · 税別 · 変更時は版を上げて通知する
+**ステータス:** 公開価格（招待制・契約ベース提供） · 税別 · 変更時は版を上げて通知する
+
+セルフチェックアウトは未開放です。Stripe live キーと本番 webhook の確認が完了するまでは、個別の招待・契約手続きで提供します。現在の提供境界は [commercial-claim-checklist.md](commercial-claim-checklist.md) を参照してください。
 
 | プラン | 月額 | 対象 | 含む |
 |--------|------|------|------|
@@ -18,7 +20,7 @@
 
 ## 課金
 
-- Stripe セルフチェックアウト（`STRIPE_SECRET_KEY` · [stripe.md](../../deploy/product/stripe.md)）
+- Stripe セルフチェックアウト（将来開放。`STRIPE_SECRET_KEY` · [stripe.md](../../deploy/product/stripe.md)）
 - `past_due` 時は Billing Portal から支払方法更新
 
 ## 関連

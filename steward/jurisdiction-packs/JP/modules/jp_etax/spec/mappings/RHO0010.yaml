@@ -1,0 +1,91 @@
+schema_version: 1
+specFamily: ksk2
+procedureCode: RHO0010
+formId: HOA110
+schemaRelativePath: hojin/RHO0010-150.xsd
+specArtifactId: e-tax19
+envelope:
+  rootElement: DATA
+  targetNamespace: http://xml.e-tax.nta.go.jp/XSD/hojin
+  generalNamespace: http://xml.e-tax.nta.go.jp/XSD/general
+  rdfNamespace: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  procedureElement: RHO0010
+  procedureVersion: "15.0.2"
+  itVersion: "1.5"
+  requiredForms:
+    - element: HOA110
+      version: "14.0"
+  softNM: OpenOrgOS-jp_etax
+  sakuseiNM: OpenOrgOS-jp_etax
+  sakuseiDaySource: it.sakuseiDay
+fields:
+  - sourcePath: it.zeimushoCd
+    xmlLocalName: zeimusho_CD
+    xmlPath: ZEIMUSHO.zeimusho_CD
+    required: true
+  - sourcePath: it.zeimushoNm
+    xmlLocalName: zeimusho_NM
+    xmlPath: ZEIMUSHO.zeimusho_NM
+    required: true
+  - sourcePath: it.nozeishaId
+    xmlLocalName: NOZEISHA_ID
+    required: true
+  - sourcePath: it.nozeishaNm
+    xmlLocalName: NOZEISHA_NM
+    required: true
+  - sourcePath: it.nozeishaAdr
+    xmlLocalName: NOZEISHA_ADR
+    required: true
+  - sourcePath: it.procedureCd
+    xmlLocalName: procedure_CD
+    xmlPath: TETSUZUKI.procedure_CD
+    required: true
+  # Optional IT children — local names from e-tax19 general/ITdefinition.xsd
+  - sourcePath: it.nozeishaZip
+    xmlLocalName: NOZEISHA_ZIP
+    required: false
+  - sourcePath: it.nozeishaTel
+    xmlLocalName: NOZEISHA_TEL
+    required: false
+  - sourcePath: it.nozeishaNmKn
+    xmlLocalName: NOZEISHA_NM_KN
+    required: false
+  - sourcePath: it.daihyoNm
+    xmlLocalName: DAIHYO_NM
+    required: false
+  - sourcePath: it.daihyoAdr
+    xmlLocalName: DAIHYO_ADR
+    required: false
+  - sourcePath: it.kazeiKikanFrom
+    xmlLocalName: KAZEI_KIKAN_FROM
+    required: false
+  - sourcePath: it.kazeiKikanTo
+    xmlLocalName: KAZEI_KIKAN_TO
+    required: false
+  - sourcePath: it.jigyoNendoFrom
+    xmlLocalName: JIGYO_NENDO_FROM
+    required: false
+  - sourcePath: it.jigyoNendoTo
+    xmlLocalName: JIGYO_NENDO_TO
+    required: false
+  - sourcePath: it.kessanDay
+    xmlLocalName: KESSAN_DAY
+    required: false
+forms:
+  - formId: HOA110
+    element: HOA110
+    fields:
+      # AAA00010 / TEISYUTSU_DAY are local names from e-tax19 HOA110-014.xsd and ITdefinition.xsd.
+      # The value is an IDREF, not an invented amount. Other 別表 stay unregistered.
+      - sourcePath: hoa110.teishutsuDay
+        xmlLocalName: AAA00010
+        xmlPath: AAA00000.AAA00010
+        required: true
+        kind: idref
+        idref: TEISYUTSU_DAY
+notes: >
+  Envelope and element local names extracted from official e-tax19 XSD:
+  DATA / RHO0010 / CATALOG / CONTENTS / IT / HOA110 (RHO0010-150.xsd,
+  ITdefinition.xsd, HOA110-014.xsd, General FormAttribute).
+  Optional IT fields are XSD local names only — values never invented.
+  EXPERIMENTAL / not productionEligible until NTA transmission test.

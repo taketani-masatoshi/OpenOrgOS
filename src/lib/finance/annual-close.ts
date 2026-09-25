@@ -24,12 +24,19 @@ import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import {
   buildOpeningBalancesFromTrialBalance,
   openingBalancesPath,
+  loadOpeningBalances,
 } from "./ledger/opening-balance.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { equityChangeAmounts, buildIndividualNotesReport } from "./ledger/balance-sheet.js";
-import { monthlyJournalSnapshotHash } from "./monthly-close.js";
+import {
+  monthlyBankSnapshotHash,
+  monthlyTrialSnapshotHash,
+  monthlyJournalSnapshotHash,
+} from "./monthly-close.js";
 import { latestLockForMonth } from "./period-lock.js";
 import { evaluateTaxAdjustment } from "./tax-adjustment.js";
+import { isSoleProprietorship } from "./sole-prop-entity.js";
+import { withFinanceMutation } from "./reconciliation-transaction.js";
 import { evaluateYearEndDeclaration } from "./year-end-declaration.js";
 
 export type AnnualCloseMonthGate = {
@@ -68,6 +75,8 @@ const annualCloseTransactionSchema = z.object({
     .string()
     .regex(/^[a-f0-9]{64}$/)
     .optional(),
+  original_opening: openingBalancesSchema.nullable().optional(),
+  transfer_sha256: z.string().optional(),
   created_at: z.string().min(1),
   updated_at: z.string().min(1),
 });
@@ -79,7 +88,7 @@ function stableValue(value: unknown): unknown {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, nested]) => [key, stableValue(nested)]),
+        .map(([key, nested]) => [key, stableValue(nested)])
     );
   }
   return value;
@@ -99,7 +108,7 @@ export function annualCloseTransactionPath(fiscalYear: string): string {
 function saveTransaction(state: AnnualCloseTransaction): void {
   writeYamlFileAtomic(
     annualCloseTransactionPath(state.fiscal_year),
-    annualCloseTransactionSchema.parse(state),
+    annualCloseTransactionSchema.parse(state)
   );
 }
 
@@ -148,6 +157,14 @@ export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluat
         evidenceValid = false;
         errors.push(`${month}: close gate evidence hash mismatch`);
       }
+      if (monthlyBankSnapshotHash(month) !== evidence.bank_reconciliation_sha256) {
+        evidenceValid = false;
+        errors.push(`${month}: bank snapshot changed after period lock`);
+      }
+      if (monthlyTrialSnapshotHash(month) !== evidence.trial_balance_sha256) {
+        evidenceValid = false;
+        errors.push(`${month}: trial snapshot changed after period lock`);
+      }
       if (monthlyJournalSnapshotHash(month) !== evidence.journal_entries_sha256) {
         evidenceValid = false;
         errors.push(`${month}: journal snapshot changed after period lock`);
@@ -162,9 +179,11 @@ export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluat
   }
   const notes = buildIndividualNotesReport({ asOf, fiscalYear });
   if (!notes.ready) errors.push(...notes.errors);
-  const tax = evaluateTaxAdjustment(fiscalYear);
-  if (!tax.can_compute) {
-    errors.push(...tax.errors.map((issue) => `tax-adjustment: ${issue}`));
+  if (!isSoleProprietorship()) {
+    const tax = evaluateTaxAdjustment(fiscalYear);
+    if (!tax.can_compute) {
+      errors.push(...tax.errors.map((issue) => `tax-adjustment: ${issue}`));
+    }
   }
   return {
     fiscal_year: fiscalYear,
@@ -177,7 +196,7 @@ export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluat
   };
 }
 
-function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }): string | null {
+export function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }): string | null {
   const coa = loadChartOfAccounts();
   const accounts = resolveJournalSourceAccounts(coa);
   const trial = buildTrialBalance({ asOf: input.asOf });
@@ -194,39 +213,40 @@ function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }): stri
     const account = coa.accounts.find((item) => item.code === row.account_code);
     if (!account || row.balance_yen === 0) continue;
     if (account.type === "revenue") {
-      const amount = Math.abs(row.balance_yen);
+      const amount = row.normal_balance === "credit" ? row.balance_yen : -row.balance_yen;
       revenueTotal += amount;
       lines.push({
         account_code: row.account_code,
-        debit_yen: amount,
-        credit_yen: 0,
+        debit_yen: Math.max(0, amount),
+        credit_yen: Math.max(0, -amount),
         tax_category: "out_of_scope",
       });
     }
     if (account.type === "expense") {
-      const amount = Math.abs(row.balance_yen);
+      const amount = row.normal_balance === "debit" ? row.balance_yen : -row.balance_yen;
       expenseTotal += amount;
       lines.push({
         account_code: row.account_code,
-        debit_yen: 0,
-        credit_yen: amount,
+        debit_yen: Math.max(0, -amount),
+        credit_yen: Math.max(0, amount),
         tax_category: "out_of_scope",
       });
     }
   }
 
-  const netToRetained = revenueTotal - expenseTotal;
-  if (netToRetained > 0) {
+  const netToEquity = revenueTotal - expenseTotal;
+  const equityAccount = accounts.owner_capital ?? accounts.retained_earnings;
+  if (netToEquity > 0) {
     lines.push({
-      account_code: accounts.retained_earnings,
+      account_code: equityAccount,
       debit_yen: 0,
-      credit_yen: netToRetained,
+      credit_yen: netToEquity,
       tax_category: "out_of_scope",
     });
-  } else if (netToRetained < 0) {
+  } else if (netToEquity < 0) {
     lines.push({
-      account_code: accounts.retained_earnings,
-      debit_yen: -netToRetained,
+      account_code: equityAccount,
+      debit_yen: -netToEquity,
       credit_yen: 0,
       tax_category: "out_of_scope",
     });
@@ -247,7 +267,7 @@ function postAnnualPlTransfer(input: { fiscalYear: string; asOf: string }): stri
       evidence_refs: [`annual-close:${input.fiscalYear}`],
       lines,
     },
-    { allowAnnualPlTransfer: true },
+    { allowAnnualPlTransfer: true }
   );
   return entryId;
 }
@@ -268,7 +288,6 @@ function closeAccountingYearUnlocked(input: {
   operatorId: string;
 }): AnnualCloseResult {
   assertFiscalYear(input.fiscalYear);
-  const evaluation = evaluateAnnualCloseGates(input.fiscalYear);
   const transactionPath = annualCloseTransactionPath(input.fiscalYear);
   const existing = (() => {
     try {
@@ -280,13 +299,57 @@ function closeAccountingYearUnlocked(input: {
   })();
   // After a successful close the live opening belongs to the next year, so
   // statement/tax gates for this FY may fail. Resume from the committed state.
-  if (existing?.phase === "committed") {
+  if (
+    existing?.phase === "committed" ||
+    (existing?.phase === "committing" && existing.opening_sha256)
+  ) {
     const expected = existing.opening_sha256;
     const proposal = readYamlFile(existing.proposal_path, openingBalancesSchema);
-    const live = readYamlFile(openingBalancesPath(), openingBalancesSchema);
-    if (!expected || sha256(proposal) !== expected || sha256(live) !== expected) {
+    const live = loadOpeningBalances();
+    const months = listFiscalYearMonths(input.fiscalYear, resolveCompanyFiscalYearEndMonth());
+    const evidence = months.map((month) => {
+      const lock = latestLockForMonth(month);
+      return { month, at: lock?.at, evidence: lock?.evidence };
+    });
+    if (sha256(evidence) !== existing.evidence_sha256 || existing.original_opening === undefined)
+      throw new Error("Annual close recovery evidence changed or legacy state requires review");
+    for (const month of months) {
+      const lock = latestLockForMonth(month);
+      if (
+        lock?.status !== "locked" ||
+        !lock.evidence ||
+        monthlyJournalSnapshotHash(month) !== lock.evidence.journal_entries_sha256 ||
+        monthlyBankSnapshotHash(month) !== lock.evidence.bank_reconciliation_sha256 ||
+        monthlyTrialSnapshotHash(month, existing.original_opening) !==
+          lock.evidence.trial_balance_sha256
+      )
+        throw new Error(`Annual close source changed: ${month}`);
+    }
+    const transfer =
+      loadJournalEntries().entries.find((e) => e.entry_id === existing.transfer_entry_id) ?? null;
+    if (sha256(transfer) !== existing.transfer_sha256) throw new Error("Annual transfer changed");
+    if (
+      !expected ||
+      sha256(proposal) !== expected ||
+      (sha256(live) !== expected &&
+        !(existing.phase === "committing" && sha256(live) === sha256(existing.original_opening)))
+    ) {
       throw new Error(`Annual close ${input.fiscalYear} committed artifacts changed`);
     }
+    if (existing.phase !== "committed") {
+      writeYamlFileAtomic(openingBalancesPath(), proposal);
+      saveTransaction({ ...existing, phase: "committed", updated_at: new Date().toISOString() });
+    }
+    const endMonth = resolveCompanyFiscalYearEndMonth();
+    const evaluation: AnnualCloseEvaluation = {
+      fiscal_year: input.fiscalYear,
+      as_of: fiscalYearEndDate(input.fiscalYear, endMonth),
+      next_fiscal_year: nextFiscalYear(input.fiscalYear),
+      next_period_start: fiscalYearStartMonth(nextFiscalYear(input.fiscalYear), endMonth),
+      months: months.map((month) => ({ month, locked: true, can_lock: true })),
+      can_close: true,
+      errors: [],
+    };
     return {
       ok: true,
       posted_entry_ids: [],
@@ -294,6 +357,7 @@ function closeAccountingYearUnlocked(input: {
       evaluation,
     };
   }
+  const evaluation = evaluateAnnualCloseGates(input.fiscalYear);
   if (!evaluation.can_close) {
     return {
       ok: false,
@@ -317,6 +381,7 @@ function closeAccountingYearUnlocked(input: {
     fiscal_year: input.fiscalYear,
     operator_id: input.operatorId,
     phase: "prepared",
+    original_opening: loadOpeningBalances(),
     evidence_sha256: evidenceHash,
     transfer_entry_id: `JE-CLOSE-${input.fiscalYear}-PL-TRANSFER`,
     proposal_path: proposedOpeningBalancesPath(evaluation.next_fiscal_year),
@@ -356,6 +421,14 @@ function closeAccountingYearUnlocked(input: {
   const proposalPath = writeOpeningProposal(opening, evaluation.next_fiscal_year);
   const parsedOpening = openingBalancesSchema.parse(opening);
   const openingHash = sha256(parsedOpening);
+  transaction = {
+    ...transaction,
+    opening_sha256: openingHash,
+    transfer_sha256: sha256(
+      loadJournalEntries().entries.find((e) => e.entry_id === transaction.transfer_entry_id) ?? null
+    ),
+  };
+  saveTransaction(transaction);
   writeYamlFileAtomic(openingBalancesPath(), parsedOpening);
   transaction = {
     ...transaction,
@@ -378,9 +451,11 @@ export function closeAccountingYear(input: {
   operatorId: string;
 }): AnnualCloseResult {
   assertFiscalYear(input.fiscalYear);
-  return withYamlFileLock(
-    `${annualCloseTransactionPath(input.fiscalYear)}.operation`,
-    () => closeAccountingYearUnlocked(input),
-    { retries: 120, retryDelayMs: 25 },
+  return withFinanceMutation(() =>
+    withYamlFileLock(
+      `${annualCloseTransactionPath(input.fiscalYear)}.operation`,
+      () => closeAccountingYearUnlocked(input),
+      { retries: 120, retryDelayMs: 25 }
+    )
   );
 }

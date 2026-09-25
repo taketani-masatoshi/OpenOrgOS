@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadCompany, loadProperties } from "./data.js";
+import { loadProperties } from "./data.js";
 import { loadOrgCompanyBilling } from "./org/tenant-data.js";
 import { monthRange } from "./utils.js";
 import {
@@ -16,12 +16,11 @@ import {
   type RentInvoiceInput,
 } from "./invoice-pdf.js";
 import { postSalesInvoiceJournalEntry } from "./finance/journal-sources.js";
-import { computeStayMetrics, loadTaxLedger } from "../../steward/modules/hospitality/cli/ops-lib.js";
 import {
-  formatJapaneseDate,
-  formatJapaneseYearMonth,
-  paymentDueDate,
-} from "./invoice-dates.js";
+  computeStayMetrics,
+  loadTaxLedger,
+} from "../../steward/modules/hospitality/cli/ops-lib.js";
+import { formatJapaneseDate, formatJapaneseYearMonth, paymentDueDate } from "./invoice-dates.js";
 import {
   invoiceEmailsDir,
   invoiceOutputDir,
@@ -39,6 +38,7 @@ export interface InvoiceGenerateOptions {
   to: string;
   fiscalYear?: string;
   tenantName?: string;
+  counterpartyId?: string;
   tenantEmail?: string;
   bankAccount?: string;
   senderEmail?: string;
@@ -99,6 +99,9 @@ export async function runInvoiceGenerate(
     };
   }
 
+  const counterpartyId = options.counterpartyId ?? billing.counterparty_id;
+  if (!counterpartyId?.trim())
+    throw new Error("Invoice counterparty_id required in billing config or --counterparty-id");
   const company = loadOrgCompanyBilling();
   const properties = loadProperties();
   const prop = properties.find((p) => p.id === options.propertyId);
@@ -111,7 +114,10 @@ export async function runInvoiceGenerate(
 
   const monthlyRentDefault = prop.rental?.monthly_rent ?? 100_000;
   const tenantName =
-    options.tenantName ?? billing.tenant_name ?? template.defaults?.tenant_name ?? TENANT_NAME_PLACEHOLDER;
+    options.tenantName ??
+    billing.tenant_name ??
+    template.defaults?.tenant_name ??
+    TENANT_NAME_PLACEHOLDER;
   const tenantEmail =
     options.tenantEmail ??
     billing.tenant_email ??
@@ -166,13 +172,13 @@ export async function runInvoiceGenerate(
       template.pdf.tax_mode === "taxable_10" && options.moduleId === "hospitality";
     postSalesInvoiceJournalEntry({
       invoiceId,
+      counterpartyId,
       amountYen: invoiceTotal,
       revenueAccountCode: options.moduleId === "hospitality" ? "4200" : undefined,
       taxCategory: splitConsumptionTax ? "taxable_10" : undefined,
       netRevenueYen: splitConsumptionTax ? monthlyRent : undefined,
       consumptionTaxYen: splitConsumptionTax ? consumptionTaxJpy : undefined,
-      lodgingTaxYen:
-        splitConsumptionTax && lodgingTaxJpy > 0 ? lodgingTaxJpy : undefined,
+      lodgingTaxYen: splitConsumptionTax && lodgingTaxJpy > 0 ? lodgingTaxJpy : undefined,
       occurredAt: `${billingMonth}-01T00:00:00.000Z`,
       authorizedBy: "invoice-generate",
       propertyId: options.propertyId ?? billing.propertyId,

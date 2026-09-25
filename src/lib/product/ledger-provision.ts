@@ -152,6 +152,7 @@ export function provisionLedgerTenant(input: {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   accountantParentId?: string;
+  entityForm?: string;
 }): { tenant_id: string; path: string; ceo_operator_id: string } {
   const tenantId = input.tenantId.trim().toLowerCase();
   const dest = join(getTenantsDir(), tenantId);
@@ -201,7 +202,7 @@ export function provisionLedgerTenant(input: {
       id: tenantId,
       name: input.companyName,
       jurisdiction: "JP",
-      entityForm: "kk",
+      entityForm: input.entityForm ?? "kk",
     });
     return null;
   });

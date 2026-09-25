@@ -8,6 +8,7 @@ import {
 } from "../../../schemas/finance/period-lock.js";
 import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
+import { withFinanceMutation } from "./reconciliation-transaction.js";
 
 const REL = "finance/period-locks.yaml";
 
@@ -24,6 +25,10 @@ export function loadPeriodLocks(): PeriodLocksFile {
 }
 
 export function savePeriodLocks(file: PeriodLocksFile): void {
+  return withFinanceMutation(() => savePeriodLocksInner(file));
+}
+
+function savePeriodLocksInner(file: PeriodLocksFile): void {
   const previous = existsSync(path()) ? readYamlFile(path(), periodLocksFileSchema) : null;
   assertPeriodLocksAppendOnly(file, previous);
   writeYamlFileAtomic(path(), periodLocksFileSchema.parse(file));
@@ -32,7 +37,7 @@ export function savePeriodLocks(file: PeriodLocksFile): void {
 /** Past lock rows are immutable; only append new lock/unlock records. */
 export function assertPeriodLocksAppendOnly(
   next: PeriodLocksFile,
-  previous: PeriodLocksFile | null,
+  previous: PeriodLocksFile | null
 ): void {
   if (!previous) return;
   if (next.locks.length < previous.locks.length) {
@@ -50,7 +55,7 @@ export function assertPeriodLocksAppendOnly(
       JSON.stringify(a.evidence ?? null) !== JSON.stringify(b.evidence ?? null)
     ) {
       throw new Error(
-        `period-locks.yaml is append-only: historical row ${i} (${a.month}) was modified`,
+        `period-locks.yaml is append-only: historical row ${i} (${a.month}) was modified`
       );
     }
   }
@@ -58,7 +63,7 @@ export function assertPeriodLocksAppendOnly(
 
 export function latestLockForMonth(
   month: string,
-  file = loadPeriodLocks(),
+  file = loadPeriodLocks()
 ): PeriodLockEntry | undefined {
   return [...file.locks].reverse().find((lock) => lock.month === month);
 }
@@ -82,6 +87,10 @@ export function lockMonth(input: {
   lockedAt?: string;
   evidence?: PeriodLockEntry["evidence"];
 }): PeriodLockEntry {
+  return withFinanceMutation(() => lockMonthInner(input));
+}
+
+function lockMonthInner(input: Parameters<typeof lockMonth>[0]): PeriodLockEntry {
   const file = loadPeriodLocks();
   const latest = latestLockForMonth(input.month, file);
   if (latest?.status === "locked") return latest;
@@ -104,6 +113,10 @@ export function unlockMonth(input: {
   reason?: string;
   unlockedAt?: string;
 }): PeriodLockEntry | null {
+  return withFinanceMutation(() => unlockMonthInner(input));
+}
+
+function unlockMonthInner(input: Parameters<typeof unlockMonth>[0]): PeriodLockEntry | null {
   if (!isMonthLocked(input.month)) return null;
   if (!input.reason?.trim()) {
     throw new Error("Period unlock requires a reason");

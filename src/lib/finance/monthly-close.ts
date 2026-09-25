@@ -1,3 +1,5 @@
+import type { OpeningBalancesFile } from "../../../schemas/finance/opening-balances.js";
+import { withFinanceMutation } from "./reconciliation-transaction.js";
 /**
  * Monthly accounting close — one gate for CLI and Workbench.
  * Lock only when error-level gates pass.
@@ -11,7 +13,7 @@ import YAML from "yaml";
 import { runValidateReport } from "../../commands/validate.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { getDataDir } from "../utils.js";
-import { buildConsumptionTaxSummary, runConsumptionTaxCheck } from "./consumption-tax.js";
+import { evaluateIndirectTaxClose } from "./indirect-tax/port.js";
 import { resolveCloseAdjustmentAmountFromCoa } from "./close-adjustments.js";
 import { buildDepreciationSchedule, postDepreciationJournalEntries } from "./depreciation.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
@@ -91,18 +93,22 @@ function monthlyPlPosted(month: string): boolean {
       entry.entry_id.startsWith(`JE-MPL-${month}-`) ||
       (entry.source?.kind === "closing" &&
         entry.source.period === month &&
-        entry.source.adjustment_id.startsWith("monthly-pl-")),
+        entry.source.adjustment_id.startsWith("monthly-pl-"))
   );
 }
 
 function depreciationPosted(month: string): boolean {
   return loadJournalEntries().entries.some(
-    (entry) => entry.source?.kind === "depreciation" && entry.source.period === month,
+    (entry) => entry.source?.kind === "depreciation" && entry.source.period === month
   );
 }
 
 function payrollPosted(month: string): boolean {
-  return loadJournalEntries().entries.some((entry) => entry.entry_id === `JE-PAYROLL-${month}`);
+  return loadJournalEntries().entries.some(
+    (entry) =>
+      entry.entry_id === `JE-PAYROLL-${month}` ||
+      entry.entry_id.startsWith(`JE-PAYROLL-${month}-`)
+  );
 }
 
 function previousMonth(month: string): string {
@@ -130,7 +136,7 @@ function stableValue(value: unknown): unknown {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, nested]) => [key, stableValue(nested)]),
+        .map(([key, nested]) => [key, stableValue(nested)])
     );
   }
   return value;
@@ -147,8 +153,30 @@ export function monthlyJournalSnapshotHash(month: string): string {
     loadJournalEntries().entries.filter(
       (entry) =>
         entry.occurred_at.startsWith(month) &&
-        !(entry.source?.kind === "closing" && entry.source.adjustment_id === "pl-transfer"),
-    ),
+        !(entry.source?.kind === "closing" && entry.source.adjustment_id === "pl-transfer")
+    )
+  );
+}
+
+export function monthlyBankSnapshotHash(month: string): string {
+  if (!bankFileExists()) return sha256({ missing: true });
+  const lite = loadBankStatementsLite(lastDayOfMonth(month));
+  if (!lite) throw new Error("Bank snapshot unavailable");
+  const raw = YAML.parse(
+    readFileSync(join(getDataDir(), "finance", "bank-statements.yaml"), "utf8")
+  ) as { entries: Array<{ id: string; date: string }> };
+  return sha256({
+    rows: raw.entries.filter((row) => row.date.startsWith(month)),
+    reconciliation: lite.entries.filter((row) => row.date.startsWith(month)),
+  });
+}
+
+export function monthlyTrialSnapshotHash(
+  month: string,
+  openingOverride?: OpeningBalancesFile | null
+): string {
+  return sha256(
+    buildTrialBalance({ asOf: lastDayOfMonth(month), excludeAnnualTransfer: true, openingOverride })
   );
 }
 
@@ -156,13 +184,6 @@ export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): P
   if (!evaluation.can_lock) {
     throw new Error(`Cannot capture close evidence for ${evaluation.month}: close gates failed`);
   }
-  const rows = bankRowsForMonth(evaluation.month);
-  const bankSnapshot = {
-    state: rows,
-    unmatched:
-      typeof rows === "number" && rows > 0 ? unmatchedBankCountForMonth(evaluation.month) : null,
-  };
-  const trial = buildTrialBalance({ asOf: evaluation.as_of });
   const gateResults = evaluation.items.map(({ id, pass, level, detail }) => ({
     id,
     pass,
@@ -173,30 +194,12 @@ export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): P
     version: 1,
     algorithm: "sha256",
     journal_entries_sha256: monthlyJournalSnapshotHash(evaluation.month),
-    bank_reconciliation_sha256: sha256(bankSnapshot),
-    trial_balance_sha256: sha256(trial),
+    bank_reconciliation_sha256: monthlyBankSnapshotHash(evaluation.month),
+    trial_balance_sha256: monthlyTrialSnapshotHash(evaluation.month),
     gate_results_sha256: sha256(gateResults),
     can_lock: true,
     gate_results: gateResults,
   };
-}
-
-function missingTaxCategories(month: string): string[] {
-  const types = new Map(
-    loadChartOfAccounts().accounts.map((account) => [account.code, account.type]),
-  );
-  const missing: string[] = [];
-  for (const entry of loadJournalEntries().entries) {
-    if (!entry.occurred_at.startsWith(month)) continue;
-    for (const line of entry.lines) {
-      const type = types.get(line.account_code);
-      if (type !== "revenue" && type !== "expense") continue;
-      if (!line.tax_category) {
-        missing.push(`${entry.entry_id}:${line.account_code}`);
-      }
-    }
-  }
-  return missing;
 }
 
 export function evaluateInventoryCloseGate(month: string, asOf: string): MonthlyCloseGate {
@@ -222,7 +225,7 @@ export function evaluateInventoryCloseGate(month: string, asOf: string): Monthly
       "棚卸と売上原価",
       false,
       "error",
-      error instanceof Error ? error.message : "inventory unreadable",
+      error instanceof Error ? error.message : "inventory unreadable"
     );
   }
   const row = months.find((item) => item.month === month);
@@ -238,12 +241,12 @@ export function evaluateInventoryCloseGate(month: string, asOf: string): Monthly
       "棚卸と売上原価",
       false,
       "error",
-      `inventory ${inventory} != ${row.ending_inventory_yen}`,
+      `inventory ${inventory} != ${row.ending_inventory_yen}`
     );
   }
   if (row.cogs_account_code && row.cogs_yen != null) {
     const cogs = Math.abs(
-      trial.rows.find((item) => item.account_code === row.cogs_account_code)?.balance_yen ?? 0,
+      trial.rows.find((item) => item.account_code === row.cogs_account_code)?.balance_yen ?? 0
     );
     if (cogs !== row.cogs_yen) {
       return gate(
@@ -251,7 +254,7 @@ export function evaluateInventoryCloseGate(month: string, asOf: string): Monthly
         "棚卸と売上原価",
         false,
         "error",
-        `cogs ${cogs} != ${row.cogs_yen}`,
+        `cogs ${cogs} != ${row.cogs_yen}`
       );
     }
   }
@@ -265,10 +268,12 @@ function bankFileExists(): boolean {
 /** Unmatched bank rows in the close month. null = no bank file. */
 export function unmatchedBankCountForMonth(month: string): number | null {
   if (!bankFileExists()) return null;
-  const lite = loadBankStatementsLite();
+  const lite = loadBankStatementsLite(lastDayOfMonth(month));
   if (!lite) return Number.POSITIVE_INFINITY;
   return lite.entries.filter(
-    (row) => row.date.slice(0, 7) === month && (!row.status || row.status === "unmatched"),
+    (row) =>
+      row.date.slice(0, 7) === month &&
+      (!row.status || row.status === "unmatched" || row.status === "partial")
   ).length;
 }
 
@@ -277,7 +282,7 @@ function gate(
   label: string,
   pass: boolean,
   level: MonthlyCloseGateLevel,
-  detail?: string,
+  detail?: string
 ): MonthlyCloseGate {
   return { id, label, pass, level, ...(detail ? { detail } : {}) };
 }
@@ -286,7 +291,7 @@ function optionalGate(
   id: string,
   label: string,
   required: boolean,
-  posted: boolean,
+  posted: boolean
 ): MonthlyCloseGate {
   if (!required) {
     return gate(id, label, true, "skip", "not required");
@@ -299,7 +304,7 @@ export function evaluateMonthlyCloseGates(
   opts?: {
     requireDepreciation?: boolean;
     requirePayroll?: boolean;
-  },
+  }
 ): MonthlyCloseEvaluation {
   monthKey(month);
   const asOf = lastDayOfMonth(month);
@@ -312,7 +317,7 @@ export function evaluateMonthlyCloseGates(
   if (requireDepreciation) {
     try {
       depRequired = buildDepreciationSchedule(month).some(
-        (line) => line.monthly_depreciation_yen > 0,
+        (line) => line.monthly_depreciation_yen > 0
       );
     } catch (error) {
       depDetail = error instanceof Error ? error.message : String(error);
@@ -325,24 +330,24 @@ export function evaluateMonthlyCloseGates(
           "depreciation-posted",
           "減価償却を計上済み",
           depRequired,
-          depreciationPosted(month),
-        ),
+          depreciationPosted(month)
+        )
   );
   items.push(
     optionalGate(
       "payroll-posted",
       "給与発生を計上済み",
       requirePayroll && payrollGross() > 0,
-      payrollPosted(month),
-    ),
+      payrollPosted(month)
+    )
   );
   items.push(
     optionalGate(
       "monthly-pl-posted",
       "月次損益を計上済み",
       monthlyPlRequired(month),
-      monthlyPlPosted(month),
-    ),
+      monthlyPlPosted(month)
+    )
   );
 
   if (!isFirstFiscalMonth(month) && !isMonthLocked(previousMonth(month))) {
@@ -352,8 +357,8 @@ export function evaluateMonthlyCloseGates(
         "直前の月がロック済み",
         false,
         "error",
-        `${previousMonth(month)} unlocked`,
-      ),
+        `${previousMonth(month)} unlocked`
+      )
     );
   } else {
     items.push(gate("prior-month-locked", "直前の月がロック済み", true, "error", "ok"));
@@ -366,8 +371,8 @@ export function evaluateMonthlyCloseGates(
       "試算表が一致",
       trial.balanced,
       "error",
-      trial.balanced ? "balanced" : trial.issues.join("; ") || "unbalanced",
-    ),
+      trial.balanced ? "balanced" : trial.issues.join("; ") || "unbalanced"
+    )
   );
 
   const fiscalYear = resolveFiscalYear(resolveCompanyFiscalYearEndMonth(), month);
@@ -381,8 +386,8 @@ export function evaluateMonthlyCloseGates(
       "貸借対照表が一致",
       bsPass,
       "error",
-      bsPass ? "balanced" : balanceSheet.issues.join("; ") || "unbalanced",
-    ),
+      bsPass ? "balanced" : balanceSheet.issues.join("; ") || "unbalanced"
+    )
   );
 
   const subsidiary = subsidiaryLedgerIntegrityIssues(asOf);
@@ -392,8 +397,8 @@ export function evaluateMonthlyCloseGates(
       "補助元帳が統制勘定と一致",
       subsidiary.length === 0,
       "error",
-      subsidiary.length === 0 ? "tied out" : subsidiary.join("; "),
-    ),
+      subsidiary.length === 0 ? "tied out" : subsidiary.join("; ")
+    )
   );
 
   const rows = bankRowsForMonth(month);
@@ -402,17 +407,17 @@ export function evaluateMonthlyCloseGates(
     items.push(gate("bank-unmatched", "銀行明細の未消込なし", true, "skip", "no bank file"));
   } else if (rows === 0) {
     items.push(
-      gate("bank-imported", "銀行明細を取込済み", false, "error", "no bank rows for month"),
+      gate("bank-imported", "銀行明細を取込済み", false, "error", "no bank rows for month")
     );
     items.push(
-      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "no bank rows for month"),
+      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "no bank rows for month")
     );
   } else if (rows === "unreadable") {
     items.push(
-      gate("bank-imported", "銀行明細を取込済み", false, "error", "bank statements unreadable"),
+      gate("bank-imported", "銀行明細を取込済み", false, "error", "bank statements unreadable")
     );
     items.push(
-      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "bank statements unreadable"),
+      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "bank statements unreadable")
     );
   } else {
     const unmatched = unmatchedBankCountForMonth(month);
@@ -423,31 +428,17 @@ export function evaluateMonthlyCloseGates(
         "銀行明細の未消込なし",
         unmatched === 0,
         "error",
-        `${unmatched} unmatched`,
-      ),
+        `${unmatched} unmatched`
+      )
     );
   }
 
   items.push(evaluateInventoryCloseGate(month, asOf));
 
-  const missingTax = missingTaxCategories(month);
-  let taxDetail = "ok";
-  let taxPass = missingTax.length === 0;
-  if (!taxPass) taxDetail = `missing tax_category ${missingTax.join(", ")}`;
-  try {
-    // Profile/check issues only — ConsumptionTaxSummary has no `issues` field.
-    const profileErrors = runConsumptionTaxCheck().issues.filter(
-      (issue) => issue.severity === "blocking"
-    );
-    if (profileErrors.length > 0) {
-      taxPass = false;
-      taxDetail = profileErrors.map((issue) => issue.message).join("; ");
-    }
-  } catch (error) {
-    taxPass = false;
-    taxDetail = error instanceof Error ? error.message : String(error);
-  }
-  items.push(gate("consumption-tax", "消費税集計", taxPass, "error", taxDetail));
+  const indirectTax = evaluateIndirectTaxClose(month);
+  items.push(
+    gate("consumption-tax", indirectTax.label, indirectTax.pass, "error", indirectTax.detail)
+  );
 
   // Always re-validate live finance data. Callers must not inject a report.
   const validate = runValidateReport({ warnings: true });
@@ -460,8 +451,8 @@ export function evaluateMonthlyCloseGates(
       "帳簿整合性チェック",
       validateErrors.length === 0,
       "error",
-      validateErrors.length === 0 ? "ok" : `${validateErrors.length} errors`,
-    ),
+      validateErrors.length === 0 ? "ok" : `${validateErrors.length} errors`
+    )
   );
 
   const plan = loadMonthlyFinances().find((row) => row.month === month);
@@ -478,8 +469,8 @@ export function evaluateMonthlyCloseGates(
       "月次YAML突合",
       Boolean(plan) && reconcile.balanced,
       "warning",
-      reconcileDetail,
-    ),
+      reconcileDetail
+    )
   );
 
   const errors = items
@@ -541,7 +532,7 @@ function postCloseAdjustments(month: string): string[] {
 function postMonthJournals(
   month: string,
   operatorId: string,
-  opts?: { postDepreciation?: boolean; postPayroll?: boolean },
+  opts?: { postDepreciation?: boolean; postPayroll?: boolean }
 ): string[] {
   const posted: string[] = [];
   if (opts?.postDepreciation !== false) {
@@ -549,13 +540,17 @@ function postMonthJournals(
       ...postDepreciationJournalEntries({
         period: month,
         authorizedBy: operatorId,
-      }),
+      })
     );
   }
   if (opts?.postPayroll !== false && payrollGross() > 0) {
     const computed = computePayrollMonth({
       month,
       grossYen: payrollGross(),
+      healthStandardRemunerationYen:
+        loadPayroll().employee_payroll?.health_standard_remuneration_yen,
+      pensionStandardRemunerationYen:
+        loadPayroll().employee_payroll?.pension_standard_remuneration_yen,
     });
     const payrollEntry = postPayrollJournalEntry({
       period: month,
@@ -563,6 +558,7 @@ function postMonthJournals(
       grossYen: computed.gross_yen,
       withholdingYen: computed.withholding_yen,
       socialEmployerYen: computed.social_insurance.employer_total_yen,
+      socialEmployeeYen: computed.social_insurance.employee_total_yen,
     });
     if (payrollEntry) posted.push(payrollEntry);
   }
@@ -570,7 +566,8 @@ function postMonthJournals(
     ...postMonthlyPlJournalEntries({
       period: month,
       authorizedBy: operatorId,
-    }),
+      skipPayroll: opts?.postPayroll === false,
+    })
   );
   posted.push(...postCloseAdjustments(month));
   return posted;
@@ -580,7 +577,7 @@ function postMonthJournals(
  * Post month-end journals, then lock only if error gates pass.
  * A month that is already locked is not posted into and is not unlocked.
  */
-export function closeAccountingMonth(input: {
+function closeAccountingMonthUnlocked(input: {
   month: string;
   operatorId: string;
   postDepreciation?: boolean;
@@ -614,4 +611,10 @@ export function closeAccountingMonth(input: {
     ok: evaluation.can_lock,
     evaluation,
   };
+}
+
+export function closeAccountingMonth(
+  input: Parameters<typeof closeAccountingMonthUnlocked>[0]
+): MonthlyCloseResult {
+  return withFinanceMutation(() => closeAccountingMonthUnlocked(input));
 }

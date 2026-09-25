@@ -27,6 +27,7 @@ export type GlStatementTotals = {
   non_operating_income: number;
   non_operating_expense: number;
   ordinary_profit: number;
+  extraordinary_gain: number;
   extraordinary: number;
   pretax_profit: number;
   income_tax: number;
@@ -189,12 +190,13 @@ export function summarizeGlStatementSections(rows: GlPlRow[]): GlStatementTotals
   const sga_total = sectionTotal(rows, "sga");
   const non_operating_income = sectionTotal(rows, "non_operating_income");
   const non_operating_expense = sectionTotal(rows, "non_operating_expense");
+  const extraordinary_gain = sectionTotal(rows, "extraordinary_gain");
   const extraordinary = sectionTotal(rows, "extraordinary");
   const income_tax = sectionTotal(rows, "income_tax");
   const gross_profit = revenue_total - cogs_total;
   const operating_profit = gross_profit - sga_total;
   const ordinary_profit = operating_profit + non_operating_income - non_operating_expense;
-  const pretax_profit = ordinary_profit - extraordinary;
+  const pretax_profit = ordinary_profit + extraordinary_gain - extraordinary;
   const net_profit = pretax_profit - income_tax;
   return {
     revenue_total,
@@ -205,6 +207,7 @@ export function summarizeGlStatementSections(rows: GlPlRow[]): GlStatementTotals
     non_operating_income,
     non_operating_expense,
     ordinary_profit,
+    extraordinary_gain,
     extraordinary,
     pretax_profit,
     income_tax,
@@ -289,7 +292,16 @@ export function buildGlKessanPlRows(input: {
     ...pair(current.ordinary_profit, prior?.ordinary_profit),
     variant: "total",
   });
-  pushRows(rows, "extraordinary", "Ⅵ. 特別損益");
+  rows.push({
+    label: "特別利益",
+    ...pair(current.extraordinary_gain, prior?.extraordinary_gain),
+    variant: "total",
+  });
+  rows.push({
+    label: "特別損失",
+    ...pair(current.extraordinary, prior?.extraordinary),
+    variant: "total",
+  });
   rows.push({
     label: "税引前当期純利益",
     ...pair(current.pretax_profit, prior?.pretax_profit),

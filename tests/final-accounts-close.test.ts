@@ -25,7 +25,7 @@ describe("final accounts close gates", () => {
       [
         "会計方針: 減価償却は定額法により計上する。収益および費用は発生主義で認識する。",
         "配当・資本取引: 該当なし",
-      ].join("\n"),
+      ].join("\n")
     );
     expect(notes.some((line) => line.startsWith("後発事象:"))).toBe(true);
   });
@@ -44,6 +44,7 @@ describe("final accounts close gates", () => {
     expect(draft.submission).toBe("not-for-etax");
     expect(draft.xml).not.toContain("retained_placeholder");
     expect(draft.xml).not.toContain("利益積立金内訳（税理士確定）");
-    expect(draft.xml).toContain("betsu-5-1-like");
+    expect(draft.xml).toContain('form="別表五（一）"');
+    expect(draft.xml).toContain('row="25"');
   });
 });

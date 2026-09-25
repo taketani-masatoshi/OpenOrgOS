@@ -7,11 +7,15 @@ import {
   resolveFiscalYear,
   resolveCompanyFiscalYearEndMonth,
 } from "../fiscal-year.js";
-import { loadChartOfAccounts, loadFixedAssets } from "../../data.js";
+import { loadChartOfAccounts } from "../../data.js";
 import { loadJournalEntries } from "../expense-claim-journal.js";
 import { loadOpeningBalances } from "./opening-balance.js";
-import { readYearEndDeclaration } from "../year-end-file.js";
 import type { PdfTableRow } from "../../pdf.js";
+import {
+  buildAccountingPolicyParagraph,
+  buildEquityMovementParagraph,
+  buildSubsequentEventsParagraph,
+} from "./financial-statement-disclosures.js";
 
 export type BalanceSheetLine = {
   account_code: string;
@@ -174,7 +178,10 @@ export function buildGlKessanBsRows(input?: {
         return account ? inferBsClass(account) === cls : false;
       },
     );
-    if (lines.length === 0) return;
+    if (lines.length === 0) {
+      rows.push({ label: title, amount: 0, variant: "total" });
+      return;
+    }
     rows.push({ label: title, amount: "", variant: "section" });
     for (const line of lines) {
       rows.push({
@@ -433,44 +440,13 @@ export function buildIndividualNotesReport(input?: {
   const endMonth = resolveCompanyFiscalYearEndMonth();
   const fiscalYear =
     input?.fiscalYear ?? resolveFiscalYear(endMonth, asOf.slice(0, 7));
-  const change = equityChangeAmounts({ asOf, fiscalYear });
-  let assets: Array<{ depreciation_method?: string }> = [];
-  try {
-    assets = loadFixedAssets().assets;
-  } catch {
-    assets = [];
-  }
-  const methods = [
-    ...new Set(
-      assets
-        .map((asset) => asset.depreciation_method)
-        .filter((method): method is string => Boolean(method)),
-    ),
-  ];
-  const policy =
-    assets.length === 0
-      ? "会計方針: 固定資産はない。収益および費用は発生主義で認識する。"
-      : methods.length === 1
-        ? `会計方針: 減価償却は${methods[0]}により計上する。収益および費用は発生主義で認識する。`
-        : `会計方針: 減価償却は方法が混在する（${methods.join("・")}）。収益および費用は発生主義で認識する。`;
-  const movement =
-    change.dividend_yen === 0 && change.capital_yen === 0
-      ? "配当・資本取引: 該当なし"
-      : `配当 ${change.dividend_yen} 円、資本取引 ${change.capital_yen} 円`;
-  const declaration = readYearEndDeclaration(fiscalYear);
-  const errors: string[] = [];
-  let subsequent = "後発事象: 宣言がない";
-  if (!declaration.ok) {
-    errors.push("subsequent events missing");
-  } else if (declaration.value.subsequent_events.status === "none") {
-    subsequent = "後発事象: 該当なし";
-  } else {
-    subsequent = `後発事象: ${declaration.value.subsequent_events.text}`;
-  }
+  const policy = buildAccountingPolicyParagraph({ asOf, fiscalYear });
+  const movement = buildEquityMovementParagraph({ asOf, fiscalYear });
+  const subsequent = buildSubsequentEventsParagraph(fiscalYear);
   return {
-    lines: [policy, movement, subsequent],
-    ready: errors.length === 0,
-    errors,
+    lines: [policy, movement, subsequent.line],
+    ready: subsequent.errors.length === 0,
+    errors: [...subsequent.errors],
   };
 }
 

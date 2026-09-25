@@ -1,30 +1,13 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import YAML from "yaml";
-import { z } from "zod";
 import type { FixedAsset } from "../../../schemas/finance/types.js";
 import { loadFixedAssets } from "../data.js";
-import { ROOT_DIR } from "../utils.js";
-import { appendJournalEntry } from "./expense-claim-journal.js";
+import { withFinanceMutation } from "./reconciliation-transaction.js";
+import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
+import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
+import { resolveDecliningBalanceRate } from "./depreciation-rates.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 
 const MONTHS_PER_YEAR = 12;
-
-const depreciationRatesSchema = z.object({
-  version: z.literal(1),
-  fiscal_year_label: z.string().optional(),
-  declining_balance_rates: z
-    .array(
-      z.object({
-        useful_life_years: z.number().int().positive(),
-        rate_pct: z.number().positive(),
-        revised_rate_pct: z.number().positive().optional(),
-        guarantee_rate_pct: z.number().min(0).max(1).optional(),
-      }),
-    )
-    .default([]),
-});
 
 export type DepreciationScheduleLine = {
   asset_id: string;
@@ -37,27 +20,9 @@ export type DepreciationScheduleLine = {
   accumulated_account_code: string;
 };
 
-function readRatesFile(): z.output<typeof depreciationRatesSchema> {
-  const path = join(
-    ROOT_DIR,
-    "steward/jurisdiction-packs/JP/seed/depreciation-rates-2026.yaml",
-  );
-  if (!existsSync(path)) {
-    return depreciationRatesSchema.parse({
-      version: 1,
-      declining_balance_rates: [],
-    });
-  }
-  return depreciationRatesSchema.parse(
-    YAML.parse(readFileSync(path, "utf-8")) as unknown,
-  );
-}
-
 function monthsInService(asset: FixedAsset, period: string): boolean {
   const start =
-    asset.placed_in_service_month ??
-    asset.acquisition_month ??
-    asset.acquisition_date?.slice(0, 7);
+    asset.placed_in_service_month ?? asset.acquisition_month ?? asset.acquisition_date?.slice(0, 7);
   if (!start) return false;
   return period >= start;
 }
@@ -69,39 +34,108 @@ export function computeStraightLineMonthly(asset: FixedAsset): number {
   return Math.floor(annual / MONTHS_PER_YEAR);
 }
 
-export function computeDecliningBalanceMonthly(
-  asset: FixedAsset,
-  bookValue: number,
-): number {
-  if (!asset.useful_life_years) return 0;
-  const rates = readRatesFile();
-  const row = rates.declining_balance_rates.find(
-    (r) => r.useful_life_years === asset.useful_life_years,
+export function computeDecliningBalanceMonthly(asset: FixedAsset, bookValue: number): number {
+  assertJapaneseFinanceEngine();
+  if (bookValue <= 1) return 0;
+  const opening = asset.fiscal_opening_book_value_yen;
+  const guarantee = asset.guarantee_amount_yen;
+  if (
+    opening === undefined ||
+    guarantee === undefined ||
+    !Number.isSafeInteger(opening) ||
+    !Number.isSafeInteger(guarantee) ||
+    opening < 0 ||
+    guarantee < 1 ||
+    !asset.useful_life_years
+  ) {
+    throw new Error(
+      `Declining depreciation requires verified fiscal opening, guarantee and revised basis: ${asset.id}`
+    );
+  }
+  const pack = resolveDecliningBalanceRate(asset.useful_life_years);
+  const expectedGuarantee = Math.max(
+    1,
+    Math.floor(asset.acquisition_cost * pack.guarantee_rate_pct)
   );
-  const ratePct = row?.rate_pct ?? 100 / asset.useful_life_years;
-  const annual = Math.floor((bookValue * ratePct) / 100);
-  return Math.floor(annual / MONTHS_PER_YEAR);
+  if (guarantee !== expectedGuarantee) {
+    throw new Error(`Declining depreciation guarantee amount invalid: ${asset.id}`);
+  }
+  const atGuarantee = bookValue <= guarantee;
+  if (atGuarantee && asset.revised_acquisition_cost_yen === undefined) {
+    throw new Error(
+      `Declining depreciation requires revised acquisition cost at guarantee: ${asset.id}`
+    );
+  }
+  const ratePct = atGuarantee
+    ? (asset.revised_declining_rate_pct ?? pack.revised_rate_pct)
+    : (asset.declining_rate_pct ?? pack.rate_pct);
+  const basis = atGuarantee ? asset.revised_acquisition_cost_yen! : opening;
+  const annual = Math.floor((basis * ratePct) / 100);
+  return Math.min(Math.max(0, Math.floor(bookValue) - 1), Math.floor(annual / MONTHS_PER_YEAR));
 }
 
-export function computeAssetMonthlyDepreciation(
-  asset: FixedAsset,
-  period: string,
-): number {
+export function computeAssetMonthlyDepreciation(asset: FixedAsset, period: string): number {
+  assertJapaneseFinanceEngine();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) throw new Error("Invalid depreciation period");
+  if (asset.disposed_month && period > asset.disposed_month) return 0;
+  if (!Number.isFinite(asset.book_value) || asset.book_value < 0)
+    throw new Error("Invalid depreciation book value");
+  if (asset.book_value <= 1) return 0;
   if (asset.small_amount) return 0;
   if (!monthsInService(asset, period)) return 0;
   if (asset.depreciation_method === "非償却") return 0;
   if (asset.depreciation_method === "定額法") {
-    return computeStraightLineMonthly(asset);
+    return Math.min(
+      Math.max(0, Math.floor(asset.book_value) - 1),
+      computeStraightLineMonthly(asset)
+    );
   }
   return computeDecliningBalanceMonthly(asset, asset.book_value);
 }
 
 export function buildDepreciationSchedule(period: string): DepreciationScheduleLine[] {
+  assertJapaneseFinanceEngine();
   const accounts = resolveJournalSourceAccounts();
   const file = loadFixedAssets();
   return file.assets.flatMap((asset): DepreciationScheduleLine[] => {
-    const monthly = computeAssetMonthlyDepreciation(asset, period);
+    if (period < file.as_of.slice(0, 7))
+      throw new Error("Historical depreciation requires an asset snapshot for that period");
+    const entries = loadJournalEntries().entries;
+    const postedSinceSnapshot = entries
+      .filter(
+        (entry) =>
+          entry.source?.kind === "depreciation" &&
+          entry.source.asset_id === asset.id &&
+          entry.occurred_at.slice(0, 10) > file.as_of &&
+          entry.occurred_at.slice(0, 7) < period
+      )
+      .reduce(
+        (sum, entry) =>
+          sum +
+          entry.lines
+            .filter((line) => line.account_code === accounts.accumulated_depreciation)
+            .reduce((s, line) => s + line.credit_yen - line.debit_yen, 0),
+        0
+      );
+    const monthly = computeAssetMonthlyDepreciation(
+      { ...asset, book_value: Math.max(0, asset.book_value - postedSinceSnapshot) },
+      period
+    );
     if (monthly <= 0) return [];
+    const alreadyPosted = entries.some(
+      (entry) => entry.entry_id === `JE-DEP-${asset.id}-${period}`
+    );
+    if (
+      !alreadyPosted &&
+      entries.some(
+        (entry) =>
+          entry.source?.kind === "depreciation" &&
+          entry.source.asset_id === asset.id &&
+          entry.source.period > period
+      )
+    ) {
+      throw new Error(`Depreciation must be posted in month order: ${asset.id}/${period}`);
+    }
     return [
       {
         asset_id: asset.id,
@@ -120,7 +154,7 @@ export function buildDepreciationSchedule(period: string): DepreciationScheduleL
 /** Annual straight-line depreciation (定額法). */
 export function computeStraightLineAnnualDepreciation(
   acquisitionCost: number,
-  usefulLifeYears: number,
+  usefulLifeYears: number
 ): number {
   if (usefulLifeYears <= 0) return 0;
   return Math.floor(acquisitionCost / usefulLifeYears);
@@ -131,7 +165,7 @@ function computeExpectedAnnualDepreciation(asset: FixedAsset): number {
   if (asset.depreciation_method === "定額法") {
     return computeStraightLineAnnualDepreciation(
       asset.acquisition_cost,
-      asset.useful_life_years ?? 0,
+      asset.useful_life_years ?? 0
     );
   }
   return computeStraightLineMonthly(asset) * MONTHS_PER_YEAR;
@@ -142,10 +176,16 @@ export function validateDepreciationConsistency(): string[] {
   const issues: string[] = [];
   for (const asset of file.assets) {
     if (asset.depreciation_method === "非償却") continue;
+    if (asset.depreciation_method === "定率法") {
+      issues.push(
+        `${asset.id}: declining depreciation requires verified fiscal opening, guarantee and revised basis`
+      );
+      continue;
+    }
     const computedAnnual = computeExpectedAnnualDepreciation(asset);
     if (Math.abs(asset.annual_depreciation - computedAnnual) > 1) {
       issues.push(
-        `${asset.id}: annual_depreciation ${asset.annual_depreciation} != computed ${computedAnnual}`,
+        `${asset.id}: annual_depreciation ${asset.annual_depreciation} != computed ${computedAnnual}`
       );
     }
     if (
@@ -160,15 +200,14 @@ export function validateDepreciationConsistency(): string[] {
       const monthBefore = `${prevY}-${String(prevM).padStart(2, "0")}`;
       if (computeAssetMonthlyDepreciation(asset, monthBefore) > 0) {
         issues.push(
-          `${asset.id}: placed_in_service_month ${asset.placed_in_service_month} より前の月で償却スケジュールが非ゼロ`,
+          `${asset.id}: placed_in_service_month ${asset.placed_in_service_month} より前の月で償却スケジュールが非ゼロ`
         );
       }
     }
-    const expectedBook =
-      asset.acquisition_cost - asset.accumulated_depreciation;
+    const expectedBook = asset.acquisition_cost - asset.accumulated_depreciation;
     if (Math.abs(expectedBook - asset.book_value) > 1) {
       issues.push(
-        `${asset.id}: book_value ${asset.book_value} != acquisition - accumulated (${expectedBook})`,
+        `${asset.id}: book_value ${asset.book_value} != acquisition - accumulated (${expectedBook})`
       );
     }
   }
@@ -188,15 +227,8 @@ export function verifyAllFixedAssetDepreciation(): DepreciationVerifyResult {
   };
 }
 
-export function formatDepreciationVerifyMarkdown(
-  result: DepreciationVerifyResult,
-): string {
-  const lines = [
-    "# 減価償却検算",
-    "",
-    `対象資産: ${result.asset_count} 件`,
-    "",
-  ];
+export function formatDepreciationVerifyMarkdown(result: DepreciationVerifyResult): string {
+  const lines = ["# 減価償却検算", "", `対象資産: ${result.asset_count} 件`, ""];
   if (result.issues.length === 0) {
     lines.push("警告なし（税理士確定額の代替ではありません）");
   } else {
@@ -208,7 +240,7 @@ export function formatDepreciationVerifyMarkdown(
   return lines.join("\n");
 }
 
-export function postDepreciationJournalEntries(input: {
+function postDepreciationJournalEntriesUnlocked(input: {
   period: string;
   authorizedBy: string;
 }): string[] {
@@ -244,4 +276,10 @@ export function postDepreciationJournalEntries(input: {
     posted.push(entryId);
   }
   return posted;
+}
+
+export function postDepreciationJournalEntries(
+  input: Parameters<typeof postDepreciationJournalEntriesUnlocked>[0]
+): string[] {
+  return withFinanceMutation(() => postDepreciationJournalEntriesUnlocked(input));
 }

@@ -3,4 +3,6 @@ employee_payroll:
   monthly_gross_jpy: 280000
   has_withholding: true
   has_social_insurance: true
+  health_standard_remuneration_yen: 280000
+  pension_standard_remuneration_yen: 280000
 account_code: "5300"

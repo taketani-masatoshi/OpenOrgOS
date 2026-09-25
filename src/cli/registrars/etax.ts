@@ -1,0 +1,305 @@
+import type { Command } from "commander";
+import {
+  runEtaxAcceptanceReport,
+  runEtaxApprove,
+  runEtaxApprovePropose,
+  runEtaxBuild,
+  runEtaxHostBind,
+  runEtaxHostStatus,
+  runEtaxProductionEnable,
+  runEtaxProductionRelease,
+  runEtaxProductionReview,
+  runEtaxProductCopySync,
+  runEtaxPromoteRho0010,
+  runEtaxReady,
+  runEtaxReceipt,
+  runEtaxSign,
+  runEtaxSpecFetch,
+  runEtaxSpecStatus,
+  runEtaxSpecUnpack,
+  runEtaxStatus,
+  runEtaxSubmit,
+  runEtaxTransmissionEvidenceRecord,
+  runEtaxTransmissionTestStatus,
+  runEtaxValidate,
+} from "../../commands/etax.js";
+import type { EtaxEnvironment } from "../../../schemas/etax/submission-state.js";
+
+function parseEnv(raw: string | undefined): EtaxEnvironment {
+  if (raw === "mock" || raw === "test" || raw === "production") return raw;
+  return "mock";
+}
+
+export function registerEtaxCommands(program: Command): void {
+  registerEtaxCommandTree(program);
+}
+
+export function registerEtaxCommandTree(parent: Command): void {
+  const etax = parent
+    .command("etax")
+    .description("NTA e-Tax integration (KSK2). EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION");
+
+  const spec = etax.command("spec").description("KSK2 specification registry");
+  spec
+    .command("status")
+    .description("Show KSK2 spec registration and production gate")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => runEtaxSpecStatus({ json: Boolean(opts.json) }));
+
+  spec
+    .command("fetch")
+    .description("Retrieve listed KSK2 CABs into gitignored spec/vendor and record SHA-256")
+    .option(
+      "--ids <csv>",
+      "Comma-separated artifact ids (default: e-tax01,03,04,05,07,08,10,18,19)"
+    )
+    .option("--no-unpack", "Hash only; do not unpack")
+    .option("--force", "Re-download even if the CAB is already present")
+    .option("--json", "JSON output")
+    .action(async (opts: { ids?: string; unpack?: boolean; force?: boolean; json?: boolean }) => {
+      await runEtaxSpecFetch({
+        ids: opts.ids
+          ?.split(",")
+          .map((id) => id.trim())
+          .filter(Boolean),
+        unpack: opts.unpack !== false,
+        force: Boolean(opts.force),
+        json: Boolean(opts.json),
+      });
+    });
+
+  spec
+    .command("unpack")
+    .description("Unpack already-retrieved KSK2 CABs (Shift-JIS names → ASCII-safe paths)")
+    .option("--ids <csv>", "Comma-separated artifact ids")
+    .option("--json", "JSON output")
+    .action(async (opts: { ids?: string; json?: boolean }) => {
+      await runEtaxSpecUnpack({
+        ids: opts.ids
+          ?.split(",")
+          .map((id) => id.trim())
+          .filter(Boolean),
+        json: Boolean(opts.json),
+      });
+    });
+
+  etax
+    .command("build")
+    .description("Create ReturnPackage from JSON (official XML needs mapping + unpacked XSD)")
+    .option("--from <path>", "Return package JSON")
+    .option("--from-accounting", "Build the payload from evaluateTaxAdjustment. Does not submit.")
+    .option("--fiscal-year <FY####>", "Fiscal year for --from-accounting")
+    .option("--taxpayer-file <path>", "Taxpayer IT identity JSON. Values are never invented.")
+    .option("--out <path>", "Write generated official XML here")
+    .option("--json", "JSON output")
+    .action((opts: {
+      from?: string;
+      out?: string;
+      json?: boolean;
+      fromAccounting?: boolean;
+      fiscalYear?: string;
+      taxpayerFile?: string;
+    }) =>
+      runEtaxBuild({
+        from: opts.from,
+        out: opts.out,
+        json: Boolean(opts.json),
+        fromAccounting: Boolean(opts.fromAccounting),
+        fiscalYear: opts.fiscalYear,
+        taxpayerFile: opts.taxpayerFile,
+      }),
+    );
+
+  etax
+    .command("validate")
+    .description(
+      "Three-layer validation (XSD / procedure / OrgOS hash). Production remains disabled."
+    )
+    .argument("<submission-id>")
+    .option("--xml <path>", "Official XML instance to validate (Layer 1)")
+    .option("--env <mock|test|production>", "Procedure gate environment", "mock")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { xml?: string; env?: string; json?: boolean }) =>
+      runEtaxValidate({
+        id,
+        xml: opts.xml,
+        env: parseEnv(opts.env),
+        json: Boolean(opts.json),
+      })
+    );
+
+  etax
+    .command("approve")
+    .description("Grant hash-bound org approval (ADR 0038). Propose first.")
+    .argument("<submission-id>")
+    .option("--approval-id <id>", "Pending or granted org approval id (APR-*)")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { approvalId?: string; json?: boolean }) =>
+      runEtaxApprove({ id, approvalId: opts.approvalId, json: Boolean(opts.json) })
+    );
+
+  etax
+    .command("approve-propose")
+    .description("Propose an org approval bound to the ReturnPackage contentHash")
+    .argument("<submission-id>")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { json?: boolean }) =>
+      runEtaxApprovePropose({ id, json: Boolean(opts.json) })
+    );
+
+  etax
+    .command("ready")
+    .description("Mark a SIGNED submission READY_TO_SUBMIT (hash-bound)")
+    .argument("<submission-id>")
+    .option("--env <mock|test|production>", "Environment", "mock")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { env?: string; json?: boolean }) =>
+      runEtaxReady({ id, env: parseEnv(opts.env), json: Boolean(opts.json) })
+    );
+
+  etax
+    .command("sign")
+    .description(
+      "Sign official XML via NTA module adapter. Mock is not legal. PIN is never a CLI flag."
+    )
+    .argument("<submission-id>")
+    .option("--env <mock|test|production>", "Signature environment", "mock")
+    .option("--provider <mock|official>", "Signature provider (mock only with --env mock)")
+    .option("--xml <path>", "Official XML instance to sign (hash-bound)")
+    .option("--json", "JSON output")
+    .action(
+      async (
+        id: string,
+        opts: { env?: string; provider?: string; xml?: string; json?: boolean }
+      ) => {
+        await runEtaxSign({
+          id,
+          env: parseEnv(opts.env),
+          provider: opts.provider,
+          xml: opts.xml,
+          json: Boolean(opts.json),
+        });
+      }
+    );
+
+  etax
+    .command("submit")
+    .description("Submit to e-Tax transport. Production is fail-closed. Mock is not NTA.")
+    .argument("<submission-id>")
+    .option("--env <mock|test|production>", "Transport environment", "mock")
+    .option("--xml <path>", "Official XML instance to submit (hash-bound)")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { env?: string; xml?: string; json?: boolean }) =>
+      runEtaxSubmit({
+        id,
+        env: parseEnv(opts.env),
+        xml: opts.xml,
+        json: Boolean(opts.json),
+      })
+    );
+
+  etax
+    .command("receipt")
+    .description("Fetch e-Tax receipt. RECEIVED_BY_ETAX is not tax-correctness.")
+    .argument("<submission-id>")
+    .option("--env <mock|test|production>", "Transport environment", "mock")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { env?: string; json?: boolean }) =>
+      runEtaxReceipt({ id, env: parseEnv(opts.env), json: Boolean(opts.json) })
+    );
+
+  const production = etax.command("production").description("Production enablement (fail-closed)");
+  production
+    .command("review")
+    .description("Show the Phase 8 checklist. Does not enable production.")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => runEtaxProductionReview({ json: Boolean(opts.json) }));
+  production
+    .command("enable")
+    .description("Refused: use production release --approval-id after requirements are met")
+    .action(() => runEtaxProductionEnable());
+  production
+    .command("release")
+    .description(
+      "Flip production_submission_enabled after approved etax.production_enable approval (requirements must already be true)",
+    )
+    .requiredOption("--approval-id <id>", "Approved org approval id (APR-*)")
+    .option("--json", "JSON output")
+    .action((opts: { approvalId: string; json?: boolean }) =>
+      runEtaxProductionRelease({ approvalId: opts.approvalId, json: Boolean(opts.json) }),
+    );
+
+  const host = etax.command("host").description("Probe etax-host health (SignToReport / Send / GetResponse)");
+  host
+    .command("status")
+    .description("Show whether the official host process is reachable")
+    .option("--json", "JSON output")
+    .action(async (opts: { json?: boolean }) => {
+      await runEtaxHostStatus({ json: Boolean(opts.json) });
+    });
+  host
+    .command("bind")
+    .description("Windows only: set tip catalog hostBound=true after healthy etax-host")
+    .option("--i-understand-windows", "Confirm NTA COM modules are installed on Windows")
+    .option("--json", "JSON output")
+    .action(async (opts: { iUnderstandWindows?: boolean; json?: boolean }) => {
+      await runEtaxHostBind({
+        iUnderstandWindows: Boolean(opts.iUnderstandWindows),
+        json: Boolean(opts.json),
+      });
+    });
+
+  const acceptance = etax
+    .command("acceptance")
+    .description("D1–D8 tip acceptance report (real-operator track)");
+  acceptance
+    .command("report")
+    .description("Evaluate D1–D8 against tip (does not invent evidence)")
+    .option("--json", "JSON output")
+    .action(async (opts: { json?: boolean }) => {
+      await runEtaxAcceptanceReport({ json: Boolean(opts.json) });
+    });
+
+  const transmission = etax
+    .command("transmission-test")
+    .description("NTA KSK2 transmission test status / evidence record");
+  transmission
+    .command("status")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) =>
+      runEtaxTransmissionTestStatus({ json: Boolean(opts.json) }),
+    );
+  transmission
+    .command("record")
+    .description("Write gitignored T-O2 or NTA completion JSON (does not flip gate yaml)")
+    .requiredOption("--from <path>", "Evidence JSON path")
+    .option("--json", "JSON output")
+    .action((opts: { from: string; json?: boolean }) =>
+      runEtaxTransmissionEvidenceRecord({ from: opts.from, json: Boolean(opts.json) }),
+    );
+
+  etax
+    .command("procedure")
+    .description("Procedure matrix maintenance")
+    .command("promote-rho0010")
+    .description("Promote RHO0010 to SUPPORTED after D4 evidence (refuses otherwise)")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => runEtaxPromoteRho0010({ json: Boolean(opts.json) }));
+
+  etax
+    .command("product-copy")
+    .description("ToS / commercial sync for certified RHO0010")
+    .command("sync")
+    .description("Update ToS + commercial + readiness after D5+D6 (refuses otherwise)")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => runEtaxProductCopySync({ json: Boolean(opts.json) }));
+
+  etax
+    .command("status")
+    .description("Submission or module status")
+    .argument("[submission-id]")
+    .option("--json", "JSON output")
+    .action((id: string | undefined, opts: { json?: boolean }) =>
+      runEtaxStatus({ id, json: Boolean(opts.json) })
+    );
+}

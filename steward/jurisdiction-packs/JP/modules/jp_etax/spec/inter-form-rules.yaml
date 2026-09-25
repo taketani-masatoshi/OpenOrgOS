@@ -1,0 +1,19 @@
+schema_version: 1
+specFamily: ksk2
+unloadedFormsWithRules: []
+formsWithNoDependencies:
+  - HOA110
+rules:
+  - formId: HOA110
+    source: e-tax08
+    dependsOn: []
+    status: loaded
+    notes: >
+      Minimal RHO0010 CONTENTS uses HOA110 alone. The registered body slice is
+      AAA00010 (提出年月日 IDREF → TEISYUTSU_DAY) from HOA110-014.xsd.
+      Other HOA110 sections and other 別表 stay unloaded.
+notes: >
+  e-tax08.CAB is retrieved locally. HOA110 is registered as loaded with an empty
+  dependsOn list (explicit no-dependency for the RHO0010 first path only).
+  Other forms remain unloaded until their e-tax08 rows are transcribed as data.
+  Do not read this catalog as full e-tax08 coverage.

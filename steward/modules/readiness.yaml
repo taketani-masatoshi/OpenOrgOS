@@ -127,6 +127,10 @@ modules:
     tier: activation_ready
     notes: 法人税申告準備 · operations tax-corporate CLI（calendar/gaps/depreciation）· ADR 0046 ·
       申告 XML/e-Tax は未対応のため production_ready ではない
+  jp_tax_individual:
+    tier: activation_ready
+    notes: 個人の青色申告決算書（一般用）と所得税の顧問ドラフト · operations tax-individual ·
+      別表は使わない。提出は未対応のため production_ready ではない
   jp_tax_consumption:
     tier: activation_ready
     notes: 消費税区分チェック · operations tax-consumption CLI（check/calc/eligibility）·

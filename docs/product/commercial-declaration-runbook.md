@@ -113,7 +113,7 @@ npm run orgos -- ledger product readiness --commercial | grep prod-auth
 
 1. Stripe Dashboard（**live**）で Secret key · Webhook signing secret 取得
 2. **推奨（本番前）:** Operator Console **`/?product-setup=1`** で保存（`data/product/stripe-secrets.env`）
-   - 本番投入**前**に `sk_test_` でも commercial `stripe-live` は合格
+   - `sk_test_` はステージング専用。commercial `stripe-live` は不合格のまま
    - セルフサーブ live 課金開始時に `sk_live_` へ差し替え
    - `production.env` の手編集は不要（Docker env がある場合は env 優先）
 3. **代替:** 本番 env に `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` 投入

@@ -221,3 +221,133 @@ entries:
         debit_yen: 0
         credit_yen: 314225
         tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-05-REV-RENT
+    occurred_at: 2026-05-31T12:00:00.000Z
+    description: Monthly P/L revenue rent 2026-05
+    source:
+      kind: closing
+      period: 2026-05
+      adjustment_id: monthly-pl-rev-rent
+    posted_at: 2026-09-22T16:57:05.867Z
+    posted_by: system
+    evidence_refs:
+      - monthly:2026-05
+      - category:rent
+    lines:
+      - account_code: "1150"
+        debit_yen: 100000
+        credit_yen: 0
+        counterparty_id: PROP-001
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 100000
+        tax_category: non_taxable
+  - entry_id: JE-MPL-2026-05-REV-HOTEL-REVENUE
+    occurred_at: 2026-05-31T12:00:00.000Z
+    description: Monthly P/L revenue hotel_revenue 2026-05
+    source:
+      kind: closing
+      period: 2026-05
+      adjustment_id: monthly-pl-rev-hotel_revenue
+    posted_at: 2026-09-22T16:57:05.894Z
+    posted_by: system
+    evidence_refs:
+      - monthly:2026-05
+      - category:hotel_revenue
+    lines:
+      - account_code: "1150"
+        debit_yen: 420000
+        credit_yen: 0
+        counterparty_id: PROP-002
+        tax_category: out_of_scope
+      - account_code: "4200"
+        debit_yen: 0
+        credit_yen: 381819
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2160"
+        debit_yen: 0
+        credit_yen: 38181
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-05-EXP-OTHER-PROP-001
+    occurred_at: 2026-05-31T12:00:00.000Z
+    description: Monthly P/L expense other 2026-05
+    source:
+      kind: closing
+      period: 2026-05
+      adjustment_id: monthly-pl-exp-other
+    posted_at: 2026-09-22T16:57:05.905Z
+    posted_by: system
+    evidence_refs:
+      - monthly:2026-05
+      - category:other
+    lines:
+      - account_code: "5900"
+        debit_yen: 26758
+        credit_yen: 0
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2170"
+        debit_yen: 2675
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "2110"
+        debit_yen: 0
+        credit_yen: 29433
+        counterparty_id: PROP-001
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-05-EXP-OTHER-PROPERTY
+    occurred_at: 2026-05-31T12:00:00.000Z
+    description: Monthly P/L expense other_property 2026-05
+    source:
+      kind: closing
+      period: 2026-05
+      adjustment_id: monthly-pl-exp-other_property
+    posted_at: 2026-09-22T16:57:05.914Z
+    posted_by: system
+    evidence_refs:
+      - monthly:2026-05
+      - category:other_property
+    lines:
+      - account_code: "5200"
+        debit_yen: 168182
+        credit_yen: 0
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2170"
+        debit_yen: 16818
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "2110"
+        debit_yen: 0
+        credit_yen: 185000
+        counterparty_id: PROP-002
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-05-EXP-OTHER
+    occurred_at: 2026-05-31T12:00:00.000Z
+    description: Monthly P/L expense other 2026-05
+    source:
+      kind: closing
+      period: 2026-05
+      adjustment_id: monthly-pl-exp-other
+    posted_at: 2026-09-22T17:03:20.180Z
+    posted_by: system
+    evidence_refs:
+      - monthly:2026-05
+      - category:other
+    lines:
+      - account_code: "5900"
+        debit_yen: 26758
+        credit_yen: 0
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2170"
+        debit_yen: 2675
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "2110"
+        debit_yen: 0
+        credit_yen: 29433
+        counterparty_id: PROP-001
+        tax_category: out_of_scope

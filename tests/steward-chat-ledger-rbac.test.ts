@@ -10,6 +10,7 @@ import {
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
 import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
+import { postPayrollJournalEntry } from "../src/lib/finance/journal-sources.js";
 import {
   applyFixtureStatementRoles,
   resetFixtureJournalEntries,
@@ -154,7 +155,7 @@ describe("steward chat ledger workbench api", () => {
     await start();
     const res = await fetch(
       `${baseUrl}/chat/v1/ledger/export?template=journal-csv&as_of=2026-09-30`,
-      { headers: { Cookie: cookieFor("OP-READONLY") } },
+      { headers: { Cookie: cookieFor("OP-READONLY") } }
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("text/csv");
@@ -179,7 +180,7 @@ describe("steward chat ledger workbench api", () => {
     });
     const res = await fetch(
       `${baseUrl}/chat/v1/ledger/dencho/search?from=2026-09-01&to=2026-09-30&description=http`,
-      { headers: { Cookie: cookieFor("OP-READONLY") } },
+      { headers: { Cookie: cookieFor("OP-READONLY") } }
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as { count: number; hits: Array<{ entry_id: string }> };
@@ -238,6 +239,14 @@ describe("steward chat ledger workbench api", () => {
         { account_code: "5300", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
         { account_code: "1100", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" },
       ],
+    });
+    postPayrollJournalEntry({
+      period: "2026-09",
+      authorizedBy: "OP-001",
+      grossYen: 50000,
+      withholdingYen: 5000,
+      socialEmployeeYen: 7000,
+      socialEmployerYen: 7500,
     });
 
     const headers = {

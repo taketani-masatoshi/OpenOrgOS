@@ -1,3 +1,5 @@
+import { assertJapaneseFinanceEngine } from "./jp-engine-guard.js";
+import { existsSync } from "node:fs";
 import type {
   ConsumptionTaxMethod,
   ConsumptionTaxPeriod,
@@ -10,29 +12,31 @@ import {
   normalizeJournalEntry,
 } from "../../../schemas/finance/journal-entry.js";
 import { loadChartOfAccounts, loadTaxProfile } from "../data.js";
-import { loadJournalEntries } from "./expense-claim-journal.js";
+import { journalEntriesPath, loadJournalEntries } from "./expense-claim-journal.js";
 import type { TaxCategory } from "../../../schemas/finance/journal-entry.js";
+import {
+  applyCommonUseAllocation,
+  applyTransitionalInvoiceRate,
+  readConsumptionTaxPeriodEvidence,
+} from "./consumption-tax-period-evidence.js";
 
 const TAX_RATE_10 = 0.1;
 const TAX_RATE_8 = 0.08;
 
 function taxFromBase(base: number, rate: number): number {
-  return Math.floor(base * rate);
+  return Math.sign(base) * Math.floor(Math.abs(base) * rate);
 }
 
 /** 内税金額を本体と消費税に分解（切り捨て）。 */
 export function splitInclusiveConsumptionTax(
   amountYen: number,
-  ratePct: 10 | 8 = 10,
+  ratePct: 10 | 8 = 10
 ): { net_yen: number; tax_yen: number } {
   const tax_yen = Math.floor((amountYen * ratePct) / (100 + ratePct));
   return { net_yen: amountYen - tax_yen, tax_yen };
 }
 
-export function monthlyPlTaxCategory(
-  kind: "revenue" | "expense",
-  category: string,
-): TaxCategory {
+export function monthlyPlTaxCategory(kind: "revenue" | "expense", category: string): TaxCategory {
   if (kind === "revenue" && category === "rent") return "non_taxable";
   return "taxable_10";
 }
@@ -63,45 +67,72 @@ function emptyJournalTotals() {
   };
 }
 
-function aggregateFromJournal(period: string): ReturnType<typeof emptyJournalTotals> {
-  const totals = emptyJournalTotals();
-  try {
-    const coa = loadChartOfAccounts();
-    const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
-    for (const raw of loadJournalEntries().entries) {
-      const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
-      if (!entry.occurred_at.startsWith(period)) continue;
-      for (const line of entry.lines) {
-        if (!line.tax_category) continue;
-        const account = accountByCode.get(line.account_code);
-        if (!account) continue;
-        if (account.type !== "revenue" && account.type !== "expense") continue;
-        const amount = line.debit_yen || line.credit_yen;
-        if (account.type === "revenue" && line.tax_category === "exempt") {
-          totals.exemptSales += amount;
-        }
-        if (account.type === "revenue" && line.tax_category === "tax_free") {
-          totals.taxFreeSales += amount;
-        }
-        if (line.tax_category === "taxable_10") {
-          if (account.type === "expense") totals.purchases10 += amount;
-          if (account.type === "revenue") totals.sales10 += amount;
-        }
-        if (line.tax_category === "taxable_8") {
-          if (account.type === "expense") totals.purchases8 += amount;
-          if (account.type === "revenue") totals.sales8 += amount;
-        }
+function aggregateFromJournal(
+  period: string
+): ReturnType<typeof emptyJournalTotals> & { purchaseTax10: number; purchaseTax8: number } {
+  const totals = { ...emptyJournalTotals(), purchaseTax10: 0, purchaseTax8: 0 };
+  if (!existsSync(journalEntriesPath()))
+    throw new Error(
+      "Tax journal is missing; explicit manual totals or a valid ledger are required"
+    );
+  const coa = loadChartOfAccounts();
+  const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
+  const periodEvidence = readConsumptionTaxPeriodEvidence(period);
+  for (const raw of loadJournalEntries().entries) {
+    const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
+    if (!entry.occurred_at.startsWith(period)) continue;
+    for (const line of entry.lines) {
+      const account = accountByCode.get(line.account_code);
+      if (!account) throw new Error(`Unknown tax account: ${line.account_code}`);
+      if (!line.tax_category)
+        throw new Error(`Tax category missing: ${entry.entry_id}/${line.account_code}`);
+      const sales = account.type === "revenue";
+      const purchase = account.type === "expense" || account.type === "asset";
+      const amount = sales ? line.credit_yen - line.debit_yen : line.debit_yen - line.credit_yen;
+      if (sales && ["exempt", "non_taxable"].includes(line.tax_category))
+        totals.exemptSales += amount;
+      if (sales && line.tax_category === "tax_free") totals.taxFreeSales += amount;
+      if (line.tax_category !== "taxable_10" && line.tax_category !== "taxable_8") continue;
+      if (!sales && !purchase) throw new Error(`Unsupported taxable account: ${line.account_code}`);
+      const ten = line.tax_category === "taxable_10";
+      if (sales) {
+        if (ten) totals.sales10 += amount;
+        else totals.sales8 += amount;
+        continue;
       }
+      if (ten) totals.purchases10 += amount;
+      else totals.purchases8 += amount;
+      if (line.purchase_use === "non_taxable_only") continue;
+      if (line.tax_amount_yen === undefined) {
+        throw new Error(
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+        );
+      }
+      let deductible = Math.sign(amount) * line.tax_amount_yen;
+      if (line.purchase_use === "common") {
+        deductible = applyCommonUseAllocation(deductible, periodEvidence);
+      } else if (line.purchase_use !== "taxable_only") {
+        throw new Error(
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+        );
+      }
+      if (line.invoice_status === "nonqualified_80" || line.invoice_status === "nonqualified_50") {
+        deductible = applyTransitionalInvoiceRate(deductible, line.invoice_status, periodEvidence);
+      } else if (line.invoice_status !== "qualified") {
+        throw new Error(
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+        );
+      }
+      if (ten) totals.purchaseTax10 += deductible;
+      else totals.purchaseTax8 += deductible;
     }
-  } catch {
-    /* journal / CoA optional for manual calc */
   }
   return totals;
 }
 
 export function resolveConsumptionTaxMethod(
   profile?: TaxProfileConsumptionSlice,
-  explicit?: ConsumptionTaxMethod,
+  explicit?: ConsumptionTaxMethod
 ): ConsumptionTaxMethod {
   if (explicit) return explicit;
   return profile?.consumption_tax?.method === "simplified" ? "simplified" : "standard";
@@ -109,7 +140,7 @@ export function resolveConsumptionTaxMethod(
 
 export function resolveDeemedPurchaseRatePct(
   profile?: TaxProfileConsumptionSlice,
-  explicit?: number,
+  explicit?: number
 ): DeemedPurchaseRatePct | undefined {
   const raw = explicit ?? profile?.consumption_tax?.deemed_purchase_rate_pct;
   if (raw === undefined) return undefined;
@@ -123,37 +154,48 @@ export function buildConsumptionTaxSummary(input: {
   method?: ConsumptionTaxMethod;
   deemedPurchaseRatePct?: number;
 }): ConsumptionTaxSummary {
-  const journal = aggregateFromJournal(input.period);
+  assertJapaneseFinanceEngine();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.period)) throw new Error("Invalid tax period");
+  const manualKeys = [
+    "taxable_sales_10_yen",
+    "taxable_sales_8_yen",
+    "exempt_sales_yen",
+    "tax_free_sales_yen",
+    "taxable_purchases_10_yen",
+    "taxable_purchases_8_yen",
+  ] as const;
+  if (input.manual && !manualKeys.every((key) => Number.isSafeInteger(input.manual?.[key]))) {
+    throw new Error("Manual tax calculation requires all six sales and purchase totals");
+  }
+  const journal = input.manual
+    ? { ...emptyJournalTotals(), purchaseTax10: 0, purchaseTax8: 0 }
+    : aggregateFromJournal(input.period);
   const periodInput = {
     period: input.period,
-    taxable_sales_10_yen:
-      input.manual?.taxable_sales_10_yen ?? journal.sales10,
+    taxable_sales_10_yen: input.manual?.taxable_sales_10_yen ?? journal.sales10,
     taxable_sales_8_yen: input.manual?.taxable_sales_8_yen ?? journal.sales8,
     exempt_sales_yen: input.manual?.exempt_sales_yen ?? journal.exemptSales,
     tax_free_sales_yen: input.manual?.tax_free_sales_yen ?? journal.taxFreeSales,
-    taxable_purchases_10_yen:
-      input.manual?.taxable_purchases_10_yen ?? journal.purchases10,
-    taxable_purchases_8_yen:
-      input.manual?.taxable_purchases_8_yen ?? journal.purchases8,
-    non_deductible_purchase_tax_yen:
-      input.manual?.non_deductible_purchase_tax_yen ?? 0,
-    transitional_deduction_rate_pct:
-      input.manual?.transitional_deduction_rate_pct,
+    taxable_purchases_10_yen: input.manual?.taxable_purchases_10_yen ?? journal.purchases10,
+    taxable_purchases_8_yen: input.manual?.taxable_purchases_8_yen ?? journal.purchases8,
+    non_deductible_purchase_tax_yen: input.manual?.non_deductible_purchase_tax_yen ?? 0,
+    transitional_deduction_rate_pct: input.manual?.transitional_deduction_rate_pct,
   };
 
   const output10 = taxFromBase(periodInput.taxable_sales_10_yen, TAX_RATE_10);
   const output8 = taxFromBase(periodInput.taxable_sales_8_yen, TAX_RATE_8);
   const outputTax = output10 + output8;
-  const input10 = taxFromBase(periodInput.taxable_purchases_10_yen, TAX_RATE_10);
-  const input8 = taxFromBase(periodInput.taxable_purchases_8_yen, TAX_RATE_8);
+  const input10 = input.manual
+    ? taxFromBase(periodInput.taxable_purchases_10_yen, TAX_RATE_10)
+    : journal.purchaseTax10;
+  const input8 = input.manual
+    ? taxFromBase(periodInput.taxable_purchases_8_yen, TAX_RATE_8)
+    : journal.purchaseTax8;
   let actualInput = input10 + input8;
   if (periodInput.transitional_deduction_rate_pct) {
-    actualInput = Math.floor(
-      (actualInput * periodInput.transitional_deduction_rate_pct) / 100,
-    );
+    actualInput = Math.floor((actualInput * periodInput.transitional_deduction_rate_pct) / 100);
   }
   actualInput -= periodInput.non_deductible_purchase_tax_yen;
-  actualInput = Math.max(0, actualInput);
 
   const method = input.method ?? "standard";
   let deductibleInput = actualInput;
@@ -163,9 +205,7 @@ export function buildConsumptionTaxSummary(input: {
       input.manual?.deemed_purchase_rate_pct ??
       resolveDeemedPurchaseRatePct(undefined, input.deemedPurchaseRatePct);
     if (!deemedRate) {
-      throw new Error(
-        "simplified calc requires deemed_purchase_rate_pct (40/50/60/70/80/90)",
-      );
+      throw new Error("simplified calc requires deemed_purchase_rate_pct (40/50/60/70/80/90)");
     }
     deductibleInput = Math.floor((outputTax * deemedRate) / 100);
   }
@@ -220,15 +260,12 @@ export function buildConsumptionTaxSummary(input: {
 }
 
 export function formatConsumptionTaxMarkdown(summary: ConsumptionTaxSummary): string {
-  const netLabel =
-    summary.direction === "refund_candidate" ? "還付候補（差引）" : "差引納付税額";
+  const netLabel = summary.direction === "refund_candidate" ? "還付候補（差引）" : "差引納付税額";
   return [
     `# 消費税集計 ${summary.period}`,
     "",
     `- 方式: ${summary.method}${
-      summary.deemed_purchase_rate_pct
-        ? ` · みなし仕入率 ${summary.deemed_purchase_rate_pct}%`
-        : ""
+      summary.deemed_purchase_rate_pct ? ` · みなし仕入率 ${summary.deemed_purchase_rate_pct}%` : ""
     }`,
     `- 売上税額: ${summary.output_tax_yen.toLocaleString()} JPY`,
     `- ${summary.method === "simplified" ? "みなし仕入税額" : "仕入税額（控除）"}: ${summary.input_tax_yen.toLocaleString()} JPY`,
@@ -262,15 +299,13 @@ export type ConsumptionTaxCheckResult = {
 };
 
 export function assessConsumptionTaxProfile(
-  profile: TaxProfileConsumptionSlice,
+  profile: TaxProfileConsumptionSlice
 ): ConsumptionTaxCheckResult {
   const ct = profile.consumption_tax;
   const status = String(ct?.status ?? "TBD");
-  const threshold =
-    ct?.base_period_sales_threshold ?? JP_CONSUMPTION_TAX_EXEMPT_THRESHOLD_JPY;
+  const threshold = ct?.base_period_sales_threshold ?? JP_CONSUMPTION_TAX_EXEMPT_THRESHOLD_JPY;
   const baseSales = ct?.base_period_sales_jpy ?? null;
-  const taxableBySales =
-    baseSales != null ? baseSales >= threshold : null;
+  const taxableBySales = baseSales != null ? baseSales >= threshold : null;
   const invoiceRegistered = Boolean(ct?.invoice_registered);
   const issues: ConsumptionTaxCheckIssue[] = [];
 
@@ -302,16 +337,11 @@ export function assessConsumptionTaxProfile(
     });
   }
 
-  if (
-    invoiceRegistered &&
-    status.includes("免税") &&
-    !ct?.invoice_exempt_reconciled_basis
-  ) {
+  if (invoiceRegistered && status.includes("免税") && !ct?.invoice_exempt_reconciled_basis) {
     issues.push({
       severity: "warning",
       code: "invoice_exempt_reconcile",
-      message:
-        "インボイス登録済みかつ免税 — invoice_exempt_reconciled_basis 未記録",
+      message: "インボイス登録済みかつ免税 — invoice_exempt_reconciled_basis 未記録",
     });
   }
 
@@ -342,9 +372,7 @@ export function assessConsumptionTaxProfile(
 }
 
 export function runConsumptionTaxCheck(): ConsumptionTaxCheckResult {
-  const result = assessConsumptionTaxProfile(
-    loadTaxProfile() as TaxProfileConsumptionSlice,
-  );
+  const result = assessConsumptionTaxProfile(loadTaxProfile() as TaxProfileConsumptionSlice);
   try {
     for (const raw of loadJournalEntries().entries) {
       const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
@@ -359,14 +387,16 @@ export function runConsumptionTaxCheck(): ConsumptionTaxCheckResult {
       }
     }
   } catch {
-    /* journal optional */
+    result.issues.push({
+      severity: "blocking",
+      code: "journal_unavailable",
+      message: "台帳を検証できません",
+    });
   }
   return result;
 }
 
-export function formatConsumptionTaxCheckMarkdown(
-  result: ConsumptionTaxCheckResult,
-): string {
+export function formatConsumptionTaxCheckMarkdown(result: ConsumptionTaxCheckResult): string {
   const lines = [
     "# 消費税区分チェック",
     "",
@@ -383,9 +413,7 @@ export function formatConsumptionTaxCheckMarkdown(
     `- インボイス登録: ${result.invoice_registered ? "あり" : "なし"}`,
     "",
     "## 所見",
-    ...result.issues.map(
-      (i) => `- [${i.severity}] ${i.code}: ${i.message}`,
-    ),
+    ...result.issues.map((i) => `- [${i.severity}] ${i.code}: ${i.message}`),
   ];
   return lines.join("\n");
 }
