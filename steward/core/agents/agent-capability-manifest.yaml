@@ -37,6 +37,7 @@ agents:
     route_ids:
       - compliance-controls
       - compliance-permit
+      - regulation-module-scaffold
     skills:
       - iso_control_review
       - jp_carbon_neutral_show

@@ -218,6 +218,7 @@ npm run orgos -- skills run monthly-close
 | pmo-project | `project_management` | `pmo_portfolio` |
 | pmo-risks | `project_management` | `pmo_risks` |
 | pmo-show | `project_management` | `pmo_show` |
+| regulation-module-scaffold | `compliance` | `regulation_module_scaffold` |
 | sales-forecast | `sales_lead` | `sales_forecast_prep` |
 | sales-outbound | `sales_outbound` | `sales_outbound_list_review` |
 | sales-pipeline | `sales_lead` | `sales_pipeline_review` |
