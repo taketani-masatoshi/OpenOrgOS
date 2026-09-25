@@ -32,6 +32,9 @@ jobs:
       - run: npm run test:finance
       - run: ORGOS_TENANT=_fixture-books FINANCE_LOOP_ROUNDS=1 bash scripts/finance-accuracy-loops.sh
       - run: '/usr/bin/time -f "npm test elapsed: %E" npm test'
+        env:
+          ORGOS_TEST_DISPOSABLE_ROOT: ${{ github.workspace }}
+          ORGOS_TENANT: demo
   console-build:
     runs-on: ubuntu-latest
     steps:
