@@ -4,6 +4,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
 import { getDataDir } from "../utils.js";
+import { resolveCompanyFiscalYearEndMonth, resolveFiscalYear } from "./fiscal-year.js";
 
 const bracketSchema = z.object({
   up_to_yen: z.number().positive(),
@@ -198,7 +199,7 @@ export function computePayrollMonth(input: {
 }): PayrollMonthResult {
   assertJapaneseFinanceEngine();
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month)) throw new Error("Invalid payroll month");
-  const year = `FY${input.month.slice(0, 4)}`;
+  const year = resolveFiscalYear(resolveCompanyFiscalYearEndMonth(), input.month);
   const rates = input.rates ?? loadPayrollRates(year);
   if (
     rates.fiscal_year !== year ||

@@ -55,13 +55,17 @@ function seedCloseInputs(months: string[]): void {
     ].join("\n"),
   );
   const assetsPath = join(finance, "fixed-assets.yaml");
-  const assets = readFileSync(assetsPath, "utf-8");
+  let assets = readFileSync(assetsPath, "utf-8");
   if (!assets.includes("tax_depreciation_yen:")) {
-    writeFileSync(
-      assetsPath,
-      assets.replace("book_value: 4293618\n", "book_value: 4293618\n    tax_depreciation_yen: 106382\n"),
+    assets = assets.replace(
+      "book_value: 4293618\n",
+      "book_value: 4293618\n    tax_depreciation_yen: 106382\n",
     );
   }
+  if (!assets.includes('as_of: "2026-01-31"')) {
+    assets = assets.replace(/as_of: "[^"]+"/, 'as_of: "2026-01-31"');
+  }
+  writeFileSync(assetsPath, assets);
   extraMonthly = [];
   for (const month of months) {
     const path = join(finance, "monthly", `${month}.yaml`);

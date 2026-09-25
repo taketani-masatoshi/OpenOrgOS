@@ -14,8 +14,8 @@ export function useFinanceFixtureTenant(): void {
  * Remediations refuse payroll without tenant rates + confirmed standard remuneration.
  * setup-restore can wipe uncommitted fixture files; re-seed from the JP pack example.
  */
-export function ensureFixturePayrollRates(): void {
-  useFinanceFixtureTenant();
+export function ensureTenantPayrollRates(tenantId: string): void {
+  setTenantId(tenantId);
   const financeDir = join(getTenantDir(), "data/finance");
   mkdirSync(financeDir, { recursive: true });
   const ratesPath = join(financeDir, "payroll-rates-2026.yaml");
@@ -23,13 +23,35 @@ export function ensureFixturePayrollRates(): void {
     ROOT_DIR,
     "steward/jurisdiction-packs/JP/modules/jp_payroll/seed/payroll-rates-2026.yaml.example",
   );
+  const insurerId = `SYNTHETIC-${tenantId.toUpperCase().replace(/[^A-Z0-9]/g, "-")}-INSURER`;
   if (!existsSync(ratesPath) && existsSync(example)) {
     const rates = YAML.parse(readFileSync(example, "utf-8")) as Record<string, unknown>;
     rates.fiscal_year = "FY2026";
-    rates.effective_from = "2026-04";
+    rates.effective_from = "2026-02";
     rates.effective_to = "2027-03";
-    rates.insurer_id = "SYNTHETIC-FIXTURE-INSURER";
+    rates.insurer_id = insurerId;
     writeFileSync(ratesPath, YAML.stringify(rates), "utf-8");
+  } else if (existsSync(ratesPath)) {
+    const rates = YAML.parse(readFileSync(ratesPath, "utf-8")) as Record<string, unknown>;
+    let changed = false;
+    if (!rates.fiscal_year) {
+      rates.fiscal_year = "FY2026";
+      changed = true;
+    }
+    const effectiveFrom = "2026-02";
+    if (rates.effective_from !== effectiveFrom) {
+      rates.effective_from = effectiveFrom;
+      changed = true;
+    }
+    if (!rates.effective_to) {
+      rates.effective_to = "2027-03";
+      changed = true;
+    }
+    if (!rates.insurer_id) {
+      rates.insurer_id = insurerId;
+      changed = true;
+    }
+    if (changed) writeFileSync(ratesPath, YAML.stringify(rates), "utf-8");
   }
   const payrollPath = join(financeDir, "payroll.yaml");
   if (!existsSync(payrollPath)) return;
@@ -48,6 +70,14 @@ export function ensureFixturePayrollRates(): void {
     changed = true;
   }
   if (changed) writeFileSync(payrollPath, YAML.stringify(payroll), "utf-8");
+}
+
+export function ensureFixturePayrollRates(): void {
+  ensureTenantPayrollRates(FINANCE_FIXTURE_TENANT);
+}
+
+export function ensureDemoPayrollRates(): void {
+  ensureTenantPayrollRates("demo");
 }
 
 /** Reset fixture journal ledger between tests (append-only file accumulates otherwise). */

@@ -1,7 +1,7 @@
 import { hydrateStripeEnvFromStore } from "./stripe-secrets-store.js";
 import {
   buildStripeBillingStatus,
-  isStripeBillingCommercialReady,
+  isStripeBillingLiveReady,
 } from "./stripe-ops.js";
 import { buildCommercialReadinessReport } from "./ledger-commercial-readiness.js";
 import { hasQualityRestoreDrill } from "./ledger-restore-drills.js";
@@ -37,8 +37,8 @@ export function buildProductInitialSetupReport(): ProductInitialSetupReport {
     {
       id: "stripe-keys",
       label: "Stripe Secret + Webhook Secret",
-      complete: isStripeBillingCommercialReady(),
-      detail: billing.commercial_ready
+      complete: isStripeBillingLiveReady(),
+      detail: billing.live_ready
         ? `mode=${billing.mode} · ${billing.attestation.status}`
         : "初期設定フォームで入力（本番前に test キー可）",
       phase: "pre_production",
@@ -82,7 +82,7 @@ export function buildProductInitialSetupReport(): ProductInitialSetupReport {
     commercial_score: commercial.score,
     commercial_ready: commercial.score >= 100,
     stripe_mode: billing.mode,
-    stripe_configured: billing.commercial_ready,
+    stripe_configured: billing.live_ready,
     webhook_path: billing.webhook_path,
     storage_path: "data/product/stripe-secrets.env",
     steps,

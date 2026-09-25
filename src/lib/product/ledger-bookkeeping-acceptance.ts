@@ -17,9 +17,11 @@ import { buildTrialBalance } from "../finance/ledger/trial-balance.js";
 import {
   buildOpeningBalancesFromTrialBalance,
   loadOpeningBalances,
+  openingBalancesPath,
   openingBalancesReconcileIssues,
   saveOpeningBalances,
 } from "../finance/ledger/opening-balance.js";
+import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { resolveJournalSourceAccounts } from "../finance/journal-source-accounts.js";
 import { getDataDir } from "../utils.js";
 import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
@@ -229,7 +231,7 @@ export function runIsolatedBookkeepingAcceptance(): BookkeepingAcceptanceResult 
         fiscalYear: "FY2027",
         asOf: "2026-09-11",
         periodStart: "2026-09",
-        bsOnly: false,
+        bsOnly: true,
       });
       saveOpeningBalances(opening);
       const issues = openingBalancesReconcileIssues();
@@ -249,7 +251,7 @@ export function runIsolatedBookkeepingAcceptance(): BookkeepingAcceptanceResult 
               : line,
           ),
         };
-        saveOpeningBalances(tampered);
+        writeYamlFileAtomic(openingBalancesPath(), tampered);
         const after = openingBalancesReconcileIssues();
         if (after.length === 0) {
           openingPass = false;

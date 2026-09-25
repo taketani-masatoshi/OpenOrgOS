@@ -85,6 +85,24 @@ export function buildOpeningBalancesFromTrialBalance(input: {
           };
     });
 
+  if (input.bsOnly && coa) {
+    const imbalance = lines.reduce((sum, line) => sum + line.debit_yen - line.credit_yen, 0);
+    if (imbalance !== 0) {
+      const equityCode =
+        coa.accounts.find((account) => account.type === "equity")?.code ?? "3200";
+      const existing = lines.find((line) => line.account_code === equityCode);
+      if (existing) {
+        const net = existing.debit_yen - existing.credit_yen + imbalance;
+        existing.debit_yen = net > 0 ? net : 0;
+        existing.credit_yen = net < 0 ? -net : 0;
+      } else if (imbalance > 0) {
+        lines.push({ account_code: equityCode, debit_yen: 0, credit_yen: imbalance });
+      } else {
+        lines.push({ account_code: equityCode, debit_yen: -imbalance, credit_yen: 0 });
+      }
+    }
+  }
+
   return openingBalancesSchema.parse({
     version: 1,
     fiscal_year: input.fiscalYear,
@@ -119,35 +137,12 @@ export function openingBalancesReconcileIssues(): string[] {
   const file = loadOpeningBalances();
   if (!file) return [];
   const issues = openingBalanceIntegrityIssues();
-  const books = buildTrialBalance({ asOf: file.as_of, includeOpening: false });
-  const expectedLines = books.rows
-    .filter((row) => row.balance_yen !== 0)
-    .map((row) => {
-      if (row.normal_balance === "debit") {
-        return row.balance_yen >= 0
-          ? {
-              account_code: row.account_code,
-              debit_yen: row.balance_yen,
-              credit_yen: 0,
-            }
-          : {
-              account_code: row.account_code,
-              debit_yen: 0,
-              credit_yen: -row.balance_yen,
-            };
-      }
-      return row.balance_yen >= 0
-        ? {
-            account_code: row.account_code,
-            debit_yen: 0,
-            credit_yen: row.balance_yen,
-          }
-        : {
-            account_code: row.account_code,
-            debit_yen: -row.balance_yen,
-            credit_yen: 0,
-          };
-    });
+  const expectedLines = buildOpeningBalancesFromTrialBalance({
+    fiscalYear: file.fiscal_year,
+    asOf: file.as_of,
+    periodStart: file.period_start,
+    bsOnly: true,
+  }).lines;
   const actual = new Map(
     file.lines.map((line) => [
       line.account_code,

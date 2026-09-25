@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
+import { ensureDemoPayrollRates } from "./helpers/finance-fixture.js";
 
 /**
  * Tax and payroll over HTTP. Two properties matter here and neither is visible
@@ -16,6 +17,7 @@ describe("steward chat tax and payroll HTTP", () => {
 
   beforeEach(async () => {
     setTenantId("demo");
+    ensureDemoPayrollRates();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
@@ -127,6 +129,8 @@ describe("steward chat tax and payroll HTTP", () => {
       month: "2026-07",
       gross_yen: 400_000,
       dependents: 1,
+      health_standard_remuneration_yen: 320_000,
+      pension_standard_remuneration_yen: 320_000,
     });
     expect(res.status, await res.clone().text()).toBe(200);
     const first = (await res.json()) as { run: Record<string, unknown> };
@@ -135,6 +139,8 @@ describe("steward chat tax and payroll HTTP", () => {
       month: "2026-07",
       gross_yen: 400_000,
       dependents: 1,
+      health_standard_remuneration_yen: 320_000,
+      pension_standard_remuneration_yen: 320_000,
     });
     const second = (await again.json()) as { run: Record<string, unknown> };
     expect(second.run).toEqual(first.run);

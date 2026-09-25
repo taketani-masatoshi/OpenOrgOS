@@ -118,7 +118,8 @@ export function buildStripeSettingsSnapshot(
   const webhook = process.env.STRIPE_WEBHOOK_SECRET?.trim() ?? "";
   const mode =
     !secret ? "stub" : secret.startsWith("sk_live_") ? "live" : "test";
-  const commercialReady = Boolean(secret && webhook);
+  const liveReady = Boolean(secret && webhook);
+  const commercialReady = mode === "live" && liveReady;
 
   return {
     webhook_path: webhookPath,
@@ -126,7 +127,7 @@ export function buildStripeSettingsSnapshot(
     secret_configured: Boolean(secret),
     webhook_secret_configured: Boolean(webhook),
     commercial_ready: commercialReady,
-    live_ready: commercialReady,
+    live_ready: liveReady,
     secret_key_hint: secret ? maskStripeSecret(secret) : null,
     webhook_secret_hint: webhook ? maskStripeSecret(webhook) : null,
     price_starter_configured: Boolean(process.env.STRIPE_PRICE_STARTER?.trim()),

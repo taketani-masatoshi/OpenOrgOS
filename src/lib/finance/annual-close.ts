@@ -5,7 +5,7 @@
  * A resumable transaction state makes partial multi-file commits safe to retry.
  */
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import type { OpeningBalancesFile } from "../../../schemas/finance/opening-balances.js";
@@ -304,7 +304,28 @@ function closeAccountingYearUnlocked(input: {
     (existing?.phase === "committing" && existing.opening_sha256)
   ) {
     const expected = existing.opening_sha256;
-    const proposal = readYamlFile(existing.proposal_path, openingBalancesSchema);
+    const proposal = (() => {
+      if (existsSync(existing.proposal_path)) {
+        return readYamlFile(existing.proposal_path, openingBalancesSchema);
+      }
+      if (existing.phase === "committing" && expected) {
+        const endMonth = resolveCompanyFiscalYearEndMonth();
+        const rebuilt = buildOpeningBalancesFromTrialBalance({
+          fiscalYear: nextFiscalYear(input.fiscalYear),
+          asOf: fiscalYearEndDate(input.fiscalYear, endMonth),
+          periodStart: fiscalYearStartMonth(nextFiscalYear(input.fiscalYear), endMonth),
+          bsOnly: true,
+        });
+        if (sha256(rebuilt) !== expected) {
+          const live = loadOpeningBalances();
+          if (sha256(live) !== sha256(existing.original_opening)) {
+            throw new Error("Annual close proposal missing and rebuild hash mismatch");
+          }
+        }
+        return rebuilt;
+      }
+      return readYamlFile(existing.proposal_path, openingBalancesSchema);
+    })();
     const live = loadOpeningBalances();
     const months = listFiscalYearMonths(input.fiscalYear, resolveCompanyFiscalYearEndMonth());
     const evidence = months.map((month) => {
@@ -328,16 +349,22 @@ function closeAccountingYearUnlocked(input: {
     const transfer =
       loadJournalEntries().entries.find((e) => e.entry_id === existing.transfer_entry_id) ?? null;
     if (sha256(transfer) !== existing.transfer_sha256) throw new Error("Annual transfer changed");
+    const liveMatchesOriginal =
+      existing.phase === "committing" &&
+      sha256(live) === sha256(existing.original_opening);
+    const proposalHashOk =
+      !expected || sha256(proposal) === expected || liveMatchesOriginal;
     if (
-      !expected ||
-      sha256(proposal) !== expected ||
-      (sha256(live) !== expected &&
-        !(existing.phase === "committing" && sha256(live) === sha256(existing.original_opening)))
+      !proposalHashOk ||
+      (sha256(live) !== expected && !liveMatchesOriginal)
     ) {
       throw new Error(`Annual close ${input.fiscalYear} committed artifacts changed`);
     }
     if (existing.phase !== "committed") {
       writeYamlFileAtomic(openingBalancesPath(), proposal);
+      if (!existsSync(existing.proposal_path)) {
+        writeYamlFileAtomic(existing.proposal_path, proposal);
+      }
       saveTransaction({ ...existing, phase: "committed", updated_at: new Date().toISOString() });
     }
     const endMonth = resolveCompanyFiscalYearEndMonth();

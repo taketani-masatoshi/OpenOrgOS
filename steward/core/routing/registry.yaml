@@ -201,7 +201,9 @@ routes:
     agent: compliance
     skill: regulation_module_scaffold
     priority: 72
-    resource_paths: []
+    resource_paths:
+      - regulations.yaml
+      - docs/company/regulations/
     match:
       keywords:
         - regulation draft

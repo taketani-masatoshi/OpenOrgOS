@@ -20,12 +20,13 @@ export type ReconciliationResult =
 const normalizeName = (value: string): string =>
   value.normalize("NFKC").toUpperCase().replace(/[\s\u3000ﾞ゜・。、,./\\()（）-]/g, "");
 
-const canonicalAmount = (value: string): string => {
-  const [whole, fraction = ""] = value.split(".");
-  const normalizedWhole = whole.replace(/^0+(?=\d)/, "");
-  return fraction.replace(/0+$/, "")
-    ? `${normalizedWhole}.${fraction.replace(/0+$/, "")}`
-    : normalizedWhole;
+const canonicalAmount = (value: string, minorUnit: number): string => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return value.trim();
+  if (minorUnit <= 0) return String(Math.round(n));
+  const scale = 10 ** minorUnit;
+  const scaled = Math.round(n * scale) / scale;
+  return scaled.toFixed(minorUnit).replace(/\.?0+$/, "");
 };
 
 export const externalTransactionIdempotencyKey = (transaction: Pick<ExternalFinanceTransaction, "tenant_id" | "source" | "source_account_id" | "transaction_id">): string =>
@@ -48,8 +49,11 @@ export function reconcileExternalTransaction(
   const sameParty = eligible.filter((candidate) => normalizeName(candidate.counterparty) === name);
   if (sameParty.length === 0) return { status: "REVIEW", reason: "NO_CANDIDATE", candidate_ids: [] };
 
+  const minorUnit = transaction.minor_unit ?? 0;
   const sameAmount = sameParty.filter(
-    (candidate) => canonicalAmount(candidate.amount) === canonicalAmount(transaction.amount),
+    (candidate) =>
+      canonicalAmount(candidate.amount, minorUnit) ===
+      canonicalAmount(transaction.amount, minorUnit),
   );
   if (sameAmount.length === 1) {
     return { status: "MATCHED", candidate_id: sameAmount[0].id, reason: "COUNTERPARTY_AND_AMOUNT" };
