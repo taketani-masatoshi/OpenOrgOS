@@ -92,7 +92,15 @@ describe("accounting commercial paths", () => {
     expect(checklist.items.some((row) => row.id === "period-locked" && row.pass)).toBe(
       true,
     );
-    const run = computeBonusDraft({ period: "2026-12", grossYen: 400_000 });
+    const run = computeBonusDraft({
+      period: "2026-12",
+      employeeId: "EMP-TEST",
+      grossYen: 400_000,
+      withholdingYen: 30_000,
+      socialEmployeeYen: 50_000,
+      socialEmployerYen: 55_000,
+      evidenceRefs: ["test:verified-bonus"],
+    });
     saveBonusDraft(run);
     const posted = postBonusDraftJournal({
       runId: run.run_id,

@@ -89,7 +89,15 @@ describe("productability P0–P2", () => {
 
   it("creates bonus draft and dencho premium sku", () => {
     provisionTemp("bonus-001");
-    const run = computeBonusDraft({ period: "2026-12", grossYen: 500_000 });
+    const run = computeBonusDraft({
+      period: "2026-12",
+      employeeId: "EMP-TEST",
+      grossYen: 500_000,
+      withholdingYen: 40_000,
+      socialEmployeeYen: 70_000,
+      socialEmployerYen: 75_000,
+      evidenceRefs: ["test:verified-bonus"],
+    });
     saveBonusDraft(run);
     expect(run.net_yen).toBeLessThan(run.gross_yen);
     const yea = buildPayrollYearEndReadiness("FY2026");

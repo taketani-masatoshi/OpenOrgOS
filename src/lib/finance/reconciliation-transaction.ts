@@ -1,4 +1,3 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { getDataDir } from "../utils.js";
@@ -12,6 +11,7 @@ import {
 import { getFsGuardAgent } from "../org/fs-guard/context.js";
 import { wrapCanonicalWrite } from "../org/fs-guard/write-hook.js";
 import { withFinanceFileLock } from "./finance-mutation-lock.js";
+import { fsSync } from "./fs-sync.js";
 import {
   appendRecoveryAudit,
   readRecoveryAudit,
@@ -34,7 +34,8 @@ export function reconciliationPendingPath(): string {
 export function assertReconciliationReadable(): void {
   const pending = reconciliationPendingPath();
   if (
-    (existsSync(pending) || existsSync(join(financeDir(), ".reconciliation-recovery"))) &&
+    (fsSync.existsSync(pending) ||
+      fsSync.existsSync(join(financeDir(), ".reconciliation-recovery"))) &&
     !internalReads.has(pending)
   ) {
     throw new Error("Reconciliation transaction incomplete; ledger unavailable until recovery");
@@ -71,7 +72,7 @@ function authorizeRecovery(options: RecoveryOptions): string {
 }
 
 function parseBefore(pending: string): Preimage[] {
-  const entries: unknown = JSON.parse(readFileSync(join(pending, "before.json"), "utf8"));
+  const entries: unknown = JSON.parse(fsSync.readFileSync(join(pending, "before.json"), "utf8"));
   if (
     !Array.isArray(entries) ||
     entries.length !== files.length ||
@@ -95,7 +96,7 @@ function fileHashes(dir: string): Record<string, string | null> {
   return Object.fromEntries(
     files.map((name) => [
       name,
-      existsSync(join(dir, name)) ? digest(readFileSync(join(dir, name))) : null,
+      fsSync.existsSync(join(dir, name)) ? digest(fsSync.readFileSync(join(dir, name))) : null,
     ])
   );
 }
@@ -104,11 +105,11 @@ function restore(dir: string, pending: string, entries: Preimage[]): void {
   for (const entry of entries) {
     const path = join(dir, entry.name);
     wrapCanonicalWrite(path, () => {
-      if (entry.base64 === null) rmSync(path, { force: true });
+      if (entry.base64 === null) fsSync.rmSync(path, { force: true });
       else {
         const temp = join(pending, `${entry.name}.restore`);
         durableWrite(temp, Buffer.from(entry.base64, "base64"));
-        renameSync(temp, path);
+        fsSync.renameSync(temp, path);
       }
     });
   }
@@ -121,16 +122,16 @@ function restore(dir: string, pending: string, entries: Preimage[]): void {
 
 function finish(dir: string, pending: string, retainEvidence = true): void {
   // Retain private evidence. Atomic rename cannot delete half a recovery record.
-  rmSync(join(dir, ".reconciliation-recovery"), { recursive: true, force: true });
+  fsSync.rmSync(join(dir, ".reconciliation-recovery"), { recursive: true, force: true });
   syncPath(dir);
   const finished = join(dir, `.reconciliation-finished-${randomUUID()}`);
-  renameSync(pending, finished);
+  fsSync.renameSync(pending, finished);
   syncPath(dir);
   if (!retainEvidence) {
     // Once detached durably, this snapshot is no longer needed for recovery.
     // A cleanup failure only leaves private evidence, not an uncertain commit.
     try {
-      rmSync(finished, { recursive: true });
+      fsSync.rmSync(finished, { recursive: true });
     } catch {
       /* preserved for maintenance */
     }
@@ -153,20 +154,20 @@ export function recoverPendingReconciliation(options: RecoveryOptions = {}): {
     dir,
     () => {
       const pending = reconciliationPendingPath();
-      if (!existsSync(pending)) {
+      if (!fsSync.existsSync(pending)) {
         assertReconciliationReadable();
         return { restored: [], status: "none" };
       }
       const committed = join(pending, "commit.json");
-      const mode = existsSync(committed) ? "committed_cleanup" : "restore";
+      const mode = fsSync.existsSync(committed) ? "committed_cleanup" : "restore";
       const entries = parseBefore(pending);
-      if (!existsSync(join(pending, "transaction-id"))) {
+      if (!fsSync.existsSync(join(pending, "transaction-id"))) {
         durableWrite(join(pending, "transaction-id"), randomUUID());
         syncPath(pending);
       }
       const transactionId = digest(
-        readFileSync(join(pending, "before.json")) +
-          readFileSync(join(pending, "transaction-id"), "utf8")
+        fsSync.readFileSync(join(pending, "before.json")) +
+          fsSync.readFileSync(join(pending, "transaction-id"), "utf8")
       );
       const input = {
         transaction_id: transactionId,
@@ -179,7 +180,7 @@ export function recoverPendingReconciliation(options: RecoveryOptions = {}): {
       appendRecoveryAudit(dir, { ...input, event: "started" });
       try {
         if (mode === "committed_cleanup") {
-          const commit = JSON.parse(readFileSync(committed, "utf8"));
+          const commit = JSON.parse(fsSync.readFileSync(committed, "utf8"));
           const hashes = fileHashes(dir);
           if (
             ![1, 2].includes(commit.version) ||
@@ -235,7 +236,7 @@ export function withReconciliationTransaction<T>(fn: () => T): T {
     const dir = financeDir();
     const pending = reconciliationPendingPath();
     const before: Preimage[] = files.map((name) => {
-      const bytes = existsSync(join(dir, name)) ? readFileSync(join(dir, name)) : null;
+      const bytes = fsSync.existsSync(join(dir, name)) ? fsSync.readFileSync(join(dir, name)) : null;
       return {
         name,
         base64: bytes?.toString("base64") ?? null,
@@ -243,23 +244,23 @@ export function withReconciliationTransaction<T>(fn: () => T): T {
       };
     });
     const preparing = join(dir, `.reconciliation-preparing-${randomUUID()}`);
-    mkdirSync(preparing, { mode: 0o700 });
+    fsSync.mkdirSync(preparing, { mode: 0o700 });
     durableWrite(join(preparing, "before.json"), JSON.stringify(before));
     durableWrite(join(preparing, "transaction-id"), randomUUID());
     syncPath(preparing);
-    renameSync(preparing, pending);
+    fsSync.renameSync(preparing, pending);
     syncPath(dir);
     internalReads.add(pending);
     let commitWritten = false;
     try {
       const result = fn();
-      for (const name of files) if (existsSync(join(dir, name))) syncPath(join(dir, name));
+      for (const name of files) if (fsSync.existsSync(join(dir, name))) syncPath(join(dir, name));
       syncPath(dir);
       durableWrite(
         join(pending, "commit.tmp"),
         JSON.stringify({ version: 2, hashes: fileHashes(dir) })
       );
-      renameSync(join(pending, "commit.tmp"), join(pending, "commit.json"));
+      fsSync.renameSync(join(pending, "commit.tmp"), join(pending, "commit.json"));
       commitWritten = true;
       syncPath(pending);
       finish(dir, pending, false);

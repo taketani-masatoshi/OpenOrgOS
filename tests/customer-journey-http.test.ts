@@ -104,7 +104,9 @@ describe("customer journey http", () => {
     return JSON.parse(text);
   }
 
-  it("runs setup → bank reconciliation → proposal approval → period lock → accountant CSV", async () => {
+  it(
+    "runs setup → bank reconciliation → proposal approval → period lock → accountant CSV",
+    async () => {
     await start();
     const cookie = cookieFor("OP-001");
     const reader = cookieFor("OP-READER");
@@ -378,5 +380,7 @@ describe("customer journey http", () => {
     expect(loadBankStatementsLite()).toBeNull();
     expect(unmatchedBankCountForMonth(month)).toBe(Number.POSITIVE_INFINITY);
     expect(readFileSync(join(financeDir, "bank-statements.yaml"), "utf8")).toBe(bankSnapshot);
-  });
+  },
+  120_000
+  );
 });

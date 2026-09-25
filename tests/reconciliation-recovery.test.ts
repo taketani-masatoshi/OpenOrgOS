@@ -17,11 +17,9 @@ import {
 } from "../src/lib/finance/reconciliation-transaction.js";
 import { digest, readRecoveryAudit } from "../src/lib/finance/reconciliation-recovery-audit.js";
 import { withFinanceFileLock } from "../src/lib/finance/finance-mutation-lock.js";
+import { fsSync } from "../src/lib/finance/fs-sync.js";
 
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
-  return { ...actual, renameSync: vi.fn(actual.renameSync) };
-});
+const actualRename = fs.renameSync;
 
 describe("reconciliation recovery", () => {
   const prior = { ...process.env };
@@ -126,30 +124,28 @@ describe("reconciliation recovery", () => {
   });
   it("leaves no false completion on a failed restore and permits retry", () => {
     const path = pending();
-    const rename = fs.renameSync;
-    vi.spyOn(fs, "renameSync").mockImplementation((from, to) => {
+    vi.spyOn(fsSync, "renameSync").mockImplementation(((from, to, ...rest) => {
       if (String(to).endsWith("journal-entries.yaml")) throw new Error("synthetic disk failure");
-      rename(from, to);
-    });
+      return actualRename(from, to, ...(rest as []));
+    }) as typeof fsSync.renameSync);
     expect(() => recoverPendingReconciliation(opts())).toThrow(/disk failure/);
     expect(readRecoveryAudit(dir).map((e) => e.event)).toEqual(["started", "failed"]);
     expect(fs.existsSync(path)).toBe(true);
     expect(assertReconciliationReadable).toThrow(/incomplete/);
-    vi.restoreAllMocks();
+    vi.mocked(fsSync.renameSync).mockRestore();
     expect(recoverPendingReconciliation(opts()).status).toBe("restored");
     expect(readRecoveryAudit(dir).filter((e) => e.event === "completed")).toHaveLength(1);
   });
   it("retries cleanup without duplicate completion or a lost recovery record", () => {
     pending();
-    const rename = fs.renameSync;
-    vi.spyOn(fs, "renameSync").mockImplementation((from, to) => {
+    vi.spyOn(fsSync, "renameSync").mockImplementation(((from, to, ...rest) => {
       if (String(to).includes(".reconciliation-finished-"))
         throw new Error("synthetic cleanup failure");
-      rename(from, to);
-    });
+      return actualRename(from, to, ...(rest as []));
+    }) as typeof fsSync.renameSync);
     expect(() => recoverPendingReconciliation(opts())).toThrow(/cleanup failure/);
     expect(fs.existsSync(join(reconciliationPendingPath(), "before.json"))).toBe(true);
-    vi.restoreAllMocks();
+    vi.mocked(fsSync.renameSync).mockRestore();
     recoverPendingReconciliation(opts());
     expect(readRecoveryAudit(dir).filter((e) => e.event === "completed")).toHaveLength(1);
   });
@@ -179,18 +175,17 @@ describe("reconciliation recovery", () => {
   });
   it("does not roll back a durable commit when cleanup fails", () => {
     fs.writeFileSync(join(dir, "journal-entries.yaml"), before);
-    const rename = fs.renameSync;
-    vi.spyOn(fs, "renameSync").mockImplementation((from, to) => {
+    vi.spyOn(fsSync, "renameSync").mockImplementation(((from, to, ...rest) => {
       if (String(to).includes(".reconciliation-finished-")) throw new Error("cleanup failed");
-      rename(from, to);
-    });
+      return actualRename(from, to, ...(rest as []));
+    }) as typeof fsSync.renameSync);
     expect(() =>
       withReconciliationTransaction(() =>
         fs.writeFileSync(join(dir, "journal-entries.yaml"), "committed")
       )
     ).toThrow(/committed/);
     expect(fs.readFileSync(join(dir, "journal-entries.yaml"), "utf8")).toBe("committed");
-    vi.restoreAllMocks();
+    vi.mocked(fsSync.renameSync).mockRestore();
     expect(recoverPendingReconciliation(opts()).status).toBe("committed");
     expect(fs.readFileSync(join(dir, "journal-entries.yaml"), "utf8")).toBe("committed");
   });

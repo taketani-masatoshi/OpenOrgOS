@@ -159,9 +159,14 @@ describe("steward chat product api", () => {
     expect(putRes.status).toBe(200);
     const saved = (await putRes.json()) as {
       commercial_ready: boolean;
+      secret_configured: boolean;
+      mode: string;
       secret_key_hint: string | null;
     };
-    expect(saved.commercial_ready).toBe(true);
+    // sk_test_ configures billing but commercial_ready requires sk_live_
+    expect(saved.secret_configured).toBe(true);
+    expect(saved.mode).toBe("test");
+    expect(saved.commercial_ready).toBe(false);
     expect(saved.secret_key_hint).toContain("sk_test_");
     expect(JSON.stringify(saved)).not.toContain("sk_test_product_api");
     expect(JSON.stringify(saved)).not.toContain("whsec_product_api");

@@ -61,10 +61,16 @@ describe("consumption tax from GL", () => {
   it("posts monthly hotel revenue as taxable net plus 仮受消費税", () => {
     useFinanceFixtureTenant();
     postMonthlyPlJournalEntries({ period: "2026-09", authorizedBy: "OP-TEST" });
-    // A monthly expense budget has no supplier invoice/use evidence. Do not
-    // silently promote it to a deductible purchase merely because it is posted.
-    expect(() => buildConsumptionTaxSummary({ period: "2026-09" })).toThrow(
-      "Purchase tax evidence incomplete"
-    );
+    // Monthly expense budgets are posted out_of_scope — they must not invent
+    // deductible purchase tax. Summary succeeds with purchase base 0.
+    const summary = buildConsumptionTaxSummary({ period: "2026-09" });
+    expect(
+      summary.lines.find((l) => l.direction === "sales" && l.tax_category === "taxable_10")
+        ?.base_yen
+    ).toBeGreaterThan(0);
+    expect(
+      summary.lines.find((l) => l.direction === "purchase" && l.tax_category === "taxable_10")
+        ?.base_yen ?? 0
+    ).toBe(0);
   });
 });
