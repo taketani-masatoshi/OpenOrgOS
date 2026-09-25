@@ -22,7 +22,33 @@ const SENDER_URI = "steward://tenant/security-sender";
 const PROXY_IP = "203.0.113.7";
 
 function openssl(cwd: string, ...args: string[]): void {
-  execFileSync("openssl", args, { cwd, stdio: "ignore" });
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      execFileSync("openssl", args, { cwd, stdio: "ignore" });
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
+function opensslWithInput(cwd: string, args: string[], input: string): void {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      execFileSync("openssl", args, {
+        cwd,
+        input,
+        stdio: ["pipe", "ignore", "ignore"],
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
 }
 
 function generateTlsFixtures(dir: string): {
@@ -44,14 +70,14 @@ function generateTlsFixtures(dir: string): {
     "req", "-newkey", "rsa:2048", "-nodes",
     "-keyout", "server.key", "-out", "server.csr", "-subj", "/CN=127.0.0.1"
   );
-  execFileSync(
-    "openssl",
+  opensslWithInput(
+    dir,
     [
       "x509", "-req", "-in", "server.csr", "-CA", "ca.crt", "-CAkey", "ca.key",
       "-CAcreateserial", "-out", "server.crt", "-days", "1",
       "-extfile", "/dev/stdin",
     ],
-    { cwd: dir, input: "subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\n", stdio: ["pipe", "ignore", "ignore"] }
+    "subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\n"
   );
 
   for (const [name, uri] of [
@@ -63,18 +89,14 @@ function generateTlsFixtures(dir: string): {
       "req", "-newkey", "rsa:2048", "-nodes",
       "-keyout", `${name}.key`, "-out", `${name}.csr`, "-subj", `/CN=${name}`
     );
-    execFileSync(
-      "openssl",
+    opensslWithInput(
+      dir,
       [
         "x509", "-req", "-in", `${name}.csr`, "-CA", "ca.crt", "-CAkey", "ca.key",
         "-CAserial", "ca.srl", "-out", `${name}.crt`, "-days", "1",
         "-extfile", "/dev/stdin",
       ],
-      {
-        cwd: dir,
-        input: `subjectAltName=URI:${uri}\nextendedKeyUsage=clientAuth\n`,
-        stdio: ["pipe", "ignore", "ignore"],
-      }
+      `subjectAltName=URI:${uri}\nextendedKeyUsage=clientAuth\n`
     );
   }
 

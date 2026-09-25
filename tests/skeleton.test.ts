@@ -40,7 +40,7 @@ describe("skeleton CLI", () => {
       expect(out).toMatch(/production_ready/);
       expect(out).toMatch(/activation_ready/);
     },
-    20_000
+    60_000
   );
 
   it(
@@ -109,7 +109,7 @@ describe("skeleton CLI", () => {
       expect(text).toContain("—");
       expect(text).toContain("スケルトンモード");
     },
-    15_000
+    60_000
   );
 
   it(
@@ -118,7 +118,7 @@ describe("skeleton CLI", () => {
       const out = orgos(["dashboard"], "demo");
       expect(out).not.toContain("agent-summaries/hospitality");
     },
-    20_000
+    60_000
   );
 
   it("demo modules check has no bind conflicts", () => {

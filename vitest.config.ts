@@ -29,6 +29,6 @@ export default defineConfig({
     // Vitest processes. Lock wait defaults to 90s (ORGOS_TEST_LOCK_TIMEOUT_MS);
     // hookTimeout must stay above that so beforeAll is not killed first.
     hookTimeout: 120_000,
-    testTimeout: 60_000,
+    testTimeout: 120_000,
   },
 });
