@@ -6,6 +6,7 @@ RUN apt-get update \
     openssl \
     ca-certificates \
     curl \
+    git \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
