@@ -65,7 +65,7 @@ run_loop2() {
       cat "$round_log" >>"$log"
       return 1
     fi
-    if rg -q "balanced=false" "$round_log"; then
+    if grep -q "balanced=false" "$round_log"; then
       echo "FAIL loop2 balanced=false round $i" >>"$log"
       cat "$round_log" >>"$log"
       return 1
@@ -86,7 +86,7 @@ run_loop3() {
     : >"$round_log"
     npm run orgos -- ledger monthly-reconcile --month "$MONTH" >>"$round_log" 2>&1
     local rc=$?
-    if [[ "$rc" -eq 0 ]] && ! rg -q "balanced=false" "$round_log"; then
+    if [[ "$rc" -eq 0 ]] && ! grep -q "balanced=false" "$round_log"; then
       npm run orgos -- report kessan --fy "$FY" --basis gl --compare >>"$round_log" 2>&1 || rc=$?
     fi
     release_lock
@@ -95,7 +95,7 @@ run_loop3() {
       cat "$round_log" >>"$log"
       return 1
     fi
-    if rg -q "balanced=false" "$round_log"; then
+    if grep -q "balanced=false" "$round_log"; then
       echo "FAIL loop3 balanced=false round $i" >>"$log"
       cat "$round_log" >>"$log"
       return 1
