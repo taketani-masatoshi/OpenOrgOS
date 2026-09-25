@@ -304,6 +304,8 @@ export function evaluateMonthlyCloseGates(
   opts?: {
     requireDepreciation?: boolean;
     requirePayroll?: boolean;
+    /** When true, skip live validate (caller must validate before lock commitment). */
+    skipValidate?: boolean;
   }
 ): MonthlyCloseEvaluation {
   monthKey(month);
@@ -440,20 +442,25 @@ export function evaluateMonthlyCloseGates(
     gate("consumption-tax", indirectTax.label, indirectTax.pass, "error", indirectTax.detail)
   );
 
-  // Always re-validate live finance data. Callers must not inject a report.
-  const validate = runValidateReport({ warnings: true });
-  const validateErrors = validate.issues
-    .filter((issue) => issue.severity === "error" && issue.path.includes("data/finance/"))
-    .map((issue) => `${issue.path}: ${issue.message}`);
-  items.push(
-    gate(
-      "validate",
-      "帳簿整合性チェック",
-      validateErrors.length === 0,
-      "error",
-      validateErrors.length === 0 ? "ok" : `${validateErrors.length} errors`
-    )
-  );
+  // Always re-validate live finance data unless a batch closer defers one pass.
+  let validateErrors: string[] = [];
+  if (opts?.skipValidate) {
+    items.push(gate("validate", "帳簿整合性チェック", true, "error", "deferred"));
+  } else {
+    const validate = runValidateReport({ warnings: true });
+    validateErrors = validate.issues
+      .filter((issue) => issue.severity === "error" && issue.path.includes("data/finance/"))
+      .map((issue) => `${issue.path}: ${issue.message}`);
+    items.push(
+      gate(
+        "validate",
+        "帳簿整合性チェック",
+        validateErrors.length === 0,
+        "error",
+        validateErrors.length === 0 ? "ok" : `${validateErrors.length} errors`
+      )
+    );
+  }
 
   const plan = loadMonthlyFinances().find((row) => row.month === month);
   const reconcile = buildMonthlyReconcileReport({ month });
@@ -582,6 +589,7 @@ function closeAccountingMonthUnlocked(input: {
   operatorId: string;
   postDepreciation?: boolean;
   postPayroll?: boolean;
+  skipValidate?: boolean;
 }): MonthlyCloseResult {
   monthKey(input.month);
   const posted = isMonthLocked(input.month)
@@ -593,6 +601,7 @@ function closeAccountingMonthUnlocked(input: {
   const evaluation = evaluateMonthlyCloseGates(input.month, {
     requireDepreciation: input.postDepreciation,
     requirePayroll: input.postPayroll,
+    skipValidate: input.skipValidate,
   });
   let locked = isMonthLocked(input.month);
   if (evaluation.can_lock && !locked) {

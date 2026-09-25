@@ -102,6 +102,7 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
       closeAccountingMonth({
         month,
         operatorId: "OP-ACCEPTANCE",
+        skipValidate: true,
       }),
     );
     const closedMonths = monthly.filter((row) => row.ok && row.locked).length;

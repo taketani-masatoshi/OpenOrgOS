@@ -34,5 +34,5 @@ describe("accounting readiness", () => {
     expect(report.checks.find((row) => row.id === "runtime-annual-close")?.pass).toBe(true);
     // Without pilots in empty workspace, runtime health checks fail → non-100
     expect(report.score).toBeLessThan(100);
-  }, 240_000);
+  }, 180_000);
 });
