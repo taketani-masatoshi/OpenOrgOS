@@ -12,6 +12,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **Hospitality OTA 取込** — Airbnb 予約 CSV（英語 UI エクスポート）を自動判定して取り込む（予約番号・日付・大人＋子どもの人数・ステータス。ゲスト名・連絡先は読まない）。汎用 CSV は引用符付きの値に対応し、必須列が無ければ停止。Airbnb iCal はブロック日を除外し、取込元を自動判定（`--channel` で上書き可）。OTA 側キャンセルは取込済み滞在を cancelled にし、未確定予約は取り込まない。
+- **宿泊税算定の料金未設定** — `tax-compute` は宿泊料金が未設定の滞在があると 0 円で計上せず停止する（`LodgingTaxMissingRateError`）。
 - **月次締め消費税ゲート** — `buildConsumptionTaxSummary` に存在しない `issues` を参照していた tsc エラーを修正（`runConsumptionTaxCheck` の blocking のみ判定）。
 - **Correspondence hooks 黙殺** — binder 未登録時に warn（`ORGOS_REQUIRE_CORRESPONDENCE_HOOKS=1` で throw）。契約テストで composition root を固定。
 

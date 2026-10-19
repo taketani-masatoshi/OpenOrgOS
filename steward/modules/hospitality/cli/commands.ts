@@ -1,4 +1,5 @@
 import type { Command } from "commander";
+import { hospitalityChannelSchema } from "../../../../schemas/hospitality-ops.js";
 import { currentDate } from "../../../../src/lib/utils.js";
 import { checkOperationsRecords, formatRecordsCheck } from "./records-check.js";
 import {
@@ -173,16 +174,35 @@ export function registerHospitalityCommands(operationsCmd: Command): void {
     });
 
   h.command("ota-import")
-    .description("OTA CSV / iCal を stays.yaml に取り込む（公式 API なし）")
+    .description(
+      "OTA CSV（汎用列 / Airbnb 予約エクスポート自動判定）· iCal を stays.yaml に取り込む（公式 API なし）"
+    )
     .requiredOption("--file <path>")
     .option("--property <id>")
     .option("--format <csv|ical>", "csv または ical", "csv")
-    .action((opts: { file: string; property?: string; format: string }) => {
+    .option("--channel <name>", "iCal の取込元（省略時は Airbnb を自動判定）: airbnb | booking | direct | other")
+    .action((opts: { file: string; property?: string; format: string; channel?: string }) => {
       const format = opts.format === "ical" || opts.format === "ics" ? "ical" : "csv";
-      const result = importOtaFile(opts.file, format, opts.property ?? defaultHospitalityPropertyId());
-      console.log(`imported ${result.imported.length} · skipped ${result.skipped.length}`);
+      const channel = opts.channel ? hospitalityChannelSchema.parse(opts.channel) : undefined;
+      const result = importOtaFile(
+        opts.file,
+        format,
+        opts.property ?? defaultHospitalityPropertyId(),
+        channel
+      );
+      console.log(
+        `imported ${result.imported.length} · cancelled ${result.cancelled.length} · skipped ${result.skipped.length}`
+      );
       for (const stay of result.imported) printStay(stay);
-      for (const id of result.skipped) console.log(`skip duplicate ${id}`);
+      for (const stay of result.cancelled) console.log(`cancel ${stay.id} (${stay.ota_ref ?? "—"})`);
+      for (const skip of result.skipped) console.log(`skip ${skip.reason} ${skip.ref}`);
+      const needsRate = result.imported.filter((s) => s.rate_per_night_jpy === undefined);
+      if (needsRate.length > 0) {
+        console.log(
+          `要補完 ${needsRate.length} 件: 宿泊料金${format === "ical" ? "・人数" : ""}が未設定 — ` +
+            "stay-upsert --id <stayId> --rate <円> --party-size <人数> で補完しないと tax-compute は停止します"
+        );
+      }
     });
 
   h.command("tax-compute")

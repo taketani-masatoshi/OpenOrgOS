@@ -16,6 +16,7 @@ import {
   importOtaRows,
   loadStays,
   loadTaxLedger,
+  LodgingTaxMissingRateError,
   lodgingTaxDueOn,
   lodgingTaxPerPersonPerNight,
   markTaxFiled,
@@ -112,7 +113,92 @@ describe("hospitality ops pure functions", () => {
       check_out: "2026-08-04",
       ota_ref: "ical-test-001",
       party_size: 1,
+      channel: "other",
     });
+  });
+
+  it("parseOtaCsv rejects a generic CSV without check_in / check_out columns", () => {
+    expect(() => parseOtaCsv("arrival,departure\n2026-09-01,2026-09-03\n")).toThrow(/check_in/);
+  });
+});
+
+describe("Airbnb exports", () => {
+  const AIRBNB_HEADER =
+    '"Confirmation code","Status","Guest name","Contact","# of adults","# of children","# of infants","Start date","End date","# of nights","Booked","Listing","Earnings"';
+
+  function airbnbCsv(...rows: string[]): string {
+    return [AIRBNB_HEADER, ...rows].join("\n");
+  }
+
+  it("parses the reservations CSV without carrying guest PII", () => {
+    const rows = parseOtaCsv(
+      airbnbCsv(
+        '"HMAAA1","Confirmed","Guest A","+81 00","2","1","1","11/3/2026","11/05/2026","2","10/01/2026","Kamezawa","¥36,000"',
+        '"HMAAA2","Past guest","Guest B","+81 00","1","0","0","08/01/2026","08/02/2026","1","07/01/2026","Kamezawa","¥9,000"'
+      )
+    );
+    expect(rows).toEqual([
+      {
+        check_in: "2026-11-03",
+        check_out: "2026-11-05",
+        party_size: 3,
+        ota_ref: "HMAAA1",
+        channel: "airbnb",
+        status: "booked",
+      },
+      {
+        check_in: "2026-08-01",
+        check_out: "2026-08-02",
+        party_size: 1,
+        ota_ref: "HMAAA2",
+        channel: "airbnb",
+        status: "checked_out",
+      },
+    ]);
+    expect(JSON.stringify(rows)).not.toContain("Guest");
+  });
+
+  it("maps cancellations and unconfirmed requests", () => {
+    const rows = parseOtaCsv(
+      airbnbCsv(
+        '"HMBBB1","Canceled by guest","x","x","2","0","0","11/10/2026","11/12/2026","2","","",""',
+        '"HMBBB2","Pending","x","x","2","0","0","11/20/2026","11/22/2026","2","","",""'
+      )
+    );
+    expect(rows.map((r) => r.status)).toEqual(["cancelled", "unconfirmed"]);
+  });
+
+  it("refuses unknown statuses and unreadable dates", () => {
+    expect(() =>
+      parseOtaCsv(airbnbCsv('"HMC1","Mystery","x","x","1","0","0","11/10/2026","11/12/2026","2","","",""'))
+    ).toThrow(/不明なステータス/);
+    expect(() =>
+      parseOtaCsv(airbnbCsv('"HMC2","Confirmed","x","x","1","0","0","2026.11.10","11/12/2026","2","","",""'))
+    ).toThrow(/2 行目/);
+  });
+
+  it("iCal skips host blocks and detects the Airbnb channel", () => {
+    const ical = [
+      "BEGIN:VCALENDAR",
+      "PRODID:-//Airbnb Inc//Hosting Calendar 1.0//EN",
+      "BEGIN:VEVENT",
+      "DTSTART;VALUE=DATE:20261103",
+      "DTEND;VALUE=DATE:20261105",
+      "SUMMARY:Reserved",
+      "UID:aaa@airbnb.com",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "DTSTART;VALUE=DATE:20261120",
+      "DTEND;VALUE=DATE:20261130",
+      "SUMMARY:Airbnb (Not available)",
+      "UID:bbb@airbnb.com",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    const rows = parseOtaIcal(ical);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ check_in: "2026-11-03", channel: "airbnb", ota_ref: "aaa@airbnb.com" });
+    expect(parseOtaIcal(ical, "booking")).toHaveLength(2);
   });
 });
 
@@ -251,6 +337,69 @@ describe("hospitality ops writes (ephemeral tenant)", () => {
     expect(second.imported).toHaveLength(0);
     expect(second.skipped).toHaveLength(1);
     expect(loadStays().stays).toHaveLength(1);
+  });
+
+  it("computeLodgingTax stops when a stay has no rate and leaves the ledger untouched", () => {
+    upsertStay({
+      id: "STAY-2026-001",
+      property_id: "PROP-002",
+      check_in: "2026-08-01",
+      check_out: "2026-08-03",
+      party_size: 2,
+      rate_per_night_jpy: 50000,
+    });
+    upsertStay({
+      id: "STAY-2026-002",
+      property_id: "PROP-002",
+      check_in: "2026-08-10",
+      check_out: "2026-08-12",
+      party_size: 2,
+    });
+    const before = loadTaxLedger();
+    expect(() => computeLodgingTax("2026-08")).toThrow(LodgingTaxMissingRateError);
+    expect(() => computeLodgingTax("2026-08")).toThrow(/STAY-2026-002/);
+    expect(loadTaxLedger()).toEqual(before);
+  });
+
+  it("computeLodgingTax accepts an explicit zero rate", () => {
+    upsertStay({
+      id: "STAY-2026-001",
+      property_id: "PROP-002",
+      check_in: "2026-08-01",
+      check_out: "2026-08-03",
+      party_size: 1,
+      rate_per_night_jpy: 0,
+    });
+    computeLodgingTax("2026-08");
+    expect(loadTaxLedger().assessments.find((a) => a.stay_id === "STAY-2026-001")?.tax_jpy).toBe(0);
+  });
+
+  it("importOtaRows applies OTA statuses", () => {
+    const base = { party_size: 2, channel: "airbnb" as const };
+    const first = importOtaRows(
+      [
+        { ...base, check_in: "2026-09-01", check_out: "2026-09-03", ota_ref: "HM-1", status: "booked" },
+        { ...base, check_in: "2026-07-01", check_out: "2026-07-02", ota_ref: "HM-2", status: "checked_out" },
+        { ...base, check_in: "2026-09-10", check_out: "2026-09-11", ota_ref: "HM-3", status: "unconfirmed" },
+        { ...base, check_in: "2026-09-20", check_out: "2026-09-21", ota_ref: "HM-4", status: "cancelled" },
+      ],
+      "PROP-002"
+    );
+    expect(first.imported.map((s) => [s.ota_ref, s.status, s.cleaning_status])).toEqual([
+      ["HM-1", "booked", "pending"],
+      ["HM-2", "checked_out", "na"],
+    ]);
+    expect(first.skipped).toEqual([
+      { ref: "HM-3", reason: "unconfirmed" },
+      { ref: "HM-4", reason: "cancelled" },
+    ]);
+
+    const second = importOtaRows(
+      [{ ...base, check_in: "2026-09-01", check_out: "2026-09-03", ota_ref: "HM-1", status: "cancelled" }],
+      "PROP-002"
+    );
+    expect(second.cancelled.map((s) => s.ota_ref)).toEqual(["HM-1"]);
+    expect(loadStays().stays.find((s) => s.ota_ref === "HM-1")?.status).toBe("cancelled");
   });
 
   it("importOtaFile reads csv from temp file", () => {

@@ -21,6 +21,20 @@
 | 定期 | **ops-due** · **recurring-list** · **recurring-complete** |
 | その他 | guest-message · access-code · ota-import · id-docs-* · metrics · blockers |
 
+## OTA 取込（`ota-import`）
+
+公式 API は使わず、OTA のエクスポートファイルを取り込む。再取込しても重複しない。
+
+| 入力 | 取り込む値 | 注意 |
+|------|-----------|------|
+| 汎用 CSV（`check_in,check_out,party_size,channel,rate_per_night_jpy,ota_ref`） | 全列 | `check_in` / `check_out` 列が無ければ停止 |
+| Airbnb 予約 CSV（英語 UI のエクスポート。列名で自動判定） | 予約番号 · 日付（MM/DD/YYYY）· 人数（大人＋子ども。乳幼児は除く）· ステータス | ゲスト名・連絡先は読まない。「Earnings」はホスト受取額で宿泊料金ではないため、料金は未設定のまま |
+| iCal（`--format ical`） | 日付 · UID | Airbnb のフィードは自動判定し、「Not available」のブロック日を除外。人数は 1、料金は未設定。他 OTA は `--channel` で指定 |
+
+Airbnb のステータスは、Confirmed → booked、Currently hosting → checked_in、Past guest → checked_out（清掃は対象外 `na`）に対応させる。キャンセルは取込済みの滞在を cancelled にし、Pending / Request 等の未確定予約は取り込まない。不明なステータスや読めない日付があれば、何も書かずに停止する。
+
+宿泊料金（`rate_per_night_jpy`）が未設定の滞在が対象月にあると、`tax-compute` は宿泊税を 0 円として扱わずに停止する。`stay-upsert --rate`（iCal 取込分は `--party-size` も）で補完してから再計算する。料金 0 円を明示した滞在は計算する。
+
 ## Today / 秘書連携
 
 - `buildTodayContext` → `hospitality_ops_due`（`## 旅館運用（期限・事前）`）

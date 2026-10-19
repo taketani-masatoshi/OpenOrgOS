@@ -4,7 +4,7 @@
 version: 2
 stats:
   vitest_total: 623
-  static_test_cases: 2942
+  static_test_cases: 2950
   tiered_execution_total: 623
   catalog_total: 47
   catalog_cli_registered: 47

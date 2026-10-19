@@ -21,6 +21,14 @@ import {
   writeTrackedFile,
   writeYamlFile,
 } from "../../../../src/lib/utils.js";
+import { parseOtaCsv, parseOtaIcal, type OtaImportRow } from "./ota-parse.js";
+
+export {
+  parseOtaCsv,
+  parseOtaIcal,
+  type OtaImportRow,
+  type OtaReservationStatus,
+} from "./ota-parse.js";
 
 export const STAYS_REL = "data/operations/stays.yaml";
 export const TAX_LEDGER_REL = "data/operations/lodging-tax.yaml";
@@ -49,14 +57,26 @@ export type StayMetrics = {
   stay_count: number;
 };
 
-export type OtaImportRow = {
-  check_in: string;
-  check_out: string;
-  party_size: number;
-  ota_ref?: string;
-  rate_per_night_jpy?: number;
-  channel: HospitalityStay["channel"];
+export type OtaImportSkip = {
+  ref: string;
+  reason: "duplicate" | "unconfirmed" | "cancelled";
 };
+
+export type OtaImportResult = {
+  imported: HospitalityStay[];
+  cancelled: HospitalityStay[];
+  skipped: OtaImportSkip[];
+};
+
+export class LodgingTaxMissingRateError extends Error {
+  constructor(readonly stayIds: string[]) {
+    super(
+      `宿泊料金（rate_per_night_jpy）が未設定の滞在があります: ${stayIds.join(", ")} — ` +
+        "operations hospitality stay-upsert --id <stayId> --rate <円> で設定してから再計算してください"
+    );
+    this.name = "LodgingTaxMissingRateError";
+  }
+}
 
 export function hospitalityModuleEnabled(): boolean {
   return loadEnabledModulesSafe().some((m) => m.id === "hospitality" && m.enabled);
@@ -254,6 +274,8 @@ export function computeLodgingTax(period: string): LodgingTaxLedgerFile {
   const stays = loadStays().stays.filter(
     (s) => periodOfDate(s.check_in) === period && s.status !== "cancelled" && s.status !== "no_show"
   );
+  const missingRate = stays.filter((s) => s.rate_per_night_jpy === undefined).map((s) => s.id);
+  if (missingRate.length > 0) throw new LodgingTaxMissingRateError(missingRate);
   const assessments = ledger.assessments.filter((a) => a.period !== period);
   const now = getClock().nowIso();
   for (const stay of stays) {
@@ -409,102 +431,77 @@ export function markTaxPaid(period: string, amount: number, paidOn: string): voi
   });
 }
 
-function mapChannel(raw: string): HospitalityStay["channel"] {
-  const c = raw.toLowerCase();
-  if (c.includes("airbnb")) return "airbnb";
-  if (c.includes("book")) return "booking";
-  if (c === "direct") return "direct";
-  return "other";
+function findImportedStay(
+  stays: HospitalityStay[],
+  row: OtaImportRow,
+  propertyId: string
+): HospitalityStay | undefined {
+  return stays.find(
+    (s) =>
+      (row.ota_ref && s.ota_ref === row.ota_ref) ||
+      (s.property_id === propertyId && s.check_in === row.check_in && s.check_out === row.check_out)
+  );
 }
 
-export function parseOtaCsv(text: string): OtaImportRow[] {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length < 2) return [];
-  const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
-  const idx = (name: string) => header.indexOf(name);
-  const rows: OtaImportRow[] = [];
-  for (const line of lines.slice(1)) {
-    const cols = line.split(",").map((c) => c.trim());
-    const party = Number(cols[idx("party_size")] ?? cols[2] ?? 1);
-    const rate = cols[idx("rate_per_night_jpy")];
-    rows.push({
-      check_in: cols[idx("check_in")] ?? cols[0],
-      check_out: cols[idx("check_out")] ?? cols[1],
-      party_size: Number.isFinite(party) && party > 0 ? party : 1,
-      ota_ref: cols[idx("ota_ref")] || undefined,
-      rate_per_night_jpy: rate ? Number(rate) : undefined,
-      channel: mapChannel(cols[idx("channel")] ?? "other"),
-    });
-  }
-  return rows;
+function createImportedStay(row: OtaImportRow, propertyId: string): HospitalityStay {
+  const status = row.status === "checked_in" || row.status === "checked_out" ? row.status : "booked";
+  return upsertStay({
+    property_id: propertyId,
+    check_in: row.check_in,
+    check_out: row.check_out,
+    party_size: row.party_size,
+    rate_per_night_jpy: row.rate_per_night_jpy,
+    channel: row.channel,
+    ota_ref: row.ota_ref,
+    status,
+    // Past stays were cleaned outside OrgOS; tracking them would flood ops-due.
+    ...(status === "checked_out" ? { cleaning_status: "na" as const } : {}),
+  });
 }
 
-export function parseOtaIcal(text: string, defaultChannel: HospitalityStay["channel"] = "other"): OtaImportRow[] {
-  const events = text.split(/BEGIN:VEVENT/i).slice(1);
-  const rows: OtaImportRow[] = [];
-  for (const block of events) {
-    const field = (name: string) => {
-      const m = block.match(new RegExp(`^${name}(?:;[^:]*)?:([^\\r\\n]+)`, "im"));
-      return m?.[1]?.trim();
-    };
-    const start = field("DTSTART");
-    const end = field("DTEND");
-    if (!start || !end) continue;
-    const toIso = (v: string) => {
-      const d = v.replace(/[^0-9]/g, "").slice(0, 8);
-      return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-    };
-    rows.push({
-      check_in: toIso(start),
-      check_out: toIso(end),
-      party_size: 1,
-      ota_ref: field("UID"),
-      channel: defaultChannel,
-    });
-  }
-  return rows;
-}
-
+/** Idempotent: duplicates are skipped, OTA cancellations cancel the matching stay. */
 export function importOtaRows(
   rows: OtaImportRow[],
   propertyId = defaultHospitalityPropertyId()
-): { imported: HospitalityStay[]; skipped: string[] } {
-  const imported: HospitalityStay[] = [];
-  const skipped: string[] = [];
-  const existing = loadStays();
+): OtaImportResult {
+  const result: OtaImportResult = { imported: [], cancelled: [], skipped: [] };
+  const known = [...loadStays().stays];
   for (const row of rows) {
-    const dup = existing.stays.find(
-      (s) =>
-        (row.ota_ref && s.ota_ref === row.ota_ref) ||
-        (s.property_id === propertyId && s.check_in === row.check_in && s.check_out === row.check_out)
-    );
-    if (dup) {
-      skipped.push(row.ota_ref ?? `${row.check_in}/${row.check_out}`);
+    const ref = row.ota_ref ?? `${row.check_in}/${row.check_out}`;
+    if (row.status === "unconfirmed") {
+      result.skipped.push({ ref, reason: "unconfirmed" });
       continue;
     }
-    const stay = upsertStay({
-      property_id: propertyId,
-      check_in: row.check_in,
-      check_out: row.check_out,
-      party_size: row.party_size,
-      rate_per_night_jpy: row.rate_per_night_jpy,
-      channel: row.channel,
-      ota_ref: row.ota_ref,
-      status: "booked",
-    });
-    existing.stays.push(stay);
-    imported.push(stay);
+    const existing = findImportedStay(known, row, propertyId);
+    if (row.status === "cancelled") {
+      if (!existing || existing.status === "cancelled") {
+        result.skipped.push({ ref, reason: "cancelled" });
+        continue;
+      }
+      const cancelled = upsertStay({ ...existing, status: "cancelled" });
+      known.splice(known.indexOf(existing), 1, cancelled);
+      result.cancelled.push(cancelled);
+      continue;
+    }
+    if (existing) {
+      result.skipped.push({ ref, reason: "duplicate" });
+      continue;
+    }
+    const stay = createImportedStay(row, propertyId);
+    known.push(stay);
+    result.imported.push(stay);
   }
-  return { imported, skipped };
+  return result;
 }
 
 export function importOtaFile(
   filePath: string,
   format: "csv" | "ical",
-  propertyId = defaultHospitalityPropertyId()
-): { imported: HospitalityStay[]; skipped: string[] } {
+  propertyId = defaultHospitalityPropertyId(),
+  channel?: HospitalityStay["channel"]
+): OtaImportResult {
   const text = readFileSync(filePath, "utf-8");
-  const rows = format === "ical" ? parseOtaIcal(text) : parseOtaCsv(text);
+  const rows = format === "ical" ? parseOtaIcal(text, channel) : parseOtaCsv(text);
   return importOtaRows(rows, propertyId);
 }
 
