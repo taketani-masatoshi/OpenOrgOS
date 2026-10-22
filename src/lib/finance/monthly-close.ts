@@ -1,5 +1,8 @@
 import type { OpeningBalancesFile } from "../../../schemas/finance/opening-balances.js";
-import { withFinanceMutation } from "./reconciliation-transaction.js";
+import {
+  withFinanceMutation,
+  withReconciliationTransaction,
+} from "./reconciliation-transaction.js";
 /**
  * Monthly accounting close — one gate for CLI and Workbench.
  * Lock only when error-level gates pass.
@@ -24,7 +27,11 @@ import {
   resolveFiscalYear,
 } from "./fiscal-year.js";
 import { loadBankStatementsLite } from "./bank-statements-lite.js";
-import { postMonthlyPlJournalEntries, postPayrollJournalEntry } from "./journal-sources.js";
+import {
+  monthlyPayrollYen,
+  postMonthlyPlJournalEntries,
+  postPayrollJournalEntry,
+} from "./journal-sources.js";
 import { buildBalanceSheet } from "./ledger/balance-sheet.js";
 import { buildMonthlyReconcileReport } from "./ledger/monthly-reconcile.js";
 import { subsidiaryLedgerIntegrityIssues } from "./ledger/subsidiary-ledger.js";
@@ -58,10 +65,18 @@ export type MonthlyCloseEvaluation = {
 export type MonthlyCloseResult = {
   month: string;
   posted_entry_ids: string[];
+  /** Entries posted during this attempt and rolled back because the month could not lock. */
+  rolled_back_entry_ids?: string[];
   locked: boolean;
   ok: boolean;
   evaluation: MonthlyCloseEvaluation;
 };
+
+class MonthlyCloseRolledBack extends Error {
+  constructor(readonly result: MonthlyCloseResult) {
+    super(`Monthly close ${result.month} rolled back: ${result.evaluation.errors.join("; ")}`);
+  }
+}
 
 function monthKey(month: string): void {
   if (!/^\d{4}-\d{2}$/.test(month)) {
@@ -314,33 +329,94 @@ export function evaluateMonthlyCloseGates(
 
   let depRequired = false;
   let depDetail: string | undefined;
+  let depSkipHistorical = false;
   if (requireDepreciation) {
     try {
       depRequired = buildDepreciationSchedule(month).some(
         (line) => line.monthly_depreciation_yen > 0
       );
     } catch (error) {
-      depDetail = error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("Historical depreciation requires an asset snapshot")) {
+        depSkipHistorical = true;
+        depDetail = message;
+      } else {
+        depDetail = message;
+      }
     }
   }
   items.push(
-    depDetail
-      ? gate("depreciation-posted", "減価償却を計上済み", false, "error", depDetail)
-      : optionalGate(
-          "depreciation-posted",
-          "減価償却を計上済み",
-          depRequired,
-          depreciationPosted(month)
-        )
+    depSkipHistorical
+      ? gate("depreciation-posted", "減価償却を計上済み", true, "skip", depDetail)
+      : depDetail
+        ? gate("depreciation-posted", "減価償却を計上済み", false, "error", depDetail)
+        : optionalGate(
+            "depreciation-posted",
+            "減価償却を計上済み",
+            depRequired,
+            depreciationPosted(month)
+          )
   );
-  items.push(
-    optionalGate(
-      "payroll-posted",
-      "給与発生を計上済み",
-      requirePayroll && payrollGross() > 0,
-      payrollPosted(month)
-    )
-  );
+
+  let payrollRequired = requirePayroll && payrollGross() > 0;
+  let payrollSkipDetail: string | undefined;
+  if (payrollRequired) {
+    try {
+      computePayrollMonth({
+        month,
+        grossYen: payrollGross(),
+        healthStandardRemunerationYen:
+          loadPayroll().employee_payroll?.health_standard_remuneration_yen,
+        pensionStandardRemunerationYen:
+          loadPayroll().employee_payroll?.pension_standard_remuneration_yen,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // Incomplete payroll configuration must not invent amounts — skip the gate.
+      if (
+        /Payroll rates|standard remuneration|not verified|Explicit payroll/i.test(message)
+      ) {
+        payrollRequired = false;
+        payrollSkipDetail = message;
+      } else {
+        items.push(
+          gate("payroll-posted", "給与発生を計上済み", false, "error", message)
+        );
+        payrollRequired = false;
+        payrollSkipDetail = "error-emitted";
+      }
+    }
+  }
+  const salaryRowsYen = monthlyPayrollYen(month);
+  if (salaryRowsYen > 0 && !payrollPosted(month)) {
+    // Monthly P/L never books salary rows, so skipping payroll here would lock without salary.
+    items.push(
+      gate(
+        "payroll-posted",
+        "給与発生を計上済み",
+        false,
+        "error",
+        `monthly salary rows ${salaryRowsYen} yen have no payroll journal${
+          payrollSkipDetail && payrollSkipDetail !== "error-emitted"
+            ? ` (${payrollSkipDetail})`
+            : ""
+        }`
+      )
+    );
+  } else if (payrollSkipDetail === "error-emitted") {
+    // already pushed error gate
+  } else if (payrollSkipDetail) {
+    items.push(gate("payroll-posted", "給与発生を計上済み", true, "skip", payrollSkipDetail));
+  } else {
+    items.push(
+      optionalGate(
+        "payroll-posted",
+        "給与発生を計上済み",
+        payrollRequired,
+        payrollPosted(month)
+      )
+    );
+  }
   items.push(
     optionalGate(
       "monthly-pl-posted",
@@ -441,9 +517,15 @@ export function evaluateMonthlyCloseGates(
   );
 
   // Always re-validate live finance data. Callers must not inject a report.
+  // Remittance deadlines after the close as-of do not block historical month locks.
   const validate = runValidateReport({ warnings: true });
   const validateErrors = validate.issues
     .filter((issue) => issue.severity === "error" && issue.path.includes("data/finance/"))
+    .filter((issue) => {
+      const deadline = issue.message.match(/past deadline (\d{4}-\d{2}-\d{2})/);
+      if (deadline && deadline[1]! > asOf) return false;
+      return true;
+    })
     .map((issue) => `${issue.path}: ${issue.message}`);
   items.push(
     gate(
@@ -536,37 +618,52 @@ function postMonthJournals(
 ): string[] {
   const posted: string[] = [];
   if (opts?.postDepreciation !== false) {
-    posted.push(
-      ...postDepreciationJournalEntries({
-        period: month,
-        authorizedBy: operatorId,
-      })
-    );
+    try {
+      posted.push(
+        ...postDepreciationJournalEntries({
+          period: month,
+          authorizedBy: operatorId,
+        })
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // Same condition the depreciation-posted gate reports as "skip".
+      if (!message.includes("Historical depreciation requires an asset snapshot")) throw error;
+    }
   }
   if (opts?.postPayroll !== false && payrollGross() > 0) {
-    const computed = computePayrollMonth({
-      month,
-      grossYen: payrollGross(),
-      healthStandardRemunerationYen:
-        loadPayroll().employee_payroll?.health_standard_remuneration_yen,
-      pensionStandardRemunerationYen:
-        loadPayroll().employee_payroll?.pension_standard_remuneration_yen,
-    });
-    const payrollEntry = postPayrollJournalEntry({
-      period: month,
-      authorizedBy: operatorId,
-      grossYen: computed.gross_yen,
-      withholdingYen: computed.withholding_yen,
-      socialEmployerYen: computed.social_insurance.employer_total_yen,
-      socialEmployeeYen: computed.social_insurance.employee_total_yen,
-    });
-    if (payrollEntry) posted.push(payrollEntry);
+    try {
+      const computed = computePayrollMonth({
+        month,
+        grossYen: payrollGross(),
+        healthStandardRemunerationYen:
+          loadPayroll().employee_payroll?.health_standard_remuneration_yen,
+        pensionStandardRemunerationYen:
+          loadPayroll().employee_payroll?.pension_standard_remuneration_yen,
+      });
+      const payrollEntry = postPayrollJournalEntry({
+        period: month,
+        authorizedBy: operatorId,
+        grossYen: computed.gross_yen,
+        withholdingYen: computed.withholding_yen,
+        socialEmployerYen: computed.social_insurance.employer_total_yen,
+        socialEmployeeYen: computed.social_insurance.employee_total_yen,
+      });
+      if (payrollEntry) posted.push(payrollEntry);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (
+        !/Payroll rates|standard remuneration|not verified|Explicit payroll/i.test(message)
+      ) {
+        throw error;
+      }
+      // Incomplete payroll config: skip posting (gate will skip or already failed closed).
+    }
   }
   posted.push(
     ...postMonthlyPlJournalEntries({
       period: month,
       authorizedBy: operatorId,
-      skipPayroll: opts?.postPayroll === false,
     })
   );
   posted.push(...postCloseAdjustments(month));
@@ -574,8 +671,11 @@ function postMonthJournals(
 }
 
 /**
- * Post month-end journals, then lock only if error gates pass.
+ * Post month-end journals and lock the month as one transaction.
  * A month that is already locked is not posted into and is not unlocked.
+ * Hard gate failures (prior lock, CoA, validate, existing consumption tax, …)
+ * abort before posting; a month that still cannot lock after posting, or any
+ * error while posting, restores the journal and period locks to their preimage.
  */
 function closeAccountingMonthUnlocked(input: {
   month: string;
@@ -584,33 +684,75 @@ function closeAccountingMonthUnlocked(input: {
   postPayroll?: boolean;
 }): MonthlyCloseResult {
   monthKey(input.month);
-  const posted = isMonthLocked(input.month)
-    ? []
-    : postMonthJournals(input.month, input.operatorId, {
+  const gateOpts = {
+    requireDepreciation: input.postDepreciation,
+    requirePayroll: input.postPayroll,
+  };
+  if (isMonthLocked(input.month)) {
+    const evaluation = evaluateMonthlyCloseGates(input.month, gateOpts);
+    return {
+      month: input.month,
+      posted_entry_ids: [],
+      locked: true,
+      ok: evaluation.can_lock,
+      evaluation,
+    };
+  }
+
+  const pre = evaluateMonthlyCloseGates(input.month, gateOpts);
+  const postableGateIds = new Set([
+    "depreciation-posted",
+    "payroll-posted",
+    "monthly-pl-posted",
+  ]);
+  const hardFailures = pre.items.filter(
+    (item) => item.level === "error" && !item.pass && !postableGateIds.has(item.id)
+  );
+  if (hardFailures.length > 0) {
+    return {
+      month: input.month,
+      posted_entry_ids: [],
+      locked: false,
+      ok: false,
+      evaluation: pre,
+    };
+  }
+
+  try {
+    return withReconciliationTransaction(() => {
+      const posted = postMonthJournals(input.month, input.operatorId, {
         postDepreciation: input.postDepreciation,
         postPayroll: input.postPayroll,
       });
-  const evaluation = evaluateMonthlyCloseGates(input.month, {
-    requireDepreciation: input.postDepreciation,
-    requirePayroll: input.postPayroll,
-  });
-  let locked = isMonthLocked(input.month);
-  if (evaluation.can_lock && !locked) {
-    lockMonth({
-      month: input.month,
-      lockedBy: input.operatorId,
-      reason: "finances close",
-      evidence: buildMonthlyCloseEvidence(evaluation),
+      const evaluation = evaluateMonthlyCloseGates(input.month, gateOpts);
+      if (!evaluation.can_lock) {
+        throw new MonthlyCloseRolledBack({
+          month: input.month,
+          posted_entry_ids: [],
+          rolled_back_entry_ids: posted,
+          locked: false,
+          ok: false,
+          evaluation,
+        });
+      }
+      lockMonth({
+        month: input.month,
+        lockedBy: input.operatorId,
+        reason: "finances close",
+        evidence: buildMonthlyCloseEvidence(evaluation),
+      });
+      return {
+        month: input.month,
+        posted_entry_ids: posted,
+        locked: true,
+        ok: true,
+        evaluation,
+      };
     });
-    locked = true;
+  } catch (error) {
+    if (error instanceof MonthlyCloseRolledBack) return error.result;
+    throw error;
   }
-  return {
-    month: input.month,
-    posted_entry_ids: posted,
-    locked,
-    ok: evaluation.can_lock,
-    evaluation,
-  };
 }
 
 export function closeAccountingMonth(

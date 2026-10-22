@@ -22,7 +22,9 @@ import {
 
 const locks = new Set<string>();
 const internalReads = new Set<string>();
-const files = ["journal-entries.yaml", "reconciliation-events.yaml"];
+const files = ["journal-entries.yaml", "reconciliation-events.yaml", "period-locks.yaml"];
+/** Records written before period-locks.yaml joined the transaction. */
+const legacyFiles = ["journal-entries.yaml", "reconciliation-events.yaml"];
 type Preimage = { name: string; base64: string | null; sha256?: string | null };
 function financeDir(): string {
   return join(getDataDir(), "finance");
@@ -74,8 +76,9 @@ function parseBefore(pending: string): Preimage[] {
   const entries: unknown = JSON.parse(readFileSync(join(pending, "before.json"), "utf8"));
   if (
     !Array.isArray(entries) ||
-    entries.length !== files.length ||
-    new Set(entries.map((e) => e?.name)).size !== files.length ||
+    ![files.length, legacyFiles.length].includes(entries.length) ||
+    new Set(entries.map((e) => e?.name)).size !== entries.length ||
+    legacyFiles.some((name) => !entries.some((e) => e?.name === name)) ||
     entries.some(
       (e) =>
         !e ||
@@ -184,15 +187,18 @@ export function recoverPendingReconciliation(options: RecoveryOptions = {}): {
           if (
             ![1, 2].includes(commit.version) ||
             !commit.hashes ||
-            files.some(
-              (name) =>
-                hashes[name] !== commit.hashes[name] &&
-                !(
-                  commit.version === 1 &&
-                  hashes[name] === null &&
-                  commit.hashes[name] === digest("")
-                )
-            )
+            legacyFiles.some((name) => !(name in commit.hashes)) ||
+            files
+              .filter((name) => name in commit.hashes)
+              .some(
+                (name) =>
+                  hashes[name] !== commit.hashes[name] &&
+                  !(
+                    commit.version === 1 &&
+                    hashes[name] === null &&
+                    commit.hashes[name] === digest("")
+                  )
+              )
           ) {
             throw new Error("Committed reconciliation marker does not match ledger files");
           }
@@ -202,7 +208,7 @@ export function recoverPendingReconciliation(options: RecoveryOptions = {}): {
         }
         finish(dir, pending);
         return {
-          restored: mode === "restore" ? files.slice() : [],
+          restored: mode === "restore" ? entries.map((entry) => entry.name) : [],
           status: mode === "restore" ? "restored" : "committed",
         };
       } catch (error) {
@@ -229,7 +235,10 @@ export function withFinanceMutation<T>(fn: () => T): T {
   });
 }
 
-/** Readers fail closed until both ledgers and the commit decision are durable. */
+/**
+ * Journal, reconciliation events and period locks commit or roll back together.
+ * Readers fail closed until the ledgers and the commit decision are durable.
+ */
 export function withReconciliationTransaction<T>(fn: () => T): T {
   return withFinanceMutation(() => {
     const dir = financeDir();

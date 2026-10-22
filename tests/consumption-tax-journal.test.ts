@@ -1,14 +1,27 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it, beforeEach } from "vitest";
-import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
+import {
+  appendJournalEntry,
+  loadJournalEntries,
+} from "../src/lib/finance/expense-claim-journal.js";
+import { getDataDir } from "../src/lib/utils.js";
 import { postMonthlyPlJournalEntries } from "../src/lib/finance/journal-sources.js";
 import {
   buildConsumptionTaxSummary,
   splitInclusiveConsumptionTax,
 } from "../src/lib/finance/consumption-tax.js";
-import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureMonthlyPurchaseEvidence,
+  resetFixtureJournalEntries,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 
 describe("consumption tax from GL", () => {
-  beforeEach(() => resetFixtureJournalEntries());
+  beforeEach(() => {
+    resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
+  });
 
   it("splits inclusive 10% with floor", () => {
     expect(splitInclusiveConsumptionTax(1_050_000, 10)).toEqual({
@@ -61,10 +74,27 @@ describe("consumption tax from GL", () => {
   it("posts monthly hotel revenue as taxable net plus 仮受消費税", () => {
     useFinanceFixtureTenant();
     postMonthlyPlJournalEntries({ period: "2026-09", authorizedBy: "OP-TEST" });
+    const summary = buildConsumptionTaxSummary({ period: "2026-09" });
+    expect(
+      summary.lines.find((l) => l.direction === "sales" && l.tax_category === "taxable_10")
+        ?.base_yen
+    ).toBeGreaterThan(0);
+  });
+
+  it("refuses to post a monthly expense that has no purchase tax evidence", () => {
+    useFinanceFixtureTenant();
+    const path = join(getDataDir(), "finance", "monthly", "2026-09.yaml");
+    writeFileSync(
+      path,
+      readFileSync(path, "utf-8").replace(/^\s+(purchase_use|invoice_status):.*\n/gm, ""),
+      "utf-8"
+    );
+    const before = loadJournalEntries().entries.length;
     // A monthly expense budget has no supplier invoice/use evidence. Do not
     // silently promote it to a deductible purchase merely because it is posted.
-    expect(() => buildConsumptionTaxSummary({ period: "2026-09" })).toThrow(
-      "Purchase tax evidence incomplete"
-    );
+    expect(() =>
+      postMonthlyPlJournalEntries({ period: "2026-09", authorizedBy: "OP-TEST" })
+    ).toThrow("Purchase tax evidence incomplete");
+    expect(loadJournalEntries().entries.length).toBe(before);
   });
 });

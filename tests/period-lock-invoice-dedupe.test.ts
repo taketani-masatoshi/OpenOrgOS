@@ -16,6 +16,7 @@ import {
 } from "../src/lib/finance/expense-claim-journal.js";
 import { invoiceMplDuplicateIssues } from "../src/lib/finance/ledger/invoice-mpl-dedupe.js";
 import {
+  applyFixtureMonthlyPurchaseEvidence,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -45,7 +46,10 @@ describe("period-locks append-only", () => {
 });
 
 describe("invoice vs JE-MPL dedupe", () => {
-  beforeEach(() => resetFixtureJournalEntries());
+  beforeEach(() => {
+    resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
+  });
   afterEach(() => resetFixtureJournalEntries());
 
   it("skips invoice JE when monthly PL already posted for the same property", () => {

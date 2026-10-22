@@ -105,7 +105,8 @@ function aggregateFromJournal(
       if (line.purchase_use === "non_taxable_only") continue;
       if (line.tax_amount_yen === undefined) {
         throw new Error(
-          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}` +
+            ` [missing tax_amount_yen]`
         );
       }
       let deductible = Math.sign(amount) * line.tax_amount_yen;
@@ -113,14 +114,16 @@ function aggregateFromJournal(
         deductible = applyCommonUseAllocation(deductible, periodEvidence);
       } else if (line.purchase_use !== "taxable_only") {
         throw new Error(
-          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}` +
+            ` [missing or invalid purchase_use]`
         );
       }
       if (line.invoice_status === "nonqualified_80" || line.invoice_status === "nonqualified_50") {
         deductible = applyTransitionalInvoiceRate(deductible, line.invoice_status, periodEvidence);
       } else if (line.invoice_status !== "qualified") {
         throw new Error(
-          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}`
+          `Purchase tax evidence incomplete or unsupported: ${entry.entry_id}/${line.account_code}` +
+            ` [missing or invalid invoice_status]`
         );
       }
       if (ten) totals.purchaseTax10 += deductible;

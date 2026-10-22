@@ -3,11 +3,16 @@ import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js"
 import { postDepreciationJournalEntries } from "../src/lib/finance/depreciation.js";
 import { postMonthlyPlJournalEntries } from "../src/lib/finance/journal-sources.js";
 import { buildMonthlyReconcileReport } from "../src/lib/finance/ledger/monthly-reconcile.js";
-import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureMonthlyPurchaseEvidence,
+  resetFixtureJournalEntries,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 
 describe("ledger monthly reconcile", () => {
   beforeEach(() => {
     resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
   });
   it("skips reconcile before period_start", () => {
     useFinanceFixtureTenant();

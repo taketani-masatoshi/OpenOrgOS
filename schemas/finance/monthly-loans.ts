@@ -35,6 +35,8 @@ export const expenseCategory = z.enum([
 
 export const revenueEntry = z.object({
   property_id: z.string().optional(),
+  /** AR counterparty when not implied by property_id (company-level revenue). */
+  counterparty_id: z.string().min(1).optional(),
   category: revenueCategory,
   amount: z.number(),
   notes: z.string().optional(),
@@ -43,6 +45,8 @@ export const revenueEntry = z.object({
 export const expenseEntry = z
   .object({
     property_id: z.string().optional(),
+    /** AP counterparty when not implied by property_id (company-level expense). */
+    counterparty_id: z.string().min(1).optional(),
     category: expenseCategory,
     /** Explicit account wins over category_mapping when collecting budget actuals. */
     chart_account_code: z
@@ -50,6 +54,14 @@ export const expenseEntry = z
       .regex(/^\d{4}$/)
       .optional(),
     amount: z.number(),
+    /**
+     * Purchase tax evidence for monthly P/L posting (taxable expenses).
+     * Required when the mapped expense account is posted as taxable_10/8.
+     */
+    purchase_use: z.enum(["taxable_only", "common", "non_taxable_only"]).optional(),
+    invoice_status: z.enum(["qualified", "nonqualified_80", "nonqualified_50"]).optional(),
+    /** Explicit tax yen; when omitted, inclusive split of amount is used. */
+    tax_amount_yen: z.number().int().nonnegative().optional(),
     /** Optional BU / org / employee allocation of this actual expense. */
     allocations: z
       .array(

@@ -21,6 +21,7 @@ import { getDataDir } from "../src/lib/utils.js";
 import { openingBalancesSchema } from "../schemas/finance/opening-balances.js";
 import { parse as parseYaml } from "yaml";
 import {
+  applyFixtureMonthlyPurchaseEvidence,
   applyFixtureStatementRoles,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
@@ -102,6 +103,7 @@ describe("annual close acceptance", () => {
   beforeEach(() => {
     resetFixtureJournalEntries();
     applyFixtureStatementRoles();
+    applyFixtureMonthlyPurchaseEvidence();
     removeOpeningProposals();
     openingBackup = readFileSync(join(getDataDir(), "finance", "opening-balances.yaml"), "utf-8");
     assetsBackup = readFileSync(join(getDataDir(), "finance", "fixed-assets.yaml"), "utf-8");
@@ -295,33 +297,12 @@ describe("annual close acceptance", () => {
     unlockMonth({
       month: finalMonth,
       unlockedBy: OPERATOR,
-      reason: "inject imbalance",
-    });
-    appendJournalEntry({
-      entry_id: "JE-BAD-TB",
-      occurred_at: `${finalMonth}-15T00:00:00.000Z`,
-      description: "unknown account",
-      source: { kind: "manual", authorized_by: OPERATOR },
-      evidence_refs: ["test:bad-tb"],
-      lines: [
-        {
-          account_code: "9999",
-          debit_yen: 100,
-          credit_yen: 0,
-          tax_category: "out_of_scope",
-        },
-        {
-          account_code: "1100",
-          debit_yen: 0,
-          credit_yen: 100,
-          tax_category: "out_of_scope",
-        },
-      ],
+      reason: "drop close evidence",
     });
     lockMonth({
       month: finalMonth,
       lockedBy: OPERATOR,
-      reason: "relock unbalanced",
+      reason: "relock without evidence",
     });
     const live = readFileSync(join(getDataDir(), "finance", "opening-balances.yaml"), "utf-8");
     const before = loadJournalEntries().entries.map((entry) => entry.entry_id);

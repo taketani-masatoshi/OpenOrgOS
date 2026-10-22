@@ -61,3 +61,56 @@ export function applyFixtureStatementRoles(): void {
   }
   writeFileSync(path, out.join("\n"));
 }
+
+const SKIP_PURCHASE_EVIDENCE = new Set(["depreciation", "loan_payment", "capex", "payroll"]);
+
+/**
+ * Monthly P/L taxable expenses require purchase_use + invoice_status.
+ * Fixture monthly YAML is restored from git without those fields — tag after restore.
+ */
+export function applyFixtureMonthlyPurchaseEvidence(): void {
+  useFinanceFixtureTenant();
+  const dir = join(getTenantDir(), "data/finance/monthly");
+  if (!existsSync(dir)) return;
+  for (const name of ["2026-08.yaml", "2026-09.yaml"]) {
+    const path = join(dir, name);
+    if (!existsSync(path)) continue;
+    const original = readFileSync(path, "utf-8");
+    if (original.includes("purchase_use:")) continue;
+    const lines = original.split("\n");
+    const out: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      out.push(line);
+      const cat = line.match(/^(\s*)category:\s*(\S+)\s*$/);
+      if (!cat) continue;
+      const indent = cat[1]!;
+      const category = cat[2]!;
+      if (SKIP_PURCHASE_EVIDENCE.has(category)) continue;
+      // Only expense sections: look backward for expenses: before revenue:
+      let section: "expenses" | "revenue" | "other" = "other";
+      for (let k = i; k >= 0; k--) {
+        if (lines[k] === "expenses:") {
+          section = "expenses";
+          break;
+        }
+        if (lines[k] === "revenue:") {
+          section = "revenue";
+          break;
+        }
+      }
+      if (section !== "expenses") continue;
+      let hasPurchase = false;
+      for (let j = i + 1; j < lines.length; j++) {
+        const next = lines[j]!;
+        if (next.match(/^\s*-\s/) || next.match(/^[a-z]/)) break;
+        if (next.includes("purchase_use:")) hasPurchase = true;
+      }
+      if (!hasPurchase) {
+        out.push(`${indent}purchase_use: taxable_only`);
+        out.push(`${indent}invoice_status: qualified`);
+      }
+    }
+    writeFileSync(path, out.join("\n"));
+  }
+}

@@ -7,10 +7,17 @@ import {
 import { postMonthlyPlJournalEntries } from "../src/lib/finance/journal-sources.js";
 import { buildSubsidiaryLedger } from "../src/lib/finance/ledger/subsidiary-ledger.js";
 import { loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
-import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureMonthlyPurchaseEvidence,
+  resetFixtureJournalEntries,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 
 describe("bank reconciliation GL", () => {
-  beforeEach(() => resetFixtureJournalEntries());
+  beforeEach(() => {
+    resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
+  });
   afterEach(() => resetFixtureJournalEntries());
 
   it("resolves settle kind from bank direction and ar-ap kind", () => {

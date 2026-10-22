@@ -5,7 +5,7 @@
  * A resumable transaction state makes partial multi-file commits safe to retry.
  */
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import type { OpeningBalancesFile } from "../../../schemas/finance/opening-balances.js";
@@ -304,9 +304,24 @@ function closeAccountingYearUnlocked(input: {
     (existing?.phase === "committing" && existing.opening_sha256)
   ) {
     const expected = existing.opening_sha256;
-    const proposal = readYamlFile(existing.proposal_path, openingBalancesSchema);
+    const endMonth = resolveCompanyFiscalYearEndMonth();
+    const asOf = fiscalYearEndDate(input.fiscalYear, endMonth);
+    const nextFy = nextFiscalYear(input.fiscalYear);
+    const nextPeriodStart = fiscalYearStartMonth(nextFy, endMonth);
+    const proposal =
+      existing.phase === "committing" && !existsSync(existing.proposal_path)
+        ? openingBalancesSchema.parse(
+            buildOpeningBalancesFromTrialBalance({
+              fiscalYear: nextFy,
+              asOf,
+              periodStart: nextPeriodStart,
+              bsOnly: true,
+              notes: `Opened by annual close ${input.fiscalYear} · authorized_by ${existing.operator_id}`,
+            })
+          )
+        : readYamlFile(existing.proposal_path, openingBalancesSchema);
     const live = loadOpeningBalances();
-    const months = listFiscalYearMonths(input.fiscalYear, resolveCompanyFiscalYearEndMonth());
+    const months = listFiscalYearMonths(input.fiscalYear, endMonth);
     const evidence = months.map((month) => {
       const lock = latestLockForMonth(month);
       return { month, at: lock?.at, evidence: lock?.evidence };
@@ -337,15 +352,15 @@ function closeAccountingYearUnlocked(input: {
       throw new Error(`Annual close ${input.fiscalYear} committed artifacts changed`);
     }
     if (existing.phase !== "committed") {
+      if (!existsSync(existing.proposal_path)) writeOpeningProposal(proposal, nextFy);
       writeYamlFileAtomic(openingBalancesPath(), proposal);
       saveTransaction({ ...existing, phase: "committed", updated_at: new Date().toISOString() });
     }
-    const endMonth = resolveCompanyFiscalYearEndMonth();
     const evaluation: AnnualCloseEvaluation = {
       fiscal_year: input.fiscalYear,
-      as_of: fiscalYearEndDate(input.fiscalYear, endMonth),
-      next_fiscal_year: nextFiscalYear(input.fiscalYear),
-      next_period_start: fiscalYearStartMonth(nextFiscalYear(input.fiscalYear), endMonth),
+      as_of: asOf,
+      next_fiscal_year: nextFy,
+      next_period_start: nextPeriodStart,
       months: months.map((month) => ({ month, locked: true, can_lock: true })),
       can_close: true,
       errors: [],

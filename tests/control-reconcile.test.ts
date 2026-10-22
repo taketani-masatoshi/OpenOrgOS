@@ -7,10 +7,17 @@ import { postMonthlyPlJournalEntries } from "../src/lib/finance/journal-sources.
 import { buildLedgerWorkbench } from "../src/lib/finance/ledger/workbench.js";
 import { buildTaxAdvisorHandoffContent } from "../src/lib/finance/tax-advisor-handoff.js";
 import { getTenantDir } from "../src/lib/tenant.js";
-import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureMonthlyPurchaseEvidence,
+  resetFixtureJournalEntries,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 
 describe("control reconcile and unposted months", () => {
-  beforeEach(() => resetFixtureJournalEntries());
+  beforeEach(() => {
+    resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
+  });
 
   it("matches fixture cash register at cash as_of", () => {
     useFinanceFixtureTenant();

@@ -28,29 +28,70 @@ type JournalLine = {
   credit_yen: number;
   tax_category: TaxCategory;
   tax_rate_pct?: number;
+  tax_amount_yen?: number;
+  purchase_use?: "taxable_only" | "common" | "non_taxable_only";
+  invoice_status?: "qualified" | "nonqualified_80" | "nonqualified_50";
   counterparty_id?: string;
 };
 
 type MonthlyBucket = {
   category: string;
   propertyId?: string;
+  counterpartyId?: string;
   amount: number;
   notes?: string;
+  purchase_use?: "taxable_only" | "common" | "non_taxable_only";
+  invoice_status?: "qualified" | "nonqualified_80" | "nonqualified_50";
+  tax_amount_yen?: number;
 };
 
+function monthlyBucketCounterparty(bucket: MonthlyBucket): string | undefined {
+  return bucket.counterpartyId ?? bucket.propertyId;
+}
+
+/** Company-level salary rows belong to the payroll journal (JE-PAYROLL), never to monthly P/L. */
+export function isMonthlyPayrollLine(line: { property_id?: string; notes?: string }): boolean {
+  return !line.property_id && /給与|payroll/i.test(line.notes ?? "");
+}
+
+export function monthlyPayrollYen(period: string): number {
+  const row = loadMonthlyFinances().find((entry) => entry.month === period);
+  return (row?.expenses ?? [])
+    .filter(isMonthlyPayrollLine)
+    .reduce((sum, line) => sum + line.amount, 0);
+}
+
 function groupMonthlyLines(
-  lines: Array<{ category: string; property_id?: string; amount: number; notes?: string }>
+  lines: Array<{
+    category: string;
+    property_id?: string;
+    counterparty_id?: string;
+    amount: number;
+    notes?: string;
+    purchase_use?: MonthlyBucket["purchase_use"];
+    invoice_status?: MonthlyBucket["invoice_status"];
+    tax_amount_yen?: number;
+  }>
 ): MonthlyBucket[] {
   const map = new Map<string, MonthlyBucket>();
   for (const line of lines) {
-    const key = `${line.category}::${line.property_id ?? ""}`;
+    const key = `${line.category}::${line.property_id ?? ""}::${line.counterparty_id ?? ""}`;
     const cur = map.get(key) ?? {
       category: line.category,
       propertyId: line.property_id,
+      counterpartyId: line.counterparty_id,
       amount: 0,
       notes: line.notes,
+      purchase_use: line.purchase_use,
+      invoice_status: line.invoice_status,
+      tax_amount_yen: line.tax_amount_yen,
     };
     cur.amount += line.amount;
+    if (line.purchase_use) cur.purchase_use = line.purchase_use;
+    if (line.invoice_status) cur.invoice_status = line.invoice_status;
+    if (line.tax_amount_yen != null) {
+      cur.tax_amount_yen = (cur.tax_amount_yen ?? 0) + line.tax_amount_yen;
+    }
     map.set(key, cur);
   }
   return [...map.values()];
@@ -129,12 +170,26 @@ function buildMonthlyExpenseLines(input: {
   taxCategory: TaxCategory;
   taxReceivable?: string;
   counterpartyId?: string;
+  purchase_use?: MonthlyBucket["purchase_use"];
+  invoice_status?: MonthlyBucket["invoice_status"];
+  tax_amount_yen?: number;
+  evidenceLabel?: string;
 }): JournalLine[] {
   const split =
     input.taxCategory === "taxable_10" &&
     input.taxReceivable &&
     splitInclusiveConsumptionTax(input.amount, 10);
   if (split && split.tax_yen > 0) {
+    const taxYen = input.tax_amount_yen ?? split.tax_yen;
+    if (!input.purchase_use || !input.invoice_status) {
+      throw new Error(
+        `Purchase tax evidence incomplete for monthly P/L expense` +
+          `${input.evidenceLabel ? ` (${input.evidenceLabel})` : ""}: ` +
+          `require purchase_use and invoice_status` +
+          `${!input.purchase_use ? " [missing purchase_use]" : ""}` +
+          `${!input.invoice_status ? " [missing invoice_status]" : ""}`
+      );
+    }
     return [
       {
         account_code: input.expenseAccount,
@@ -142,6 +197,9 @@ function buildMonthlyExpenseLines(input: {
         credit_yen: 0,
         tax_category: "taxable_10",
         tax_rate_pct: 10,
+        tax_amount_yen: taxYen,
+        purchase_use: input.purchase_use,
+        invoice_status: input.invoice_status,
       },
       {
         account_code: input.taxReceivable!,
@@ -175,11 +233,13 @@ function buildMonthlyExpenseLines(input: {
   ];
 }
 
-/** Post accrual P/L from monthly YAML (revenue→AR 1150, expense→AP 2110). Skips depreciation (JE-DEP). */
+/**
+ * Post accrual P/L from monthly YAML (revenue→AR 1150, expense→AP 2110).
+ * Skips depreciation (JE-DEP) and company-level salary rows (JE-PAYROLL).
+ */
 export function postMonthlyPlJournalEntries(input: {
   period: string;
   authorizedBy: string;
-  skipPayroll?: boolean;
 }): string[] {
   const coa = loadChartOfAccounts();
   const accounts = resolveJournalSourceAccounts();
@@ -190,11 +250,61 @@ export function postMonthlyPlJournalEntries(input: {
   if (!monthRow) return [];
 
   const revenueBuckets = groupMonthlyLines(monthRow.revenue);
-  const expenseBuckets = groupMonthlyLines(monthRow.expenses).filter(
-    (bucket) =>
-      !(input.skipPayroll && !bucket.propertyId && /給与|payroll/i.test(bucket.notes ?? ""))
+  const expenseBuckets = groupMonthlyLines(
+    monthRow.expenses.filter((line) => !isMonthlyPayrollLine(line))
   );
   const posted: string[] = [];
+
+  const misfiledDepreciation = monthRow.expenses.find(
+    (line) => line.category !== "depreciation" && /減価償却|depreciation/i.test(line.notes ?? "")
+  );
+  if (misfiledDepreciation) {
+    throw new Error(
+      `Depreciation row in monthly P/L must use category depreciation (${input.period}/` +
+        `${misfiledDepreciation.category}: ${misfiledDepreciation.notes}); ` +
+        `depreciation is posted by JE-DEP, not as a purchase`
+    );
+  }
+
+  // Fail closed before any append when taxable expenses lack purchase evidence
+  // or an AR/AP line would lack a counterparty.
+  for (const bucket of revenueBuckets) {
+    if (bucket.amount <= 0) continue;
+    const accountCode = coa.category_mapping.revenue[bucket.category as never];
+    if (!accountCode || !isPlAccountType(coa, accountCode)) continue;
+    if (!monthlyBucketCounterparty(bucket)) {
+      throw new Error(
+        `Monthly P/L revenue requires property_id or counterparty_id` +
+          ` (${input.period}/${bucket.category}/${accountCode})`
+      );
+    }
+  }
+  for (const bucket of expenseBuckets) {
+    if (bucket.amount <= 0) continue;
+    if (SKIP_EXPENSE_CATEGORIES.has(bucket.category)) continue;
+    const accountCode = coa.category_mapping.expense[bucket.category as never];
+    if (!accountCode || !isPlAccountType(coa, accountCode)) continue;
+    if (!monthlyBucketCounterparty(bucket)) {
+      throw new Error(
+        `Monthly P/L expense requires property_id or counterparty_id` +
+          ` (${input.period}/${bucket.category}/${accountCode})`
+      );
+    }
+    const taxCategory = monthlyPlTaxCategory("expense", bucket.category);
+    if (taxCategory !== "taxable_10" && taxCategory !== "taxable_8") continue;
+    if (!accounts.consumption_tax_receivable) continue;
+    const split = splitInclusiveConsumptionTax(bucket.amount, 10);
+    if (split.tax_yen <= 0) continue;
+    if (!bucket.purchase_use || !bucket.invoice_status) {
+      throw new Error(
+        `Purchase tax evidence incomplete for monthly P/L expense` +
+          ` (${input.period}/${bucket.category}/${accountCode}): ` +
+          `require purchase_use and invoice_status` +
+          `${!bucket.purchase_use ? " [missing purchase_use]" : ""}` +
+          `${!bucket.invoice_status ? " [missing invoice_status]" : ""}`
+      );
+    }
+  }
 
   for (const bucket of revenueBuckets) {
     if (bucket.amount <= 0) continue;
@@ -219,7 +329,7 @@ export function postMonthlyPlJournalEntries(input: {
         amount: bucket.amount,
         taxCategory,
         taxPayable: accounts.consumption_tax_payable,
-        counterpartyId: bucket.propertyId,
+        counterpartyId: monthlyBucketCounterparty(bucket),
       }),
     });
     posted.push(entryId);
@@ -249,7 +359,11 @@ export function postMonthlyPlJournalEntries(input: {
         amount: bucket.amount,
         taxCategory,
         taxReceivable: accounts.consumption_tax_receivable,
-        counterpartyId: bucket.propertyId,
+        counterpartyId: monthlyBucketCounterparty(bucket),
+        purchase_use: bucket.purchase_use,
+        invoice_status: bucket.invoice_status,
+        tax_amount_yen: bucket.tax_amount_yen,
+        evidenceLabel: `${entryId}/${accountCode}`,
       }),
     });
     posted.push(entryId);

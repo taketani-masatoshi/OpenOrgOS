@@ -1,13 +1,23 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it, beforeEach } from "vitest";
+import { getDataDir } from "../src/lib/utils.js";
 import { postDepreciationJournalEntries } from "../src/lib/finance/depreciation.js";
 import { postMonthlyPlJournalEntries } from "../src/lib/finance/journal-sources.js";
 import { loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
 import { buildMonthlyReconcileReport } from "../src/lib/finance/ledger/monthly-reconcile.js";
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
-import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureMonthlyPurchaseEvidence,
+  resetFixtureJournalEntries,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 
 describe("monthly P/L journal posting", () => {
-  beforeEach(() => resetFixtureJournalEntries());
+  beforeEach(() => {
+    resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
+  });
   it("2026-09 reconcile balanced after depreciation + monthly-pl", () => {
     useFinanceFixtureTenant();
     postDepreciationJournalEntries({ period: "2026-09", authorizedBy: "OP-TEST" });
@@ -16,6 +26,21 @@ describe("monthly P/L journal posting", () => {
     expect(report.gl_active).toBe(true);
     expect(report.balanced).toBe(true);
     expect(report.diffs).toEqual([]);
+  });
+
+  it("refuses a depreciation row filed under another category before posting anything", () => {
+    useFinanceFixtureTenant();
+    const path = join(getDataDir(), "finance", "monthly", "2026-09.yaml");
+    writeFileSync(
+      path,
+      readFileSync(path, "utf-8").replace(/category: depreciation/g, "category: other"),
+      "utf-8"
+    );
+    const before = loadJournalEntries().entries.length;
+    expect(() =>
+      postMonthlyPlJournalEntries({ period: "2026-09", authorizedBy: "OP-TEST" })
+    ).toThrow("must use category depreciation");
+    expect(loadJournalEntries().entries.length).toBe(before);
   });
 
   it("depreciation idempotent re-run keeps 5100 at single month amount", () => {

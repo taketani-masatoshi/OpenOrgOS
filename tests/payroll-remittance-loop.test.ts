@@ -11,7 +11,11 @@ import {
 } from "../src/lib/finance/remittance-from-calendar.js";
 import { buildTaxCalendarPortfolio } from "../src/lib/finance/tax-calendar-portfolio.js";
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
-import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
+import {
+  applyFixtureMonthlyPurchaseEvidence,
+  resetFixtureJournalEntries,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 
 describe("remittance from calendar mapping", () => {
   it("maps cashflow categories to remittance obligations", () => {
@@ -37,7 +41,10 @@ describe("remittance from calendar mapping", () => {
 });
 
 describe("payroll and statutory remittance loop", () => {
-  beforeEach(() => resetFixtureJournalEntries());
+  beforeEach(() => {
+    resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
+  });
   afterEach(() => resetFixtureJournalEntries());
 
   it("accrues payroll then remits withholding/social and pays net", () => {
