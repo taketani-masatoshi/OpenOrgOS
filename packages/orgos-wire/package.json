@@ -10,7 +10,7 @@
   "scripts": {
     "postinstall": "node postinstall.mjs"
   },
-  "license": "UNLICENSED",
+  "license": "GPL-2.0-only",
   "publishConfig": {
     "access": "public"
   }

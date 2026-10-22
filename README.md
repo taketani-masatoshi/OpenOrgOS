@@ -145,3 +145,9 @@ npm run weekly     # check + pipeline run weekly
 **コア Agent + 業務モジュール:** [steward/core/agents/00-このフォルダについて.md](steward/core/agents/00-このフォルダについて.md)
 
 会社固有情報: `tenants/{id}/rules/company_context.md`
+
+---
+
+## License
+
+OpenOrgOS is distributed under the [GNU General Public License v2.0 only](LICENSE) (`GPL-2.0-only`). For commercial licensing, patent permissions, or enterprise inquiries, please review our [Terms of Service](TERMS_OF_SERVICE.md). Contributions are accepted under the Contributor License Agreement in Article 7 of the Terms of Service.

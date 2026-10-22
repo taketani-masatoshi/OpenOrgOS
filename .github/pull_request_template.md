@@ -23,4 +23,8 @@
 - [ ] 重複ロジック · デッドコード · TODO 残置なし
 - [ ] L2/L3 を tracked MD · チャットに出力していない
 
+## License / CLA
+
+- [ ] [TERMS_OF_SERVICE.md](../TERMS_OF_SERVICE.md) 第7条（CLA）に同意し、本 PR の著作権を当組織に譲渡する（PR 提出で同意とみなされます）
+
 正本: [steward/rules/engineering/](../steward/rules/engineering/00-このフォルダについて.md) · [ADR 0003](../docs/adr/0003-constitution-code-compliance-roadmap.md)

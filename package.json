@@ -2,6 +2,7 @@
   "name": "orgos-reference",
   "version": "0.9.0-beta.1",
   "description": "OrgOS — Organizational OS reference implementation (tenant-separated management framework)",
+  "license": "GPL-2.0-only",
   "type": "module",
   "workspaces": [
     "apps/steward-chat",
