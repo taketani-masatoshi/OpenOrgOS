@@ -63,6 +63,7 @@ describe("invoice vs JE-MPL dedupe", () => {
       invoiceId: "PROP-001-2026-09",
       amountYen: 110000,
       propertyId: "PROP-001",
+      counterpartyId: "PROP-001",
       occurredAt: "2026-09-01T00:00:00.000Z",
       authorizedBy: "test",
     });
@@ -104,6 +105,7 @@ describe("invoice vs JE-MPL dedupe", () => {
       invoiceId: "PROP-002-2026-09",
       amountYen: 110000,
       propertyId: "PROP-002",
+      counterpartyId: "PROP-002",
       occurredAt: "2026-09-01T00:00:00.000Z",
       authorizedBy: "test",
     });
@@ -116,6 +118,7 @@ describe("invoice vs JE-MPL dedupe", () => {
       invoiceId: "PROP-001-2026-09",
       amountYen: 110000,
       propertyId: "PROP-001",
+      counterpartyId: "PROP-001",
       occurredAt: "2026-09-01T00:00:00.000Z",
       authorizedBy: "test",
     });
@@ -162,6 +165,7 @@ describe("invoice vs JE-MPL dedupe", () => {
           debit_yen: 110000,
           credit_yen: 0,
           tax_category: "out_of_scope",
+          counterparty_id: "PROP-001",
         },
         {
           account_code: "4100",

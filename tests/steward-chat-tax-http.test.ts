@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
-import { setTenantId } from "../src/lib/tenant.js";
+import {
+  seedFixturePayrollRates,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 
 /**
  * Tax and payroll over HTTP. Two properties matter here and neither is visible
@@ -15,7 +18,8 @@ describe("steward chat tax and payroll HTTP", () => {
   const env = { ...process.env };
 
   beforeEach(async () => {
-    setTenantId("demo");
+    useFinanceFixtureTenant();
+    seedFixturePayrollRates();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
@@ -94,7 +98,8 @@ describe("steward chat tax and payroll HTTP", () => {
   });
 
   it("expands lodging tax from the ledger, not from a guess", async () => {
-    setTenantId("mal");
+    // Fixture tenant is enough: the assertion is that ledger-backed rows never
+    // claim a lodging amount without a note when the ledger has no period.
     const cookie = await login();
     const res = await fetch(`${baseUrl}/chat/v1/tax/calendar?today=2026-08-01`, {
       headers: { Cookie: cookie },
@@ -123,19 +128,18 @@ describe("steward chat tax and payroll HTTP", () => {
 
   it("computes a payroll month deterministically from rates", async () => {
     const cookie = await login();
-    const res = await post("/chat/v1/tax/payroll-calc", cookie, {
+    const payload = {
       month: "2026-07",
       gross_yen: 400_000,
       dependents: 1,
-    });
+      health_standard_remuneration_yen: 410_000,
+      pension_standard_remuneration_yen: 410_000,
+    };
+    const res = await post("/chat/v1/tax/payroll-calc", cookie, payload);
     expect(res.status, await res.clone().text()).toBe(200);
     const first = (await res.json()) as { run: Record<string, unknown> };
 
-    const again = await post("/chat/v1/tax/payroll-calc", cookie, {
-      month: "2026-07",
-      gross_yen: 400_000,
-      dependents: 1,
-    });
+    const again = await post("/chat/v1/tax/payroll-calc", cookie, payload);
     const second = (await again.json()) as { run: Record<string, unknown> };
     expect(second.run).toEqual(first.run);
   });

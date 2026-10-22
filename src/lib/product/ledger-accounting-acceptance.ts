@@ -10,6 +10,7 @@ import { closeAccountingYear, listFiscalYearMonths } from "../finance/annual-clo
 import { runValidateReport } from "../../commands/validate.js";
 import { resolveCompanyFiscalYearEndMonth } from "../finance/fiscal-year.js";
 import { closeAccountingMonth } from "../finance/monthly-close.js";
+import { reconciliationEventPath } from "../jp-bank-corporate/reconciliation-store.js";
 import { getDataDir } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { clearTenantId, getTenantId, setTenantId } from "../tenant.js";
@@ -83,13 +84,22 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
     if (!result.bank_reconcile.pass) return result;
 
     const months = listFiscalYearMonths(fiscalYear, resolveCompanyFiscalYearEndMonth());
+    // Bank e2e leaves reconciliation-events.yaml. Stub month rows below are lite-schema
+    // only; drop event history so close gates read status from the stub file itself.
+    const eventsPath = reconciliationEventPath();
+    if (existsSync(eventsPath)) rmSync(eventsPath);
     writeYamlFileAtomic(join(getDataDir(), "finance", "bank-statements.yaml"), {
+      currency: "JPY",
       entries: months.map((month, index) => ({
         id: `BS-ACCEPTANCE-${String(index + 1).padStart(2, "0")}`,
         date: `${month}-15`,
         direction: "inflow",
         amount: 1,
+        category: "acceptance",
+        description: "acceptance matched row",
+        account_id: "BANK-001",
         status: "matched",
+        source: "import",
       })),
     });
     const monthly = months.map((month) =>

@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { setTenantEnv } from "../src/lib/orgos-cli.js";
 import { setTenantId } from "../src/lib/tenant.js";
+import { FINANCE_FIXTURE_TENANT } from "./helpers/finance-fixture.js";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import {
@@ -60,7 +62,8 @@ describe("finance summary HTTP boundary", () => {
   const env = { ...process.env };
 
   beforeEach(() => {
-    setTenantId("_fixture-books");
+    setTenantEnv(FINANCE_FIXTURE_TENANT);
+    setTenantId(FINANCE_FIXTURE_TENANT);
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";

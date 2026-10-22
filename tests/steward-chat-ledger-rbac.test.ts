@@ -3,15 +3,24 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, beforeEach } from "vitest";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
-import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
 import {
   registerSession,
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
 import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
-import { postPayrollJournalEntry } from "../src/lib/finance/journal-sources.js";
-import { resetFixtureJournalEntries } from "./helpers/finance-fixture.js";
+import {
+  postMonthlyPlJournalEntries,
+  postPayrollJournalEntry,
+} from "../src/lib/finance/journal-sources.js";
+import { postDepreciationJournalEntries } from "../src/lib/finance/depreciation.js";
+import { lockMonth } from "../src/lib/finance/period-lock.js";
+import {
+  applyFixtureMonthlyPurchaseEvidence,
+  resetFixtureJournalEntries,
+  seedFixturePayrollRates,
+  useFinanceFixtureTenant,
+} from "./helpers/finance-fixture.js";
 import { getPendingApprovalsPath } from "../src/lib/org/paths.js";
 
 describe("steward chat ledger workbench api", () => {
@@ -20,8 +29,10 @@ describe("steward chat ledger workbench api", () => {
   const env = { ...process.env };
 
   beforeEach(() => {
-    setTenantId("_fixture-books");
+    useFinanceFixtureTenant();
     resetFixtureJournalEntries();
+    applyFixtureMonthlyPurchaseEvidence();
+    seedFixturePayrollRates();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";
@@ -51,12 +62,25 @@ describe("steward chat ledger workbench api", () => {
     return `${WIRE_CONSOLE_SESSION_COOKIE}=${token}`;
   }
 
+  /** Make month lockable over HTTP without already locking it. */
+  function prepareMonthForHttpLock(month: string, priorMonth: string): void {
+    lockMonth({ month: priorMonth, lockedBy: "OP-001", reason: "HTTP RBAC prior lock" });
+    try {
+      postDepreciationJournalEntries({ period: month, authorizedBy: "OP-001" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("Historical depreciation requires an asset snapshot")) throw error;
+    }
+    postMonthlyPlJournalEntries({ period: month, authorizedBy: "OP-001" });
+  }
+
   it("requires a reason to unlock a month and audits lock / unlock", async () => {
     const auditPath = join(getDataDir(), ".orgos", "chat-audit-period-test.jsonl");
     rmSync(auditPath, { force: true });
     process.env.ORGOS_CHAT_AUDIT = "1";
     process.env.ORGOS_CHAT_AUDIT_LOG = auditPath;
     await start();
+    prepareMonthForHttpLock("2026-08", "2026-07");
     const headers = {
       Cookie: cookieFor("OP-001"),
       "Content-Type": "application/json",
@@ -67,7 +91,7 @@ describe("steward chat ledger workbench api", () => {
       headers,
       body: JSON.stringify({ month: "2026-08", action: "lock" }),
     });
-    expect(lock.status).toBe(200);
+    expect(lock.status, await lock.clone().text()).toBe(200);
 
     const noReason = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
       method: "POST",
@@ -242,12 +266,13 @@ describe("steward chat ledger workbench api", () => {
     });
     expect(reverse.status).toBe(200);
 
+    prepareMonthForHttpLock("2026-09", "2026-08");
     const lock = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
       method: "POST",
       headers,
       body: JSON.stringify({ month: "2026-09", action: "lock" }),
     });
-    expect(lock.status).toBe(200);
+    expect(lock.status, await lock.clone().text()).toBe(200);
 
     const unlock = await fetch(`${baseUrl}/chat/v1/ledger/period`, {
       method: "POST",
@@ -404,9 +429,15 @@ describe("steward chat ledger workbench api", () => {
         Cookie: cookieFor("OP-001"),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ month: "2026-08", gross_yen: 300000, dependents: 0 }),
+      body: JSON.stringify({
+        month: "2026-08",
+        gross_yen: 300000,
+        dependents: 0,
+        health_standard_remuneration_yen: 300000,
+        pension_standard_remuneration_yen: 300000,
+      }),
     });
-    expect(calc.status).toBe(200);
+    expect(calc.status, await calc.clone().text()).toBe(200);
     const run = (await calc.json()) as {
       ok: boolean;
       run: { net_pay_yen: number; withholding_yen: number };
@@ -482,11 +513,18 @@ describe("steward chat ledger workbench api", () => {
       expect(yea.status).toBe(200);
       const ybody = (await yea.json()) as {
         ok: boolean;
-        yea: { employee_count: number; totals: { annual_gross_yen: number } };
+        yea: {
+          employee_count: number;
+          totals: { annual_gross_yen: number | null };
+        };
       };
       expect(ybody.ok).toBe(true);
       expect(ybody.yea.employee_count).toBeGreaterThanOrEqual(1);
-      expect(ybody.yea.totals.annual_gross_yen).toBeGreaterThan(0);
+      // Gross is null until annual source + declaration evidence are complete.
+      expect(
+        ybody.yea.totals.annual_gross_yen === null ||
+          ybody.yea.totals.annual_gross_yen > 0
+      ).toBe(true);
     } finally {
       if (existsSync(yeaPath)) rmSync(yeaPath, { recursive: true, force: true });
     }

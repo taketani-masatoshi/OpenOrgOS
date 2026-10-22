@@ -99,15 +99,20 @@ export async function runInvoiceGenerate(
     };
   }
 
-  const counterpartyId = options.counterpartyId ?? billing.counterparty_id;
-  if (!counterpartyId?.trim())
-    throw new Error("Invoice counterparty_id required in billing config or --counterparty-id");
   const company = loadOrgCompanyBilling();
   const properties = loadProperties();
   const prop = properties.find((p) => p.id === options.propertyId);
   if (!prop) {
     throw new Error(`Property ${options.propertyId} not found in properties data`);
   }
+  // Prefer explicit counterparty; property_id is an acceptable AR dimension for rental/hospitality.
+  const counterpartyId =
+    options.counterpartyId?.trim() ||
+    billing.counterparty_id?.trim() ||
+    options.propertyId?.trim() ||
+    billing.propertyId?.trim();
+  if (!counterpartyId)
+    throw new Error("Invoice counterparty_id required in billing config or --counterparty-id");
 
   const template = loadInvoiceTemplate(billing.moduleId, billing.template_id);
   const bodyTemplateText = loadInvoiceBodyTemplate(billing.moduleId, template);

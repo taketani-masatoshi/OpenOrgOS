@@ -3,6 +3,7 @@ import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js"
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
 import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
+import { lockMonth } from "../src/lib/finance/period-lock.js";
 
 /**
  * HTTP surface of the ledger: posting, the month lock, reversal, 電子帳簿
@@ -101,6 +102,8 @@ describe("steward chat ledger HTTP", () => {
 
   it("locks a month, refuses posting into it, and unlocks only with a reason", async () => {
     const month = "2026-01";
+    // Fiscal year ends in January, so 2026-01 still requires the prior calendar month.
+    lockMonth({ month: "2025-12", lockedBy: "OP-001", reason: "HTTP test prior lock" });
     const lock = await post("/chat/v1/ledger/period", { month, action: "lock" });
     expect(lock.status, await lock.clone().text()).toBe(200);
 

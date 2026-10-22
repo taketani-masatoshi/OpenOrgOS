@@ -1,12 +1,66 @@
-import { writeFileSync, readFileSync, existsSync } from "node:fs";
+import { copyFileSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { setTenantEnv } from "../../src/lib/orgos-cli.js";
+import { getInstallRoot } from "../../src/lib/orgos-paths.js";
 import { setTenantId, getTenantDir } from "../../src/lib/tenant.js";
 
 /** Isolated tenant for finance / GL / ledger vitest — safe for journal writes. */
 export const FINANCE_FIXTURE_TENANT = "_fixture-books";
 
+/**
+ * Bind both the in-process tenant and ORGOS_TENANT so HTTP servers (Steward Chat)
+ * that resolve the tenant from the environment cannot fall back to mal.
+ */
 export function useFinanceFixtureTenant(): void {
+  setTenantEnv(FINANCE_FIXTURE_TENANT);
   setTenantId(FINANCE_FIXTURE_TENANT);
+}
+
+/**
+ * Seed verified FY2026 payroll rates for fixture HTTP / CLI tests.
+ * Restored fixture trees wipe this each beforeEach, so call after reset.
+ */
+export function seedFixturePayrollRates(): void {
+  useFinanceFixtureTenant();
+  const example = join(
+    getInstallRoot(),
+    "steward/jurisdiction-packs/JP/modules/jp_payroll/seed/payroll-rates-2026.yaml.example"
+  );
+  const target = join(getTenantDir(), "data/finance/payroll-rates-2026.yaml");
+  if (!existsSync(example)) {
+    throw new Error(`Missing payroll rates example: ${example}`);
+  }
+  copyFileSync(example, target);
+  const text = readFileSync(target, "utf-8");
+  if (!text.includes("effective_from:")) {
+    writeFileSync(
+      target,
+      text.replace(
+        /^fiscal_year:\s*FY2026\s*$/m,
+        [
+          "fiscal_year: FY2026",
+          "insurer_id: FIXTURE-KENPO",
+          'effective_from: "2026-01"',
+          'effective_to: "2026-12"',
+        ].join("\n")
+      ),
+      "utf-8"
+    );
+  }
+  const payrollPath = join(getTenantDir(), "data/finance/payroll.yaml");
+  if (existsSync(payrollPath)) {
+    const payroll = readFileSync(payrollPath, "utf-8");
+    if (!payroll.includes("employee_ids:")) {
+      writeFileSync(
+        payrollPath,
+        payroll.replace(
+          /^(employee_payroll:\n(?:  .*\n)*)/m,
+          "$1  employee_ids:\n    - EMP-FIXTURE-001\n"
+        ),
+        "utf-8"
+      );
+    }
+  }
 }
 
 /** Reset fixture journal ledger between tests (append-only file accumulates otherwise). */

@@ -556,7 +556,8 @@ export function postSalesInvoiceJournalEntry(input: {
     return null;
   }
 
-  if (!input.counterpartyId?.trim()) throw new Error("Invoice counterparty_id required");
+  const counterpartyId = input.counterpartyId?.trim() || input.propertyId?.trim();
+  if (!counterpartyId) throw new Error("Invoice counterparty_id required");
   const accounts = resolveJournalSourceAccounts();
   const entryId = `JE-INV-${input.invoiceId}`;
   const taxCategory = input.taxCategory ?? "taxable_10";
@@ -569,7 +570,7 @@ export function postSalesInvoiceJournalEntry(input: {
   }[] = [
     {
       account_code: input.arAccountCode ?? accounts.accounts_receivable,
-      counterparty_id: input.counterpartyId,
+      counterparty_id: counterpartyId,
       debit_yen: input.amountYen,
       credit_yen: 0,
       tax_category: "out_of_scope",

@@ -19,7 +19,33 @@ describe("external finance reconciliation", () => {
   });
 
   it("keeps decimal amounts exact", () => {
-    expect(reconcileExternalTransaction(transaction, [{ id: "inv-2", tenant_id: "demo", type: "INCOME", direction: "CREDIT", counterparty: "ABC株式会社", amount: "100.100", currency: "JPY", status: "OPEN" }]).status).toBe("MATCHED");
+    const decimalTxn = externalFinanceTransactionSchema.parse({
+      tenant_id: "demo",
+      transaction_id: "evt-decimal",
+      source: "stripe",
+      type: "INCOME",
+      amount: "100.10",
+      currency: "USD",
+      payer_or_payee: "ＡＢＣ 株式会社",
+      transaction_date: "2026-09-21T00:00:00+09:00",
+      direction: "CREDIT",
+      minor_unit: 2,
+      raw_event_id: "raw-decimal",
+    });
+    expect(
+      reconcileExternalTransaction(decimalTxn, [
+        {
+          id: "inv-2",
+          tenant_id: "demo",
+          type: "INCOME",
+          direction: "CREDIT",
+          counterparty: "ABC株式会社",
+          amount: "100.100",
+          currency: "USD",
+          status: "OPEN",
+        },
+      ]).status,
+    ).toBe("MATCHED");
   });
 
   it("builds a tenant and account scoped idempotency key", () => {
